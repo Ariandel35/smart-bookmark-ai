@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Smart Bookmark AI</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="popup-body">
+    <main class="popup-shell">
+      <header class="topbar">
+        <div class="topbar__row topbar__row--popup">
+          <div>
+            <div class="topbar__meta">Smart Bookmark AI</div>
+            <h1 class="topbar__title">书签整理</h1>
+          </div>
+          <div class="topbar__actions topbar__actions--popup">
+            <button class="button button--ghost button--compact" id="optionsButton" type="button">
+              设置
+            </button>
+            <span class="pill pill--warm" id="phaseBadge">空闲</span>
+          </div>
+        </div>
+
+        <div class="popup-toolbar">
+          <button class="button button--primary button--tiny" id="startButton" type="button">
+            整理书签
+          </button>
+          <button class="button button--secondary button--tiny" id="backupButton" type="button">
+            手动备份
+          </button>
+          <button class="button button--danger button--tiny" id="cancelButton" type="button">
+            取消任务
+          </button>
+        </div>
+      </header>
+
+      <section class="section-stack">
+        <section class="panel">
+          <div class="panel__inner">
+            <div class="progress-head">
+              <div>
+                <div class="progress-head__value" id="progressPercent">0%</div>
+                <div class="progress-head__summary" id="progressSummary">0 / 0</div>
+              </div>
+              <div class="progress-head__meta" id="progressMeta">等待开始</div>
+            </div>
+
+            <div class="progress" aria-hidden="true">
+              <div class="progress__bar" id="progressBar"></div>
+            </div>
+
+            <div class="results-workspace metrics--spaced">
+              <aside class="result-nav" aria-label="结果导航">
+                <button
+                  class="result-nav__button is-active"
+                  data-detail-view="overview"
+                  type="button"
+                >
+                  <span class="result-nav__label">总览</span>
+                  <span class="result-nav__value" id="totalValue">0</span>
+                </button>
+                <button class="result-nav__button" data-detail-view="processed" type="button">
+                  <span class="result-nav__label">已处理</span>
+                  <span class="result-nav__value" id="processedValue">0</span>
+                </button>
+                <button class="result-nav__button" data-detail-view="folders" type="button">
+                  <span class="result-nav__label">已归类</span>
+                  <span class="result-nav__value" id="movedValue">0</span>
+                </button>
+                <button class="result-nav__button" data-detail-view="deleted" type="button">
+                  <span class="result-nav__label">已删除</span>
+                  <span class="result-nav__value" id="deletedValue">0</span>
+                </button>
+                <button class="result-nav__button" data-detail-view="warnings" type="button">
+                  <span class="result-nav__label">未处理</span>
+                  <span class="result-nav__value" id="warningValue">0</span>
+                </button>
+              </aside>
+
+              <section class="result-detail">
+                <div class="detail-panel" id="detailPanel"></div>
+              </section>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

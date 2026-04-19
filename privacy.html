@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Smart Bookmark AI - 隐私说明</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="topbar">
+        <div class="topbar__row">
+          <div>
+            <div class="topbar__meta">Smart Bookmark AI / Privacy</div>
+            <h1 class="topbar__title">隐私说明</h1>
+          </div>
+        </div>
+      </header>
+
+      <section class="content-stack">
+        <section class="panel">
+          <div class="panel__inner form-grid">
+            <div class="panel__heading">
+              <div>
+                <p class="panel__eyebrow">Data Use</p>
+                <h2 class="panel__title">数据使用范围</h2>
+              </div>
+            </div>
+
+            <div class="record-list">
+              <article class="record-item">
+                <div class="record-item__title">读取的本地数据</div>
+                <div class="record-item__suggestion">书签标题、URL、当前文件夹路径、插件设置、备份快照。</div>
+              </article>
+              <article class="record-item">
+                <div class="record-item__title">发送到第三方的数据</div>
+                <div class="record-item__suggestion">只有在你主动整理书签或开启自动整理时，书签标题、URL、现有路径和自定义 Prompt 才会发送到你选择的模型服务商。</div>
+              </article>
+              <article class="record-item">
+                <div class="record-item__title">失效链接检测</div>
+                <div class="record-item__suggestion">整理流程会直接向书签对应的网站发送 HEAD / GET 请求，用于判断链接是否失效。</div>
+              </article>
+              <article class="record-item">
+                <div class="record-item__title">本地存储</div>
+                <div class="record-item__suggestion">API Key、Provider、模型名、白名单和备份快照都保存在你的浏览器本地存储与 IndexedDB 中。</div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel__inner form-grid">
+            <div class="panel__heading">
+              <div>
+                <p class="panel__eyebrow">Control</p>
+                <h2 class="panel__title">你可以控制的内容</h2>
+              </div>
+            </div>
+
+            <div class="record-list">
+              <article class="record-item">
+                <div class="record-item__title">授权网站访问</div>
+                <div class="record-item__suggestion">整理书签和自动整理前，需要你显式授权网站访问权限。你也可以稍后在 Chrome 扩展权限里撤销。</div>
+              </article>
+              <article class="record-item">
+                <div class="record-item__title">白名单与待手动分类</div>
+                <div class="record-item__suggestion">白名单域名不会被自动整理；状态不明确的书签会进入“待手动分类”。</div>
+              </article>
+              <article class="record-item">
+                <div class="record-item__title">备份与恢复</div>
+                <div class="record-item__suggestion">整理前会先创建本地快照备份。你可以在设置页管理备份并恢复旧版本。</div>
+              </article>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>

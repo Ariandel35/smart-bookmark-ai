@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Smart Bookmark AI - 设置</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="topbar">
+        <div class="topbar__row">
+          <div>
+            <div class="topbar__meta">Smart Bookmark AI / Options</div>
+            <h1 class="topbar__title">设置中心</h1>
+          </div>
+
+          <div class="topbar__actions topbar__actions--page">
+            <span class="pill pill--accent" id="saveBadge">未保存</span>
+            <button class="button button--primary button--compact" type="submit" form="settingsForm">
+              保存设置
+            </button>
+            <button class="button button--ghost button--compact" type="button" id="resetButton">
+              恢复默认
+            </button>
+            <button class="button button--ghost button--compact" type="button" id="privacyButton">
+              隐私
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <aside class="sidebar panel">
+            <div class="panel__inner">
+              <div class="panel__heading">
+                <div>
+                  <p class="panel__eyebrow">Navigation</p>
+                  <h2 class="panel__title">配置导航</h2>
+                </div>
+              </div>
+
+            <nav class="nav-list" aria-label="设置导航">
+              <button
+                class="nav-button is-active"
+                type="button"
+                data-section-target="connection"
+                aria-selected="true"
+              >
+                <span class="nav-button__title">连接配置</span>
+              </button>
+              <button
+                class="nav-button"
+                type="button"
+                data-section-target="organize"
+                aria-selected="false"
+              >
+                <span class="nav-button__title">整理规则</span>
+              </button>
+              <button
+                class="nav-button"
+                type="button"
+                data-section-target="automation"
+                aria-selected="false"
+              >
+                <span class="nav-button__title">自动任务</span>
+              </button>
+              <button
+                class="nav-button"
+                type="button"
+                data-section-target="backup"
+                aria-selected="false"
+              >
+                <span class="nav-button__title">备份管理</span>
+              </button>
+            </nav>
+          </div>
+        </aside>
+
+        <section class="content-stack">
+          <form id="settingsForm" class="form-grid">
+            <section
+              class="panel settings-section is-active"
+              data-section-panel="connection"
+            >
+              <div class="panel__inner">
+                <div class="panel__heading">
+                  <div>
+                    <p class="panel__eyebrow">Connection</p>
+                    <h2 class="panel__title">连接配置</h2>
+                  </div>
+                </div>
+
+                <div class="form-grid">
+                  <div class="field-grid">
+                    <div class="field">
+                      <label for="provider">API Provider</label>
+                      <select id="provider" name="provider">
+                        <option value="openai">OpenAI</option>
+                        <option value="deepseek">DeepSeek</option>
+                        <option value="minimax">MiniMax</option>
+                        <option value="ollama">Ollama</option>
+                      </select>
+                    </div>
+
+                    <div class="field">
+                      <label for="model">Model Name</label>
+                      <input
+                        id="model"
+                        name="model"
+                        type="text"
+                        placeholder="例如：gpt-4.1-mini"
+                        spellcheck="false"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label for="baseUrl">Base URL</label>
+                    <input
+                      id="baseUrl"
+                      name="baseUrl"
+                      type="url"
+                      placeholder="https://api.openai.com/v1"
+                      spellcheck="false"
+                      inputmode="url"
+                    />
+                  </div>
+
+                  <div class="field">
+                    <label for="apiKey">API Key</label>
+                    <input
+                      id="apiKey"
+                      name="apiKey"
+                      type="password"
+                      placeholder="请输入 API Key"
+                      autocomplete="new-password"
+                      spellcheck="false"
+                    />
+                  </div>
+
+                  <div class="field field--inline-actions">
+                    <div class="field__toolbar">
+                      <button class="button button--secondary button--compact" type="button" id="testApiButton">
+                        检测 API 是否可用
+                      </button>
+                      <span class="status-text field__status" id="apiTestStatus" aria-live="polite" hidden></span>
+                    </div>
+                  </div>
+
+                  <div class="field field--inline-actions">
+                    <div class="field__toolbar">
+                      <button class="button button--ghost button--compact" type="button" id="grantAccessButton">
+                        授权网站访问
+                      </button>
+                      <span class="status-text field__status" id="hostAccessStatus" aria-live="polite"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel settings-section" data-section-panel="organize" hidden>
+              <div class="panel__inner">
+                <div class="panel__heading">
+                  <div>
+                    <p class="panel__eyebrow">Organization</p>
+                    <h2 class="panel__title">整理规则</h2>
+                  </div>
+                </div>
+
+                <div class="form-grid">
+                  <div class="field">
+                    <label for="batchSize">每批处理数量</label>
+                    <input
+                      id="batchSize"
+                      name="batchSize"
+                      type="number"
+                      min="5"
+                      max="100"
+                      step="1"
+                      inputmode="numeric"
+                      placeholder="50"
+                    />
+                  </div>
+
+                  <div class="field">
+                    <label for="whitelistDomains">白名单域名</label>
+                    <textarea
+                      id="whitelistDomains"
+                      name="whitelistDomains"
+                      placeholder="每行一个域名，例如：&#10;mail.google.com&#10;github.com&#10;*.bank.com"
+                    ></textarea>
+                  </div>
+
+                  <div class="field">
+                    <label for="customPrompt">自定义 Prompt</label>
+                    <textarea
+                      id="customPrompt"
+                      name="customPrompt"
+                      placeholder="输入自定义 Prompt"
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel settings-section" data-section-panel="automation" hidden>
+              <div class="panel__inner">
+                <div class="panel__heading">
+                  <div>
+                    <p class="panel__eyebrow">Automation</p>
+                    <h2 class="panel__title">自动任务</h2>
+                  </div>
+                </div>
+
+                <div class="split-grid">
+                  <div class="field">
+                    <label for="autoOrganizeEnabled">自动静默整理</label>
+                    <select id="autoOrganizeEnabled" name="autoOrganizeEnabled">
+                      <option value="true">开启</option>
+                      <option value="false">关闭</option>
+                    </select>
+                  </div>
+
+                  <div class="field">
+                    <label for="autoOrganizeIntervalHours">自动整理间隔（小时）</label>
+                    <input
+                      id="autoOrganizeIntervalHours"
+                      name="autoOrganizeIntervalHours"
+                      type="number"
+                      min="1"
+                      max="168"
+                      step="1"
+                      inputmode="numeric"
+                      placeholder="24"
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel settings-section" data-section-panel="backup" hidden>
+              <div class="panel__inner">
+                <div class="panel__heading">
+                  <div>
+                    <p class="panel__eyebrow">Backup</p>
+                    <h2 class="panel__title">备份管理</h2>
+                  </div>
+                  <span class="pill" id="backupStatusBadge">读取中</span>
+                </div>
+
+                <div class="form-grid">
+                  <div class="backup-list" id="backupList">
+                    <div class="empty-state">读取中</div>
+                  </div>
+
+                  <div class="actions">
+                    <button class="button button--secondary button--compact" type="button" id="createBackupButton">
+                      立即备份
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <script src="options.js"></script>
+  </body>
+</html>
