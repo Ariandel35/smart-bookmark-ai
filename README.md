@@ -10,7 +10,30 @@ Smart Bookmark AI is a Chrome extension that helps users clean up large bookmark
 
 It creates a local snapshot backup, checks clearly dead links, removes obvious duplicates, and rebuilds a simpler bookmark structure directly at the bookmark bar root.
 
-![Smart Bookmark AI hero](docs/assets/hero.svg)
+## What It Solves
+
+- Too many bookmarks with no usable structure
+- Repeated links that make folders noisy
+- Dead bookmarks that should be removed before reorganization
+- Settings that need to work with different LLM providers
+
+## Interface Preview
+
+### Popup
+
+<p align="center">
+  <img src="docs/screenshots/popup-overview.png" alt="Popup overview" width="430" />
+</p>
+
+The popup keeps the main actions close to the top: organize bookmarks, create a manual backup, cancel the current job, and review progress in one place.
+
+### Settings Center
+
+<p align="center">
+  <img src="docs/screenshots/options-organization.png" alt="Settings center" width="980" />
+</p>
+
+The settings page uses a left-side navigation layout for connection settings, organization rules, automation, and backup management.
 
 ## Highlights
 
@@ -23,25 +46,17 @@ It creates a local snapshot backup, checks clearly dead links, removes obvious d
 - Automatic local snapshot backup before each organize run
 - Manual backup, restore, and delete
 - Auto organize with Chrome alarms
-- Reviewable "Unprocessed" and delete logs
+- Reviewable unprocessed and delete logs
 
 ## Workflow
 
 Smart Bookmark AI is designed for safety first. It does not rewrite the bookmark tree while analysis is still in progress.
-
-![Workflow diagram](docs/assets/workflow.svg)
 
 1. Create a local snapshot backup
 2. Scan links for clearly dead bookmarks
 3. Send bookmark context to the model provider you selected
 4. Build a full plan
 5. Rebuild the final structure at the bookmark root in one pass
-
-## Screens at a Glance
-
-The repository includes a compact visual overview of the popup, settings, and backup workflow for the GitHub landing page.
-
-![Feature overview](docs/assets/pages.svg)
 
 ## Privacy Summary
 
@@ -69,7 +84,7 @@ Full privacy details: [PRIVACY.md](PRIVACY.md)
 - [options.js](options.js)
 - [styles.css](styles.css)
 - [privacy.html](privacy.html)
-- [docs/assets](docs/assets)
+- [docs/screenshots](docs/screenshots)
 - [webstore](webstore)
 
 ## Local Development
