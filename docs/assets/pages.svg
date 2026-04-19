@@ -1,0 +1,46 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="720" rx="28" fill="#F4F5F0"/>
+  <rect x="38" y="38" width="1124" height="644" rx="24" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <text x="74" y="88" fill="#131713" font-family="Arial, sans-serif" font-size="34" font-weight="700">Repository overview</text>
+  <text x="74" y="122" fill="#667065" font-family="Arial, sans-serif" font-size="20">Popup, options, and backup management in one glance.</text>
+  <rect x="74" y="162" width="320" height="458" rx="22" fill="#FAFBF7" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="438" y="162" width="330" height="458" rx="22" fill="#FAFBF7" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="812" y="162" width="314" height="458" rx="22" fill="#FAFBF7" stroke="#DFE4DB" stroke-width="2"/>
+  <text x="102" y="206" fill="#1F6D53" font-family="Arial, sans-serif" font-size="18" font-weight="700">Popup</text>
+  <text x="466" y="206" fill="#1F6D53" font-family="Arial, sans-serif" font-size="18" font-weight="700">Options</text>
+  <text x="840" y="206" fill="#1F6D53" font-family="Arial, sans-serif" font-size="18" font-weight="700">Backups</text>
+  <rect x="102" y="236" width="264" height="40" rx="12" fill="#1F6D53"/>
+  <rect x="102" y="290" width="126" height="36" rx="10" fill="#EBF5F0"/>
+  <rect x="240" y="290" width="126" height="36" rx="10" fill="#FBEFEC"/>
+  <rect x="102" y="350" width="264" height="12" rx="6" fill="#EEF1EA"/>
+  <rect x="102" y="350" width="184" height="12" rx="6" fill="#1F6D53"/>
+  <rect x="102" y="388" width="264" height="60" rx="14" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="102" y="464" width="264" height="60" rx="14" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="102" y="540" width="264" height="60" rx="14" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <text x="126" y="262" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="18" font-weight="700">Start organize</text>
+  <text x="124" y="314" fill="#1F6D53" font-family="Arial, sans-serif" font-size="16" font-weight="700">Manual backup</text>
+  <text x="270" y="314" fill="#B64231" font-family="Arial, sans-serif" font-size="16" font-weight="700">Cancel</text>
+  <text x="126" y="424" fill="#131713" font-family="Arial, sans-serif" font-size="20" font-weight="700">Overview</text>
+  <text x="126" y="500" fill="#131713" font-family="Arial, sans-serif" font-size="20" font-weight="700">Processed</text>
+  <text x="126" y="576" fill="#131713" font-family="Arial, sans-serif" font-size="20" font-weight="700">Unprocessed</text>
+  <rect x="466" y="236" width="274" height="54" rx="14" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="466" y="308" width="274" height="54" rx="14" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="466" y="380" width="274" height="54" rx="14" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="466" y="462" width="130" height="40" rx="12" fill="#EBF5F0"/>
+  <rect x="610" y="462" width="130" height="40" rx="12" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="466" y="530" width="274" height="54" rx="14" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <text x="490" y="270" fill="#131713" font-family="Arial, sans-serif" font-size="18" font-weight="700">Provider / Model</text>
+  <text x="490" y="342" fill="#131713" font-family="Arial, sans-serif" font-size="18" font-weight="700">Base URL / API Key</text>
+  <text x="490" y="414" fill="#131713" font-family="Arial, sans-serif" font-size="18" font-weight="700">Prompt / Whitelist</text>
+  <text x="490" y="488" fill="#1F6D53" font-family="Arial, sans-serif" font-size="16" font-weight="700">Test API</text>
+  <text x="642" y="488" fill="#131713" font-family="Arial, sans-serif" font-size="16" font-weight="700">Grant access</text>
+  <text x="490" y="564" fill="#131713" font-family="Arial, sans-serif" font-size="18" font-weight="700">Auto organize</text>
+  <rect x="840" y="236" width="258" height="70" rx="16" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="840" y="324" width="258" height="70" rx="16" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="840" y="412" width="258" height="70" rx="16" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="840" y="518" width="144" height="42" rx="12" fill="#1F6D53"/>
+  <text x="866" y="278" fill="#131713" font-family="Arial, sans-serif" font-size="18" font-weight="700">Snapshot 2026-04-19</text>
+  <text x="866" y="366" fill="#131713" font-family="Arial, sans-serif" font-size="18" font-weight="700">Restore / Delete</text>
+  <text x="866" y="454" fill="#131713" font-family="Arial, sans-serif" font-size="18" font-weight="700">Keep 10 recent backups</text>
+  <text x="874" y="545" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="18" font-weight="700">Create backup</text>
+</svg>

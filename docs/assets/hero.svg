@@ -1,0 +1,29 @@
+<svg width="1200" height="640" viewBox="0 0 1200 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="640" rx="32" fill="#F4F5F0"/>
+  <rect x="44" y="44" width="1112" height="552" rx="28" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="84" y="84" width="452" height="472" rx="24" fill="#FAFBF7" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="578" y="84" width="538" height="140" rx="24" fill="#1F6D53"/>
+  <rect x="578" y="246" width="258" height="150" rx="24" fill="#EBF5F0" stroke="#CFE3DA" stroke-width="2"/>
+  <rect x="858" y="246" width="258" height="150" rx="24" fill="#FAFBF7" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="578" y="418" width="538" height="138" rx="24" fill="#FAFBF7" stroke="#DFE4DB" stroke-width="2"/>
+  <text x="108" y="144" fill="#1F6D53" font-family="Arial, sans-serif" font-size="18" font-weight="700">SMART BOOKMARK AI</text>
+  <text x="108" y="208" fill="#131713" font-family="Arial, sans-serif" font-size="54" font-weight="700">Organize bookmarks</text>
+  <text x="108" y="264" fill="#131713" font-family="Arial, sans-serif" font-size="54" font-weight="700">with fewer folders.</text>
+  <text x="108" y="328" fill="#667065" font-family="Arial, sans-serif" font-size="24">Dead-link checks, conservative dedupe,</text>
+  <text x="108" y="364" fill="#667065" font-family="Arial, sans-serif" font-size="24">local snapshot backups, and root-level rebuilds.</text>
+  <rect x="108" y="430" width="172" height="52" rx="26" fill="#1F6D53"/>
+  <text x="153" y="463" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="22" font-weight="700">MV3</text>
+  <rect x="298" y="430" width="194" height="52" rx="26" fill="#EBF5F0"/>
+  <text x="338" y="463" fill="#1F6D53" font-family="Arial, sans-serif" font-size="22" font-weight="700">Local backup</text>
+  <text x="612" y="140" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="18" font-weight="700">Safety-first flow</text>
+  <text x="612" y="184" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="36" font-weight="700">Backup → Analyze → Rebuild</text>
+  <text x="612" y="330" fill="#1F6D53" font-family="Arial, sans-serif" font-size="22" font-weight="700">Popup</text>
+  <text x="612" y="362" fill="#667065" font-family="Arial, sans-serif" font-size="18">Start organize, review progress,</text>
+  <text x="612" y="388" fill="#667065" font-family="Arial, sans-serif" font-size="18">inspect deleted / unprocessed items.</text>
+  <text x="892" y="330" fill="#131713" font-family="Arial, sans-serif" font-size="22" font-weight="700">Options</text>
+  <text x="892" y="362" fill="#667065" font-family="Arial, sans-serif" font-size="18">Provider config, auto organize,</text>
+  <text x="892" y="388" fill="#667065" font-family="Arial, sans-serif" font-size="18">whitelist, backup management.</text>
+  <text x="612" y="472" fill="#131713" font-family="Arial, sans-serif" font-size="28" font-weight="700">Built for real bookmark messes</text>
+  <text x="612" y="514" fill="#667065" font-family="Arial, sans-serif" font-size="20">Use your own LLM provider, keep backups local, and avoid turning a messy</text>
+  <text x="612" y="542" fill="#667065" font-family="Arial, sans-serif" font-size="20">bookmark bar into a maze of over-classified folders.</text>
+</svg>

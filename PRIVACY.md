@@ -38,4 +38,6 @@ Smart Bookmark AI only processes data needed to organize bookmarks.
 
 ## Contact
 
-Replace this section with your public support email or support page before publishing.
+For public support, use the GitHub repository issue tracker:
+
+`https://github.com/Ariandel35/smart-bookmark-ai/issues`

@@ -1,11 +1,11 @@
 # Support
 
-If you publish this project on GitHub, the recommended support flow is:
+Project support links:
 
-- Bug reports: GitHub Issues
-- Feature requests: GitHub Issues
+- Bug reports: [GitHub Issues](https://github.com/Ariandel35/smart-bookmark-ai/issues)
+- Feature requests: [GitHub Issues](https://github.com/Ariandel35/smart-bookmark-ai/issues)
 - Security reports: private email listed in `SECURITY.md`
 
 Recommended Chrome Web Store support URL:
 
-`https://github.com/<your-name>/<your-repo>/issues`
+`https://github.com/Ariandel35/smart-bookmark-ai/issues`

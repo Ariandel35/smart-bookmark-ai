@@ -1,14 +1,22 @@
 # Smart Bookmark AI
 
-Smart Bookmark AI is a Chrome extension built on Manifest V3 that helps users reorganize large bookmark collections with LLM-assisted classification.
+[English](README.md) | [简体中文](README.zh-CN.md)
 
-It reads bookmark titles, URLs, and folder paths, checks for clearly dead links, removes obvious duplicates, and rebuilds a cleaner bookmark structure directly at the bookmark bar root.
+![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)
+![Release](https://img.shields.io/badge/Version-1.2.0-1f6d53?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-black?style=flat-square)
 
-## Features
+Smart Bookmark AI is a Chrome extension that helps users clean up large bookmark libraries with LLM-assisted classification.
+
+It creates a local snapshot backup, checks clearly dead links, removes obvious duplicates, and rebuilds a simpler bookmark structure directly at the bookmark bar root.
+
+![Smart Bookmark AI hero](docs/assets/hero.svg)
+
+## Highlights
 
 - Works with OpenAI, DeepSeek, MiniMax, and Ollama
-- Custom Base URL, API Key, model name, and prompt
-- Chunked background processing for large bookmark libraries
+- Custom Base URL, API key, model name, and prompt
+- Chunked background processing for large bookmark collections
 - Dead link detection before AI classification
 - Conservative duplicate cleanup
 - Whitelist domains that should never be reorganized
@@ -16,6 +24,24 @@ It reads bookmark titles, URLs, and folder paths, checks for clearly dead links,
 - Manual backup, restore, and delete
 - Auto organize with Chrome alarms
 - Reviewable "Unprocessed" and delete logs
+
+## Workflow
+
+Smart Bookmark AI is designed for safety first. It does not rewrite the bookmark tree while analysis is still in progress.
+
+![Workflow diagram](docs/assets/workflow.svg)
+
+1. Create a local snapshot backup
+2. Scan links for clearly dead bookmarks
+3. Send bookmark context to the model provider you selected
+4. Build a full plan
+5. Rebuild the final structure at the bookmark root in one pass
+
+## Screens at a Glance
+
+The repository includes a compact visual overview of the popup, settings, and backup workflow for the GitHub landing page.
+
+![Feature overview](docs/assets/pages.svg)
 
 ## Privacy Summary
 
@@ -33,7 +59,7 @@ Full privacy details: [PRIVACY.md](PRIVACY.md)
 - `alarms`: schedule auto organize jobs
 - Optional website access: requested at runtime for model API access and dead link checks
 
-## Project Files
+## Repository Structure
 
 - [manifest.json](manifest.json)
 - [background.js](background.js)
@@ -43,21 +69,28 @@ Full privacy details: [PRIVACY.md](PRIVACY.md)
 - [options.js](options.js)
 - [styles.css](styles.css)
 - [privacy.html](privacy.html)
+- [docs/assets](docs/assets)
 - [webstore](webstore)
 
 ## Local Development
 
 1. Open `chrome://extensions`
 2. Enable Developer mode
-3. Click "Load unpacked"
-4. Select this folder
+3. Click `Load unpacked`
+4. Select this repository root
+
+### Syntax checks
+
+```bash
+node --check background.js
+node --check options.js
+node --check popup.js
+```
 
 ## GitHub and Chrome Web Store
 
-Recommended public links after pushing this repository:
+- Homepage: [github.com/Ariandel35/smart-bookmark-ai](https://github.com/Ariandel35/smart-bookmark-ai)
+- Support: [github.com/Ariandel35/smart-bookmark-ai/issues](https://github.com/Ariandel35/smart-bookmark-ai/issues)
+- Privacy policy: [github.com/Ariandel35/smart-bookmark-ai/blob/main/PRIVACY.md](https://github.com/Ariandel35/smart-bookmark-ai/blob/main/PRIVACY.md)
 
-- Homepage URL: `https://github.com/<your-name>/<your-repo>`
-- Support URL: `https://github.com/<your-name>/<your-repo>/issues`
-- Privacy Policy URL: `https://github.com/<your-name>/<your-repo>/blob/main/PRIVACY.md`
-
-Additional store materials are prepared in [webstore](webstore).
+Store submission materials are prepared in [webstore](webstore).
