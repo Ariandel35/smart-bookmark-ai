@@ -2,61 +2,60 @@
   <rect width="1200" height="740" rx="28" fill="#F4F5F0"/>
   <rect x="36" y="36" width="1128" height="668" rx="26" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
 
-  <text x="74" y="100" fill="#131713" font-family="Arial, sans-serif" font-size="34" font-weight="700">Product overview</text>
-  <text x="74" y="140" fill="#667065" font-family="Arial, sans-serif" font-size="19">Popup, settings, and backup flows shown in one system.</text>
+  <text x="74" y="96" fill="#131713" font-family="Arial, sans-serif" font-size="28" font-weight="700">Product overview</text>
+  <text x="74" y="132" fill="#667065" font-family="Arial, sans-serif" font-size="18">Popup, settings, and backup flows shown in one system.</text>
 
-  <rect x="74" y="188" width="320" height="486" rx="24" fill="#FAFBF7" stroke="#DFE4DB" stroke-width="2"/>
-  <rect x="440" y="188" width="330" height="486" rx="24" fill="#FAFBF7" stroke="#DFE4DB" stroke-width="2"/>
-  <rect x="816" y="188" width="310" height="486" rx="24" fill="#FAFBF7" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="74" y="176" width="320" height="500" rx="24" fill="#FAFBF7" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="440" y="176" width="330" height="500" rx="24" fill="#FAFBF7" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="816" y="176" width="310" height="500" rx="24" fill="#FAFBF7" stroke="#DFE4DB" stroke-width="2"/>
 
-  <text x="108" y="236" fill="#1F6D53" font-family="Arial, sans-serif" font-size="18" font-weight="700">POPUP</text>
-  <text x="474" y="236" fill="#1F6D53" font-family="Arial, sans-serif" font-size="18" font-weight="700">SETTINGS CENTER</text>
-  <text x="850" y="236" fill="#1F6D53" font-family="Arial, sans-serif" font-size="18" font-weight="700">BACKUP MANAGEMENT</text>
+  <text x="108" y="220" fill="#1F6D53" font-family="Arial, sans-serif" font-size="16" font-weight="700">POPUP</text>
+  <text x="474" y="220" fill="#1F6D53" font-family="Arial, sans-serif" font-size="16" font-weight="700">SETTINGS CENTER</text>
+  <text x="850" y="220" fill="#1F6D53" font-family="Arial, sans-serif" font-size="16" font-weight="700">BACKUP MANAGEMENT</text>
 
-  <rect x="108" y="266" width="150" height="44" rx="16" fill="#1F6D53"/>
-  <rect x="272" y="266" width="108" height="44" rx="16" fill="#EBF5F0"/>
-  <text x="146" y="294" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="18" font-weight="700">Organize</text>
-  <text x="305" y="294" fill="#1F6D53" font-family="Arial, sans-serif" font-size="18" font-weight="700">Backup</text>
+  <rect x="108" y="248" width="142" height="40" rx="14" fill="#1F6D53"/>
+  <rect x="264" y="248" width="110" height="40" rx="14" fill="#EBF5F0"/>
+  <text x="147" y="274" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="16" font-weight="700">Organize</text>
+  <text x="296" y="274" fill="#1F6D53" font-family="Arial, sans-serif" font-size="16" font-weight="700">Backup</text>
 
-  <rect x="108" y="338" width="272" height="12" rx="6" fill="#E9EEE6"/>
-  <rect x="108" y="338" width="168" height="12" rx="6" fill="#1F6D53"/>
+  <rect x="108" y="314" width="266" height="10" rx="5" fill="#E9EEE6"/>
+  <rect x="108" y="314" width="154" height="10" rx="5" fill="#1F6D53"/>
 
-  <rect x="108" y="388" width="272" height="100" rx="18" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
-  <rect x="108" y="500" width="272" height="100" rx="18" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
-  <rect x="108" y="612" width="272" height="56" rx="18" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
-  <text x="136" y="430" fill="#131713" font-family="Arial, sans-serif" font-size="22" font-weight="700">Overview</text>
-  <text x="136" y="458" fill="#667065" font-family="Arial, sans-serif" font-size="17">Progress and status.</text>
-  <text x="136" y="480" fill="#667065" font-family="Arial, sans-serif" font-size="17">Task summary.</text>
-  <text x="136" y="542" fill="#131713" font-family="Arial, sans-serif" font-size="22" font-weight="700">Processed</text>
-  <text x="136" y="570" fill="#667065" font-family="Arial, sans-serif" font-size="17">Category totals.</text>
-  <text x="136" y="594" fill="#667065" font-family="Arial, sans-serif" font-size="17">Deletion results.</text>
-  <text x="136" y="646" fill="#131713" font-family="Arial, sans-serif" font-size="22" font-weight="700">Unprocessed</text>
+  <rect x="108" y="362" width="266" height="94" rx="18" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="108" y="472" width="266" height="94" rx="18" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="108" y="582" width="266" height="60" rx="18" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <text x="136" y="400" fill="#131713" font-family="Arial, sans-serif" font-size="19" font-weight="700">Overview</text>
+  <text x="136" y="428" fill="#667065" font-family="Arial, sans-serif" font-size="15">Progress and status.</text>
+  <text x="136" y="450" fill="#667065" font-family="Arial, sans-serif" font-size="15">Task summary.</text>
+  <text x="136" y="510" fill="#131713" font-family="Arial, sans-serif" font-size="19" font-weight="700">Processed</text>
+  <text x="136" y="538" fill="#667065" font-family="Arial, sans-serif" font-size="15">Category totals.</text>
+  <text x="136" y="560" fill="#667065" font-family="Arial, sans-serif" font-size="15">Deletion results.</text>
+  <text x="136" y="620" fill="#131713" font-family="Arial, sans-serif" font-size="19" font-weight="700">Unprocessed</text>
 
-  <rect x="474" y="266" width="262" height="56" rx="16" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
-  <rect x="474" y="340" width="262" height="56" rx="16" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
-  <rect x="474" y="414" width="262" height="126" rx="16" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
-  <rect x="474" y="556" width="122" height="44" rx="14" fill="#EBF5F0"/>
-  <rect x="610" y="556" width="126" height="44" rx="14" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
-  <text x="500" y="300" fill="#131713" font-family="Arial, sans-serif" font-size="18" font-weight="700">Provider / Model</text>
-  <text x="500" y="374" fill="#131713" font-family="Arial, sans-serif" font-size="18" font-weight="700">Base URL / API Key</text>
-  <text x="500" y="450" fill="#131713" font-family="Arial, sans-serif" font-size="18" font-weight="700">Prompt / Batch / Whitelist</text>
-  <text x="500" y="482" fill="#667065" font-family="Arial, sans-serif" font-size="17">Connection, rules,</text>
-  <text x="500" y="508" fill="#667065" font-family="Arial, sans-serif" font-size="17">automation, and</text>
-  <text x="500" y="534" fill="#667065" font-family="Arial, sans-serif" font-size="17">backup recovery.</text>
-  <text x="503" y="584" fill="#1F6D53" font-family="Arial, sans-serif" font-size="18" font-weight="700">Test API</text>
-  <text x="636" y="584" fill="#131713" font-family="Arial, sans-serif" font-size="18" font-weight="700">Permissions</text>
+  <rect x="474" y="248" width="262" height="52" rx="16" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="474" y="318" width="262" height="52" rx="16" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="474" y="388" width="262" height="118" rx="16" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="474" y="528" width="118" height="40" rx="14" fill="#EBF5F0"/>
+  <rect x="606" y="528" width="128" height="40" rx="14" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <text x="500" y="280" fill="#131713" font-family="Arial, sans-serif" font-size="17" font-weight="700">Provider / Model</text>
+  <text x="500" y="350" fill="#131713" font-family="Arial, sans-serif" font-size="17" font-weight="700">Base URL / API Key</text>
+  <text x="500" y="422" fill="#131713" font-family="Arial, sans-serif" font-size="17" font-weight="700">Prompt / Batch / Whitelist</text>
+  <text x="500" y="454" fill="#667065" font-family="Arial, sans-serif" font-size="15">Connection, rules, automation,</text>
+  <text x="500" y="478" fill="#667065" font-family="Arial, sans-serif" font-size="15">and backup recovery.</text>
+  <text x="505" y="553" fill="#1F6D53" font-family="Arial, sans-serif" font-size="16" font-weight="700">Test API</text>
+  <text x="632" y="553" fill="#131713" font-family="Arial, sans-serif" font-size="16" font-weight="700">Permissions</text>
 
-  <rect x="850" y="266" width="242" height="94" rx="18" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
-  <rect x="850" y="378" width="242" height="94" rx="18" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
-  <rect x="850" y="490" width="242" height="94" rx="18" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
-  <rect x="850" y="596" width="172" height="46" rx="16" fill="#1F6D53"/>
-  <text x="878" y="308" fill="#131713" font-family="Arial, sans-serif" font-size="20" font-weight="700">Snapshot list</text>
-  <text x="878" y="338" fill="#667065" font-family="Arial, sans-serif" font-size="17">Keep 10 local backups.</text>
-  <text x="878" y="420" fill="#131713" font-family="Arial, sans-serif" font-size="20" font-weight="700">Restore safely</text>
-  <text x="878" y="450" fill="#667065" font-family="Arial, sans-serif" font-size="17">Recover from a chosen</text>
-  <text x="878" y="476" fill="#667065" font-family="Arial, sans-serif" font-size="17">local snapshot.</text>
-  <text x="878" y="532" fill="#131713" font-family="Arial, sans-serif" font-size="20" font-weight="700">Delete old entries</text>
-  <text x="878" y="562" fill="#667065" font-family="Arial, sans-serif" font-size="17">Clean history without</text>
-  <text x="878" y="588" fill="#667065" font-family="Arial, sans-serif" font-size="17">touching current data.</text>
-  <text x="888" y="625" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="18" font-weight="700">Create backup</text>
+  <rect x="850" y="248" width="242" height="88" rx="18" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="850" y="352" width="242" height="88" rx="18" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="850" y="456" width="242" height="88" rx="18" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="850" y="574" width="168" height="42" rx="14" fill="#1F6D53"/>
+  <text x="878" y="284" fill="#131713" font-family="Arial, sans-serif" font-size="18" font-weight="700">Snapshot list</text>
+  <text x="878" y="312" fill="#667065" font-family="Arial, sans-serif" font-size="15">Keep 10 local backups.</text>
+  <text x="878" y="388" fill="#131713" font-family="Arial, sans-serif" font-size="18" font-weight="700">Restore safely</text>
+  <text x="878" y="416" fill="#667065" font-family="Arial, sans-serif" font-size="15">Recover from a chosen</text>
+  <text x="878" y="438" fill="#667065" font-family="Arial, sans-serif" font-size="15">local snapshot.</text>
+  <text x="878" y="492" fill="#131713" font-family="Arial, sans-serif" font-size="18" font-weight="700">Delete old entries</text>
+  <text x="878" y="520" fill="#667065" font-family="Arial, sans-serif" font-size="15">Clean history without</text>
+  <text x="878" y="542" fill="#667065" font-family="Arial, sans-serif" font-size="15">touching current data.</text>
+  <text x="888" y="601" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="16" font-weight="700">Create backup</text>
 </svg>

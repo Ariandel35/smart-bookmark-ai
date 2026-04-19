@@ -11,7 +11,7 @@ Smart Bookmark AI is a Chrome extension that helps users clean up large bookmark
 It creates a local snapshot backup, checks clearly dead links, removes obvious duplicates, and rebuilds a simpler bookmark structure directly at the bookmark bar root.
 
 <p align="center">
-  <img src="docs/assets/hero.svg" alt="Smart Bookmark AI hero" width="980" />
+  <img src="docs/assets/hero.svg" alt="Smart Bookmark AI hero" width="860" />
 </p>
 
 ## What It Solves
@@ -26,7 +26,7 @@ It creates a local snapshot backup, checks clearly dead links, removes obvious d
 ### Product Overview
 
 <p align="center">
-  <img src="docs/assets/pages.svg" alt="Product overview" width="980" />
+  <img src="docs/assets/pages.svg" alt="Product overview" width="860" />
 </p>
 
 The overview graphic shows how the popup, settings center, and backup management fit together.
@@ -42,7 +42,7 @@ The popup keeps the main actions close to the top: organize bookmarks, create a 
 ### Settings Center
 
 <p align="center">
-  <img src="docs/screenshots/options-organization.png" alt="Settings center" width="980" />
+  <img src="docs/screenshots/options-organization.png" alt="Settings center" width="860" />
 </p>
 
 The settings page uses a left-side navigation layout for connection settings, organization rules, automation, and backup management.
@@ -65,7 +65,7 @@ The settings page uses a left-side navigation layout for connection settings, or
 Smart Bookmark AI is designed for safety first. It does not rewrite the bookmark tree while analysis is still in progress.
 
 <p align="center">
-  <img src="docs/assets/workflow.svg" alt="Workflow diagram" width="980" />
+  <img src="docs/assets/workflow.svg" alt="Workflow diagram" width="860" />
 </p>
 
 1. Create a local snapshot backup

@@ -2,39 +2,39 @@
   <rect width="1200" height="420" rx="28" fill="#FFFFFF"/>
   <rect x="30" y="30" width="1140" height="360" rx="24" fill="#FAFBF7" stroke="#DFE4DB" stroke-width="2"/>
 
-  <rect x="64" y="110" width="196" height="180" rx="20" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
-  <rect x="282" y="110" width="196" height="180" rx="20" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
-  <rect x="500" y="110" width="196" height="180" rx="20" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
-  <rect x="718" y="110" width="196" height="180" rx="20" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
-  <rect x="936" y="110" width="196" height="180" rx="20" fill="#EBF5F0" stroke="#CFE3DA" stroke-width="2"/>
+  <rect x="60" y="116" width="196" height="168" rx="20" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="278" y="116" width="196" height="168" rx="20" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="496" y="116" width="196" height="168" rx="20" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="714" y="116" width="196" height="168" rx="20" fill="#FFFFFF" stroke="#DFE4DB" stroke-width="2"/>
+  <rect x="932" y="116" width="196" height="168" rx="20" fill="#EBF5F0" stroke="#CFE3DA" stroke-width="2"/>
 
-  <text x="92" y="146" fill="#1F6D53" font-family="Arial, sans-serif" font-size="18" font-weight="700">01</text>
-  <text x="92" y="184" fill="#131713" font-family="Arial, sans-serif" font-size="30" font-weight="700">Snapshot</text>
-  <text x="92" y="220" fill="#667065" font-family="Arial, sans-serif" font-size="18">Create a local backup</text>
-  <text x="92" y="248" fill="#667065" font-family="Arial, sans-serif" font-size="18">before touching anything.</text>
+  <text x="88" y="150" fill="#1F6D53" font-family="Arial, sans-serif" font-size="16" font-weight="700">01</text>
+  <text x="88" y="184" fill="#131713" font-family="Arial, sans-serif" font-size="24" font-weight="700">Snapshot</text>
+  <text x="88" y="216" fill="#667065" font-family="Arial, sans-serif" font-size="15">Create a local backup</text>
+  <text x="88" y="240" fill="#667065" font-family="Arial, sans-serif" font-size="15">before touching anything.</text>
 
-  <text x="310" y="146" fill="#1F6D53" font-family="Arial, sans-serif" font-size="18" font-weight="700">02</text>
-  <text x="310" y="184" fill="#131713" font-family="Arial, sans-serif" font-size="30" font-weight="700">Scan</text>
-  <text x="310" y="220" fill="#667065" font-family="Arial, sans-serif" font-size="18">Check clearly dead links</text>
-  <text x="310" y="248" fill="#667065" font-family="Arial, sans-serif" font-size="18">and flag uncertain items.</text>
+  <text x="306" y="150" fill="#1F6D53" font-family="Arial, sans-serif" font-size="16" font-weight="700">02</text>
+  <text x="306" y="184" fill="#131713" font-family="Arial, sans-serif" font-size="24" font-weight="700">Scan</text>
+  <text x="306" y="216" fill="#667065" font-family="Arial, sans-serif" font-size="15">Check clearly dead links</text>
+  <text x="306" y="240" fill="#667065" font-family="Arial, sans-serif" font-size="15">and flag uncertain items.</text>
 
-  <text x="528" y="146" fill="#1F6D53" font-family="Arial, sans-serif" font-size="18" font-weight="700">03</text>
-  <text x="528" y="184" fill="#131713" font-family="Arial, sans-serif" font-size="30" font-weight="700">Classify</text>
-  <text x="528" y="220" fill="#667065" font-family="Arial, sans-serif" font-size="18">Send bookmark context</text>
-  <text x="528" y="248" fill="#667065" font-family="Arial, sans-serif" font-size="18">to your LLM provider.</text>
+  <text x="524" y="150" fill="#1F6D53" font-family="Arial, sans-serif" font-size="16" font-weight="700">03</text>
+  <text x="524" y="184" fill="#131713" font-family="Arial, sans-serif" font-size="24" font-weight="700">Classify</text>
+  <text x="524" y="216" fill="#667065" font-family="Arial, sans-serif" font-size="15">Send bookmark context</text>
+  <text x="524" y="240" fill="#667065" font-family="Arial, sans-serif" font-size="15">to your LLM provider.</text>
 
-  <text x="746" y="146" fill="#1F6D53" font-family="Arial, sans-serif" font-size="18" font-weight="700">04</text>
-  <text x="746" y="184" fill="#131713" font-family="Arial, sans-serif" font-size="30" font-weight="700">Plan</text>
-  <text x="746" y="220" fill="#667065" font-family="Arial, sans-serif" font-size="18">Build one complete</text>
-  <text x="746" y="248" fill="#667065" font-family="Arial, sans-serif" font-size="18">stable folder structure.</text>
+  <text x="742" y="150" fill="#1F6D53" font-family="Arial, sans-serif" font-size="16" font-weight="700">04</text>
+  <text x="742" y="184" fill="#131713" font-family="Arial, sans-serif" font-size="24" font-weight="700">Plan</text>
+  <text x="742" y="216" fill="#667065" font-family="Arial, sans-serif" font-size="15">Build one complete</text>
+  <text x="742" y="240" fill="#667065" font-family="Arial, sans-serif" font-size="15">stable structure.</text>
 
-  <text x="964" y="146" fill="#1F6D53" font-family="Arial, sans-serif" font-size="18" font-weight="700">05</text>
-  <text x="964" y="184" fill="#131713" font-family="Arial, sans-serif" font-size="30" font-weight="700">Rebuild</text>
-  <text x="964" y="220" fill="#4C5A50" font-family="Arial, sans-serif" font-size="18">Rewrite the root</text>
-  <text x="964" y="248" fill="#4C5A50" font-family="Arial, sans-serif" font-size="18">in a single pass.</text>
+  <text x="960" y="150" fill="#1F6D53" font-family="Arial, sans-serif" font-size="16" font-weight="700">05</text>
+  <text x="960" y="184" fill="#131713" font-family="Arial, sans-serif" font-size="24" font-weight="700">Rebuild</text>
+  <text x="960" y="216" fill="#4C5A50" font-family="Arial, sans-serif" font-size="15">Rewrite the root</text>
+  <text x="960" y="240" fill="#4C5A50" font-family="Arial, sans-serif" font-size="15">in a single pass.</text>
 
-  <path d="M260 200H282" stroke="#C2CBC1" stroke-width="4" stroke-linecap="round"/>
-  <path d="M478 200H500" stroke="#C2CBC1" stroke-width="4" stroke-linecap="round"/>
-  <path d="M696 200H718" stroke="#C2CBC1" stroke-width="4" stroke-linecap="round"/>
-  <path d="M914 200H936" stroke="#C2CBC1" stroke-width="4" stroke-linecap="round"/>
+  <path d="M256 198H278" stroke="#C2CBC1" stroke-width="4" stroke-linecap="round"/>
+  <path d="M474 198H496" stroke="#C2CBC1" stroke-width="4" stroke-linecap="round"/>
+  <path d="M692 198H714" stroke="#C2CBC1" stroke-width="4" stroke-linecap="round"/>
+  <path d="M910 198H932" stroke="#C2CBC1" stroke-width="4" stroke-linecap="round"/>
 </svg>
