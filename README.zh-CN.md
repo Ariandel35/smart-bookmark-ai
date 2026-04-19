@@ -10,6 +10,10 @@ Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主
 
 它会先创建本地快照备份，再检测明显失效的链接、清理明显重复的书签，并结合你选择的大语言模型，对剩余书签进行语义分类，最后把整理后的结构直接重建到书签栏根目录。
 
+<p align="center">
+  <img src="docs/assets/hero.svg" alt="Smart Bookmark AI 首页图" width="980" />
+</p>
+
 ## 它解决什么问题
 
 - 书签太多，根本找不到想看的网页
@@ -18,6 +22,14 @@ Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主
 - 不同模型服务商需要灵活配置
 
 ## 界面预览
+
+### 产品概览
+
+<p align="center">
+  <img src="docs/assets/pages.svg" alt="产品概览图" width="980" />
+</p>
+
+这张概览图用于快速说明弹窗、设置中心和备份管理之间的关系。
 
 ### 弹窗首页
 
@@ -52,6 +64,10 @@ Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主
 
 这个扩展强调“先分析、后重建”，不会在分析还没结束时一边跑一边改动你的原始书签结构。
 
+<p align="center">
+  <img src="docs/assets/workflow.svg" alt="工作流程图" width="980" />
+</p>
+
 1. 创建本地快照备份
 2. 扫描明显失效的书签链接
 3. 将书签上下文发送到你自己配置的模型服务商
@@ -84,6 +100,7 @@ Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主
 - [options.js](options.js)
 - [styles.css](styles.css)
 - [privacy.html](privacy.html)
+- [docs/assets](docs/assets)
 - [docs/screenshots](docs/screenshots)
 - [webstore](webstore)
 
