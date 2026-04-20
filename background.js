@@ -1,3 +1,5 @@
+importScripts("i18n.js", "providers.js", "rules.js", "json-utils.js", "cache-utils.js");
+
 const STORAGE_KEYS = {
   config: "smartBookmarkConfig",
   status: "smartBookmarkJobStatus",
@@ -7,20 +9,42 @@ const STORAGE_KEYS = {
   latestBackupFolderId: "smartBookmarkLatestBackupFolderId",
   latestSnapshotBackupFolderId: "smartBookmarkLatestSnapshotBackupFolderId",
   backupRecords: "smartBookmarkBackupRecords",
-  unresolvedFolderId: "smartBookmarkUnresolvedFolderId"
+  unresolvedFolderId: "smartBookmarkUnresolvedFolderId",
+  classificationCache: "smartBookmarkClassificationCache",
+  deadLinkCache: "smartBookmarkDeadLinkCache"
 };
 
 const ALARM_NAME = "smart-bookmark-ai-next-batch";
 const AUTO_ORGANIZE_ALARM_NAME = "smart-bookmark-ai-auto-organize";
 const HOST_ACCESS_ORIGINS = ["https://*/*", "http://*/*"];
+const I18N = globalThis.SmartBookmarkI18n;
+const Providers = globalThis.SmartBookmarkProviders;
+const Rules = globalThis.SmartBookmarkRules;
+const JsonUtils = globalThis.SmartBookmarkJson;
+const CacheUtils = globalThis.SmartBookmarkCache;
+const t = (key, params) => I18N.t(key, params);
+const isZh = I18N.locale === "zh_CN";
+const ux = (zh, en) => (isZh ? zh : en);
 const DEFAULT_BATCH_SIZE = 50;
 const DEFAULT_DEAD_SCAN_BATCH_SIZE = 20;
 const DEFAULT_ROOT_FOLDER = "Smart Bookmark AI";
 const BACKUP_DB_NAME = "smart-bookmark-ai-backups";
 const BACKUP_DB_VERSION = 1;
 const BACKUP_DB_STORE = "snapshots";
-const BACKUP_FOLDER_PREFIX = "书签整理备份";
-const BACKUP_RECORD_PREFIX = "书签快照";
+const BACKUP_FOLDER_PREFIX = I18N.getBackupFolderPrefix();
+const BACKUP_RECORD_PREFIX = I18N.getBackupRecordPrefix();
+const MANUAL_FOLDER_TITLE = I18N.getManualFolderTitle();
+const DUPLICATE_FOLDER_TITLE = ux("重复书签", "Duplicate Bookmarks");
+const MANUAL_FOLDER_ALIASES = [
+  "待手动分类",
+  "待整理",
+  "待处理",
+  "未分类",
+  "未整理",
+  "未处理",
+  "Needs Manual Review",
+  "Manual Review"
+];
 const DEAD_LINK_CHECK_TIMEOUT_MS = 10_000;
 const DEAD_LINK_DELETE_STATUS_CODES = new Set([404, 410, 451]);
 const KEEP_ALIVE_INTERVAL_MS = 25_000;
@@ -28,60 +52,11 @@ const FIRST_RESPONSE_TIMEOUT_MS = 25_000;
 const REQUEST_TIMEOUT_MS = 90_000;
 const NEXT_BATCH_DELAY_MS = 150;
 const MAX_BACKUP_RECORDS = 10;
+const MAX_CLASSIFICATION_SIGNATURES = 6;
+const MAX_CLASSIFICATION_CACHE_ITEMS = 5000;
 
-const LEGACY_DEFAULT_PROMPT = `你是一名资深信息架构师，请根据书签标题、URL 和现有路径，为每条书签分配稳定、可复用、便于长期维护的中文分类。
-
-要求：
-1. 优先使用宽泛且可长期复用的大类，不要给单个链接创建独占文件夹。
-2. folderPath 控制在 1 到 3 层之间，命名简洁清晰。
-3. 同类内容尽量归并，避免只在措辞上略有差异的重复分类。
-4. 如果信息不足以准确判断，请放入“待手动分类”。`;
-
-const DEFAULT_PROMPT = `你是一名极度克制的信息架构师，请整理浏览器书签，但目标不是“分类越细越专业”，而是“普通人以后能更快找到网页”。
-
-强制规则：
-1. 整体目录必须尽量少，一级目录总数以 6 到 8 个为目标，绝对不要超过 9 个。
-2. 每条书签最多只能使用 2 级结构：
-   - 允许：["AI/技术"]、["工具/效率", "浏览器插件"]
-   - 不允许：["技术", "AI", "模型", "推理"] 这种 3 级或 4 级结构
-3. 一级目录必须优先复用下面这些稳定大类，不要自由发明新大类：
-   - AI/技术
-   - 学习/教程
-   - 工具/效率
-   - 产品/设计
-   - 资讯/社区
-   - 购物/服务
-   - 娱乐/内容
-   - 生活/资源
-   - 待手动分类
-4. 只有在确实有必要时才添加二级目录；如果一级目录已经足够清楚，就只保留一级目录。
-5. 宁可合并，不要细分。不要把意思接近的内容拆成多个相似文件夹。
-6. 如果两个书签明显是同一个网页、同一篇内容、同一工具的重复入口，保留信息更完整、标题更清晰的一条，其他标记为重复删除。
-7. 无法确定是否重复时，不要删除，只做分类。
-8. 信息不足时统一放入“待手动分类”。`;
-
-const PROVIDER_DEFAULTS = {
-  openai: {
-    baseUrl: "https://api.openai.com/v1",
-    model: "gpt-4.1-mini",
-    requiresApiKey: true
-  },
-  deepseek: {
-    baseUrl: "https://api.deepseek.com",
-    model: "deepseek-chat",
-    requiresApiKey: true
-  },
-  minimax: {
-    baseUrl: "https://api.minimaxi.com/v1",
-    model: "MiniMax-M2.7",
-    requiresApiKey: true
-  },
-  ollama: {
-    baseUrl: "http://localhost:11434/v1",
-    model: "llama3.2",
-    requiresApiKey: false
-  }
-};
+const LEGACY_DEFAULT_PROMPT = I18N.getLegacyDefaultPrompt();
+const DEFAULT_PROMPT = I18N.getDefaultPrompt();
 
 let currentStatus = buildIdleStatus();
 let batchLock = false;
@@ -145,7 +120,21 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         console.error("Failed to start organize job:", error);
         sendResponse({
           ok: false,
-          error: toUserMessage(error, "启动书签整理任务失败。")
+          error: toUserMessage(error, ux("启动书签整理任务失败。", "Failed to start bookmark organizing."))
+        });
+      }
+      return;
+    }
+
+    if (message?.type === "START_PREVIEW") {
+      try {
+        const result = await startOrganizeJob({ trigger: "manual", mode: "preview" });
+        sendResponse(result);
+      } catch (error) {
+        console.error("Failed to start preview job:", error);
+        sendResponse({
+          ok: false,
+          error: toUserMessage(error, ux("启动整理预览失败。", "Failed to start the preview."))
         });
       }
       return;
@@ -159,7 +148,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         console.error("Failed to create manual backup:", error);
         sendResponse({
           ok: false,
-          error: toUserMessage(error, "创建手动备份失败。")
+          error: toUserMessage(error, ux("创建手动备份失败。", "Failed to create a manual backup."))
         });
       }
       return;
@@ -173,7 +162,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         console.error("Failed to list backup records:", error);
         sendResponse({
           ok: false,
-          error: toUserMessage(error, "读取备份列表失败。")
+          error: toUserMessage(error, ux("读取备份列表失败。", "Failed to load backup records."))
         });
       }
       return;
@@ -187,7 +176,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         console.error("Failed to restore latest backup:", error);
         sendResponse({
           ok: false,
-          error: toUserMessage(error, "恢复最近备份失败。")
+          error: toUserMessage(error, ux("恢复最近备份失败。", "Failed to restore the latest backup."))
         });
       }
       return;
@@ -201,7 +190,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         console.error("Failed to restore backup entry:", error);
         sendResponse({
           ok: false,
-          error: toUserMessage(error, "恢复备份失败。")
+          error: toUserMessage(error, ux("恢复备份失败。", "Failed to restore the backup."))
         });
       }
       return;
@@ -215,7 +204,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         console.error("Failed to delete backup entry:", error);
         sendResponse({
           ok: false,
-          error: toUserMessage(error, "删除备份失败。")
+          error: toUserMessage(error, ux("删除备份失败。", "Failed to delete the backup."))
         });
       }
       return;
@@ -229,7 +218,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         console.error("Failed to resolve unprocessed entry:", error);
         sendResponse({
           ok: false,
-          error: toUserMessage(error, "处理未处理书签失败。")
+          error: toUserMessage(error, ux("处理未处理书签失败。", "Failed to handle the unprocessed bookmark."))
         });
       }
       return;
@@ -243,10 +232,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         console.error("Failed to test API connection:", error);
         sendResponse({
           ok: false,
-          error: error?.userMessage || toUserMessage(error, "API 检测失败。"),
+          error: error?.userMessage || toUserMessage(error, ux("API 检测失败。", "API test failed.")),
           detail:
             error?.userDetail ||
-            "请检查 Base URL、API Key、模型名是否正确，或确认接口当前没有被风控/限流。"
+            ux(
+              "请检查 Base URL、API Key、模型名是否正确，或确认接口当前没有被风控/限流。",
+              "Check whether the Base URL, API key, and model name are correct, and make sure the endpoint is not currently rate-limited or blocked."
+            )
         });
       }
       return;
@@ -260,13 +252,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         console.error("Failed to cancel job:", error);
         sendResponse({
           ok: false,
-          error: toUserMessage(error, "取消任务失败。")
+          error: toUserMessage(error, ux("取消任务失败。", "Failed to cancel the task."))
         });
       }
       return;
     }
 
-    sendResponse({ ok: false, error: "Unsupported message type." });
+    sendResponse({ ok: false, error: ux("不支持的消息类型。", "Unsupported message type.") });
   })();
 
   return true;
@@ -289,7 +281,7 @@ void bootstrapState();
 function buildIdleStatus(overrides = {}) {
   return {
     phase: "idle",
-    message: "准备就绪，等待开始整理。",
+    message: t("progressWaiting"),
     detail: "",
     provider: "",
     model: "",
@@ -297,11 +289,15 @@ function buildIdleStatus(overrides = {}) {
     processed: 0,
     moved: 0,
     deleted: 0,
+    reused: 0,
+    aiClassified: 0,
     batchSize: DEFAULT_BATCH_SIZE,
     warningCount: 0,
     lastWarning: "",
     warnings: [],
     deletedItems: [],
+    previewFolders: [],
+    protectedRootCount: 0,
     currentBatch: 0,
     totalBatches: 0,
     startedAt: "",
@@ -309,6 +305,14 @@ function buildIdleStatus(overrides = {}) {
     updatedAt: new Date().toISOString(),
     ...overrides
   };
+}
+
+function getProviderDefaults(provider) {
+  return Providers.getProvider(provider);
+}
+
+function getProviderLabel(provider) {
+  return getProviderDefaults(provider).label || provider || "";
 }
 
 async function initializeDefaults() {
@@ -376,7 +380,7 @@ async function bootstrapState() {
 }
 
 function buildDefaultConfig(provider = "openai") {
-  const defaults = PROVIDER_DEFAULTS[provider] || PROVIDER_DEFAULTS.openai;
+  const defaults = getProviderDefaults(provider);
 
   return {
     provider,
@@ -387,12 +391,14 @@ function buildDefaultConfig(provider = "openai") {
     autoOrganizeEnabled: false,
     autoOrganizeIntervalHours: 24,
     whitelistDomains: "",
+    protectedRootFolders: "",
+    domainFolderRules: "",
     customPrompt: DEFAULT_PROMPT
   };
 }
 
 function mergeConfig(raw = {}) {
-  const provider = raw.provider && PROVIDER_DEFAULTS[raw.provider] ? raw.provider : "openai";
+  const provider = raw.provider && Providers.hasProvider(raw.provider) ? raw.provider : "openai";
   const defaults = buildDefaultConfig(provider);
   const promptValue =
     typeof raw.customPrompt === "string" && raw.customPrompt.trim()
@@ -409,6 +415,10 @@ function mergeConfig(raw = {}) {
     autoOrganizeIntervalHours: normalizeAutoInterval(raw.autoOrganizeIntervalHours),
     whitelistDomains:
       typeof raw.whitelistDomains === "string" ? raw.whitelistDomains.trim() : "",
+    protectedRootFolders:
+      typeof raw.protectedRootFolders === "string" ? raw.protectedRootFolders.trim() : "",
+    domainFolderRules:
+      typeof raw.domainFolderRules === "string" ? raw.domainFolderRules.trim() : "",
     customPrompt: normalizePromptValue(promptValue)
   };
 }
@@ -458,14 +468,23 @@ async function assertOrganizeHostAccess(trigger = "manual") {
 
   if (trigger === "auto") {
     throw buildUserFacingError(
-      "自动整理缺少网站访问权限，已跳过本次任务。",
-      "请打开扩展设置页，点击“授权网站访问”后再继续使用自动整理。"
+      ux(
+        "自动整理缺少网站访问权限，已跳过本次任务。",
+        "Auto organize skipped because site access has not been granted."
+      ),
+      ux(
+        "请打开扩展设置页，点击“授权网站访问”后再继续使用自动整理。",
+        "Open the settings page and grant site access before using auto organize again."
+      )
     );
   }
 
   throw buildUserFacingError(
-    "缺少网站访问权限，无法开始整理。",
-    "请先在弹窗开始整理时授权网站访问，或去设置页点击“授权网站访问”。"
+    ux("缺少网站访问权限，无法开始整理。", "Cannot start organizing without site access."),
+    ux(
+      "请先在弹窗开始整理时授权网站访问，或去设置页点击“授权网站访问”。",
+      "Grant site access from the popup or from the settings page first."
+    )
   );
 }
 
@@ -475,8 +494,11 @@ async function assertApiOriginAccess(baseUrl) {
   }
 
   throw buildUserFacingError(
-    "缺少 API 访问权限。",
-    "请在设置页检测 API 时授权当前接口域名，或先授权网站访问。"
+    ux("缺少 API 访问权限。", "Missing permission for the API origin."),
+    ux(
+      "请在设置页检测 API 时授权当前接口域名，或先授权网站访问。",
+      "Authorize the current API origin from the settings page, or grant broad site access first."
+    )
   );
 }
 
@@ -502,38 +524,305 @@ async function updateStatus(patch) {
       status: currentStatus
     });
   } catch (error) {
-    // Popup 关闭时发送消息会失败，忽略即可，状态已写入 storage.local。
+    // Ignore popup messaging failures. The latest state is already stored in storage.local.
   }
 
   return currentStatus;
 }
 
-async function startOrganizeJob(runContext = { trigger: "manual" }) {
+function normalizeTopLevelFolderList(rawFolders) {
+  const list = (Array.isArray(rawFolders) ? rawFolders : [])
+    .map((item) => sanitizeFolderName(String(item || "")))
+    .filter(Boolean)
+    .filter((item, index, arr) => arr.indexOf(item) === index)
+    .slice(0, 9);
+
+  if (!list.includes(MANUAL_FOLDER_TITLE)) {
+    list.push(MANUAL_FOLDER_TITLE);
+  }
+
+  return list.slice(0, 9);
+}
+
+function buildTaxonomyPlanningSample(bookmarks, maxItems = 160) {
+  const selected = [];
+  const seenHosts = new Set();
+
+  for (const bookmark of Array.isArray(bookmarks) ? bookmarks : []) {
+    if (selected.length >= maxItems) {
+      break;
+    }
+
+    const host = extractHostname(bookmark.url);
+    if (host && seenHosts.has(host) && selected.length < Math.floor(maxItems * 0.6)) {
+      continue;
+    }
+
+    if (host) {
+      seenHosts.add(host);
+    }
+
+    selected.push({
+      title: bookmark.title || t("untitledBookmark"),
+      url: bookmark.url,
+      currentPath: bookmark.currentPath
+    });
+  }
+
+  return selected;
+}
+
+function buildTaxonomyPlanningMessages(bookmarks, customPrompt) {
+  const sample = buildTaxonomyPlanningSample(bookmarks);
+  const strategyPrompt = (customPrompt || DEFAULT_PROMPT).trim();
+  const fixedFolders = buildTaxonomyFallbackTopFolders();
+
+  return [
+    {
+      role: "system",
+      content: isZh
+        ? "你是一个极度克制的目录规划助手。你只能输出合法 JSON，不能输出解释、Markdown 或额外文字。"
+        : "You are a restrained taxonomy planning assistant. Output valid JSON only, with no explanations, Markdown, or extra text."
+    },
+    {
+      role: "user",
+      content: isZh
+        ? `${strategyPrompt}
+
+请先为整批书签规划一个全局一级目录方案。
+
+输出格式必须是：
+{
+  "topFolders": ["一级目录1", "一级目录2", "..."]
+}
+
+强制规则：
+1. topFolders 只允许 4 到 9 个目录名。
+2. 必须包含“${MANUAL_FOLDER_TITLE}”。
+3. 优先复用稳定大类，不要发明零碎目录。
+4. 这些目录名优先参考：${fixedFolders.join("、")}。
+5. 只输出合法 JSON 对象。
+
+书签样本：
+${JSON.stringify(sample, null, 2)}`
+        : `${strategyPrompt}
+
+Plan a global top-level taxonomy for the whole bookmark set first.
+
+The output format must be:
+{
+  "topFolders": ["Top Folder 1", "Top Folder 2", "..."]
+}
+
+Hard rules:
+1. topFolders must contain 4 to 9 folder names.
+2. It must include "${MANUAL_FOLDER_TITLE}".
+3. Reuse stable broad categories instead of inventing fragmented ones.
+4. Prefer names close to: ${fixedFolders.join(", ")}.
+5. Output valid JSON only.
+
+Bookmark sample:
+${JSON.stringify(sample, null, 2)}`
+    }
+  ];
+}
+
+async function planGlobalTaxonomy(bookmarks, config) {
+  if (!Array.isArray(bookmarks) || !bookmarks.length) {
+    return buildTaxonomyFallbackTopFolders();
+  }
+
+  const messages = buildTaxonomyPlanningMessages(bookmarks, config.customPrompt);
+  const requestSpec = Providers.buildRequest(config, messages, { mode: "organize" });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort("taxonomy-timeout"), 30_000);
+  let response;
+  let rawBody = "";
+
+  try {
+    response = await fetch(requestSpec.endpoint, {
+      method: "POST",
+      headers: requestSpec.headers,
+      body: JSON.stringify(requestSpec.body),
+      signal: controller.signal
+    });
+    rawBody = await response.text();
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (controller.signal.aborted) {
+    throw new Error(
+      ux(
+        "全局目录规划超时，已改用默认稳定大类。",
+        "Global taxonomy planning timed out, so the extension fell back to the default stable folders."
+      )
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      ux(
+        `全局目录规划失败 (${response.status})：${truncate(rawBody, 220)}`,
+        `Global taxonomy planning failed (${response.status}): ${truncate(rawBody, 220)}`
+      )
+    );
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(rawBody);
+  } catch (error) {
+    throw new Error(
+      ux(
+        `全局目录规划返回了非 JSON 响应：${truncate(rawBody, 180)}`,
+        `Global taxonomy planning returned a non-JSON response: ${truncate(rawBody, 180)}`
+      )
+    );
+  }
+
+  const content = Providers.extractText(parsed, config.provider);
+  const payload = JsonUtils.extractJsonObject(content);
+  const topFolders = normalizeTopLevelFolderList(payload.topFolders);
+  return topFolders.length ? topFolders : buildTaxonomyFallbackTopFolders();
+}
+
+function collectProtectedRootFolderIds(bookmarkBarNode, rawProtectedFolders = "") {
+  const protectedFolderNames = Rules.parseProtectedRootFolders(rawProtectedFolders);
+  if (!Array.isArray(bookmarkBarNode?.children) || !protectedFolderNames.length) {
+    return [];
+  }
+
+  const normalizedTargets = new Set(
+    protectedFolderNames.map((name) => Rules.normalizeFolderSegment(name))
+  );
+
+  return bookmarkBarNode.children
+    .filter((node) => !node.url && normalizedTargets.has(Rules.normalizeFolderSegment(node.title)))
+    .map((node) => node.id);
+}
+
+function buildForcedPlans(bookmarks, domainFolderRules = []) {
+  const plans = [];
+  const remaining = [];
+
+  for (const bookmark of Array.isArray(bookmarks) ? bookmarks : []) {
+    const matchedRule = Rules.matchDomainRule(extractHostname(bookmark.url), domainFolderRules);
+    if (!matchedRule) {
+      remaining.push(bookmark);
+      continue;
+    }
+
+    plans.push({
+      id: bookmark.id,
+      action: "keep",
+      folderPath: normalizeFolderPath(matchedRule.folderPath),
+      duplicateOf: ""
+    });
+  }
+
+  return {
+    plans,
+    remaining
+  };
+}
+
+function buildCachedPlans(bookmarks, cacheBucket = {}) {
+  const plans = [];
+  const remaining = [];
+
+  for (const bookmark of Array.isArray(bookmarks) ? bookmarks : []) {
+    const fingerprint = Rules.buildBookmarkFingerprint(bookmark);
+    const cached = fingerprint ? cacheBucket[fingerprint] : null;
+
+    if (!cached?.folderPath?.length) {
+      remaining.push(bookmark);
+      continue;
+    }
+
+    plans.push({
+      id: bookmark.id,
+      action: "keep",
+      folderPath: normalizeFolderPath(cached.folderPath),
+      duplicateOf: ""
+    });
+  }
+
+  return {
+    plans,
+    remaining
+  };
+}
+
+function updateClassificationCacheBucket(cacheBucket, bookmarks, normalizedResults) {
+  const nextBucket = {
+    ...(cacheBucket && typeof cacheBucket === "object" ? cacheBucket : {})
+  };
+  const bookmarkById = new Map((Array.isArray(bookmarks) ? bookmarks : []).map((bookmark) => [bookmark.id, bookmark]));
+
+  for (const result of Array.isArray(normalizedResults) ? normalizedResults : []) {
+    if (result?.action !== "keep") {
+      continue;
+    }
+
+    const bookmark = bookmarkById.get(result.id);
+    if (!bookmark) {
+      continue;
+    }
+
+    const fingerprint = Rules.buildBookmarkFingerprint(bookmark);
+    if (!fingerprint) {
+      continue;
+    }
+
+    nextBucket[fingerprint] = {
+      folderPath: normalizeFolderPath(result.folderPath),
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  return normalizeClassificationCacheBucket(nextBucket);
+}
+
+async function startOrganizeJob(runContext = { trigger: "manual", mode: "organize" }) {
   const stored = await chrome.storage.local.get(STORAGE_KEYS.job);
   const existingJob = stored[STORAGE_KEYS.job];
+  const jobMode = runContext.mode === "preview" ? "preview" : "organize";
 
   if (existingJob?.phase === "running") {
     return {
       ok: false,
-      error: "已经有一个后台整理任务在运行，请先等待完成或取消后再试。"
+      error: ux(
+        "已经有一个后台整理任务在运行，请先等待完成或取消后再试。",
+        "A background organize task is already running. Wait for it to finish or cancel it first."
+      )
     };
   }
 
   const config = await readStoredConfig();
   validateConfig(config);
   await assertOrganizeHostAccess(runContext.trigger);
+  await assertApiOriginAccess(config.baseUrl);
 
   const tree = await chrome.bookmarks.getTree();
   const bookmarkBarNode = findBookmarksBarNode(tree);
   const unresolvedFolderId = await findExistingUnresolvedFolderId(bookmarkBarNode.id);
+  const protectedRootFolderIds = collectProtectedRootFolderIds(
+    bookmarkBarNode,
+    config.protectedRootFolders
+  );
   const whitelistMatcher = buildWhitelistMatcher(config.whitelistDomains);
+  const skipNodeIds = new Set([
+    unresolvedFolderId,
+    ...protectedRootFolderIds
+  ].filter(Boolean));
   const collectedBookmarks = collectBookmarks(tree, {
-    skipNodeIds: new Set([unresolvedFolderId].filter(Boolean))
+    skipNodeIds
   });
   const preservedBookmarks = collectedBookmarks
     .filter((bookmark) => whitelistMatcher(bookmark.url))
     .map((bookmark) => ({
-      title: bookmark.title || "(无标题书签)",
+      title: bookmark.title || t("untitledBookmark"),
       url: bookmark.url,
       folderPath: normalizePreservedFolderPath(bookmark.currentPath)
     }));
@@ -543,10 +832,11 @@ async function startOrganizeJob(runContext = { trigger: "manual" }) {
     await chrome.storage.local.remove(STORAGE_KEYS.job);
     await updateStatus(
       buildIdleStatus({
-        phase: "completed",
+        phase: jobMode === "preview" ? "preview" : "completed",
         message: preservedBookmarks.length
-          ? "当前书签都在白名单范围内，本次未改动。"
-          : "没有发现需要整理的书签。",
+          ? ux("当前书签都在白名单范围内，本次未改动。", "All current bookmarks are covered by the whitelist. Nothing changed.")
+          : ux("没有发现需要整理的书签。", "No bookmarks need to be organized."),
+        protectedRootCount: protectedRootFolderIds.length,
         finishedAt: new Date().toISOString()
       })
     );
@@ -554,17 +844,45 @@ async function startOrganizeJob(runContext = { trigger: "manual" }) {
     return { ok: true };
   }
 
-  const snapshotInfo = await createCurrentSnapshotBackup(
-    bookmarkBarNode,
-    runContext.trigger === "auto" ? "auto" : "manual"
-  );
+  const snapshotInfo =
+    jobMode === "organize"
+      ? await createCurrentSnapshotBackup(
+          bookmarkBarNode,
+          runContext.trigger === "auto" ? "auto" : "manual"
+        )
+      : {
+          created: false,
+          folderId: "",
+          folderTitle: "",
+          detail: ux("本次仅生成预览，不会修改现有书签。", "This run generates a preview only and will not change current bookmarks.")
+        };
 
-  if (collectedBookmarks.length && !snapshotInfo.created) {
+  if (jobMode === "organize" && collectedBookmarks.length && !snapshotInfo.created) {
     throw buildUserFacingError(
-      "整理前备份失败，任务已停止。",
-      "为避免直接改乱现有书签，扩展要求先成功创建快照备份后才会继续整理。请先检查书签栏权限或手动点击一次“手动备份”。"
+      ux("整理前备份失败，任务已停止。", "Backup before organize failed, so the task was stopped."),
+      ux(
+        "为避免直接改乱现有书签，扩展要求先成功创建快照备份后才会继续整理。请先检查书签栏权限或手动点击一次“手动备份”。",
+        "To avoid corrupting your current bookmarks, the extension requires a successful snapshot backup before continuing. Check bookmark permissions or create a manual backup first."
+      )
     );
   }
+
+  let taxonomyTopFolders = buildTaxonomyFallbackTopFolders();
+  let taxonomyPlanningNote = "";
+  try {
+    taxonomyTopFolders = await withKeepAlive(() => planGlobalTaxonomy(bookmarks, config));
+  } catch (error) {
+    console.warn("Failed to plan global taxonomy, falling back to defaults:", error);
+    taxonomyPlanningNote = ux(
+      "全局目录规划失败，已回退到默认稳定大类。",
+      "Global taxonomy planning failed, so the extension fell back to the default stable folders."
+    );
+  }
+  const classificationSignature = Rules.buildClassificationSignature(config, MANUAL_FOLDER_TITLE);
+  const domainFolderRules = Rules.parseDomainFolderRules(
+    config.domainFolderRules,
+    MANUAL_FOLDER_TITLE
+  );
 
   const totalBatches = Math.ceil(bookmarks.length / config.batchSize);
   const runId = crypto.randomUUID();
@@ -573,6 +891,7 @@ async function startOrganizeJob(runContext = { trigger: "manual" }) {
   const job = {
     runId,
     jobType: "organize",
+    jobMode,
     phase: "running",
     cancelRequested: false,
     trigger: runContext.trigger || "manual",
@@ -585,16 +904,23 @@ async function startOrganizeJob(runContext = { trigger: "manual" }) {
     processed: 0,
     moved: 0,
     deleted: 0,
+    reused: 0,
+    aiClassified: 0,
     warningCount: 0,
     lastWarning: "",
     warnings: [],
     deletedItems: [],
+    previewFolders: [],
     bookmarks,
     preservedBookmarks,
     plannedBookmarks: [],
     pendingWarnings: [],
     exactDuplicateSeenByUrl: {},
     taxonomyLocks: {},
+    taxonomyTopFolders,
+    classificationSignature,
+    domainFolderRules,
+    protectedRootFolderIds,
     managedFolderIds: [],
     snapshotBackupId: snapshotInfo.folderId || "",
     snapshotBackupTitle: snapshotInfo.folderTitle || "",
@@ -609,22 +935,32 @@ async function startOrganizeJob(runContext = { trigger: "manual" }) {
   await updateStatus(
     buildIdleStatus({
       phase: "running",
-      message: `已创建整理队列，共 ${bookmarks.length} 条书签，准备开始第 1 批。`,
-      provider: config.provider,
+      message: ux(
+        `${jobMode === "preview" ? "已创建整理预览队列" : "已创建整理队列"}，共 ${bookmarks.length} 条书签，准备开始第 1 批。`,
+        `${jobMode === "preview" ? "Created a preview queue" : "Created an organize queue"} for ${bookmarks.length} bookmarks. Preparing batch 1.`
+      ),
+      provider: getProviderLabel(config.provider),
       model: config.model,
       total: bookmarks.length,
       processed: 0,
       moved: 0,
       deleted: 0,
+      reused: 0,
+      aiClassified: 0,
       batchSize: config.batchSize,
       warningCount: 0,
       warnings: [],
       deletedItems: [],
+      previewFolders: [],
+      protectedRootCount: protectedRootFolderIds.length,
       currentBatch: 0,
       totalBatches,
       startedAt,
       finishedAt: "",
-      detail: `${runContext.trigger === "auto" ? "这是一次自动静默整理。" : "这是一次手动整理。"} 批大小 ${config.batchSize}。${snapshotInfo.detail} 本次会先生成完整整理方案，最后再一次性清空旧结构并重建新结构，处理中不会边跑边改动现有书签。`.trim()
+      detail: ux(
+        `${runContext.trigger === "auto" ? "这是一次自动静默整理。" : jobMode === "preview" ? "这是一次手动预览。" : "这是一次手动整理。"} 批大小 ${config.batchSize}。${snapshotInfo.detail} 先生成全局目录方案，再按批分类。${taxonomyPlanningNote ? `${taxonomyPlanningNote} ` : ""}${jobMode === "preview" ? "预览不会落地改动。" : "最终会一次性重建书签结构，中途不会边跑边改。"} 受保护根目录 ${protectedRootFolderIds.length} 个，目录规则 ${domainFolderRules.length} 条。`.trim(),
+        `${runContext.trigger === "auto" ? "This is an automatic silent run." : jobMode === "preview" ? "This is a manual preview." : "This is a manual organize run."} Batch size ${config.batchSize}. ${snapshotInfo.detail} The extension plans a global taxonomy first, then classifies in batches. ${taxonomyPlanningNote ? `${taxonomyPlanningNote} ` : ""}${jobMode === "preview" ? "The preview does not apply any changes." : "The final rebuild happens in one pass instead of mutating bookmarks mid-run."} Protected root folders: ${protectedRootFolderIds.length}. Domain rules: ${domainFolderRules.length}.`.trim()
+      )
     })
   );
 
@@ -640,7 +976,7 @@ async function requestCancellation() {
     await updateStatus(
       buildIdleStatus({
         phase: "cancelled",
-        message: "当前没有正在执行的整理任务。",
+        message: ux("当前没有正在执行的整理任务。", "There is no running organize task right now."),
         finishedAt: new Date().toISOString()
       })
     );
@@ -662,8 +998,11 @@ async function requestCancellation() {
 
   await updateStatus({
     phase: "running",
-    message: "已收到取消请求，当前批次结束后会停止任务。",
-    detail: "如果模型请求仍在进行，会尝试立即中止；已经完成的移动和删除不会回滚。"
+    message: ux("已收到取消请求，当前批次结束后会停止任务。", "Cancellation requested. The task will stop after the current batch."),
+    detail: ux(
+      "如果模型请求仍在进行，会尝试立即中止；已经完成的移动和删除不会回滚。",
+      "If a model request is still running, the extension will try to abort it immediately. Finished moves and deletions will not be rolled back."
+    )
   });
 }
 
@@ -673,7 +1012,10 @@ async function createManualBackup() {
   if (stored[STORAGE_KEYS.job]?.phase === "running") {
     return {
       ok: false,
-      error: "已经有一个后台任务在运行，请先等待完成或取消后再试。"
+      error: ux(
+        "已经有一个后台任务在运行，请先等待完成或取消后再试。",
+        "A background task is already running. Wait for it to finish or cancel it first."
+      )
     };
   }
 
@@ -684,7 +1026,9 @@ async function createManualBackup() {
   await updateStatus(
     buildIdleStatus({
       phase: snapshotInfo.created ? "completed" : "idle",
-      message: snapshotInfo.created ? "已完成手动备份。" : "当前没有可备份的书签。",
+      message: snapshotInfo.created
+        ? ux("已完成手动备份。", "Manual backup completed.")
+        : ux("当前没有可备份的书签。", "There are no bookmarks to back up."),
       detail: snapshotInfo.detail,
       finishedAt: new Date().toISOString()
     })
@@ -693,7 +1037,9 @@ async function createManualBackup() {
   return {
     ok: true,
     created: snapshotInfo.created,
-    message: snapshotInfo.created ? "已完成手动备份。" : "当前没有可备份的书签。"
+    message: snapshotInfo.created
+      ? ux("已完成手动备份。", "Manual backup completed.")
+      : ux("当前没有可备份的书签。", "There are no bookmarks to back up.")
   };
 }
 
@@ -706,7 +1052,7 @@ async function restoreLatestBackup() {
   if (!records.length) {
     return {
       ok: false,
-      error: "当前没有可恢复的备份。"
+      error: ux("当前没有可恢复的备份。", "There is no backup available to restore.")
     };
   }
 
@@ -719,14 +1065,17 @@ async function restoreBackupEntry(backupId) {
   if (stored[STORAGE_KEYS.job]?.phase === "running") {
     return {
       ok: false,
-      error: "已经有一个后台任务在运行，请先等待完成或取消后再试。"
+      error: ux(
+        "已经有一个后台任务在运行，请先等待完成或取消后再试。",
+        "A background task is already running. Wait for it to finish or cancel it first."
+      )
     };
   }
 
   if (!backupId) {
     return {
       ok: false,
-      error: "备份参数无效。"
+      error: ux("备份参数无效。", "Invalid backup parameters.")
     };
   }
 
@@ -736,7 +1085,7 @@ async function restoreBackupEntry(backupId) {
     await removeBackupRecord(backupId);
     return {
       ok: false,
-      error: "最近备份已不存在，请先重新创建备份。"
+      error: ux("最近备份已不存在，请先重新创建备份。", "The selected backup no longer exists. Create a new backup first.")
     };
   }
 
@@ -769,15 +1118,18 @@ async function restoreBackupEntry(backupId) {
   await updateStatus(
     buildIdleStatus({
       phase: "completed",
-      message: "已恢复最近备份。",
-      detail: `已从“${restoredRecord?.title || "最近备份"}”恢复 ${restoredTopLevelNodes.length} 个顶层项目。`,
+      message: ux("已恢复最近备份。", "Latest backup restored."),
+      detail: ux(
+        `已从“${restoredRecord?.title || "最近备份"}”恢复 ${restoredTopLevelNodes.length} 个顶层项目。`,
+        `Restored ${restoredTopLevelNodes.length} top-level items from "${restoredRecord?.title || "latest backup"}".`
+      ),
       finishedAt: new Date().toISOString()
     })
   );
 
   return {
     ok: true,
-    message: "已恢复备份。"
+    message: ux("已恢复备份。", "Backup restored.")
   };
 }
 
@@ -786,14 +1138,17 @@ async function deleteBackupEntry(backupId) {
   if (stored[STORAGE_KEYS.job]?.phase === "running") {
     return {
       ok: false,
-      error: "已经有一个后台任务在运行，请先等待完成或取消后再试。"
+      error: ux(
+        "已经有一个后台任务在运行，请先等待完成或取消后再试。",
+        "A background task is already running. Wait for it to finish or cancel it first."
+      )
     };
   }
 
   if (!backupId) {
     return {
       ok: false,
-      error: "备份参数无效。"
+      error: ux("备份参数无效。", "Invalid backup parameters.")
     };
   }
 
@@ -802,7 +1157,7 @@ async function deleteBackupEntry(backupId) {
 
   return {
     ok: true,
-    message: "已删除备份。"
+    message: ux("已删除备份。", "Backup deleted.")
   };
 }
 
@@ -810,7 +1165,7 @@ async function resolveUnprocessedEntry(entryId, action) {
   if (!entryId || !["keep", "delete"].includes(action)) {
     return {
       ok: false,
-      error: "未处理项参数无效。"
+      error: ux("未处理项参数无效。", "Invalid unprocessed item parameters.")
     };
   }
 
@@ -818,7 +1173,10 @@ async function resolveUnprocessedEntry(entryId, action) {
   if (stored[STORAGE_KEYS.job]?.phase === "running") {
     return {
       ok: false,
-      error: "后台任务正在运行，请等待当前批次结束后再处理未处理项。"
+      error: ux(
+        "后台任务正在运行，请等待当前批次结束后再处理未处理项。",
+        "A background task is running. Wait for the current batch to finish before handling unprocessed items."
+      )
     };
   }
 
@@ -828,7 +1186,10 @@ async function resolveUnprocessedEntry(entryId, action) {
   if (!targetEntry) {
     return {
       ok: false,
-      error: "这条未处理记录已经不存在，请刷新后重试。"
+      error: ux(
+        "这条未处理记录已经不存在，请刷新后重试。",
+        "This unprocessed record no longer exists. Refresh and try again."
+      )
     };
   }
 
@@ -848,23 +1209,32 @@ async function resolveUnprocessedEntry(entryId, action) {
             title: targetEntry.title,
             url: targetEntry.url
           },
-          "用户已在未处理列表中手动删除这条书签。",
-          "如果之后仍然需要，可以手动重新添加。"
+          ux("用户已在未处理列表中手动删除这条书签。", "This bookmark was manually deleted from the unprocessed list."),
+          ux("如果之后仍然需要，可以手动重新添加。", "If you still need it later, you can add it again manually.")
         )
       ]);
-      message = "已删除未处理书签。";
-      detail = `书签《${targetEntry.title || targetEntry.url}》已删除。`;
+      message = ux("已删除未处理书签。", "Unprocessed bookmark deleted.");
+      detail = ux(
+        `书签《${targetEntry.title || targetEntry.url}》已删除。`,
+        `Deleted "${targetEntry.title || targetEntry.url}".`
+      );
     } else {
       const tree = await chrome.bookmarks.getTree();
       const bookmarkBarNode = findBookmarksBarNode(tree);
       const unresolvedFolderId = await ensureUnresolvedFolder(bookmarkBarNode.id);
       await chrome.bookmarks.move(targetEntry.bookmarkId, { parentId: unresolvedFolderId });
-      message = "已保留书签。";
-      detail = `书签《${targetEntry.title || targetEntry.url}》已移动到根目录的“待手动分类”文件夹。`;
+      message = ux("已保留书签。", "Bookmark kept.");
+      detail = ux(
+        `书签《${targetEntry.title || targetEntry.url}》已移动到根目录的“${MANUAL_FOLDER_TITLE}”文件夹。`,
+        `"${targetEntry.title || targetEntry.url}" was moved into "${MANUAL_FOLDER_TITLE}" at the root level.`
+      );
     }
   } else {
-    message = "已更新未处理列表。";
-    detail = "这条记录没有可操作的书签实体，因此只从列表中移除了。";
+    message = ux("已更新未处理列表。", "Unprocessed list updated.");
+    detail = ux(
+      "这条记录没有可操作的书签实体，因此只从列表中移除了。",
+      "This record no longer has a bookmark node to act on, so it was only removed from the list."
+    );
   }
 
   await updateStatus({
@@ -905,7 +1275,11 @@ async function processNextBatch() {
     }
 
     if (job.cancelRequested) {
-      await finishJob("cancelled", "任务已取消，未继续处理后续批次。", job);
+      await finishJob(
+        "cancelled",
+        ux("任务已取消，未继续处理后续批次。", "Task cancelled. Remaining batches were not processed."),
+        job
+      );
       return;
     }
 
@@ -917,22 +1291,37 @@ async function processNextBatch() {
     const batch = job.bookmarks.slice(job.processed, job.processed + job.batchSize);
 
     if (!batch.length) {
-      await finishJob("completed", `书签整理完成，已处理 ${job.processed} / ${job.total} 条。`, job);
+      await finishJob(
+        "completed",
+        ux(
+          `书签整理完成，已处理 ${job.processed} / ${job.total} 条。`,
+          `Bookmark organizing finished. Processed ${job.processed} / ${job.total}.`
+        ),
+        job
+      );
       return;
     }
 
     const currentBatch = Math.floor(job.processed / job.batchSize) + 1;
 
     await updateBatchStatus(job, currentBatch, {
-      message: `正在检测第 ${currentBatch}/${job.totalBatches} 批链接状态 (${job.processed}/${job.total})。`,
-      detail: `本批 ${batch.length} 条。会先识别确认失效的链接，把状态不明确的链接留到“待手动分类”，再对剩余书签做 AI 分类。提交前不会改动现有书签树。`
+      message: ux(
+        `正在检测第 ${currentBatch}/${job.totalBatches} 批链接状态 (${job.processed}/${job.total})。`,
+        `Checking link health for batch ${currentBatch}/${job.totalBatches} (${job.processed}/${job.total}).`
+      ),
+      detail: ux(
+        `本批 ${batch.length} 条。会先识别确认失效的链接，把状态不明确的链接留到“${MANUAL_FOLDER_TITLE}”，再对剩余书签做 AI 分类。提交前不会改动现有书签树。`,
+        `${batch.length} items in this batch. Confirmed dead links are removed first, uncertain links are kept in "${MANUAL_FOLDER_TITLE}", and only the remaining bookmarks are sent to AI. The bookmark tree is not changed before the final rebuild.`
+      )
     });
 
+    const deadLinkCache = await loadDeadLinkCache();
     const scanResult = await scanDeadBookmarksBatch(
       batch,
       (stage) => updateBatchStatus(job, currentBatch, stage),
-      { mutate: false }
+      { mutate: false, cache: deadLinkCache }
     );
+    await saveDeadLinkCache(scanResult.nextDeadLinkCache || deadLinkCache);
     const duplicateState = markHealthyExactDuplicates(
       scanResult.healthyBookmarks,
       job.exactDuplicateSeenByUrl
@@ -940,7 +1329,14 @@ async function processNextBatch() {
     const aliveBatch = duplicateState.bookmarks;
     job.exactDuplicateSeenByUrl = duplicateState.seenByUrl;
     const exactDuplicatePlans = buildExactDuplicatePlans(aliveBatch);
-    const bookmarksToClassify = aliveBatch.filter((bookmark) => !bookmark.exactDuplicateOf);
+    const nonDuplicateBookmarks = aliveBatch.filter((bookmark) => !bookmark.exactDuplicateOf);
+    const forcedPlans = buildForcedPlans(nonDuplicateBookmarks, job.domainFolderRules);
+    const classificationCacheStore = await loadClassificationCacheStore();
+    const classificationCacheBucket = normalizeClassificationCacheBucket(
+      classificationCacheStore[job.classificationSignature]?.items || {}
+    );
+    const cachedPlans = buildCachedPlans(forcedPlans.remaining, classificationCacheBucket);
+    const bookmarksToClassify = cachedPlans.remaining;
     const classifications = bookmarksToClassify.length
       ? await withKeepAlive(
           () =>
@@ -948,13 +1344,19 @@ async function processNextBatch() {
               bookmarksToClassify,
               job.config,
               (stage) => updateBatchStatus(job, currentBatch, stage),
-              job.taxonomyLocks
+              job.taxonomyLocks,
+              job.taxonomyTopFolders
             ),
           () =>
             updateBatchStatus(job, currentBatch, {
-              message: `第 ${currentBatch}/${job.totalBatches} 批正在等待模型返回。`,
-              detail:
-                "已启用后台 keep-alive 心跳。若模型 25 秒内没有返回响应，会主动超时并提示减小批大小或检查网络。"
+              message: ux(
+                `第 ${currentBatch}/${job.totalBatches} 批正在等待模型返回。`,
+                `Waiting for the model response for batch ${currentBatch}/${job.totalBatches}.`
+              ),
+              detail: ux(
+                "已启用后台 keep-alive 心跳。若模型 25 秒内没有返回响应，会主动超时并提示减小批大小或检查网络。",
+                "Keep-alive is active. If the model does not return a first response within 25 seconds, the task will time out and suggest reducing batch size or checking the network."
+              )
             })
         )
       : [];
@@ -963,22 +1365,39 @@ async function processNextBatch() {
       job.taxonomyLocks
     );
     job.taxonomyLocks = normalized.taxonomyLocks;
+    const nextClassificationCacheBucket = updateClassificationCacheBucket(
+      classificationCacheBucket,
+      bookmarksToClassify,
+      normalized.results
+    );
+    await saveClassificationCacheBucket(job.classificationSignature, nextClassificationCacheBucket);
 
     await updateBatchStatus(job, currentBatch, {
-      message: `第 ${currentBatch}/${job.totalBatches} 批模型结果已返回，正在写入最终整理方案。`,
+      message: ux(
+        `第 ${currentBatch}/${job.totalBatches} 批模型结果已返回，正在写入最终整理方案。`,
+        `Model output for batch ${currentBatch}/${job.totalBatches} received. Writing it into the final organize plan.`
+      ),
       detail: aliveBatch.length
-        ? "正在把本批结果加入最终重建方案，原有书签结构暂时不会变化。"
-        : "本批没有可进入 AI 分类的有效书签，正在记录删除和未处理结果。"
+        ? ux(
+            "正在把本批结果加入最终重建方案，原有书签结构暂时不会变化。",
+            "This batch is being added to the final rebuild plan. The current bookmark structure is still unchanged."
+          )
+        : ux(
+            "本批没有可进入 AI 分类的有效书签，正在记录删除和未处理结果。",
+            "This batch has no valid bookmarks left for AI classification. Only deletions and unresolved items are being recorded."
+          )
     });
 
     const planResult = buildBatchClassificationPlan(
       aliveBatch,
-      [...normalized.results, ...exactDuplicatePlans]
+      [...forcedPlans.plans, ...cachedPlans.plans, ...normalized.results, ...exactDuplicatePlans]
     );
 
     job.processed += batch.length;
     job.moved += planResult.keepCount;
     job.deleted += scanResult.deletedCount + planResult.deletedCount;
+    job.reused += cachedPlans.plans.length;
+    job.aiClassified += normalized.results.length;
     job.warningCount += scanResult.warningCount + planResult.warningCount;
     job.lastWarning = planResult.lastWarning || scanResult.lastWarning || job.lastWarning || "";
     job.warnings = appendLimitedEntries(job.warnings, [
@@ -997,21 +1416,61 @@ async function processNextBatch() {
     });
 
     await updateBatchStatus(job, currentBatch, {
-      message: `第 ${currentBatch}/${job.totalBatches} 批完成，累计已处理 ${job.processed}/${job.total} 条。`,
-      detail: `本批已写入 ${planResult.keepCount} 条整理结果，标记删除 ${scanResult.deletedCount + planResult.deletedCount} 条，未处理 ${scanResult.warningCount + planResult.warningCount} 条。旧书签结构尚未改动。`,
+      message: ux(
+        `第 ${currentBatch}/${job.totalBatches} 批完成，累计已处理 ${job.processed}/${job.total} 条。`,
+        `Batch ${currentBatch}/${job.totalBatches} finished. Processed ${job.processed}/${job.total} so far.`
+      ),
+      detail: ux(
+        `本批已写入 ${planResult.keepCount} 条整理结果，其中缓存复用 ${cachedPlans.plans.length} 条、规则命中 ${forcedPlans.plans.length} 条、AI 新分类 ${normalized.results.length} 条；标记删除 ${scanResult.deletedCount + planResult.deletedCount} 条，未处理 ${scanResult.warningCount + planResult.warningCount} 条。旧书签结构尚未改动。`,
+        `This batch added ${planResult.keepCount} organize results, including ${cachedPlans.plans.length} reused from cache, ${forcedPlans.plans.length} matched by rules, and ${normalized.results.length} newly classified by AI. It also marked ${scanResult.deletedCount + planResult.deletedCount} deletions and left ${scanResult.warningCount + planResult.warningCount} unresolved items. The original bookmark tree is still unchanged.`
+      ),
       warnings: job.warnings,
       deletedItems: job.deletedItems
     });
 
     if (job.cancelRequested) {
-      await finishJob("cancelled", "任务已取消，当前批次的结果已保存。", job);
+      await finishJob(
+        "cancelled",
+        ux("任务已取消，当前批次的结果已保存。", "Task cancelled. The current batch result has been preserved."),
+        job
+      );
       return;
     }
 
     if (job.processed >= job.total) {
+      if (job.jobMode === "preview") {
+        const previewFolders = buildPreviewFolderSummary(
+          [...(job.preservedBookmarks || []), ...(job.plannedBookmarks || [])],
+          job.pendingWarnings
+        );
+        job.previewFolders = previewFolders;
+        await finishJob(
+          "preview",
+          ux(
+            `整理预览已生成，共分析 ${job.total} 条书签。`,
+            `Preview is ready. Analyzed ${job.total} bookmarks.`
+          ),
+          job,
+          {
+            detail: ux(
+              `本次预览生成了全局目录方案。预计归类 ${job.moved} 条，复用缓存 ${job.reused} 条，AI 新分类 ${job.aiClassified} 条，删除 ${job.deleted} 条，${MANUAL_FOLDER_TITLE} ${job.pendingWarnings.length} 条。确认无误后可以继续点击“整理书签”正式应用。`,
+              `This preview generated a global taxonomy plan. It would categorize ${job.moved} bookmarks, reuse ${job.reused} cached results, classify ${job.aiClassified} new bookmarks with AI, delete ${job.deleted}, and leave ${job.pendingWarnings.length} items in "${MANUAL_FOLDER_TITLE}". If it looks good, click Organize to apply it.`
+            ),
+            previewFolders
+          }
+        );
+        return;
+      }
+
       await updateBatchStatus(job, currentBatch, {
-        message: "全部批次已分析完成，正在清空旧结构并重建新结构。",
-        detail: "接下来会删除当前书签栏中的旧书签结构，并根据完整方案一次性创建新的分类目录。备份已经提前完成。"
+        message: ux(
+          "全部批次已分析完成，正在清空旧结构并重建新结构。",
+          "All batches are analyzed. Clearing the old structure and rebuilding the new one."
+        ),
+        detail: ux(
+          "接下来会删除当前书签栏中的旧书签结构，并根据完整方案一次性创建新的分类目录。备份已经提前完成。",
+          "Next, the old bookmark bar structure will be removed and the final folder plan will be rebuilt in one pass. A backup has already been created."
+        )
       });
 
       const rebuildResult = await rebuildOrganizedBookmarks(job);
@@ -1022,10 +1481,16 @@ async function processNextBatch() {
 
       await finishJob(
         "completed",
-        `书签整理完成，已重建 ${rebuildResult.createdCount} 条书签，并删除 ${job.deleted} 条失效或重复书签。`,
+        ux(
+          `书签整理完成，已重建 ${rebuildResult.createdCount} 条书签，并删除 ${job.deleted} 条失效或重复书签。`,
+          `Bookmark organizing completed. Rebuilt ${rebuildResult.createdCount} bookmarks and removed ${job.deleted} dead or duplicate entries.`
+        ),
         job,
         {
-          detail: `本次先生成完整方案，再整体重建书签结构。AI 已归类 ${job.moved} 条，白名单保留 ${rebuildResult.preservedCount} 条，待手动分类 ${rebuildResult.warningEntries.length} 条。`
+          detail: ux(
+            `本次先生成完整方案，再整体重建书签结构。共归类 ${job.moved} 条，其中缓存复用 ${job.reused} 条、AI 新分类 ${job.aiClassified} 条；白名单保留 ${rebuildResult.preservedCount} 条，受保护根目录保留 ${job.protectedRootFolderIds.length} 个，${MANUAL_FOLDER_TITLE} ${rebuildResult.warningEntries.length} 条。`,
+            `This run generated a full plan first and rebuilt the structure afterward. It categorized ${job.moved} bookmarks in total, including ${job.reused} reused from cache and ${job.aiClassified} newly classified by AI. It preserved ${rebuildResult.preservedCount} whitelisted bookmarks, kept ${job.protectedRootFolderIds.length} protected root folders untouched, and left ${rebuildResult.warningEntries.length} items in "${MANUAL_FOLDER_TITLE}".`
+          )
         }
       );
       return;
@@ -1038,8 +1503,11 @@ async function processNextBatch() {
     const job = stored[STORAGE_KEYS.job];
 
     if (isAbortError(error)) {
-      await finishJob("cancelled", "任务已取消，后台请求已中止。", job, {
-        detail: "如果你是主动取消，这属于正常停止；如果不是主动取消，请检查网络、模型响应速度或批大小设置。"
+      await finishJob("cancelled", ux("任务已取消，后台请求已中止。", "Task cancelled and the background request was aborted."), job, {
+        detail: ux(
+          "如果你是主动取消，这属于正常停止；如果不是主动取消，请检查网络、模型响应速度或批大小设置。",
+          "If you cancelled it yourself, this is expected. Otherwise, check the network, model latency, or batch size."
+        )
       });
       return;
     }
@@ -1048,13 +1516,25 @@ async function processNextBatch() {
       phase: "error",
       message:
         error?.userMessage ||
-        toUserMessage(error, "整理过程中出错，请检查 API 配置、网络连接或模型返回的 JSON 格式。"),
+        toUserMessage(
+          error,
+          ux(
+            "整理过程中出错，请检查 API 配置、网络连接或模型返回的 JSON 格式。",
+            "An error occurred while organizing bookmarks. Check the API config, network, or model JSON output."
+          )
+        ),
       detail:
         error?.userDetail ||
         [
-          "任务已停止。建议先查看扩展的 Service Worker 控制台日志，再检查 Base URL、API Key、模型名和批大小设置。",
+          ux(
+            "任务已停止。建议先查看扩展的 Service Worker 控制台日志，再检查 Base URL、API Key、模型名和批大小设置。",
+            "The task has stopped. Check the extension Service Worker logs, then verify Base URL, API key, model name, and batch size."
+          ),
           job?.snapshotBackupTitle
-            ? `如果重建阶段已经开始，你可以去设置页的备份管理恢复“${job.snapshotBackupTitle}”。`
+            ? ux(
+                `如果重建阶段已经开始，你可以去设置页的备份管理恢复“${job.snapshotBackupTitle}”。`,
+                `If rebuild had already started, you can restore "${job.snapshotBackupTitle}" from Backup Management in Settings.`
+              )
             : ""
         ]
           .filter(Boolean)
@@ -1075,7 +1555,10 @@ async function processNextDeadScanBatch(job) {
   if (!batch.length) {
     await finishJob(
       "completed",
-      `失效书签扫描完成，共检查 ${job.processed} 条，自动删除 ${job.deleted} 条确认失效的书签。`,
+      ux(
+        `失效书签扫描完成，共检查 ${job.processed} 条，自动删除 ${job.deleted} 条确认失效的书签。`,
+        `Dead-link scan completed. Checked ${job.processed} bookmarks and automatically removed ${job.deleted} confirmed dead links.`
+      ),
       job
     );
     return;
@@ -1083,13 +1566,23 @@ async function processNextDeadScanBatch(job) {
 
   const currentBatch = Math.floor(job.processed / job.batchSize) + 1;
   await updateBatchStatus(job, currentBatch, {
-    message: `正在扫描第 ${currentBatch}/${job.totalBatches} 批失效书签 (${job.processed}/${job.total})。`,
-    detail: `本批 ${batch.length} 条。会先尝试 HEAD，必要时回退 GET；只有确认失效的链接才会自动删除。`
+    message: ux(
+      `正在扫描第 ${currentBatch}/${job.totalBatches} 批失效书签 (${job.processed}/${job.total})。`,
+      `Scanning dead links for batch ${currentBatch}/${job.totalBatches} (${job.processed}/${job.total}).`
+    ),
+    detail: ux(
+      `本批 ${batch.length} 条。会先尝试 HEAD，必要时回退 GET；只有确认失效的链接才会自动删除。`,
+      `${batch.length} items in this batch. HEAD is tried first, then GET if needed. Only confirmed dead links are removed automatically.`
+    )
   });
 
-  const scanResult = await scanDeadBookmarksBatch(batch, (stage) =>
-    updateBatchStatus(job, currentBatch, stage)
+  const deadLinkCache = await loadDeadLinkCache();
+  const scanResult = await scanDeadBookmarksBatch(
+    batch,
+    (stage) => updateBatchStatus(job, currentBatch, stage),
+    { cache: deadLinkCache }
   );
+  await saveDeadLinkCache(scanResult.nextDeadLinkCache || deadLinkCache);
 
   job.processed += batch.length;
   job.deleted += scanResult.deletedCount;
@@ -1103,21 +1596,34 @@ async function processNextDeadScanBatch(job) {
   });
 
   await updateBatchStatus(job, currentBatch, {
-    message: `第 ${currentBatch}/${job.totalBatches} 批失效书签扫描完成，累计已检查 ${job.processed}/${job.total} 条。`,
-    detail: `本批删除 ${scanResult.deletedCount} 条确认失效书签，警告 ${scanResult.warningCount} 条。`,
+    message: ux(
+      `第 ${currentBatch}/${job.totalBatches} 批失效书签扫描完成，累计已检查 ${job.processed}/${job.total} 条。`,
+      `Dead-link scan batch ${currentBatch}/${job.totalBatches} finished. Checked ${job.processed}/${job.total} so far.`
+    ),
+    detail: ux(
+      `本批删除 ${scanResult.deletedCount} 条确认失效书签，警告 ${scanResult.warningCount} 条。`,
+      `This batch removed ${scanResult.deletedCount} confirmed dead bookmarks and left ${scanResult.warningCount} warnings.`
+    ),
     warnings: job.warnings,
     deletedItems: job.deletedItems
   });
 
   if (job.cancelRequested) {
-    await finishJob("cancelled", "失效书签扫描已取消，当前批次结果已保存。", job);
+    await finishJob(
+      "cancelled",
+      ux("失效书签扫描已取消，当前批次结果已保存。", "Dead-link scan cancelled. The current batch result has been preserved."),
+      job
+    );
     return;
   }
 
   if (job.processed >= job.total) {
     await finishJob(
       "completed",
-      `失效书签扫描完成，共检查 ${job.processed} 条，自动删除 ${job.deleted} 条确认失效的书签。`,
+      ux(
+        `失效书签扫描完成，共检查 ${job.processed} 条，自动删除 ${job.deleted} 条确认失效的书签。`,
+        `Dead-link scan completed. Checked ${job.processed} bookmarks and automatically removed ${job.deleted} confirmed dead links.`
+      ),
       job
     );
     return;
@@ -1138,6 +1644,8 @@ async function finishJob(phase, message, job, overrides = {}) {
   const processed = job?.processed ?? currentStatus.processed ?? 0;
   const moved = job?.moved ?? currentStatus.moved ?? 0;
   const deleted = job?.deleted ?? currentStatus.deleted ?? 0;
+  const reused = job?.reused ?? currentStatus.reused ?? 0;
+  const aiClassified = job?.aiClassified ?? currentStatus.aiClassified ?? 0;
   const warningCount = job?.warningCount ?? currentStatus.warningCount ?? 0;
   const warnings = Array.isArray(job?.warnings) ? job.warnings : currentStatus.warnings || [];
   const deletedItems = Array.isArray(job?.deletedItems)
@@ -1147,17 +1655,27 @@ async function finishJob(phase, message, job, overrides = {}) {
   await updateStatus({
     phase,
     message,
-    provider: job?.jobType === "dead_scan" ? "" : job?.config?.provider || currentStatus.provider || "",
+    provider:
+      job?.jobType === "dead_scan"
+        ? ""
+        : getProviderLabel(job?.config?.provider || "") || currentStatus.provider || "",
     model: job?.jobType === "dead_scan" ? "" : job?.config?.model || currentStatus.model || "",
     total: job?.total ?? currentStatus.total ?? 0,
     processed,
     moved,
     deleted,
+    reused,
+    aiClassified,
     batchSize: job?.batchSize ?? currentStatus.batchSize ?? DEFAULT_BATCH_SIZE,
     warningCount,
     lastWarning: job?.lastWarning || currentStatus.lastWarning || "",
     warnings,
     deletedItems,
+    previewFolders: overrides.previewFolders || currentStatus.previewFolders || [],
+    protectedRootCount:
+      job?.protectedRootFolderIds?.length ??
+      currentStatus.protectedRootCount ??
+      0,
     currentBatch:
       processed > 0
         ? Math.ceil(processed / (job?.batchSize || DEFAULT_BATCH_SIZE))
@@ -1170,18 +1688,18 @@ async function finishJob(phase, message, job, overrides = {}) {
 }
 
 function validateConfig(config) {
-  const defaults = PROVIDER_DEFAULTS[config.provider] || PROVIDER_DEFAULTS.openai;
+  const defaults = getProviderDefaults(config.provider);
 
   if (!config.baseUrl) {
-    throw new Error("Base URL 不能为空。");
+    throw new Error(ux("Base URL 不能为空。", "Base URL is required."));
   }
 
   if (!config.model) {
-    throw new Error("Model Name 不能为空。");
+    throw new Error(ux("Model Name 不能为空。", "Model Name is required."));
   }
 
   if (!Number.isInteger(config.batchSize) || config.batchSize < 5 || config.batchSize > 100) {
-    throw new Error("批大小必须是 5 到 100 之间的整数。");
+    throw new Error(ux("批大小必须是 5 到 100 之间的整数。", "Batch size must be an integer between 5 and 100."));
   }
 
   if (
@@ -1189,11 +1707,21 @@ function validateConfig(config) {
     config.autoOrganizeIntervalHours < 1 ||
     config.autoOrganizeIntervalHours > 168
   ) {
-    throw new Error("自动整理间隔必须是 1 到 168 小时之间的整数。");
+    throw new Error(
+      ux(
+        "自动整理间隔必须是 1 到 168 小时之间的整数。",
+        "Auto organize interval must be an integer between 1 and 168 hours."
+      )
+    );
   }
 
-  if (defaults.requiresApiKey && !config.apiKey) {
-    throw new Error(`${config.provider} 需要 API Key。`);
+  if (!defaults.apiKeyOptional && !config.apiKey) {
+    throw new Error(
+      ux(
+        `${getProviderLabel(config.provider)} 需要 API Key。`,
+        `${getProviderLabel(config.provider)} requires an API key.`
+      )
+    );
   }
 }
 
@@ -1233,7 +1761,7 @@ function collectBookmarks(tree, options = {}) {
       if (!nextSkipBranch) {
         results.push({
           id: node.id,
-          title: node.title || "(无标题书签)",
+          title: node.title || t("untitledBookmark"),
           url: node.url,
           currentPath: safeTrail,
           ancestorIds: safeAncestorIds
@@ -1307,13 +1835,13 @@ function serializeBookmarkTreeNodes(nodes) {
   return (Array.isArray(nodes) ? nodes : []).map((node) => {
     if (node?.url) {
       return {
-        title: node.title || "(无标题书签)",
+        title: node.title || t("untitledBookmark"),
         url: node.url
       };
     }
 
     return {
-      title: node?.title || "未命名文件夹",
+      title: node?.title || t("unnamedCategory"),
       children: serializeBookmarkTreeNodes(node?.children || [])
     };
   });
@@ -1327,7 +1855,7 @@ async function cloneBookmarkTreeNodes(nodes, parentId) {
       createdNodes.push(
         await chrome.bookmarks.create({
           parentId,
-          title: node.title || "(无标题书签)",
+          title: node.title || t("untitledBookmark"),
           url: node.url
         })
       );
@@ -1336,7 +1864,7 @@ async function cloneBookmarkTreeNodes(nodes, parentId) {
 
     const folder = await chrome.bookmarks.create({
       parentId,
-      title: node.title || "未命名文件夹"
+      title: node.title || t("unnamedCategory")
     });
     await cloneBookmarkTreeNodes(node.children || [], folder.id);
     createdNodes.push(folder);
@@ -1358,7 +1886,7 @@ function openBackupDatabase() {
 
     request.onsuccess = () => resolve(request.result);
     request.onerror = () =>
-      reject(request.error || new Error("打开本地备份数据库失败。"));
+      reject(request.error || new Error(ux("打开本地备份数据库失败。", "Failed to open the local backup database.")));
   });
 }
 
@@ -1366,9 +1894,9 @@ function waitForTransaction(transaction) {
   return new Promise((resolve, reject) => {
     transaction.oncomplete = () => resolve();
     transaction.onabort = () =>
-      reject(transaction.error || new Error("本地备份事务被中止。"));
+      reject(transaction.error || new Error(ux("本地备份事务被中止。", "The local backup transaction was aborted.")));
     transaction.onerror = () =>
-      reject(transaction.error || new Error("本地备份事务失败。"));
+      reject(transaction.error || new Error(ux("本地备份事务失败。", "The local backup transaction failed.")));
   });
 }
 
@@ -1376,7 +1904,7 @@ function waitForRequest(request) {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () =>
-      reject(request.error || new Error("本地备份读写失败。"));
+      reject(request.error || new Error(ux("本地备份读写失败。", "Failed to read or write local backup data.")));
   });
 }
 
@@ -1646,8 +2174,8 @@ async function findExistingUnresolvedFolderId(bookmarkBarId) {
   if (storedFolderId) {
     const existing = await getFolderById(storedFolderId);
     if (existing && !existing.url) {
-      if (existing.title !== "待手动分类") {
-        await chrome.bookmarks.update(existing.id, { title: "待手动分类" });
+      if (existing.title !== MANUAL_FOLDER_TITLE) {
+        await chrome.bookmarks.update(existing.id, { title: MANUAL_FOLDER_TITLE });
       }
       return existing.id;
     }
@@ -1659,15 +2187,15 @@ async function findExistingUnresolvedFolderId(bookmarkBarId) {
 
   const children = await chrome.bookmarks.getChildren(bookmarkBarId);
   const folder = children.find(
-    (node) => !node.url && (node.title === "待手动分类" || node.title === "未处理" || node.title === "待整理")
+    (node) => !node.url && MANUAL_FOLDER_ALIASES.includes(node.title)
   );
 
   if (!folder) {
     return "";
   }
 
-  if (folder.title !== "待手动分类") {
-    await chrome.bookmarks.update(folder.id, { title: "待手动分类" });
+  if (folder.title !== MANUAL_FOLDER_TITLE) {
+    await chrome.bookmarks.update(folder.id, { title: MANUAL_FOLDER_TITLE });
   }
 
   await chrome.storage.local.set({
@@ -1685,7 +2213,7 @@ async function ensureUnresolvedFolder(bookmarkBarId) {
 
   const folder = await chrome.bookmarks.create({
     parentId: bookmarkBarId,
-    title: "待手动分类"
+    title: MANUAL_FOLDER_TITLE
   });
 
   await chrome.storage.local.set({
@@ -1703,7 +2231,7 @@ async function createCurrentSnapshotBackup(bookmarkBarNode, source = "manual") {
   if (!bookmarkBarNode?.id || !topLevelNodes.length) {
     return {
       created: false,
-      detail: "当前没有可备份的书签。"
+      detail: ux("当前没有可备份的书签。", "There are no bookmarks to back up.")
     };
   }
 
@@ -1723,7 +2251,7 @@ async function createCurrentSnapshotBackup(bookmarkBarNode, source = "manual") {
     created: true,
     folderId: backupId,
     folderTitle: backupTitle,
-    detail: `已创建本地快照备份“${backupTitle}”。`
+    detail: ux(`已创建本地快照备份“${backupTitle}”。`, `Created local snapshot backup "${backupTitle}".`)
   };
 }
 
@@ -1748,7 +2276,7 @@ async function removeFolderIfExists(folderId) {
   try {
     await chrome.bookmarks.removeTree(folderId);
   } catch (error) {
-    // 用户可能已经手动删掉了，忽略即可。
+    // Ignore if the user already removed it manually.
   }
 }
 
@@ -1768,7 +2296,7 @@ async function cleanupForbiddenAiRootFolders(bookmarkBarId) {
       try {
         await chrome.bookmarks.move(child.id, { parentId: bookmarkBarId });
       } catch (error) {
-        // 如果节点已被其他同步源移动或删除，忽略即可。
+        // Ignore if another sync source already moved or removed the node.
       }
     }
 
@@ -1908,10 +2436,19 @@ async function handleAutoOrganizeAlarm() {
       phase: "error",
       message:
         error?.userMessage ||
-        toUserMessage(error, "自动静默整理失败，请检查配置、网络或批大小设置。"),
+        toUserMessage(
+          error,
+          ux(
+            "自动静默整理失败，请检查配置、网络或批大小设置。",
+            "Auto silent organize failed. Check the configuration, network, or batch size."
+          )
+        ),
       detail:
         error?.userDetail ||
-        "这是一次自动定时任务触发的失败。你可以稍后手动打开 Popup 或设置页查看并重试。",
+        ux(
+          "这是一次自动定时任务触发的失败。你可以稍后手动打开 Popup 或设置页查看并重试。",
+          "This failure happened during an automatic scheduled run. You can open the popup or settings page later to review it and try again."
+        ),
       finishedAt: new Date().toISOString()
     });
   }
@@ -1922,38 +2459,30 @@ async function testApiConnection(rawConfig) {
   validateConfig(config);
   await assertApiOriginAccess(config.baseUrl);
 
-  const endpoint = buildChatCompletionsEndpoint(config.baseUrl);
-  const headers = {
-    "Content-Type": "application/json"
-  };
-
-  if (config.apiKey) {
-    headers.Authorization = `Bearer ${config.apiKey}`;
-  }
+  const requestSpec = Providers.buildRequest(
+    config,
+    [
+      {
+        role: "system",
+        content: "You are a connectivity test."
+      },
+      {
+        role: "user",
+        content: "Reply with OK."
+      }
+    ],
+    { mode: "test" }
+  );
+  const providerLabel = getProviderLabel(config.provider);
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort("api-test-timeout"), 20_000);
 
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetch(requestSpec.endpoint, {
       method: "POST",
-      headers,
-      body: JSON.stringify({
-        model: config.model,
-        messages: [
-          {
-            role: "system",
-            content: "You are a connectivity test."
-          },
-          {
-            role: "user",
-            content: "Reply with OK."
-          }
-        ],
-        temperature: 0,
-        stream: false,
-        max_tokens: 8
-      }),
+      headers: requestSpec.headers,
+      body: JSON.stringify(requestSpec.body),
       signal: controller.signal
     });
 
@@ -1961,8 +2490,8 @@ async function testApiConnection(rawConfig) {
 
     if (!response.ok) {
       throw buildUserFacingError(
-        `API 检测失败，接口返回 ${response.status}。`,
-        `接口响应片段：${truncate(rawBody, 220)}`
+        ux(`API 检测失败，接口返回 ${response.status}。`, `API test failed with status ${response.status}.`),
+        ux(`接口响应片段：${truncate(rawBody, 220)}`, `Response snippet: ${truncate(rawBody, 220)}`)
       );
     }
 
@@ -1971,23 +2500,32 @@ async function testApiConnection(rawConfig) {
       parsedBody = JSON.parse(rawBody);
     } catch (error) {
       throw buildUserFacingError(
-        "API 检测失败，接口没有返回 JSON。",
-        `原始响应片段：${truncate(rawBody, 220)}`
+        ux("API 检测失败，接口没有返回 JSON。", "API test failed because the response was not JSON."),
+        ux(`原始响应片段：${truncate(rawBody, 220)}`, `Raw response snippet: ${truncate(rawBody, 220)}`)
       );
     }
 
-    const content = extractAssistantContent(parsedBody);
+    const content = Providers.extractText(parsedBody, config.provider);
     return {
-      message: `API 检测成功，${config.provider} / ${config.model} 当前可用。`,
+      message: ux(
+        `API 检测成功，${providerLabel} / ${config.model} 当前可用。`,
+        `API test succeeded. ${providerLabel} / ${config.model} is available.`
+      ),
       detail: content
-        ? `模型已返回内容：${truncate(content.replace(/\s+/g, " "), 80)}`
-        : "接口返回正常，已成功拿到结构化响应。"
+        ? ux(
+            `模型已返回内容：${truncate(content.replace(/\s+/g, " "), 80)}`,
+            `Model returned: ${truncate(content.replace(/\s+/g, " "), 80)}`
+          )
+        : ux("接口返回正常，已成功拿到结构化响应。", "The endpoint responded normally with a structured response.")
     };
   } catch (error) {
     if (controller.signal.aborted) {
       throw buildUserFacingError(
-        "API 检测超时，20 秒内没有拿到响应。",
-        "请检查 Base URL、网络、模型负载，或确认当前接口没有排队过久。"
+        ux("API 检测超时，20 秒内没有拿到响应。", "API test timed out after 20 seconds."),
+        ux(
+          "请检查 Base URL、网络、模型负载，或确认当前接口没有排队过久。",
+          "Check the Base URL, network, model load, or whether the endpoint is stuck in a queue."
+        )
       );
     }
 
@@ -1999,6 +2537,9 @@ async function testApiConnection(rawConfig) {
 
 async function scanDeadBookmarksBatch(batch, reportStage = () => {}, options = {}) {
   const shouldMutate = options.mutate !== false;
+  const nextDeadLinkCache = {
+    ...((options.cache && typeof options.cache === "object") ? options.cache : {})
+  };
   let deletedCount = 0;
   let warningCount = 0;
   let lastWarning = "";
@@ -2010,12 +2551,18 @@ async function scanDeadBookmarksBatch(batch, reportStage = () => {}, options = {
   for (let index = 0; index < batch.length; index += 1) {
     const bookmark = batch[index];
     await reportStage({
-      message: `正在检测失效书签：${bookmark.title || bookmark.url}`,
-      detail: `当前进度 ${index + 1}/${batch.length}。正在检查 ${truncate(bookmark.url, 90)}`
+      message: ux(
+        `正在检测失效书签：${bookmark.title || bookmark.url}`,
+        `Checking link health: ${bookmark.title || bookmark.url}`
+      ),
+      detail: ux(
+        `当前进度 ${index + 1}/${batch.length}。正在检查 ${truncate(bookmark.url, 90)}`,
+        `Progress ${index + 1}/${batch.length}. Checking ${truncate(bookmark.url, 90)}`
+      )
     });
 
     try {
-      const result = await checkBookmarkHealth(bookmark.url);
+      const result = await checkBookmarkHealth(bookmark.url, nextDeadLinkCache);
       if (result.isDead) {
         if (shouldMutate) {
           await chrome.bookmarks.remove(bookmark.id);
@@ -2026,21 +2573,39 @@ async function scanDeadBookmarksBatch(batch, reportStage = () => {}, options = {
             "dead_link_deleted",
             bookmark,
             shouldMutate
-              ? `已确认失效并自动删除：${result.reason || "HTTP 404 / 410 / 451"}`
-              : `已确认失效，重建时不会保留：${result.reason || "HTTP 404 / 410 / 451"}`,
+              ? ux(
+                  `已确认失效并自动删除：${result.reason || "HTTP 404 / 410 / 451"}`,
+                  `Confirmed dead and removed automatically: ${result.reason || "HTTP 404 / 410 / 451"}`
+                )
+              : ux(
+                  `已确认失效，重建时不会保留：${result.reason || "HTTP 404 / 410 / 451"}`,
+                  `Confirmed dead and excluded from rebuild: ${result.reason || "HTTP 404 / 410 / 451"}`
+                ),
             shouldMutate
-              ? "扩展只会删除明确失效的链接。如果你仍然需要它，可以稍后手动重新添加。"
-              : "本次整理会在最终重建时跳过这类明确失效的链接，原始结构仍已备份。"
+              ? ux(
+                  "扩展只会删除明确失效的链接。如果你仍然需要它，可以稍后手动重新添加。",
+                  "The extension removes only clearly dead links. If you still need it, you can add it again manually later."
+                )
+              : ux(
+                  "本次整理会在最终重建时跳过这类明确失效的链接，原始结构仍已备份。",
+                  "This organize run will skip clearly dead links during the final rebuild. The original structure is still backed up."
+                )
           )
         );
       } else if (!result.isHealthy) {
-        const reason = `书签《${bookmark.title}》状态不明确，未自动删除：${result.reason || "检测超时或目标站点拒绝访问"}`;
-        const suggestion = "这通常是目标站点拒绝 HEAD 请求、需要登录或暂时超时。建议手动打开确认，扩展不会直接删除这类链接。";
+        const reason = ux(
+          `书签《${bookmark.title}》状态不明确，未自动删除：${result.reason || "检测超时或目标站点拒绝访问"}`,
+          `Bookmark "${bookmark.title}" has an uncertain status and was not deleted automatically: ${result.reason || "Timeout or the target site rejected the request"}`
+        );
+        const suggestion = ux(
+          "这通常是目标站点拒绝 HEAD 请求、需要登录或暂时超时。建议手动打开确认，扩展不会直接删除这类链接。",
+          "This usually means the target site rejects HEAD requests, requires sign-in, or timed out temporarily. Open it manually to confirm. The extension will not remove links like this automatically."
+        );
         warningCount += 1;
         lastWarning = reason;
         warningEntries.push(buildLogEntry("scan_uncertain", bookmark, reason, suggestion));
         pendingWarnings.push({
-          title: bookmark.title || "(无标题书签)",
+          title: bookmark.title || t("untitledBookmark"),
           url: bookmark.url,
           kind: "scan_uncertain",
           reason,
@@ -2055,21 +2620,30 @@ async function scanDeadBookmarksBatch(batch, reportStage = () => {}, options = {
       }
 
       warningCount += 1;
-      lastWarning = `书签《${bookmark.title}》检测失败：${toUserMessage(error, "未知错误")}`;
+      lastWarning = ux(
+        `书签《${bookmark.title}》检测失败：${toUserMessage(error, "未知错误")}`,
+        `Failed to check "${bookmark.title}": ${toUserMessage(error, "Unknown error")}`
+      );
       warningEntries.push(
         buildLogEntry(
           "scan_failed",
           bookmark,
           lastWarning,
-          "建议稍后重试一次；如果目标网站限制访问，手动打开通常比后台探测更准确。"
+          ux(
+            "建议稍后重试一次；如果目标网站限制访问，手动打开通常比后台探测更准确。",
+            "Try again later. If the target site blocks background requests, opening it manually is usually more reliable."
+          )
         )
       );
       pendingWarnings.push({
-        title: bookmark.title || "(无标题书签)",
+        title: bookmark.title || t("untitledBookmark"),
         url: bookmark.url,
         kind: "scan_failed",
         reason: lastWarning,
-        suggestion: "建议稍后重试一次；如果目标网站限制访问，手动打开通常比后台探测更准确。"
+        suggestion: ux(
+          "建议稍后重试一次；如果目标网站限制访问，手动打开通常比后台探测更准确。",
+          "Try again later. If the target site blocks background requests, opening it manually is usually more reliable."
+        )
       });
     }
   }
@@ -2081,11 +2655,12 @@ async function scanDeadBookmarksBatch(batch, reportStage = () => {}, options = {
     warningEntries,
     deletedEntries,
     healthyBookmarks,
-    pendingWarnings
+    pendingWarnings,
+    nextDeadLinkCache
   };
 }
 
-async function checkBookmarkHealth(rawUrl) {
+async function checkBookmarkHealth(rawUrl, cacheStore = {}) {
   if (!/^https?:\/\//i.test(rawUrl)) {
     return {
       isDead: false,
@@ -2095,20 +2670,45 @@ async function checkBookmarkHealth(rawUrl) {
     };
   }
 
+  const cacheKey = CacheUtils.normalizeCacheUrl(rawUrl);
+  const cachedEntry = cacheStore[cacheKey];
+  if (cachedEntry && CacheUtils.isDeadLinkCacheFresh(cachedEntry)) {
+    return {
+      ...cachedEntry.result
+    };
+  }
+
   const headResult = await requestBookmarkHealth(rawUrl, "HEAD");
   if (headResult.isDead) {
+    const cacheEntry = CacheUtils.createDeadLinkCacheEntry(rawUrl, headResult);
+    if (cacheEntry) {
+      cacheStore[cacheEntry.cacheKey] = cacheEntry;
+    }
     return headResult;
   }
 
   if (headResult.isHealthy) {
+    const cacheEntry = CacheUtils.createDeadLinkCacheEntry(rawUrl, headResult);
+    if (cacheEntry) {
+      cacheStore[cacheEntry.cacheKey] = cacheEntry;
+    }
     return headResult;
   }
 
   if (!headResult.shouldRetryWithGet) {
+    const cacheEntry = CacheUtils.createDeadLinkCacheEntry(rawUrl, headResult);
+    if (cacheEntry) {
+      cacheStore[cacheEntry.cacheKey] = cacheEntry;
+    }
     return headResult;
   }
 
-  return requestBookmarkHealth(rawUrl, "GET");
+  const getResult = await requestBookmarkHealth(rawUrl, "GET");
+  const cacheEntry = CacheUtils.createDeadLinkCacheEntry(rawUrl, getResult);
+  if (cacheEntry) {
+    cacheStore[cacheEntry.cacheKey] = cacheEntry;
+  }
+  return getResult;
 }
 
 async function requestBookmarkHealth(rawUrl, method) {
@@ -2127,7 +2727,7 @@ async function requestBookmarkHealth(rawUrl, method) {
       try {
         await response.body.cancel();
       } catch (error) {
-        // 忽略 body 取消失败。
+        // Ignore body cancellation failures.
       }
     }
 
@@ -2158,14 +2758,18 @@ async function requestBookmarkHealth(rawUrl, method) {
   } catch (error) {
     if (controller.signal.aborted) {
       if (`${controller.signal.reason || ""}` === "cancelled-by-user") {
-        throw buildUserFacingError("失效书签扫描已被取消。", "后台已经停止当前 URL 检测。", "cancelled-by-user");
+        throw buildUserFacingError(
+          ux("失效书签扫描已被取消。", "Dead-link scan was cancelled."),
+          ux("后台已经停止当前 URL 检测。", "The background worker stopped checking the current URL."),
+          "cancelled-by-user"
+        );
       }
 
       return {
         isDead: false,
         isHealthy: false,
         shouldRetryWithGet: false,
-        reason: "请求超时"
+        reason: ux("请求超时", "Request timed out")
       };
     }
 
@@ -2173,7 +2777,7 @@ async function requestBookmarkHealth(rawUrl, method) {
       isDead: false,
       isHealthy: false,
       shouldRetryWithGet: method === "HEAD",
-      reason: toUserMessage(error, "网络错误")
+      reason: toUserMessage(error, ux("网络错误", "Network error"))
     };
   } finally {
     clearTimeout(timer);
@@ -2181,27 +2785,20 @@ async function requestBookmarkHealth(rawUrl, method) {
   }
 }
 
-async function classifyBatchWithModel(batch, config, reportStage = () => {}, taxonomyLocks = {}) {
-  const endpoint = buildChatCompletionsEndpoint(config.baseUrl);
-  const messages = buildClassificationMessages(batch, config.customPrompt, taxonomyLocks);
-  const payload = {
-    model: config.model,
-    messages,
-    temperature: config.provider === "minimax" ? 0.2 : 0.1,
-    stream: false
-  };
-
-  if (config.provider === "minimax") {
-    payload.reasoning_split = true;
-  }
-
-  const headers = {
-    "Content-Type": "application/json"
-  };
-
-  if (config.apiKey) {
-    headers.Authorization = `Bearer ${config.apiKey}`;
-  }
+async function classifyBatchWithModel(
+  batch,
+  config,
+  reportStage = () => {},
+  taxonomyLocks = {},
+  taxonomyTopFolders = []
+) {
+  const messages = buildClassificationMessages(
+    batch,
+    config.customPrompt,
+    taxonomyLocks,
+    taxonomyTopFolders
+  );
+  const requestSpec = Providers.buildRequest(config, messages, { mode: "organize" });
 
   activeAbortController = new AbortController();
   let abortReason = "";
@@ -2220,16 +2817,22 @@ async function classifyBatchWithModel(batch, config, reportStage = () => {}, tax
 
   try {
     await reportStage({
-      message: `第 1 阶段：正在向模型发送 ${batch.length} 条书签的分类请求。`,
-      detail: `请求地址：${truncate(endpoint, 90)}。如果 25 秒内没有收到响应，会主动停止并提示你减小批大小。`
+      message: ux(
+        `第 1 阶段：正在向模型发送 ${batch.length} 条书签的分类请求。`,
+        `Stage 1: sending a classification request for ${batch.length} bookmarks to the model.`
+      ),
+      detail: ux(
+        `请求地址：${truncate(requestSpec.endpoint, 90)}。如果 25 秒内没有收到响应，会主动停止并提示你减小批大小。`,
+        `Endpoint: ${truncate(requestSpec.endpoint, 90)}. If no response is received within 25 seconds, the request will stop and suggest reducing the batch size.`
+      )
     });
 
     let response;
     try {
-      response = await fetch(endpoint, {
+      response = await fetch(requestSpec.endpoint, {
         method: "POST",
-        headers,
-        body: JSON.stringify(payload),
+        headers: requestSpec.headers,
+        body: JSON.stringify(requestSpec.body),
         signal: activeAbortController.signal
       });
     } catch (error) {
@@ -2247,8 +2850,14 @@ async function classifyBatchWithModel(batch, config, reportStage = () => {}, tax
     clearTimeout(firstResponseTimer);
 
     await reportStage({
-      message: "第 2 阶段：模型已响应，正在读取返回内容。",
-      detail: "已经收到服务器响应头，接下来会读取文本并进行 JSON 提取。"
+      message: ux(
+        "第 2 阶段：模型已响应，正在读取返回内容。",
+        "Stage 2: the model has responded and the body is being read."
+      ),
+      detail: ux(
+        "已经收到服务器响应头，接下来会读取文本并进行 JSON 提取。",
+        "Response headers have arrived. The extension will read the text and extract JSON next."
+      )
     });
 
     let rawBody;
@@ -2267,34 +2876,61 @@ async function classifyBatchWithModel(batch, config, reportStage = () => {}, tax
     }
 
     if (!response.ok) {
-      throw new Error(`API 请求失败 (${response.status})：${truncate(rawBody, 280)}`);
+      throw new Error(
+        ux(
+          `API 请求失败 (${response.status})：${truncate(rawBody, 280)}`,
+          `API request failed (${response.status}): ${truncate(rawBody, 280)}`
+        )
+      );
     }
 
     let parsedResponse;
     try {
       parsedResponse = JSON.parse(rawBody);
     } catch (error) {
-      throw new Error(`API 返回了非 JSON 响应：${truncate(rawBody, 200)}`);
+      throw new Error(
+        ux(
+          `API 返回了非 JSON 响应：${truncate(rawBody, 200)}`,
+          `API returned a non-JSON response: ${truncate(rawBody, 200)}`
+        )
+      );
     }
 
-    const content = extractAssistantContent(parsedResponse);
+    const content = Providers.extractText(parsedResponse, config.provider);
     if (!content) {
-      throw new Error("模型返回为空，未获取到可解析的文本内容。");
+      throw new Error(
+        ux(
+          "模型返回为空，未获取到可解析的文本内容。",
+          "The model returned empty content, so there was no parsable text."
+        )
+      );
     }
 
     await reportStage({
-      message: "第 3 阶段：模型文本已收到，正在提取并解析 JSON。",
-      detail: "后台会自动剥离 ```json 代码块和多余说明文字，只保留合法 JSON 数组。"
+      message: ux(
+        "第 3 阶段：模型文本已收到，正在提取并解析 JSON。",
+        "Stage 3: model text received. Extracting and parsing JSON."
+      ),
+      detail: ux(
+        "后台会自动剥离 ```json 代码块和多余说明文字，只保留合法 JSON 数组。",
+        "The extension removes ```json fences and extra explanations automatically, then keeps only a valid JSON array."
+      )
     });
 
     try {
-      return extractJsonArray(content);
+      return JsonUtils.extractJsonArray(content);
     } catch (error) {
       throw new Error(
-        `模型返回内容无法解析为 JSON 数组。请检查 Prompt 或模型能力。原始片段：${truncate(
-          content,
-          220
-        )}`
+        ux(
+          `模型返回内容无法解析为 JSON 数组。请检查 Prompt 或模型能力。原始片段：${truncate(
+            content,
+            220
+          )}`,
+          `The model output could not be parsed as a JSON array. Check the prompt or the model capability. Raw snippet: ${truncate(
+            content,
+            220
+          )}`
+        )
       );
     }
   } finally {
@@ -2303,8 +2939,19 @@ async function classifyBatchWithModel(batch, config, reportStage = () => {}, tax
   }
 }
 
-function buildClassificationMessages(batch, customPrompt, taxonomyLocks = {}) {
+function buildClassificationMessages(
+  batch,
+  customPrompt,
+  taxonomyLocks = {},
+  taxonomyTopFolders = []
+) {
   const strategyPrompt = (customPrompt || DEFAULT_PROMPT).trim();
+  const isZh = I18N.locale === "zh_CN";
+  const allowedTopFolders = normalizeTopLevelFolderList(
+    Array.isArray(taxonomyTopFolders) && taxonomyTopFolders.length
+      ? taxonomyTopFolders
+      : buildTaxonomyFallbackTopFolders()
+  );
   const inputPayload = batch.map((item) => ({
     id: item.id,
     title: item.title,
@@ -2314,18 +2961,22 @@ function buildClassificationMessages(batch, customPrompt, taxonomyLocks = {}) {
   const lockLines = Object.entries(taxonomyLocks)
     .sort(([a], [b]) => a.localeCompare(b, "zh-CN"))
     .slice(0, 80)
-    .map(([subfolder, topLevel]) => `- ${subfolder} 必须放到 ${topLevel}`)
+    .map(([subfolder, topLevel]) =>
+      isZh ? `- ${subfolder} 必须放到 ${topLevel}` : `- ${subfolder} must stay under ${topLevel}`
+    )
     .join("\n");
 
   return [
     {
       role: "system",
-      content:
-        "你是一个非常严格的书签整理助手。你只能输出合法 JSON，不能输出解释、Markdown、注释或额外文本。"
+      content: isZh
+        ? "你是一个非常严格的书签整理助手。你只能输出合法 JSON，不能输出解释、Markdown、注释或额外文本。"
+        : "You are a very strict bookmark organizer. You must output valid JSON only. Do not output explanations, Markdown, comments, or extra text."
     },
     {
       role: "user",
-      content: `${strategyPrompt}
+      content: isZh
+        ? `${strategyPrompt}
 
 请严格遵守下面的输出约束：
 1. 你只能输出 JSON 数组，不要输出 \`\`\`json、说明文字或开场白。
@@ -2340,198 +2991,43 @@ function buildClassificationMessages(batch, customPrompt, taxonomyLocks = {}) {
   }
 ]
 4. folderPath 必须是 1 到 2 层字符串数组；如果 action 是 delete_duplicate，也仍然要返回一个简短 folderPath，建议填 ["重复书签"]。
-5. 一级目录尽量只使用这些固定大类：AI/技术、学习/教程、工具/效率、产品/设计、资讯/社区、购物/服务、娱乐/内容、生活/资源、待手动分类。
+5. 一级目录必须只从这个全局目录方案中选择：${allowedTopFolders.join("、")}。
 6. 如果无法确认重复，不要删除，action 必须返回 keep。
 7. 如果同一个二级目录名已经被固定归属到某个一级目录，你必须复用该归属，不能换父目录。
-8. 信息不足时统一归入 ["待手动分类"]。
+8. 信息不足时统一归入 ["${MANUAL_FOLDER_TITLE}"]。
 
 已有固定归属：
 ${lockLines || "- 当前还没有已锁定的二级目录归属"}
 
 以下是待整理书签：
 ${JSON.stringify(inputPayload, null, 2)}`
+        : `${strategyPrompt}
+
+Follow these output rules exactly:
+1. Output a JSON array only. Do not output \`\`\`json, explanations, or introductions.
+2. The array must cover every input id exactly once.
+3. The schema must be:
+[
+  {
+    "id": "bookmark id",
+    "action": "keep or delete_duplicate",
+    "folderPath": ["top level", "optional second level"],
+    "duplicateOf": "If action is delete_duplicate, fill in the kept bookmark id, otherwise use an empty string"
+  }
+]
+4. folderPath must be a string array with 1 or 2 levels. If action is delete_duplicate, still return a short folderPath, for example ["Duplicate Bookmarks"].
+5. The top-level folder must be chosen only from this global taxonomy: ${allowedTopFolders.join(", ")}.
+6. If duplicate status is uncertain, do not delete it. action must be keep.
+7. If a second-level folder has already been locked under a top-level folder, you must reuse that parent and not move it elsewhere.
+8. If information is insufficient, place the bookmark in ["${MANUAL_FOLDER_TITLE}"].
+
+Locked mappings:
+${lockLines || "- No locked second-level mappings yet"}
+
+Bookmarks to organize:
+${JSON.stringify(inputPayload, null, 2)}`
     }
   ];
-}
-
-function buildChatCompletionsEndpoint(baseUrl) {
-  const normalized = baseUrl.trim().replace(/\/+$/, "");
-  if (/\/chat\/completions$/i.test(normalized)) {
-    return normalized;
-  }
-
-  return `${normalized}/chat/completions`;
-}
-
-function extractAssistantContent(responseBody) {
-  const choice = responseBody?.choices?.[0];
-  const messageContent = choice?.message?.content;
-
-  if (typeof messageContent === "string") {
-    return messageContent;
-  }
-
-  if (Array.isArray(messageContent)) {
-    return messageContent
-      .map((part) => {
-        if (typeof part === "string") {
-          return part;
-        }
-
-        if (typeof part?.text === "string") {
-          return part.text;
-        }
-
-        return "";
-      })
-      .join("\n")
-      .trim();
-  }
-
-  if (typeof responseBody?.output_text === "string") {
-    return responseBody.output_text;
-  }
-
-  return "";
-}
-
-function extractJsonArray(rawText) {
-  if (typeof rawText !== "string" || !rawText.trim()) {
-    throw new Error("模型返回为空字符串。");
-  }
-
-  const normalizedText = rawText.trim().replace(/^\uFEFF/, "");
-  const direct = tryParseJsonCandidate(normalizedText);
-
-  if (direct) {
-    return direct;
-  }
-
-  const fencedCandidates = [];
-  const fenceRegex = /```(?:json)?\s*([\s\S]*?)```/gi;
-  let fenceMatch;
-
-  while ((fenceMatch = fenceRegex.exec(normalizedText))) {
-    fencedCandidates.push(fenceMatch[1].trim());
-  }
-
-  for (const candidate of fencedCandidates) {
-    const parsed = tryParseJsonCandidate(candidate);
-    if (parsed) {
-      return parsed;
-    }
-  }
-
-  const stripped = normalizedText.replace(/```(?:json)?/gi, "").replace(/```/g, "").trim();
-  const fragments = collectBalancedJsonFragments(stripped);
-
-  for (const fragment of fragments) {
-    const parsed = tryParseJsonCandidate(fragment);
-    if (parsed) {
-      return parsed;
-    }
-  }
-
-  throw new Error("未找到合法 JSON 数组。");
-}
-
-function tryParseJsonCandidate(candidate) {
-  if (!candidate) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(candidate);
-    if (Array.isArray(parsed)) {
-      return parsed;
-    }
-
-    if (parsed && typeof parsed === "object") {
-      if (Array.isArray(parsed.items)) {
-        return parsed.items;
-      }
-
-      if (Array.isArray(parsed.data)) {
-        return parsed.data;
-      }
-
-      if (Array.isArray(parsed.bookmarks)) {
-        return parsed.bookmarks;
-      }
-    }
-  } catch (error) {
-    return null;
-  }
-
-  return null;
-}
-
-function collectBalancedJsonFragments(text) {
-  const fragments = [];
-
-  for (let start = 0; start < text.length; start += 1) {
-    const firstChar = text[start];
-
-    if (firstChar !== "[" && firstChar !== "{") {
-      continue;
-    }
-
-    const end = findBalancedJsonEnd(text, start);
-    if (end !== -1) {
-      fragments.push(text.slice(start, end + 1));
-    }
-  }
-
-  return fragments;
-}
-
-function findBalancedJsonEnd(text, startIndex) {
-  const stack = [];
-  let inString = false;
-  let escaping = false;
-
-  for (let index = startIndex; index < text.length; index += 1) {
-    const char = text[index];
-
-    if (inString) {
-      if (escaping) {
-        escaping = false;
-      } else if (char === "\\") {
-        escaping = true;
-      } else if (char === '"') {
-        inString = false;
-      }
-      continue;
-    }
-
-    if (char === '"') {
-      inString = true;
-      continue;
-    }
-
-    if (char === "[") {
-      stack.push("]");
-      continue;
-    }
-
-    if (char === "{") {
-      stack.push("}");
-      continue;
-    }
-
-    if (char === "]" || char === "}") {
-      if (!stack.length || stack[stack.length - 1] !== char) {
-        return -1;
-      }
-
-      stack.pop();
-      if (!stack.length) {
-        return index;
-      }
-    }
-  }
-
-  return -1;
 }
 
 function normalizeClassificationResults(results, batch) {
@@ -2553,7 +3049,7 @@ function normalizeClassificationResults(results, batch) {
   return batch.map((item) => ({
     id: item.id,
     action: resultMap.get(item.id)?.action || "keep",
-    folderPath: resultMap.get(item.id)?.folderPath || ["待手动分类"],
+    folderPath: resultMap.get(item.id)?.folderPath || [MANUAL_FOLDER_TITLE],
     duplicateOf: resultMap.get(item.id)?.duplicateOf || ""
   }));
 }
@@ -2568,8 +3064,8 @@ function canonicalizeFolderName(value) {
     return "";
   }
 
-  if (["待整理", "待处理", "未分类", "未整理"].includes(trimmed)) {
-    return "待手动分类";
+  if (MANUAL_FOLDER_ALIASES.includes(trimmed)) {
+    return MANUAL_FOLDER_TITLE;
   }
 
   return trimmed;
@@ -2589,11 +3085,11 @@ function normalizeFolderPath(folderPath) {
     .filter((segment, index, arr) => arr.indexOf(segment) === index)
     .slice(0, 2);
 
-  if (cleaned.includes("待手动分类")) {
-    return ["待手动分类"];
+  if (cleaned.includes(MANUAL_FOLDER_TITLE)) {
+    return [MANUAL_FOLDER_TITLE];
   }
 
-  return cleaned.length ? cleaned : ["待手动分类"];
+  return cleaned.length ? cleaned : [MANUAL_FOLDER_TITLE];
 }
 
 function normalizePreservedFolderPath(folderPath) {
@@ -2605,8 +3101,8 @@ function normalizePreservedFolderPath(folderPath) {
     .filter((segment) => !isForbiddenManagedFolderName(segment))
     .slice(0, 2);
 
-  if (cleaned.includes("待手动分类")) {
-    return ["待手动分类"];
+  if (cleaned.includes(MANUAL_FOLDER_TITLE)) {
+    return [MANUAL_FOLDER_TITLE];
   }
 
   return cleaned;
@@ -2647,7 +3143,7 @@ function buildLogEntry(kind, bookmark, reason, suggestion) {
     id: crypto.randomUUID(),
     bookmarkId: bookmark?.id || "",
     kind,
-    title: bookmark?.title || "(无标题书签)",
+    title: bookmark?.title || t("untitledBookmark"),
     url: bookmark?.url || "",
     reason,
     suggestion,
@@ -2668,7 +3164,7 @@ function buildBatchClassificationPlan(batch, normalizedResults) {
   for (const bookmark of batch) {
     const plan = resultMap.get(bookmark.id) || {
       action: "keep",
-      folderPath: ["待手动分类"],
+      folderPath: [MANUAL_FOLDER_TITLE],
       duplicateOf: ""
     };
 
@@ -2678,15 +3174,21 @@ function buildBatchClassificationPlan(batch, normalizedResults) {
         buildLogEntry(
           "duplicate_deleted",
           bookmark,
-          "检测到同一 URL 的重复书签，重建时不会保留当前重复项。",
-          "如果这是你刻意保留的多个入口，可以稍后手动重新添加，或在整理前把该网站加入白名单。"
+          ux(
+            "检测到同一 URL 的重复书签，重建时不会保留当前重复项。",
+            "Duplicate bookmarks with the same URL were detected. The current duplicate will not be kept during rebuild."
+          ),
+          ux(
+            "如果这是你刻意保留的多个入口，可以稍后手动重新添加，或在整理前把该网站加入白名单。",
+            "If you intentionally keep multiple entries, you can add it back manually later or whitelist that site before organizing."
+          )
         )
       );
       continue;
     }
 
     keepEntries.push({
-      title: bookmark.title || "(无标题书签)",
+      title: bookmark.title || t("untitledBookmark"),
       url: bookmark.url,
       folderPath: normalizeFolderPath(plan.folderPath)
     });
@@ -2710,7 +3212,10 @@ async function rebuildOrganizedBookmarks(job) {
   const rootFolderId = bookmarkBarNode.id;
   const rootFolderName = bookmarkBarNode.title || "BOOKMARK_BAR";
   const unresolvedFolderId = await findExistingUnresolvedFolderId(rootFolderId);
-  const preservedTopLevelIds = new Set([unresolvedFolderId].filter(Boolean));
+  const preservedTopLevelIds = new Set([
+    unresolvedFolderId,
+    ...(Array.isArray(job.protectedRootFolderIds) ? job.protectedRootFolderIds : [])
+  ].filter(Boolean));
   const currentChildren = await chrome.bookmarks.getChildren(rootFolderId);
   const folderCache = { [rootFolderName]: rootFolderId };
   const managedFolderIds = [];
@@ -2747,7 +3252,7 @@ async function rebuildOrganizedBookmarks(job) {
     );
     await chrome.bookmarks.create({
       parentId: folderId,
-      title: entry.title || "(无标题书签)",
+      title: entry.title || t("untitledBookmark"),
       url: entry.url
     });
     createdCount += 1;
@@ -2764,15 +3269,15 @@ async function rebuildOrganizedBookmarks(job) {
 
       const bookmarkNode = await chrome.bookmarks.create({
         parentId: pendingFolderId,
-        title: entry.title || "(无标题书签)",
+        title: entry.title || t("untitledBookmark"),
         url: entry.url
       });
       realizedWarnings.push(
         buildLogEntry(
           entry.kind || "scan_uncertain",
           bookmarkNode,
-          entry.reason || "该书签暂未自动处理。",
-          entry.suggestion || "建议手动确认后再决定是否删除。"
+          entry.reason || ux("该书签暂未自动处理。", "This bookmark was not handled automatically yet."),
+          entry.suggestion || ux("建议手动确认后再决定是否删除。", "Check it manually before deciding whether to delete it.")
         )
       );
       createdCount += 1;
@@ -2795,7 +3300,7 @@ async function removeBookmarkIfExists(bookmarkId) {
   try {
     await chrome.bookmarks.remove(bookmarkId);
   } catch (error) {
-    // 书签可能已经被删除或移动，忽略即可。
+    // Ignore if the bookmark has already been removed or moved.
   }
 }
 
@@ -2889,6 +3394,123 @@ function normalizePromptValue(promptValue) {
   return promptValue.trim() === LEGACY_DEFAULT_PROMPT.trim() ? DEFAULT_PROMPT : promptValue;
 }
 
+async function loadClassificationCacheStore() {
+  const stored = await chrome.storage.local.get(STORAGE_KEYS.classificationCache);
+  const rawStore = stored[STORAGE_KEYS.classificationCache];
+  return rawStore && typeof rawStore === "object" ? rawStore : {};
+}
+
+function normalizeClassificationCacheBucket(rawBucket) {
+  const entries = Object.entries(rawBucket && typeof rawBucket === "object" ? rawBucket : {})
+    .filter(([fingerprint, entry]) => {
+      return (
+        typeof fingerprint === "string" &&
+        fingerprint &&
+        Array.isArray(entry?.folderPath) &&
+        entry.folderPath.length
+      );
+    })
+    .map(([fingerprint, entry]) => [
+      fingerprint,
+      {
+        folderPath: normalizeFolderPath(entry.folderPath),
+        updatedAt: entry.updatedAt || new Date().toISOString()
+      }
+    ]);
+
+  return Object.fromEntries(entries.slice(-MAX_CLASSIFICATION_CACHE_ITEMS));
+}
+
+async function saveClassificationCacheBucket(signature, bucket) {
+  if (!signature) {
+    return;
+  }
+
+  const store = await loadClassificationCacheStore();
+  const normalizedBucket = normalizeClassificationCacheBucket(bucket);
+  const nextStore = {
+    ...store,
+    [signature]: {
+      updatedAt: new Date().toISOString(),
+      items: normalizedBucket
+    }
+  };
+
+  const ordered = Object.entries(nextStore).sort(
+    (a, b) => Number(new Date(b[1]?.updatedAt || 0)) - Number(new Date(a[1]?.updatedAt || 0))
+  );
+  const limited = Object.fromEntries(ordered.slice(0, MAX_CLASSIFICATION_SIGNATURES));
+
+  await chrome.storage.local.set({
+    [STORAGE_KEYS.classificationCache]: limited
+  });
+}
+
+async function loadDeadLinkCache() {
+  const stored = await chrome.storage.local.get(STORAGE_KEYS.deadLinkCache);
+  const rawCache = stored[STORAGE_KEYS.deadLinkCache];
+  return rawCache && typeof rawCache === "object" ? rawCache : {};
+}
+
+async function saveDeadLinkCache(cache) {
+  await chrome.storage.local.set({
+    [STORAGE_KEYS.deadLinkCache]: CacheUtils.trimCacheEntries(cache)
+  });
+}
+
+function buildPreviewFolderSummary(planEntries, pendingWarnings = []) {
+  const counts = new Map();
+
+  for (const entry of Array.isArray(planEntries) ? planEntries : []) {
+    if (!entry?.url) {
+      continue;
+    }
+
+    const topLevel = Array.isArray(entry.folderPath) && entry.folderPath.length
+      ? entry.folderPath[0]
+      : MANUAL_FOLDER_TITLE;
+    counts.set(topLevel, (counts.get(topLevel) || 0) + 1);
+  }
+
+  if (Array.isArray(pendingWarnings) && pendingWarnings.length) {
+    counts.set(MANUAL_FOLDER_TITLE, (counts.get(MANUAL_FOLDER_TITLE) || 0) + pendingWarnings.length);
+  }
+
+  return Array.from(counts.entries())
+    .map(([title, totalBookmarks]) => ({
+      id: title,
+      title,
+      totalBookmarks
+    }))
+    .sort((a, b) => b.totalBookmarks - a.totalBookmarks || a.title.localeCompare(b.title, "zh-CN"));
+}
+
+function buildTaxonomyFallbackTopFolders() {
+  return isZh
+    ? [
+        "AI/技术",
+        "学习/教程",
+        "工具/效率",
+        "产品/设计",
+        "资讯/社区",
+        "购物/服务",
+        "娱乐/内容",
+        "生活/资源",
+        MANUAL_FOLDER_TITLE
+      ]
+    : [
+        "AI & Tech",
+        "Learning & Tutorials",
+        "Tools & Productivity",
+        "Product & Design",
+        "News & Communities",
+        "Shopping & Services",
+        "Entertainment & Content",
+        "Life & Resources",
+        MANUAL_FOLDER_TITLE
+      ];
+}
+
 function applyTaxonomyLocks(results, existingLocks = {}) {
   const nextLocks = { ...(existingLocks || {}) };
   const lockedResults = results.map((item) => {
@@ -2931,12 +3553,14 @@ function normalizeTaxonomyLockKey(value) {
 async function updateBatchStatus(job, currentBatch, patch) {
   return updateStatus({
     phase: "running",
-    provider: job.jobType === "dead_scan" ? "" : job.config.provider,
+    provider: job.jobType === "dead_scan" ? "" : getProviderLabel(job.config.provider),
     model: job.jobType === "dead_scan" ? "" : job.config.model,
     total: job.total,
     processed: job.processed,
     moved: job.moved,
     deleted: job.deleted,
+    reused: job.reused || 0,
+    aiClassified: job.aiClassified || 0,
     batchSize: job.batchSize,
     warningCount: job.warningCount,
     lastWarning: job.lastWarning || "",
@@ -2944,6 +3568,8 @@ async function updateBatchStatus(job, currentBatch, patch) {
     deletedItems: Array.isArray(job.deletedItems)
       ? job.deletedItems
       : currentStatus.deletedItems || [],
+    previewFolders: Array.isArray(job.previewFolders) ? job.previewFolders : currentStatus.previewFolders || [],
+    protectedRootCount: Array.isArray(job.protectedRootFolderIds) ? job.protectedRootFolderIds.length : currentStatus.protectedRootCount || 0,
     currentBatch,
     totalBatches: job.totalBatches,
     startedAt: job.startedAt,
@@ -2974,33 +3600,50 @@ async function withKeepAlive(task, onHeartbeatStart = null) {
 }
 
 function buildRequestAbortError(reason, config, batchLength) {
+  const providerLabel = getProviderLabel(config.provider);
+
   if (reason === "first-response-timeout") {
     return buildUserFacingError(
-      `${config.provider} 在 ${Math.floor(FIRST_RESPONSE_TIMEOUT_MS / 1000)} 秒内没有返回响应，任务已提前停止。`,
-      `这通常意味着模型首包太慢，容易撞到 Chrome Manifest V3 后台生命周期限制。建议先把批大小调小到 10-20，再检查网络、Base URL 和模型负载。当前批量：${batchLength}。`,
+      ux(
+        `${providerLabel} 在 ${Math.floor(FIRST_RESPONSE_TIMEOUT_MS / 1000)} 秒内没有返回响应，任务已提前停止。`,
+        `${providerLabel} did not return a response within ${Math.floor(FIRST_RESPONSE_TIMEOUT_MS / 1000)} seconds, so the task was stopped early.`
+      ),
+      ux(
+        `这通常意味着模型首包太慢，容易撞到 Chrome Manifest V3 后台生命周期限制。建议先把批大小调小到 10-20，再检查网络、Base URL 和模型负载。当前批量：${batchLength}。`,
+        `This usually means the first token was too slow and may hit Chrome Manifest V3 service worker lifetime limits. Try reducing the batch size to 10-20 first, then check the network, Base URL, and model load. Current batch size: ${batchLength}.`
+      ),
       reason
     );
   }
 
   if (reason === "request-timeout") {
     return buildUserFacingError(
-      `${config.provider} 请求超过 ${Math.floor(REQUEST_TIMEOUT_MS / 1000)} 秒仍未完成，任务已停止。`,
-      `模型虽然可能已经开始处理，但完整响应仍然过慢。建议减小批大小、换更快的模型，或确认接口没有卡在排队状态。当前批量：${batchLength}。`,
+      ux(
+        `${providerLabel} 请求超过 ${Math.floor(REQUEST_TIMEOUT_MS / 1000)} 秒仍未完成，任务已停止。`,
+        `${providerLabel} did not finish within ${Math.floor(REQUEST_TIMEOUT_MS / 1000)} seconds, so the task was stopped.`
+      ),
+      ux(
+        `模型虽然可能已经开始处理，但完整响应仍然过慢。建议减小批大小、换更快的模型，或确认接口没有卡在排队状态。当前批量：${batchLength}。`,
+        `The model may have started working, but the full response was still too slow. Reduce the batch size, switch to a faster model, or confirm the endpoint is not stuck in queue. Current batch size: ${batchLength}.`
+      ),
       reason
     );
   }
 
   if (reason === "cancelled-by-user") {
     return buildUserFacingError(
-      "任务已被你取消。",
-      "后台已经中止当前模型请求，不会继续处理后续批次。",
+      ux("任务已被你取消。", "The task was cancelled by you."),
+      ux("后台已经中止当前模型请求，不会继续处理后续批次。", "The current model request has been aborted and later batches will not continue."),
       reason
     );
   }
 
   return buildUserFacingError(
-    "模型请求被中止，任务已停止。",
-    "如果这不是你主动取消的，请检查网络连接、接口稳定性，或先调小批大小后重试。",
+    ux("模型请求被中止，任务已停止。", "The model request was aborted and the task has stopped."),
+    ux(
+      "如果这不是你主动取消的，请检查网络连接、接口稳定性，或先调小批大小后重试。",
+      "If you did not cancel it yourself, check the network connection, endpoint stability, or try again with a smaller batch size."
+    ),
     reason
   );
 }
@@ -3023,7 +3666,7 @@ function buildExactDuplicatePlans(batch) {
     .map((bookmark) => ({
       id: bookmark.id,
       action: "delete_duplicate",
-      folderPath: ["重复书签"],
+      folderPath: [DUPLICATE_FOLDER_TITLE],
       duplicateOf: bookmark.exactDuplicateOf
     }));
 }

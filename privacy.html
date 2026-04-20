@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Smart Bookmark AI - 隐私说明</title>
+    <title data-i18n="privacyPageTitle">Smart Bookmark AI - Privacy</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -12,7 +12,7 @@
         <div class="topbar__row">
           <div>
             <div class="topbar__meta">Smart Bookmark AI / Privacy</div>
-            <h1 class="topbar__title">隐私说明</h1>
+            <h1 class="topbar__title" data-i18n="privacyMainTitle">Privacy</h1>
           </div>
         </div>
       </header>
@@ -23,26 +23,26 @@
             <div class="panel__heading">
               <div>
                 <p class="panel__eyebrow">Data Use</p>
-                <h2 class="panel__title">数据使用范围</h2>
+                <h2 class="panel__title" data-i18n="privacyDataUseTitle">Data Scope</h2>
               </div>
             </div>
 
             <div class="record-list">
               <article class="record-item">
-                <div class="record-item__title">读取的本地数据</div>
-                <div class="record-item__suggestion">书签标题、URL、当前文件夹路径、插件设置、备份快照。</div>
+                <div class="record-item__title" data-i18n="privacyLocalDataTitle">Local data accessed</div>
+                <div class="record-item__suggestion" data-i18n="privacyLocalDataDesc">Bookmark titles, URLs, current folder paths, extension settings, and backup snapshots.</div>
               </article>
               <article class="record-item">
-                <div class="record-item__title">发送到第三方的数据</div>
-                <div class="record-item__suggestion">只有在你主动整理书签或开启自动整理时，书签标题、URL、现有路径和自定义 Prompt 才会发送到你选择的模型服务商。</div>
+                <div class="record-item__title" data-i18n="privacyThirdPartyTitle">Data sent to third parties</div>
+                <div class="record-item__suggestion" data-i18n="privacyThirdPartyDesc">Only when you actively organize bookmarks or enable auto organize, bookmark titles, URLs, current paths, and your custom prompt are sent to the model provider you chose.</div>
               </article>
               <article class="record-item">
-                <div class="record-item__title">失效链接检测</div>
-                <div class="record-item__suggestion">整理流程会直接向书签对应的网站发送 HEAD / GET 请求，用于判断链接是否失效。</div>
+                <div class="record-item__title" data-i18n="privacyDeadLinkTitle">Dead-link checks</div>
+                <div class="record-item__suggestion" data-i18n="privacyDeadLinkDesc">The organize flow sends direct HEAD / GET requests to bookmarked websites to determine whether links are dead.</div>
               </article>
               <article class="record-item">
-                <div class="record-item__title">本地存储</div>
-                <div class="record-item__suggestion">API Key、Provider、模型名、白名单和备份快照都保存在你的浏览器本地存储与 IndexedDB 中。</div>
+                <div class="record-item__title" data-i18n="privacyStorageTitle">Local storage</div>
+                <div class="record-item__suggestion" data-i18n="privacyStorageDesc">API keys, provider settings, model names, whitelist rules, and backup snapshots are stored locally in browser storage and IndexedDB.</div>
               </article>
             </div>
           </div>
@@ -53,27 +53,31 @@
             <div class="panel__heading">
               <div>
                 <p class="panel__eyebrow">Control</p>
-                <h2 class="panel__title">你可以控制的内容</h2>
+                <h2 class="panel__title" data-i18n="privacyControlTitle">Your Controls</h2>
               </div>
             </div>
 
             <div class="record-list">
               <article class="record-item">
-                <div class="record-item__title">授权网站访问</div>
-                <div class="record-item__suggestion">整理书签和自动整理前，需要你显式授权网站访问权限。你也可以稍后在 Chrome 扩展权限里撤销。</div>
+                <div class="record-item__title" data-i18n="privacyHostAccessTitle">Grant site access</div>
+                <div class="record-item__suggestion" data-i18n="privacyHostAccessDesc">You must explicitly grant site access before organizing bookmarks or using auto organize. You can later revoke it from Chrome extension permissions.</div>
               </article>
               <article class="record-item">
-                <div class="record-item__title">白名单与待手动分类</div>
-                <div class="record-item__suggestion">白名单域名不会被自动整理；状态不明确的书签会进入“待手动分类”。</div>
+                <div class="record-item__title" data-i18n="privacyWhitelistTitle">Whitelist and manual review</div>
+                <div class="record-item__suggestion" data-i18n="privacyWhitelistDesc">Whitelisted domains are not reorganized automatically. Uncertain bookmarks are placed in the manual review folder.</div>
               </article>
               <article class="record-item">
-                <div class="record-item__title">备份与恢复</div>
-                <div class="record-item__suggestion">整理前会先创建本地快照备份。你可以在设置页管理备份并恢复旧版本。</div>
+                <div class="record-item__title" data-i18n="privacyBackupTitle">Backup and restore</div>
+                <div class="record-item__suggestion" data-i18n="privacyBackupDesc">A local snapshot backup is created before organizing. You can manage backups and restore older versions from the settings page.</div>
               </article>
             </div>
           </div>
         </section>
       </section>
     </main>
+    <script src="i18n.js"></script>
+    <script>
+      SmartBookmarkI18n.applyDocument(document);
+    </script>
   </body>
 </html>

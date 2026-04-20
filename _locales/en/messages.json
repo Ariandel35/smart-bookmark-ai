@@ -1,0 +1,11 @@
+{
+  "extName": {
+    "message": "Smart Bookmark AI"
+  },
+  "extDescription": {
+    "message": "An intelligent Chrome extension that uses large language models to analyze and reorganize bookmarks in batches."
+  },
+  "actionTitle": {
+    "message": "Smart Bookmark AI"
+  }
+}

@@ -1,63 +1,10 @@
 const STORAGE_KEY = "smartBookmarkConfig";
 const HOST_ACCESS_ORIGINS = ["https://*/*", "http://*/*"];
-
-const LEGACY_DEFAULT_PROMPT = `你是一名资深信息架构师，请根据书签标题、URL 和现有路径，为每条书签分配稳定、可复用、便于长期维护的中文分类。
-
-要求：
-1. 优先使用宽泛且可长期复用的大类，不要给单个链接创建独占文件夹。
-2. folderPath 控制在 1 到 3 层之间，命名简洁清晰。
-3. 同类内容尽量归并，避免只在措辞上略有差异的重复分类。
-4. 如果信息不足以准确判断，请放入“待手动分类”。`;
-
-const DEFAULT_PROMPT = `你是一名极度克制的信息架构师，请整理浏览器书签，但目标不是“分类越细越专业”，而是“普通人以后能更快找到网页”。
-
-强制规则：
-1. 整体目录必须尽量少，一级目录总数以 6 到 8 个为目标，绝对不要超过 9 个。
-2. 每条书签最多只能使用 2 级结构：
-   - 允许：["AI/技术"]、["工具/效率", "浏览器插件"]
-   - 不允许：["技术", "AI", "模型", "推理"] 这种 3 级或 4 级结构
-3. 一级目录必须优先复用下面这些稳定大类，不要自由发明新大类：
-   - AI/技术
-   - 学习/教程
-   - 工具/效率
-   - 产品/设计
-   - 资讯/社区
-   - 购物/服务
-   - 娱乐/内容
-   - 生活/资源
-   - 待手动分类
-4. 只有在确实有必要时才添加二级目录；如果一级目录已经足够清楚，就只保留一级目录。
-5. 宁可合并，不要细分。不要把意思接近的内容拆成多个相似文件夹。
-6. 如果两个书签明显是同一个网页、同一篇内容、同一工具的重复入口，保留信息更完整、标题更清晰的一条，其他标记为重复删除。
-7. 无法确定是否重复时，不要删除，只做分类。
-8. 信息不足时统一放入“待手动分类”。`;
-
-const PROVIDER_DEFAULTS = {
-  openai: {
-    label: "OpenAI",
-    baseUrl: "https://api.openai.com/v1",
-    model: "gpt-4.1-mini",
-    apiKeyOptional: false
-  },
-  deepseek: {
-    label: "DeepSeek",
-    baseUrl: "https://api.deepseek.com",
-    model: "deepseek-chat",
-    apiKeyOptional: false
-  },
-  minimax: {
-    label: "MiniMax",
-    baseUrl: "https://api.minimaxi.com/v1",
-    model: "MiniMax-M2.7",
-    apiKeyOptional: false
-  },
-  ollama: {
-    label: "Ollama",
-    baseUrl: "http://localhost:11434/v1",
-    model: "llama3.2",
-    apiKeyOptional: true
-  }
-};
+const I18N = globalThis.SmartBookmarkI18n;
+const Providers = globalThis.SmartBookmarkProviders;
+const t = (key, params) => I18N.t(key, params);
+const LEGACY_DEFAULT_PROMPT = I18N.getLegacyDefaultPrompt();
+const DEFAULT_PROMPT = I18N.getDefaultPrompt();
 
 const form = document.getElementById("settingsForm");
 const providerSelect = document.getElementById("provider");
@@ -68,6 +15,8 @@ const batchSizeInput = document.getElementById("batchSize");
 const autoOrganizeEnabledInput = document.getElementById("autoOrganizeEnabled");
 const autoOrganizeIntervalInput = document.getElementById("autoOrganizeIntervalHours");
 const whitelistDomainsInput = document.getElementById("whitelistDomains");
+const protectedRootFoldersInput = document.getElementById("protectedRootFolders");
+const domainFolderRulesInput = document.getElementById("domainFolderRules");
 const customPromptInput = document.getElementById("customPrompt");
 const apiTestStatus = document.getElementById("apiTestStatus");
 const hostAccessStatus = document.getElementById("hostAccessStatus");
@@ -82,10 +31,13 @@ const createBackupButton = document.getElementById("createBackupButton");
 const navButtons = Array.from(document.querySelectorAll("[data-section-target]"));
 const sectionPanels = Array.from(document.querySelectorAll("[data-section-panel]"));
 
-let lastProvider = providerSelect.value;
+let lastProvider = "openai";
+
+I18N.applyDocument(document);
+renderProviderOptions();
 
 function getDefaults(provider) {
-  return PROVIDER_DEFAULTS[provider] || PROVIDER_DEFAULTS.openai;
+  return Providers.getProvider(provider);
 }
 
 function buildDefaultConfig(provider = "openai") {
@@ -99,12 +51,14 @@ function buildDefaultConfig(provider = "openai") {
     autoOrganizeEnabled: false,
     autoOrganizeIntervalHours: 24,
     whitelistDomains: "",
+    protectedRootFolders: "",
+    domainFolderRules: "",
     customPrompt: DEFAULT_PROMPT
   };
 }
 
 function mergeConfig(raw = {}) {
-  const provider = raw.provider && PROVIDER_DEFAULTS[raw.provider] ? raw.provider : "openai";
+  const provider = raw.provider && Providers.hasProvider(raw.provider) ? raw.provider : "openai";
   const defaults = buildDefaultConfig(provider);
   const promptValue =
     typeof raw.customPrompt === "string" && raw.customPrompt.trim()
@@ -121,8 +75,32 @@ function mergeConfig(raw = {}) {
     autoOrganizeIntervalHours: normalizeAutoInterval(raw.autoOrganizeIntervalHours),
     whitelistDomains:
       typeof raw.whitelistDomains === "string" ? raw.whitelistDomains.trim() : "",
+    protectedRootFolders:
+      typeof raw.protectedRootFolders === "string" ? raw.protectedRootFolders.trim() : "",
+    domainFolderRules:
+      typeof raw.domainFolderRules === "string" ? raw.domainFolderRules.trim() : "",
     customPrompt: normalizePromptValue(promptValue)
   };
+}
+
+function renderProviderOptions() {
+  const selectedProvider = Providers.hasProvider(providerSelect.value)
+    ? providerSelect.value
+    : Providers.hasProvider(lastProvider)
+      ? lastProvider
+      : "openai";
+
+  providerSelect.replaceChildren();
+
+  Providers.listProviders().forEach((provider) => {
+    const option = document.createElement("option");
+    option.value = provider.id;
+    option.textContent = provider.label;
+    providerSelect.appendChild(option);
+  });
+
+  providerSelect.value = Providers.hasProvider(selectedProvider) ? selectedProvider : "openai";
+  lastProvider = providerSelect.value;
 }
 
 function setSaveBadge(text, variant = "") {
@@ -160,28 +138,22 @@ function showAlert(message, sectionId = "") {
 }
 
 function formatDate(dateString) {
-  if (!dateString) {
-    return "—";
-  }
-
-  try {
-    return new Intl.DateTimeFormat("zh-CN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit"
-    }).format(new Date(dateString));
-  } catch (error) {
-    return "—";
-  }
+  return I18N.formatDate(dateString, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
 function updateProviderHints(provider) {
   const defaults = getDefaults(provider);
   modelInput.placeholder = defaults.model;
   baseUrlInput.placeholder = defaults.baseUrl;
-  apiKeyInput.placeholder = defaults.apiKeyOptional ? "本地模型可留空" : "请输入 API Key";
+  apiKeyInput.placeholder = defaults.apiKeyOptional
+    ? t("placeholderApiKeyOptional")
+    : t("placeholderApiKey");
 }
 
 function buildOriginPattern(rawUrl) {
@@ -253,8 +225,8 @@ async function ensureOriginAccess(rawUrl) {
 
 async function refreshHostAccessStatus() {
   const granted = await hasBroadHostAccess();
-  setHostAccessStatus(granted ? "已授权网站访问" : "未授权网站访问", granted);
-  grantAccessButton.textContent = granted ? "已授权" : "授权网站访问";
+  setHostAccessStatus(granted ? t("hostAccessGranted") : t("hostAccessMissing"), granted);
+  grantAccessButton.textContent = granted ? t("hostAccessGrantedButton") : t("hostAccessButton");
 }
 
 function populateForm(config) {
@@ -266,6 +238,8 @@ function populateForm(config) {
   autoOrganizeEnabledInput.value = config.autoOrganizeEnabled ? "true" : "false";
   autoOrganizeIntervalInput.value = String(config.autoOrganizeIntervalHours);
   whitelistDomainsInput.value = config.whitelistDomains;
+  protectedRootFoldersInput.value = config.protectedRootFolders;
+  domainFolderRulesInput.value = config.domainFolderRules;
   customPromptInput.value = config.customPrompt;
   lastProvider = config.provider;
   updateProviderHints(config.provider);
@@ -284,6 +258,8 @@ function collectFormData() {
     autoOrganizeEnabled: autoOrganizeEnabledInput.value === "true",
     autoOrganizeIntervalHours: normalizeAutoInterval(autoOrganizeIntervalInput.value),
     whitelistDomains: whitelistDomainsInput.value.trim(),
+    protectedRootFolders: protectedRootFoldersInput.value.trim(),
+    domainFolderRules: domainFolderRulesInput.value.trim(),
     customPrompt: customPromptInput.value.trim() || DEFAULT_PROMPT
   };
 }
@@ -344,7 +320,7 @@ function setActiveSection(sectionId, updateHash = true) {
 }
 
 function markPending() {
-  setSaveBadge("待保存", "warm");
+  setSaveBadge(t("saveBadgeUnsaved"), "warm");
 }
 
 function initializeNavigation() {
@@ -370,7 +346,7 @@ async function loadConfig() {
   await refreshBackupStatus();
   await refreshHostAccessStatus();
   clearApiTestStatus();
-  setSaveBadge("已同步", "success");
+  setSaveBadge(t("saveBadgeSynced"), "success");
 }
 
 async function refreshBackupStatus() {
@@ -384,9 +360,9 @@ async function refreshBackupStatus() {
   if (!response?.ok) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
-    empty.textContent = response?.error || "读取备份列表失败。";
+    empty.textContent = response?.error || t("backupReadFailed");
     backupList.appendChild(empty);
-    setBackupBadge("异常", "danger");
+    setBackupBadge(t("backupErrorBadge"), "danger");
     return;
   }
 
@@ -394,9 +370,9 @@ async function refreshBackupStatus() {
   if (!records.length) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
-    empty.textContent = "暂无备份";
+    empty.textContent = t("backupEmpty");
     backupList.appendChild(empty);
-    setBackupBadge("0 / 10");
+    setBackupBadge(t("backupRatio", { count: 0 }));
     return;
   }
 
@@ -414,7 +390,7 @@ async function refreshBackupStatus() {
     const desc = document.createElement("div");
     desc.className = "backup-row__desc";
     desc.textContent = [
-      record.source === "auto" ? "自动" : "手动",
+      record.source === "auto" ? t("backupSourceAuto") : t("backupSourceManual"),
       formatDate(record.createdAt)
     ]
       .filter(Boolean)
@@ -428,24 +404,24 @@ async function refreshBackupStatus() {
     const restoreButton = document.createElement("button");
     restoreButton.type = "button";
     restoreButton.className = "button button--ghost button--compact";
-    restoreButton.textContent = "恢复";
+    restoreButton.textContent = t("restoreButton");
     restoreButton.addEventListener("click", () => {
       restoreBackupEntry(record.id).catch((error) => {
         console.error("Failed to restore backup entry:", error);
-        setBackupBadge("异常", "danger");
-        window.alert("恢复备份时发生异常。");
+        setBackupBadge(t("backupErrorBadge"), "danger");
+        window.alert(t("backupRestoreExceptionAlert"));
       });
     });
 
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
     deleteButton.className = "button button--danger button--compact";
-    deleteButton.textContent = "删除";
+    deleteButton.textContent = t("deleteButton");
     deleteButton.addEventListener("click", () => {
       deleteBackupEntry(record.id).catch((error) => {
         console.error("Failed to delete backup entry:", error);
-        setBackupBadge("异常", "danger");
-        window.alert("删除备份时发生异常。");
+        setBackupBadge(t("backupErrorBadge"), "danger");
+        window.alert(t("backupDeleteExceptionAlert"));
       });
     });
 
@@ -454,7 +430,7 @@ async function refreshBackupStatus() {
     backupList.appendChild(row);
   });
 
-  setBackupBadge(`${records.length} / 10`, "success");
+  setBackupBadge(t("backupRatio", { count: records.length }), "success");
 }
 
 async function saveConfig(event) {
@@ -463,17 +439,17 @@ async function saveConfig(event) {
   const defaults = getDefaults(config.provider);
 
   if (!config.baseUrl) {
-    showAlert("Base URL 不能为空。", "connection");
+    showAlert(t("baseUrlRequired"), "connection");
     return;
   }
 
   if (!config.model) {
-    showAlert("Model Name 不能为空。", "connection");
+    showAlert(t("modelRequired"), "connection");
     return;
   }
 
   if (!Number.isInteger(config.batchSize) || config.batchSize < 5 || config.batchSize > 100) {
-    showAlert("批大小必须是 5 到 100 之间的整数。", "organize");
+    showAlert(t("batchSizeValidation"), "organize");
     return;
   }
 
@@ -482,12 +458,12 @@ async function saveConfig(event) {
     config.autoOrganizeIntervalHours < 1 ||
     config.autoOrganizeIntervalHours > 168
   ) {
-    showAlert("自动整理间隔必须是 1 到 168 小时之间的整数。", "automation");
+    showAlert(t("autoIntervalValidation"), "automation");
     return;
   }
 
   if (!defaults.apiKeyOptional && !config.apiKey) {
-    showAlert(`${defaults.label} 通常需要 API Key，请先填写。`, "connection");
+    showAlert(t("requiredApiKey", { provider: defaults.label }), "connection");
     return;
   }
 
@@ -495,13 +471,13 @@ async function saveConfig(event) {
     const granted = await ensureBroadHostAccess();
     await refreshHostAccessStatus();
     if (!granted) {
-      showAlert("自动整理需要网站访问权限。请先授权网站访问，再保存自动任务配置。", "automation");
+      showAlert(t("autoOrganizePermission"), "automation");
       return;
     }
   }
 
   await chrome.storage.local.set({ [STORAGE_KEY]: config });
-  setSaveBadge("已保存", "success");
+  setSaveBadge(t("saveBadgeSaved"), "success");
 }
 
 async function testApiConnection() {
@@ -510,19 +486,19 @@ async function testApiConnection() {
 
   if (!config.baseUrl) {
     setActiveSection("connection");
-    setApiTestStatus("Base URL 不能为空。", true);
+    setApiTestStatus(t("baseUrlRequired"), true);
     return;
   }
 
   if (!config.model) {
     setActiveSection("connection");
-    setApiTestStatus("Model Name 不能为空。", true);
+    setApiTestStatus(t("modelRequired"), true);
     return;
   }
 
   if (!defaults.apiKeyOptional && !config.apiKey) {
     setActiveSection("connection");
-    setApiTestStatus(`${defaults.label} 通常需要 API Key，请先填写。`, true);
+    setApiTestStatus(t("requiredApiKey", { provider: defaults.label }), true);
     return;
   }
 
@@ -530,12 +506,12 @@ async function testApiConnection() {
   await refreshHostAccessStatus();
   if (!granted) {
     setActiveSection("connection");
-    setApiTestStatus("未授权访问当前 API 地址。", true);
+    setApiTestStatus(t("currentApiAccessMissing"), true);
     return;
   }
 
   testApiButton.disabled = true;
-  setApiTestStatus("检测中…");
+  setApiTestStatus(t("apiTesting"));
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -545,16 +521,16 @@ async function testApiConnection() {
 
     if (!response?.ok) {
       setApiTestStatus(
-        [response?.error || "API 检测失败。", response?.detail].filter(Boolean).join(" "),
+        [response?.error || t("apiTestFailed"), response?.detail].filter(Boolean).join(" "),
         true
       );
       return;
     }
 
-    setApiTestStatus([response.message || "API 检测成功。", response.detail].filter(Boolean).join(" "));
+    setApiTestStatus([response.message || t("apiTestSucceeded"), response.detail].filter(Boolean).join(" "));
   } catch (error) {
     console.error("Failed to test API connection:", error);
-    setApiTestStatus("API 检测过程中发生异常。", true);
+    setApiTestStatus(t("apiTestException"), true);
   } finally {
     testApiButton.disabled = false;
   }
@@ -562,7 +538,7 @@ async function testApiConnection() {
 
 async function createManualBackup() {
   createBackupButton.disabled = true;
-  setBackupBadge("创建中", "accent");
+  setBackupBadge(t("backupCreatingBadge"), "accent");
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -570,16 +546,16 @@ async function createManualBackup() {
     });
 
     if (!response?.ok) {
-      setBackupBadge("异常", "danger");
-      window.alert(response?.error || "创建备份失败。");
+      setBackupBadge(t("backupErrorBadge"), "danger");
+      window.alert(response?.error || t("backupCreateFailedAlert"));
       return;
     }
 
     await refreshBackupStatus();
   } catch (error) {
     console.error("Failed to create manual backup:", error);
-    setBackupBadge("异常", "danger");
-    window.alert("创建备份时发生异常。");
+    setBackupBadge(t("backupErrorBadge"), "danger");
+    window.alert(t("backupCreateExceptionAlert"));
   } finally {
     createBackupButton.disabled = false;
     await refreshBackupStatus();
@@ -587,12 +563,12 @@ async function createManualBackup() {
 }
 
 async function restoreBackupEntry(backupId) {
-  if (!window.confirm("恢复这个备份后，当前书签栏内容会被该备份覆盖。继续吗？")) {
+  if (!window.confirm(t("backupRestoreConfirm"))) {
     return;
   }
 
   createBackupButton.disabled = true;
-  setBackupBadge("恢复中", "accent");
+  setBackupBadge(t("backupRestoringBadge"), "accent");
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -601,16 +577,16 @@ async function restoreBackupEntry(backupId) {
     });
 
     if (!response?.ok) {
-      setBackupBadge("异常", "danger");
-      window.alert(response?.error || "恢复备份失败。");
+      setBackupBadge(t("backupErrorBadge"), "danger");
+      window.alert(response?.error || t("backupRestoreFailedAlert"));
       return;
     }
 
     await refreshBackupStatus();
   } catch (error) {
     console.error("Failed to restore backup entry:", error);
-    setBackupBadge("异常", "danger");
-    window.alert("恢复备份时发生异常。");
+    setBackupBadge(t("backupErrorBadge"), "danger");
+    window.alert(t("backupRestoreExceptionAlert"));
   } finally {
     createBackupButton.disabled = false;
     await refreshBackupStatus();
@@ -618,12 +594,12 @@ async function restoreBackupEntry(backupId) {
 }
 
 async function deleteBackupEntry(backupId) {
-  if (!window.confirm("确定要删除这个备份吗？删除后无法恢复。")) {
+  if (!window.confirm(t("backupDeleteConfirm"))) {
     return;
   }
 
   createBackupButton.disabled = true;
-  setBackupBadge("删除中", "accent");
+  setBackupBadge(t("backupDeletingBadge"), "accent");
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -632,16 +608,16 @@ async function deleteBackupEntry(backupId) {
     });
 
     if (!response?.ok) {
-      setBackupBadge("异常", "danger");
-      window.alert(response?.error || "删除备份失败。");
+      setBackupBadge(t("backupErrorBadge"), "danger");
+      window.alert(response?.error || t("backupDeleteFailedAlert"));
       return;
     }
 
     await refreshBackupStatus();
   } catch (error) {
     console.error("Failed to delete backup entry:", error);
-    setBackupBadge("异常", "danger");
-    window.alert("删除备份时发生异常。");
+    setBackupBadge(t("backupErrorBadge"), "danger");
+    window.alert(t("backupDeleteExceptionAlert"));
   } finally {
     createBackupButton.disabled = false;
     await refreshBackupStatus();
@@ -654,14 +630,14 @@ function resetCurrentProviderDefaults() {
   populateForm(config);
   setActiveSection("connection");
   clearApiTestStatus();
-  setSaveBadge("待保存", "warm");
+  setSaveBadge(t("saveBadgeUnsaved"), "warm");
 }
 
 async function requestHostAccess() {
   const granted = await ensureBroadHostAccess();
   await refreshHostAccessStatus();
   if (!granted) {
-    showAlert("未授予网站访问权限。整理书签和自动整理都需要这项授权。", "connection");
+    showAlert(t("hostAccessMissingAlert"), "connection");
   }
 }
 
@@ -694,7 +670,7 @@ providerSelect.addEventListener("change", () => {
   updateProviderHints(nextProvider);
   lastProvider = nextProvider;
   clearApiTestStatus();
-  setSaveBadge("待保存", "warm");
+  setSaveBadge(t("saveBadgeUnsaved"), "warm");
 });
 
 form.addEventListener("submit", saveConfig);
@@ -704,7 +680,7 @@ testApiButton.addEventListener("click", testApiConnection);
 grantAccessButton.addEventListener("click", () => {
   requestHostAccess().catch((error) => {
     console.error("Failed to request host access:", error);
-    showAlert("申请网站访问权限时发生异常。", "connection");
+    showAlert(t("hostAccessRequestException"), "connection");
   });
 });
 resetButton.addEventListener("click", resetCurrentProviderDefaults);
@@ -735,5 +711,5 @@ loadConfig().catch((error) => {
     console.error("Failed to refresh backup status:", backupError);
   });
   clearApiTestStatus();
-  setSaveBadge("读取失败", "danger");
+  setSaveBadge(t("saveBadgeFailed"), "danger");
 });

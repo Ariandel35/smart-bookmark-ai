@@ -8,7 +8,7 @@
 
 Smart Bookmark AI is a Chrome extension that helps users clean up large bookmark libraries with LLM-assisted classification.
 
-It creates a local snapshot backup, checks clearly dead links, removes obvious duplicates, and rebuilds a simpler bookmark structure directly at the bookmark bar root.
+It creates a local snapshot backup, checks clearly dead links, removes obvious duplicates, plans a stable global taxonomy, and rebuilds a simpler bookmark structure directly at the bookmark bar root.
 
 <p align="center">
   <img src="docs/assets/hero.svg" alt="Smart Bookmark AI hero" width="860" />
@@ -49,16 +49,18 @@ The settings page uses a left-side navigation layout for connection settings, or
 
 ## Highlights
 
-- Works with OpenAI, DeepSeek, MiniMax, and Ollama
+- Works with OpenAI, DeepSeek, Anthropic, Gemini, OpenRouter, Groq, xAI, Moonshot AI, Ollama, and generic OpenAI-compatible endpoints
 - Custom Base URL, API key, model name, and prompt
-- Chunked background processing for large bookmark collections
-- Dead link detection before AI classification
-- Conservative duplicate cleanup
-- Whitelist domains that should never be reorganized
+- Global taxonomy planning before chunked classification for more stable folders
+- Preview mode before applying changes to the bookmark tree
+- Conservative duplicate cleanup and dead link detection before AI classification
+- Protected root folders and domain-to-folder rules
+- Classification cache reuse and dead link cache for faster reruns
 - Automatic local snapshot backup before each organize run
 - Manual backup, restore, and delete
 - Auto organize with Chrome alarms
 - Reviewable unprocessed and delete logs
+- English and Simplified Chinese interface support
 
 ## Workflow
 
@@ -68,16 +70,17 @@ Smart Bookmark AI is designed for safety first. It does not rewrite the bookmark
   <img src="docs/assets/workflow.svg" alt="Workflow diagram" width="860" />
 </p>
 
-1. Create a local snapshot backup
-2. Scan links for clearly dead bookmarks
-3. Send bookmark context to the model provider you selected
-4. Build a full plan
+1. Optionally generate a preview without changing bookmarks
+2. Create a local snapshot backup before a real organize run
+3. Scan links for clearly dead bookmarks
+4. Plan a global folder taxonomy, then classify in chunks
 5. Rebuild the final structure at the bookmark root in one pass
 
 ## Privacy Summary
 
 - Bookmarks are only sent to the model provider you choose
 - API keys and backups are stored locally in the browser
+- Classification cache and dead-link cache are stored locally to speed up later runs
 - Dead link detection sends requests directly to bookmarked websites
 - The extension developer does not receive your bookmark data
 
@@ -90,16 +93,29 @@ Full privacy details: [PRIVACY.md](PRIVACY.md)
 - `alarms`: schedule auto organize jobs
 - Optional website access: requested at runtime for model API access and dead link checks
 
+## Advanced Rules
+
+- `Protected root folders`: keep selected top-level bookmark folders untouched during organize runs
+- `Domain folder rules`: force matching domains into specific folders before AI classification
+- `Preview mode`: inspect the planned structure and key counts before rebuilding
+- `Cache reuse`: previously classified bookmarks can be reused locally when the title, URL, and rules signature still match
+
 ## Repository Structure
 
 - [manifest.json](manifest.json)
 - [background.js](background.js)
+- [providers.js](providers.js)
+- [json-utils.js](json-utils.js)
+- [rules.js](rules.js)
+- [cache-utils.js](cache-utils.js)
+- [i18n.js](i18n.js)
 - [popup.html](popup.html)
 - [popup.js](popup.js)
 - [options.html](options.html)
 - [options.js](options.js)
 - [styles.css](styles.css)
 - [privacy.html](privacy.html)
+- [tests](tests)
 - [docs/assets](docs/assets)
 - [docs/screenshots](docs/screenshots)
 - [webstore](webstore)
@@ -117,6 +133,9 @@ Full privacy details: [PRIVACY.md](PRIVACY.md)
 node --check background.js
 node --check options.js
 node --check popup.js
+node --check providers.js
+node --check i18n.js
+node tests/run-tests.js
 ```
 
 ## GitHub and Chrome Web Store

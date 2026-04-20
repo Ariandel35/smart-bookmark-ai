@@ -14,6 +14,7 @@ Smart Bookmark AI only processes data needed to organize bookmarks.
 
 - To check whether bookmarked links are clearly dead
 - To send bookmark context to the model provider you choose for classification
+- To generate preview plans and stable taxonomy suggestions before a full rebuild
 - To create a local snapshot backup before reorganizing bookmarks
 - To render progress, delete logs, and unprocessed items in the UI
 
@@ -26,6 +27,7 @@ Smart Bookmark AI only processes data needed to organize bookmarks.
 
 - API keys and extension settings are stored in `chrome.storage.local`
 - Local snapshot backups are stored in IndexedDB
+- Classification cache and dead-link cache are stored locally to speed up future runs
 - The extension developer does not operate a relay server for user data
 
 ## Your control

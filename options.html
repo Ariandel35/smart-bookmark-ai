@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Smart Bookmark AI - 设置</title>
+    <title data-i18n="optionsPageTitle">Smart Bookmark AI - Settings</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -11,20 +11,35 @@
       <header class="topbar">
         <div class="topbar__row">
           <div>
-            <div class="topbar__meta">Smart Bookmark AI / Options</div>
-            <h1 class="topbar__title">设置中心</h1>
+            <div class="topbar__meta" data-i18n="optionsMeta">Smart Bookmark AI / Options</div>
+            <h1 class="topbar__title" data-i18n="optionsMainTitle">Settings Center</h1>
           </div>
 
           <div class="topbar__actions topbar__actions--page">
-            <span class="pill pill--accent" id="saveBadge">未保存</span>
-            <button class="button button--primary button--compact" type="submit" form="settingsForm">
-              保存设置
+            <span class="pill pill--accent" id="saveBadge" data-i18n="saveBadgeUnsaved">Unsaved</span>
+            <button
+              class="button button--primary button--compact"
+              type="submit"
+              form="settingsForm"
+              data-i18n="saveButton"
+            >
+              Save
             </button>
-            <button class="button button--ghost button--compact" type="button" id="resetButton">
-              恢复默认
+            <button
+              class="button button--ghost button--compact"
+              type="button"
+              id="resetButton"
+              data-i18n="resetButton"
+            >
+              Reset
             </button>
-            <button class="button button--ghost button--compact" type="button" id="privacyButton">
-              隐私
+            <button
+              class="button button--ghost button--compact"
+              type="button"
+              id="privacyButton"
+              data-i18n="privacyButton"
+            >
+              Privacy
             </button>
           </div>
         </div>
@@ -35,19 +50,19 @@
             <div class="panel__inner">
               <div class="panel__heading">
                 <div>
-                  <p class="panel__eyebrow">Navigation</p>
-                  <h2 class="panel__title">配置导航</h2>
+                  <p class="panel__eyebrow" data-i18n="navEyebrow">Navigation</p>
+                  <h2 class="panel__title" data-i18n="navTitle">Settings Navigation</h2>
                 </div>
               </div>
 
-            <nav class="nav-list" aria-label="设置导航">
+            <nav class="nav-list" data-i18n-aria-label="navTitle" aria-label="Settings Navigation">
               <button
                 class="nav-button is-active"
                 type="button"
                 data-section-target="connection"
                 aria-selected="true"
               >
-                <span class="nav-button__title">连接配置</span>
+                <span class="nav-button__title" data-i18n="navConnection">Connection</span>
               </button>
               <button
                 class="nav-button"
@@ -55,7 +70,7 @@
                 data-section-target="organize"
                 aria-selected="false"
               >
-                <span class="nav-button__title">整理规则</span>
+                <span class="nav-button__title" data-i18n="navOrganize">Organization</span>
               </button>
               <button
                 class="nav-button"
@@ -63,7 +78,7 @@
                 data-section-target="automation"
                 aria-selected="false"
               >
-                <span class="nav-button__title">自动任务</span>
+                <span class="nav-button__title" data-i18n="navAutomation">Automation</span>
               </button>
               <button
                 class="nav-button"
@@ -71,7 +86,7 @@
                 data-section-target="backup"
                 aria-selected="false"
               >
-                <span class="nav-button__title">备份管理</span>
+                <span class="nav-button__title" data-i18n="navBackup">Backups</span>
               </button>
             </nav>
           </div>
@@ -86,37 +101,33 @@
               <div class="panel__inner">
                 <div class="panel__heading">
                   <div>
-                    <p class="panel__eyebrow">Connection</p>
-                    <h2 class="panel__title">连接配置</h2>
+                    <p class="panel__eyebrow" data-i18n="connectionEyebrow">Connection</p>
+                    <h2 class="panel__title" data-i18n="connectionTitle">Connection Settings</h2>
                   </div>
                 </div>
 
                 <div class="form-grid">
                   <div class="field-grid">
                     <div class="field">
-                      <label for="provider">API Provider</label>
-                      <select id="provider" name="provider">
-                        <option value="openai">OpenAI</option>
-                        <option value="deepseek">DeepSeek</option>
-                        <option value="minimax">MiniMax</option>
-                        <option value="ollama">Ollama</option>
-                      </select>
+                      <label for="provider" data-i18n="labelProvider">API Provider</label>
+                      <select id="provider" name="provider"></select>
                     </div>
 
                     <div class="field">
-                      <label for="model">Model Name</label>
+                      <label for="model" data-i18n="labelModel">Model Name</label>
                       <input
                         id="model"
                         name="model"
                         type="text"
-                        placeholder="例如：gpt-4.1-mini"
+                        data-i18n-placeholder="placeholderModel"
+                        placeholder="e.g. gpt-4.1-mini"
                         spellcheck="false"
                       />
                     </div>
                   </div>
 
                   <div class="field">
-                    <label for="baseUrl">Base URL</label>
+                    <label for="baseUrl" data-i18n="labelBaseUrl">Base URL</label>
                     <input
                       id="baseUrl"
                       name="baseUrl"
@@ -128,12 +139,13 @@
                   </div>
 
                   <div class="field">
-                    <label for="apiKey">API Key</label>
+                    <label for="apiKey" data-i18n="labelApiKey">API Key</label>
                     <input
                       id="apiKey"
                       name="apiKey"
                       type="password"
-                      placeholder="请输入 API Key"
+                      data-i18n-placeholder="placeholderApiKey"
+                      placeholder="Enter API key"
                       autocomplete="new-password"
                       spellcheck="false"
                     />
@@ -142,7 +154,7 @@
                   <div class="field field--inline-actions">
                     <div class="field__toolbar">
                       <button class="button button--secondary button--compact" type="button" id="testApiButton">
-                        检测 API 是否可用
+                        <span data-i18n="testApiButton">Test API</span>
                       </button>
                       <span class="status-text field__status" id="apiTestStatus" aria-live="polite" hidden></span>
                     </div>
@@ -151,7 +163,7 @@
                   <div class="field field--inline-actions">
                     <div class="field__toolbar">
                       <button class="button button--ghost button--compact" type="button" id="grantAccessButton">
-                        授权网站访问
+                        <span data-i18n="hostAccessButton">Grant Site Access</span>
                       </button>
                       <span class="status-text field__status" id="hostAccessStatus" aria-live="polite"></span>
                     </div>
@@ -164,14 +176,14 @@
               <div class="panel__inner">
                 <div class="panel__heading">
                   <div>
-                    <p class="panel__eyebrow">Organization</p>
-                    <h2 class="panel__title">整理规则</h2>
+                    <p class="panel__eyebrow" data-i18n="organizeEyebrow">Organization</p>
+                    <h2 class="panel__title" data-i18n="organizeTitle">Organization Rules</h2>
                   </div>
                 </div>
 
                 <div class="form-grid">
                   <div class="field">
-                    <label for="batchSize">每批处理数量</label>
+                    <label for="batchSize" data-i18n="labelBatchSize">Batch Size</label>
                     <input
                       id="batchSize"
                       name="batchSize"
@@ -185,20 +197,42 @@
                   </div>
 
                   <div class="field">
-                    <label for="whitelistDomains">白名单域名</label>
+                    <label for="whitelistDomains" data-i18n="labelWhitelistDomains">Whitelist Domains</label>
                     <textarea
                       id="whitelistDomains"
                       name="whitelistDomains"
-                      placeholder="每行一个域名，例如：&#10;mail.google.com&#10;github.com&#10;*.bank.com"
+                      data-i18n-placeholder="placeholderWhitelist"
+                      placeholder="One domain per line"
                     ></textarea>
                   </div>
 
                   <div class="field">
-                    <label for="customPrompt">自定义 Prompt</label>
+                    <label for="protectedRootFolders" data-i18n="labelProtectedRootFolders">Protected Root Folders</label>
+                    <textarea
+                      id="protectedRootFolders"
+                      name="protectedRootFolders"
+                      data-i18n-placeholder="placeholderProtectedRootFolders"
+                      placeholder="One root folder per line"
+                    ></textarea>
+                  </div>
+
+                  <div class="field">
+                    <label for="domainFolderRules" data-i18n="labelDomainFolderRules">Domain Folder Rules</label>
+                    <textarea
+                      id="domainFolderRules"
+                      name="domainFolderRules"
+                      data-i18n-placeholder="placeholderDomainFolderRules"
+                      placeholder="example.com => Tools / Reading"
+                    ></textarea>
+                  </div>
+
+                  <div class="field">
+                    <label for="customPrompt" data-i18n="labelCustomPrompt">Custom Prompt</label>
                     <textarea
                       id="customPrompt"
                       name="customPrompt"
-                      placeholder="输入自定义 Prompt"
+                      data-i18n-placeholder="placeholderPrompt"
+                      placeholder="Enter custom prompt"
                     ></textarea>
                   </div>
                 </div>
@@ -209,22 +243,22 @@
               <div class="panel__inner">
                 <div class="panel__heading">
                   <div>
-                    <p class="panel__eyebrow">Automation</p>
-                    <h2 class="panel__title">自动任务</h2>
+                    <p class="panel__eyebrow" data-i18n="automationEyebrow">Automation</p>
+                    <h2 class="panel__title" data-i18n="automationTitle">Automation</h2>
                   </div>
                 </div>
 
                 <div class="split-grid">
                   <div class="field">
-                    <label for="autoOrganizeEnabled">自动静默整理</label>
+                    <label for="autoOrganizeEnabled" data-i18n="labelAutoOrganizeEnabled">Auto Silent Organize</label>
                     <select id="autoOrganizeEnabled" name="autoOrganizeEnabled">
-                      <option value="true">开启</option>
-                      <option value="false">关闭</option>
+                      <option value="true" data-i18n="autoOrganizeOn">Enabled</option>
+                      <option value="false" data-i18n="autoOrganizeOff">Disabled</option>
                     </select>
                   </div>
 
                   <div class="field">
-                    <label for="autoOrganizeIntervalHours">自动整理间隔（小时）</label>
+                    <label for="autoOrganizeIntervalHours" data-i18n="labelAutoOrganizeInterval">Auto Organize Interval (hours)</label>
                     <input
                       id="autoOrganizeIntervalHours"
                       name="autoOrganizeIntervalHours"
@@ -244,20 +278,20 @@
               <div class="panel__inner">
                 <div class="panel__heading">
                   <div>
-                    <p class="panel__eyebrow">Backup</p>
-                    <h2 class="panel__title">备份管理</h2>
+                    <p class="panel__eyebrow" data-i18n="backupEyebrow">Backup</p>
+                    <h2 class="panel__title" data-i18n="backupTitle">Backup Management</h2>
                   </div>
-                  <span class="pill" id="backupStatusBadge">读取中</span>
+                  <span class="pill" id="backupStatusBadge" data-i18n="backupLoading">Loading</span>
                 </div>
 
                 <div class="form-grid">
                   <div class="backup-list" id="backupList">
-                    <div class="empty-state">读取中</div>
+                    <div class="empty-state" data-i18n="backupLoading">Loading</div>
                   </div>
 
                   <div class="actions">
                     <button class="button button--secondary button--compact" type="button" id="createBackupButton">
-                      立即备份
+                      <span data-i18n="createBackupNow">Create Backup</span>
                     </button>
                   </div>
                 </div>
@@ -269,6 +303,8 @@
       </section>
     </main>
 
+    <script src="i18n.js"></script>
+    <script src="providers.js"></script>
     <script src="options.js"></script>
   </body>
 </html>

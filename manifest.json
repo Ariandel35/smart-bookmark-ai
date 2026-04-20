@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Smart Bookmark AI",
-  "description": "使用大语言模型批量分析并重新整理 Chrome 书签的智能扩展。",
+  "name": "__MSG_extName__",
+  "description": "__MSG_extDescription__",
   "version": "1.2.0",
+  "default_locale": "en",
   "permissions": ["bookmarks", "storage", "alarms"],
   "optional_host_permissions": ["https://*/*", "http://*/*"],
   "icons": {
@@ -15,7 +16,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Smart Bookmark AI",
+    "default_title": "__MSG_actionTitle__",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",

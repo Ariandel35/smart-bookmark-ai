@@ -8,7 +8,7 @@
 
 Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主要用于帮助用户清理数量庞大、结构混乱的书签库。
 
-它会先创建本地快照备份，再检测明显失效的链接、清理明显重复的书签，并结合你选择的大语言模型，对剩余书签进行语义分类，最后把整理后的结构直接重建到书签栏根目录。
+它会先创建本地快照备份，再检测明显失效的链接、清理明显重复的书签，先规划全局目录，再结合你选择的大语言模型，对剩余书签进行分批语义分类，最后把整理后的结构直接重建到书签栏根目录。
 
 <p align="center">
   <img src="docs/assets/hero.svg" alt="Smart Bookmark AI 首页图" width="860" />
@@ -49,15 +49,18 @@ Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主
 
 ## 核心特点
 
-- 支持 OpenAI、DeepSeek、MiniMax 和 Ollama
+- 支持 OpenAI、DeepSeek、Anthropic、Gemini、OpenRouter、Groq、xAI、Moonshot AI、Ollama，以及通用 OpenAI Compatible 接口
 - 支持自定义 Base URL、API Key、模型名和 Prompt
-- 支持大规模书签分批处理
+- 先做全局 taxonomy 规划，再分批分类，减少同类书签被拆散
+- 支持预览模式，先看结果摘要再决定是否正式整理
 - 先扫描明显失效链接，再进行 AI 分类
 - 保守去重，尽量避免误删
-- 支持白名单域名，不整理指定网站
+- 支持受保护根目录和域名目录规则
+- 支持分类缓存与死链缓存，加快重复整理
 - 每次整理前自动创建本地快照备份
 - 支持手动备份、恢复与删除
 - 支持自动静默整理
+- 支持中英文界面切换
 - 支持查看未处理项与删除记录
 
 ## 工作流程
@@ -68,16 +71,17 @@ Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主
   <img src="docs/assets/workflow.svg" alt="工作流程图" width="860" />
 </p>
 
-1. 创建本地快照备份
-2. 扫描明显失效的书签链接
-3. 将书签上下文发送到你自己配置的模型服务商
-4. 生成完整整理方案
+1. 可先生成预览，不直接改动书签
+2. 正式整理前创建本地快照备份
+3. 扫描明显失效的书签链接
+4. 先规划全局目录，再分批分类
 5. 一次性在根目录重建新的书签结构
 
 ## 隐私摘要
 
 - 书签内容只会发送到你自己选择的模型服务商
 - API Key 和备份数据只保存在本地浏览器
+- 分类缓存和死链缓存也只保存在本地
 - 失效链接检测会直接访问书签对应的网站
 - 扩展开发者不会接收你的书签数据
 
@@ -90,16 +94,29 @@ Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主
 - `alarms`：支持自动整理和批次调度
 - 网站访问权限：运行时申请，用于模型 API 请求和失效链接检测
 
+## 高级规则
+
+- `受保护根目录`：整理时跳过指定的书签根目录，避免误动重要文件夹
+- `域名目录规则`：让指定域名在进入 AI 分类前，先固定归到你指定的目录
+- `预览模式`：先查看预计的目录结构和统计，再决定是否真正重建
+- `缓存复用`：当书签标题、URL 和规则签名不变时，可直接复用之前的分类结果
+
 ## 仓库结构
 
 - [manifest.json](manifest.json)
 - [background.js](background.js)
+- [providers.js](providers.js)
+- [json-utils.js](json-utils.js)
+- [rules.js](rules.js)
+- [cache-utils.js](cache-utils.js)
+- [i18n.js](i18n.js)
 - [popup.html](popup.html)
 - [popup.js](popup.js)
 - [options.html](options.html)
 - [options.js](options.js)
 - [styles.css](styles.css)
 - [privacy.html](privacy.html)
+- [tests](tests)
 - [docs/assets](docs/assets)
 - [docs/screenshots](docs/screenshots)
 - [webstore](webstore)
@@ -117,6 +134,9 @@ Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主
 node --check background.js
 node --check options.js
 node --check popup.js
+node --check providers.js
+node --check i18n.js
+node tests/run-tests.js
 ```
 
 ## GitHub 与 Chrome Web Store

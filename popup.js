@@ -2,6 +2,8 @@ const CONFIG_KEY = "smartBookmarkConfig";
 const STATUS_KEY = "smartBookmarkJobStatus";
 const MANAGED_FOLDER_IDS_KEY = "smartBookmarkManagedFolderIds";
 const HOST_ACCESS_ORIGINS = ["https://*/*", "http://*/*"];
+const I18N = globalThis.SmartBookmarkI18n;
+const t = (key, params) => I18N.t(key, params);
 
 const phaseBadge = document.getElementById("phaseBadge");
 const progressBar = document.getElementById("progressBar");
@@ -14,6 +16,7 @@ const movedValue = document.getElementById("movedValue");
 const deletedValue = document.getElementById("deletedValue");
 const warningValue = document.getElementById("warningValue");
 const detailPanel = document.getElementById("detailPanel");
+const previewButton = document.getElementById("previewButton");
 const startButton = document.getElementById("startButton");
 const backupButton = document.getElementById("backupButton");
 const cancelButton = document.getElementById("cancelButton");
@@ -27,8 +30,9 @@ let currentFolderViews = [];
 let selectedDetailView = "overview";
 let detailRequestVersion = 0;
 
-const DEFAULT_STATUS_DETAIL =
-  "整理会尽量压缩为少量大类、最多两级，并清理明显重复或已失效的书签。";
+I18N.applyDocument(document);
+
+const DEFAULT_STATUS_DETAIL = t("defaultStatusDetail");
 
 async function hasBroadHostAccess() {
   try {
@@ -52,14 +56,15 @@ async function ensureBroadHostAccess() {
 
 function titleCasePhase(phase) {
   const phaseMap = {
-    idle: "空闲",
-    running: "执行中",
-    completed: "已完成",
-    cancelled: "已取消",
-    error: "出错"
+    idle: t("phaseIdle"),
+    preview: t("phasePreview"),
+    running: t("phaseRunning"),
+    completed: t("phaseCompleted"),
+    cancelled: t("phaseCancelled"),
+    error: t("phaseError")
   };
 
-  return phaseMap[phase] || "未知";
+  return phaseMap[phase] || t("phaseUnknown");
 }
 
 function shorten(text, maxLength = 42) {
@@ -71,21 +76,7 @@ function shorten(text, maxLength = 42) {
 }
 
 function formatDate(dateString) {
-  if (!dateString) {
-    return "—";
-  }
-
-  try {
-    return new Intl.DateTimeFormat("zh-CN", {
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit"
-    }).format(new Date(dateString));
-  } catch (error) {
-    return "—";
-  }
+  return I18N.formatDate(dateString);
 }
 
 function getHostname(urlString) {
@@ -103,14 +94,14 @@ function getHostname(urlString) {
 function getLogKindLabel(kind) {
   return (
     {
-      move_failed: "移动失败",
-      delete_failed: "删除失败",
-      scan_uncertain: "状态不明确",
-      scan_failed: "扫描失败",
-      duplicate_deleted: "重复删除",
-      dead_link_deleted: "死链删除",
-      manual_deleted: "手动删除"
-    }[kind] || "记录"
+      move_failed: t("logMoveFailed"),
+      delete_failed: t("logDeleteFailed"),
+      scan_uncertain: t("logScanUncertain"),
+      scan_failed: t("logScanFailed"),
+      duplicate_deleted: t("logDuplicateDeleted"),
+      dead_link_deleted: t("logDeadLinkDeleted"),
+      manual_deleted: t("logManualDeleted")
+    }[kind] || t("logRecord")
   );
 }
 
@@ -120,6 +111,7 @@ function hasRunnableConfig(config) {
 
 function syncActionButtons() {
   const isRunning = currentStatus?.phase === "running";
+  previewButton.disabled = isRunning || !hasRunnableConfig(currentConfig);
   startButton.disabled = isRunning || !hasRunnableConfig(currentConfig);
   backupButton.disabled = isRunning;
   cancelButton.disabled = !isRunning;
@@ -160,15 +152,15 @@ function renderStatus(status) {
 
   const metaParts = [];
   if (status?.currentBatch && status?.totalBatches) {
-    metaParts.push(`第 ${status.currentBatch}/${status.totalBatches} 批`);
+    metaParts.push(t("batchMeta", { current: status.currentBatch, total: status.totalBatches }));
   }
   if (status?.batchSize) {
-    metaParts.push(`批大小 ${status.batchSize}`);
+    metaParts.push(t("batchSizeMeta", { count: status.batchSize }));
   }
   if (status?.updatedAt) {
-    metaParts.push(`最近更新 ${formatDate(status.updatedAt)}`);
+    metaParts.push(t("updatedMeta", { time: formatDate(status.updatedAt) }));
   }
-  progressMeta.textContent = metaParts.join(" · ") || "等待开始";
+  progressMeta.textContent = metaParts.join(" · ") || t("progressWaiting");
 
   totalValue.textContent = String(total);
   processedValue.textContent = String(processed);
@@ -238,7 +230,7 @@ function countBookmarks(node) {
 function buildFolderViewModel(node) {
   return {
     id: node.id,
-    title: node.title || "未命名分类",
+    title: node.title || t("unnamedCategory"),
     totalBookmarks: countBookmarks(node)
   };
 }
@@ -261,7 +253,7 @@ async function loadManagedFolderViews() {
         views.push(buildFolderViewModel(rootNode));
       }
     } catch (error) {
-      // 文件夹可能已被手动删除，忽略并继续读取其余分类。
+      // Ignore folders that were removed manually and continue loading the rest.
     }
   }
 
@@ -269,10 +261,15 @@ async function loadManagedFolderViews() {
 }
 
 function renderFolderDetail() {
-  if (!currentFolderViews.length) {
+  const folderViews =
+    Array.isArray(currentStatus?.previewFolders) && currentStatus.previewFolders.length
+      ? currentStatus.previewFolders
+      : currentFolderViews;
+
+  if (!folderViews.length) {
     return createEmptyState(
-      "还没有可查看的分类结果",
-      "开始整理后，这里会显示每个分类下当前有多少条书签。"
+      t("emptyFoldersTitle"),
+      t("emptyFoldersDesc")
     );
   }
 
@@ -284,11 +281,13 @@ function renderFolderDetail() {
 
   const summaryTitle = document.createElement("p");
   summaryTitle.className = "info-card__title";
-  summaryTitle.textContent = "分类统计";
+  summaryTitle.textContent = t("folderStatsTitle");
 
   const summaryDesc = document.createElement("p");
   summaryDesc.className = "info-card__desc";
-  summaryDesc.textContent = `共 ${currentFolderViews.reduce((sum, item) => sum + item.totalBookmarks, 0)} 条已归类书签。`;
+  summaryDesc.textContent = t("folderStatsDesc", {
+    count: folderViews.reduce((sum, item) => sum + item.totalBookmarks, 0)
+  });
 
   summary.append(summaryTitle, summaryDesc);
   wrapper.appendChild(summary);
@@ -300,10 +299,10 @@ function renderFolderDetail() {
   table.className = "result-table";
 
   const thead = document.createElement("thead");
-  thead.innerHTML = "<tr><th>分类</th><th>书签数</th></tr>";
+  thead.innerHTML = `<tr><th>${t("tableFolder")}</th><th>${t("tableCount")}</th></tr>`;
 
   const tbody = document.createElement("tbody");
-  [...currentFolderViews]
+  [...folderViews]
     .sort((a, b) => b.totalBookmarks - a.totalBookmarks || a.title.localeCompare(b.title, "zh-CN"))
     .forEach((folderView) => {
       const row = document.createElement("tr");
@@ -335,7 +334,7 @@ function renderOverviewDetail() {
   const providerModel =
     currentStatus?.provider && currentStatus?.model
       ? `${currentStatus.provider} / ${currentStatus.model}`
-      : "当前任务未调用模型";
+      : t("noModelUsed");
 
   const wrapper = document.createElement("div");
   wrapper.className = "detail-stack";
@@ -345,13 +344,13 @@ function renderOverviewDetail() {
 
   const title = document.createElement("p");
   title.className = "info-card__title";
-  title.textContent = total ? `共 ${total} 条书签` : "还没有任务总量";
+  title.textContent = total ? t("totalBookmarksTitle", { count: total }) : t("noTaskTotal");
 
   const desc = document.createElement("p");
   desc.className = "info-card__desc";
   desc.textContent = total
-    ? `当前状态：${phase}`
-    : "开始整理后，这里会显示本次任务总量。";
+    ? t("currentStatus", { phase })
+    : t("overviewNoTaskDesc");
 
   summary.append(title, desc);
   wrapper.appendChild(summary);
@@ -361,7 +360,7 @@ function renderOverviewDetail() {
 
   const messageTitle = document.createElement("div");
   messageTitle.className = "record-item__title";
-  messageTitle.textContent = currentStatus?.message || "尚未开始整理。";
+  messageTitle.textContent = currentStatus?.message || t("notStartedMessage");
 
   const messageMeta = document.createElement("div");
   messageMeta.className = "record-item__suggestion";
@@ -374,10 +373,12 @@ function renderOverviewDetail() {
   facts.className = "record-list";
 
   [
-    ["阶段", phase],
-    ["当前批次", currentBatch],
-    ["Provider / Model", providerModel],
-    ["最近更新", formatDate(currentStatus?.updatedAt)]
+    [t("factPhase"), phase],
+    [t("factCurrentBatch"), currentBatch],
+    [t("factProviderModel"), providerModel],
+    [t("factReused"), `${Number(currentStatus?.reused || 0)}`],
+    [t("factProtectedRoots"), `${Number(currentStatus?.protectedRootCount || 0)}`],
+    [t("factUpdatedAt"), formatDate(currentStatus?.updatedAt)]
   ].forEach(([label, value]) => {
     facts.appendChild(createFactItem(label, value));
   });
@@ -404,11 +405,11 @@ function renderProcessedDetail() {
 
   const title = document.createElement("p");
   title.className = "info-card__title";
-  title.textContent = "处理进度";
+  title.textContent = t("processedTitle");
 
   const desc = document.createElement("p");
   desc.className = "info-card__desc";
-  desc.textContent = `当前已处理 ${processed} / ${total}，完成度 ${progress}%，剩余 ${remaining} 条。`;
+  desc.textContent = t("processedDesc", { processed, total, progress, remaining });
 
   headline.append(title, desc);
   wrapper.appendChild(headline);
@@ -416,9 +417,11 @@ function renderProcessedDetail() {
   const facts = document.createElement("div");
   facts.className = "record-list";
   [
-    ["当前批次", currentBatch],
-    ["批大小", `${currentStatus?.batchSize || 0}`],
-    ["最近更新", formatDate(currentStatus?.updatedAt)]
+    [t("factCurrentBatch"), currentBatch],
+    [t("factBatchSize"), `${currentStatus?.batchSize || 0}`],
+    [t("factReused"), `${Number(currentStatus?.reused || 0)}`],
+    [t("factAiClassified"), `${Number(currentStatus?.aiClassified || 0)}`],
+    [t("factUpdatedAt"), formatDate(currentStatus?.updatedAt)]
   ].forEach(([label, value]) => {
     facts.appendChild(createFactItem(label, value));
   });
@@ -429,7 +432,7 @@ function renderProcessedDetail() {
 
   const phaseEl = document.createElement("div");
   phaseEl.className = "record-item__title";
-  phaseEl.textContent = currentStatus?.message || "等待开始处理。";
+  phaseEl.textContent = currentStatus?.message || t("waitingProcessing");
 
   const metaEl = document.createElement("div");
   metaEl.className = "record-item__suggestion";
@@ -462,7 +465,7 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
 
     const titleEl = document.createElement("div");
     titleEl.className = "record-item__title";
-    titleEl.textContent = entry.title || "(无标题书签)";
+    titleEl.textContent = entry.title || t("untitledBookmark");
 
     const metaEl = document.createElement("div");
     metaEl.className = "record-item__meta";
@@ -485,11 +488,13 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
 
     const reason = document.createElement("div");
     reason.className = "record-item__reason";
-    reason.textContent = entry.reason || "暂无说明。";
+    reason.textContent = entry.reason || t("noReason");
 
     const suggestion = document.createElement("div");
     suggestion.className = "record-item__suggestion";
-    suggestion.textContent = `处理建议：${entry.suggestion || "暂无额外建议。"}`;
+    suggestion.textContent = t("suggestionPrefix", {
+      text: entry.suggestion || t("noSuggestion")
+    });
 
     item.append(topRow, reason, suggestion);
 
@@ -510,14 +515,14 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
       const keepButton = document.createElement("button");
       keepButton.type = "button";
       keepButton.className = "button button--secondary button--compact";
-      keepButton.textContent = "保留";
+      keepButton.textContent = t("keepButton");
       keepButton.addEventListener("click", () => {
         resolveUnprocessedEntry(entry.id, "keep").catch((error) => {
           console.error("Failed to keep unprocessed bookmark:", error);
           renderStatus({
             ...(currentStatus || {}),
             phase: "error",
-            message: "保留书签时发生异常。"
+            message: t("keepError")
           });
           renderDetailPanelContent();
         });
@@ -526,14 +531,14 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
       const deleteButton = document.createElement("button");
       deleteButton.type = "button";
       deleteButton.className = "button button--danger button--compact";
-      deleteButton.textContent = "删除";
+      deleteButton.textContent = t("deleteButton");
       deleteButton.addEventListener("click", () => {
         resolveUnprocessedEntry(entry.id, "delete").catch((error) => {
           console.error("Failed to delete unprocessed bookmark:", error);
           renderStatus({
             ...(currentStatus || {}),
             phase: "error",
-            message: "删除未处理书签时发生异常。"
+            message: t("deleteUnprocessedError")
           });
           renderDetailPanelContent();
         });
@@ -555,15 +560,15 @@ function renderDetailPanelContent() {
   if (selectedDetailView === "warnings") {
     content = renderLogDetail(
       currentStatus?.warnings || [],
-      "暂无未处理项目",
-      "扫描状态不明确、移动失败或其他需要你决定的书签会出现在这里。",
+      t("noWarningsTitle"),
+      t("noWarningsDesc"),
       { allowActions: true }
     );
   } else if (selectedDetailView === "deleted") {
     content = renderLogDetail(
       currentStatus?.deletedItems || [],
-      "暂无删除记录",
-      "自动删除重复书签或确认失效书签后，这里会留下可追溯的记录。"
+      t("noDeletedTitle"),
+      t("noDeletedDesc")
     );
   } else if (selectedDetailView === "processed") {
     content = renderProcessedDetail();
@@ -580,15 +585,19 @@ async function refreshDetailPanel() {
   const requestVersion = ++detailRequestVersion;
 
   if (selectedDetailView === "folders") {
-    try {
-      currentFolderViews = await loadManagedFolderViews();
-    } catch (error) {
-      console.error("Failed to load managed folders:", error);
+    if (Array.isArray(currentStatus?.previewFolders) && currentStatus.previewFolders.length) {
       currentFolderViews = [];
-    }
+    } else {
+      try {
+        currentFolderViews = await loadManagedFolderViews();
+      } catch (error) {
+        console.error("Failed to load managed folders:", error);
+        currentFolderViews = [];
+      }
 
-    if (requestVersion !== detailRequestVersion) {
-      return;
+      if (requestVersion !== detailRequestVersion) {
+        return;
+      }
     }
   }
 
@@ -612,8 +621,8 @@ async function startJob() {
     renderStatus({
       ...(currentStatus || {}),
       phase: "error",
-      message: "未授权网站访问，无法开始整理。",
-      detail: "书签整理会检测失效链接并访问你配置的模型接口。请先授权网站访问，再重新开始整理。"
+      message: t("hostPermissionRequiredTitle"),
+      detail: t("hostPermissionRequiredDetail")
     });
     renderDetailPanelContent();
     return;
@@ -626,7 +635,39 @@ async function startJob() {
     renderStatus({
       ...(currentStatus || {}),
       phase: "error",
-      message: response?.error || "启动任务失败。"
+      message: response?.error || t("startJobFailed")
+    });
+    renderDetailPanelContent();
+    return;
+  }
+
+  await refreshAll();
+}
+
+async function startPreview() {
+  previewButton.disabled = true;
+  const granted = await ensureBroadHostAccess();
+
+  if (!granted) {
+    await refreshAll();
+    renderStatus({
+      ...(currentStatus || {}),
+      phase: "error",
+      message: t("hostPermissionRequiredTitle"),
+      detail: t("hostPermissionRequiredDetail")
+    });
+    renderDetailPanelContent();
+    return;
+  }
+
+  const response = await chrome.runtime.sendMessage({ type: "START_PREVIEW" });
+
+  if (!response?.ok) {
+    await refreshAll();
+    renderStatus({
+      ...(currentStatus || {}),
+      phase: "error",
+      message: response?.error || t("previewStartFailed")
     });
     renderDetailPanelContent();
     return;
@@ -644,7 +685,7 @@ async function createManualBackup() {
     renderStatus({
       ...(currentStatus || {}),
       phase: "error",
-      message: response?.error || "创建备份失败。"
+      message: response?.error || t("createBackupFailed")
     });
     renderDetailPanelContent();
     return;
@@ -665,7 +706,7 @@ async function resolveUnprocessedEntry(entryId, action) {
     renderStatus({
       ...(currentStatus || {}),
       phase: "error",
-      message: response?.error || "处理未处理书签失败。"
+      message: response?.error || t("resolveUnprocessedFailed")
     });
     renderDetailPanelContent();
     return;
@@ -703,7 +744,19 @@ startButton.addEventListener("click", () => {
     renderStatus({
       ...(currentStatus || {}),
       phase: "error",
-      message: "启动后台任务时发生异常。"
+      message: t("startJobException")
+    });
+    renderDetailPanelContent();
+  });
+});
+
+previewButton.addEventListener("click", () => {
+  startPreview().catch((error) => {
+    console.error("Failed to start preview:", error);
+    renderStatus({
+      ...(currentStatus || {}),
+      phase: "error",
+      message: t("previewStartException")
     });
     renderDetailPanelContent();
   });
@@ -715,7 +768,7 @@ backupButton.addEventListener("click", () => {
     renderStatus({
       ...(currentStatus || {}),
       phase: "error",
-      message: "创建手动备份时发生异常。"
+      message: t("createBackupException")
     });
     renderDetailPanelContent();
   });
@@ -727,7 +780,7 @@ cancelButton.addEventListener("click", () => {
     renderStatus({
       ...(currentStatus || {}),
       phase: "error",
-      message: "取消任务失败，请稍后重试。"
+      message: t("cancelJobFailed")
     });
     renderDetailPanelContent();
   });
@@ -756,7 +809,7 @@ refreshAll()
     renderStatus({
       ...(currentStatus || {}),
       phase: "error",
-      message: "读取本地状态失败，请重开弹窗。"
+      message: t("readStateFailed")
     });
     renderDetailPanelContent();
   });
