@@ -3,7 +3,7 @@
     "message": "Smart Bookmark AI"
   },
   "extDescription": {
-    "message": "An intelligent Chrome extension that uses large language models to analyze and reorganize bookmarks in batches."
+    "message": "Preview, clean duplicates and dead links, then rebuild a simpler bookmark structure with your own AI model."
   },
   "actionTitle": {
     "message": "Smart Bookmark AI"

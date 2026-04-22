@@ -3,7 +3,7 @@
     "message": "Smart Bookmark AI"
   },
   "extDescription": {
-    "message": "使用大语言模型批量分析并重新整理 Chrome 书签的智能扩展。"
+    "message": "先预览并清理重复与失效链接，再用你自己的 AI 模型重建更清爽的书签结构。"
   },
   "actionTitle": {
     "message": "Smart Bookmark AI"

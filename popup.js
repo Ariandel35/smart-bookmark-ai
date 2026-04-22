@@ -1,6 +1,7 @@
 const CONFIG_KEY = "smartBookmarkConfig";
 const STATUS_KEY = "smartBookmarkJobStatus";
 const MANAGED_FOLDER_IDS_KEY = "smartBookmarkManagedFolderIds";
+const MANAGED_ROOT_BOOKMARK_IDS_KEY = "smartBookmarkManagedRootBookmarkIds";
 const HOST_ACCESS_ORIGINS = ["https://*/*", "http://*/*"];
 const I18N = globalThis.SmartBookmarkI18n;
 const t = (key, params) => I18N.t(key, params);
@@ -16,18 +17,15 @@ const movedValue = document.getElementById("movedValue");
 const deletedValue = document.getElementById("deletedValue");
 const warningValue = document.getElementById("warningValue");
 const detailPanel = document.getElementById("detailPanel");
-const previewButton = document.getElementById("previewButton");
 const startButton = document.getElementById("startButton");
 const backupButton = document.getElementById("backupButton");
 const cancelButton = document.getElementById("cancelButton");
 const optionsButton = document.getElementById("optionsButton");
-const detailViewButtons = Array.from(document.querySelectorAll("[data-detail-view]"));
 
 let refreshTimer = null;
 let currentConfig = null;
 let currentStatus = null;
 let currentFolderViews = [];
-let selectedDetailView = "overview";
 let detailRequestVersion = 0;
 
 I18N.applyDocument(document);
@@ -109,12 +107,16 @@ function hasRunnableConfig(config) {
   return Boolean(config?.provider && config?.baseUrl && config?.model);
 }
 
+function isPreviewReady() {
+  return currentStatus?.phase === "preview";
+}
+
 function syncActionButtons() {
   const isRunning = currentStatus?.phase === "running";
-  previewButton.disabled = isRunning || !hasRunnableConfig(currentConfig);
   startButton.disabled = isRunning || !hasRunnableConfig(currentConfig);
   backupButton.disabled = isRunning;
   cancelButton.disabled = !isRunning;
+  startButton.textContent = isPreviewReady() ? t("confirmOrganizeButton") : t("startButton");
 }
 
 function renderConfig(_config) {
@@ -169,19 +171,6 @@ function renderStatus(status) {
   warningValue.textContent = String(warnings);
 
   syncActionButtons();
-  syncDetailViewButtons();
-}
-
-function syncDetailViewButtons() {
-  detailViewButtons.forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.detailView === selectedDetailView);
-  });
-}
-
-function setDetailView(view) {
-  selectedDetailView = view;
-  syncDetailViewButtons();
-  void refreshDetailPanel();
 }
 
 function createEmptyState(title, description) {
@@ -236,10 +225,16 @@ function buildFolderViewModel(node) {
 }
 
 async function loadManagedFolderViews() {
-  const stored = await chrome.storage.local.get(MANAGED_FOLDER_IDS_KEY);
+  const stored = await chrome.storage.local.get([
+    MANAGED_FOLDER_IDS_KEY,
+    MANAGED_ROOT_BOOKMARK_IDS_KEY
+  ]);
   const folderIds = Array.isArray(stored[MANAGED_FOLDER_IDS_KEY]) ? stored[MANAGED_FOLDER_IDS_KEY] : [];
+  const rootBookmarkIds = Array.isArray(stored[MANAGED_ROOT_BOOKMARK_IDS_KEY])
+    ? stored[MANAGED_ROOT_BOOKMARK_IDS_KEY]
+    : [];
 
-  if (!folderIds.length) {
+  if (!folderIds.length && !rootBookmarkIds.length) {
     return [];
   }
 
@@ -255,6 +250,26 @@ async function loadManagedFolderViews() {
     } catch (error) {
       // Ignore folders that were removed manually and continue loading the rest.
     }
+  }
+
+  let rootBookmarkCount = 0;
+  for (const bookmarkId of rootBookmarkIds) {
+    try {
+      const [node] = await chrome.bookmarks.get(bookmarkId);
+      if (node?.url) {
+        rootBookmarkCount += 1;
+      }
+    } catch (error) {
+      // Ignore bookmarks that were removed manually.
+    }
+  }
+
+  if (rootBookmarkCount > 0) {
+    views.push({
+      id: "__root__",
+      title: t("rootCategoryTitle"),
+      totalBookmarks: rootBookmarkCount
+    });
   }
 
   return views.filter((view) => view.totalBookmarks > 0);
@@ -303,7 +318,16 @@ function renderFolderDetail() {
 
   const tbody = document.createElement("tbody");
   [...folderViews]
-    .sort((a, b) => b.totalBookmarks - a.totalBookmarks || a.title.localeCompare(b.title, "zh-CN"))
+    .sort((a, b) => {
+      const rootTitle = t("rootCategoryTitle");
+      const aRoot = a.id === "__root__" || a.title === rootTitle;
+      const bRoot = b.id === "__root__" || b.title === rootTitle;
+      if (aRoot !== bRoot) {
+        return aRoot ? -1 : 1;
+      }
+
+      return b.totalBookmarks - a.totalBookmarks || a.title.localeCompare(b.title, "zh-CN");
+    })
     .forEach((folderView) => {
       const row = document.createElement("tr");
 
@@ -322,6 +346,55 @@ function renderFolderDetail() {
   wrapper.appendChild(tableWrap);
 
   return wrapper;
+}
+
+function renderCompactFolderSummary(folderViews) {
+  if (!folderViews.length) {
+    return null;
+  }
+
+  const section = document.createElement("div");
+  section.className = "detail-group";
+
+  const title = document.createElement("h3");
+  title.className = "detail-group__title";
+  title.textContent = t("navFolders");
+
+  const table = document.createElement("table");
+  table.className = "result-table";
+
+  const thead = document.createElement("thead");
+  thead.innerHTML = `<tr><th>${t("tableFolder")}</th><th>${t("tableCount")}</th></tr>`;
+
+  const tbody = document.createElement("tbody");
+  [...folderViews]
+    .sort((a, b) => {
+      const rootTitle = t("rootCategoryTitle");
+      const aRoot = a.id === "__root__" || a.title === rootTitle;
+      const bRoot = b.id === "__root__" || b.title === rootTitle;
+      if (aRoot !== bRoot) {
+        return aRoot ? -1 : 1;
+      }
+
+      return b.totalBookmarks - a.totalBookmarks || a.title.localeCompare(b.title, "zh-CN");
+    })
+    .slice(0, 8)
+    .forEach((folderView) => {
+      const row = document.createElement("tr");
+
+      const titleCell = document.createElement("td");
+      titleCell.textContent = folderView.title;
+
+      const countCell = document.createElement("td");
+      countCell.textContent = String(folderView.totalBookmarks);
+
+      row.append(titleCell, countCell);
+      tbody.appendChild(row);
+    });
+
+  table.append(thead, tbody);
+  section.append(title, table);
+  return section;
 }
 
 function renderOverviewDetail() {
@@ -554,50 +627,88 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
   return wrapper;
 }
 
-function renderDetailPanelContent() {
-  let content = null;
-
-  if (selectedDetailView === "warnings") {
-    content = renderLogDetail(
-      currentStatus?.warnings || [],
-      t("noWarningsTitle"),
-      t("noWarningsDesc"),
-      { allowActions: true }
-    );
-  } else if (selectedDetailView === "deleted") {
-    content = renderLogDetail(
-      currentStatus?.deletedItems || [],
-      t("noDeletedTitle"),
-      t("noDeletedDesc")
-    );
-  } else if (selectedDetailView === "processed") {
-    content = renderProcessedDetail();
-  } else if (selectedDetailView === "overview") {
-    content = renderOverviewDetail();
-  } else {
-    content = renderFolderDetail();
+function renderMainDetail() {
+  if (!hasRunnableConfig(currentConfig)) {
+    return createEmptyState(t("setupRequiredTitle"), t("setupRequiredDesc"));
   }
 
-  detailPanel.replaceChildren(content);
+  const wrapper = document.createElement("div");
+  wrapper.className = "detail-stack";
+
+  const summary = document.createElement("article");
+  summary.className = "record-item";
+
+  const summaryTitle = document.createElement("div");
+  summaryTitle.className = "record-item__title";
+  summaryTitle.textContent = currentStatus?.message || t("notStartedMessage");
+
+  const summaryDesc = document.createElement("div");
+  summaryDesc.className = "record-item__suggestion";
+  const summaryDetail =
+    currentStatus?.phase === "error" || currentStatus?.phase === "preview"
+      ? currentStatus?.detail || DEFAULT_STATUS_DETAIL
+      : "";
+  summaryDesc.textContent = summaryDetail;
+
+  summary.append(summaryTitle);
+  if (summaryDetail) {
+    summary.append(summaryDesc);
+  }
+  wrapper.appendChild(summary);
+
+  if (Array.isArray(currentStatus?.warnings) && currentStatus.warnings.length) {
+    const warningsSection = document.createElement("div");
+    warningsSection.className = "detail-group";
+
+    const warningsTitle = document.createElement("h3");
+    warningsTitle.className = "detail-group__title";
+    warningsTitle.textContent = t("navWarnings");
+
+    warningsSection.appendChild(warningsTitle);
+    warningsSection.appendChild(
+      renderLogDetail(
+        currentStatus.warnings,
+        t("noWarningsTitle"),
+        t("noWarningsDesc"),
+        { allowActions: true }
+      )
+    );
+    wrapper.appendChild(warningsSection);
+    return wrapper;
+  }
+
+  const folderViews =
+    Array.isArray(currentStatus?.previewFolders) && currentStatus.previewFolders.length
+      ? currentStatus.previewFolders
+      : currentFolderViews;
+  const folderSummary = renderCompactFolderSummary(folderViews);
+
+  if (folderSummary) {
+    wrapper.appendChild(folderSummary);
+  }
+
+  return wrapper;
+}
+
+function renderDetailPanelContent() {
+  detailPanel.replaceChildren(renderMainDetail());
 }
 
 async function refreshDetailPanel() {
   const requestVersion = ++detailRequestVersion;
 
-  if (selectedDetailView === "folders") {
-    if (Array.isArray(currentStatus?.previewFolders) && currentStatus.previewFolders.length) {
+  if (Array.isArray(currentStatus?.previewFolders) && currentStatus.previewFolders.length) {
+    currentFolderViews = [];
+  } else {
+    try {
+      currentFolderViews = await loadManagedFolderViews();
+    } catch (error) {
+      console.error("Failed to load managed folders:", error);
       currentFolderViews = [];
-    } else {
-      try {
-        currentFolderViews = await loadManagedFolderViews();
-      } catch (error) {
-        console.error("Failed to load managed folders:", error);
-        currentFolderViews = [];
-      }
+    }
 
-      if (requestVersion !== detailRequestVersion) {
-        return;
-      }
+    if (requestVersion !== detailRequestVersion) {
+      return;
     }
   }
 
@@ -645,7 +756,7 @@ async function startJob() {
 }
 
 async function startPreview() {
-  previewButton.disabled = true;
+  startButton.disabled = true;
   const granted = await ensureBroadHostAccess();
 
   if (!granted) {
@@ -674,6 +785,19 @@ async function startPreview() {
   }
 
   await refreshAll();
+}
+
+async function handlePrimaryAction() {
+  if (isPreviewReady()) {
+    if (!window.confirm(t("previewReadyConfirm"))) {
+      return;
+    }
+
+    await startJob();
+    return;
+  }
+
+  await startPreview();
 }
 
 async function createManualBackup() {
@@ -728,35 +852,17 @@ chrome.runtime.onMessage.addListener((message) => {
   }
 });
 
-detailViewButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    setDetailView(button.dataset.detailView || "folders");
-  });
-});
-
 optionsButton.addEventListener("click", () => {
   chrome.runtime.openOptionsPage();
 });
 
 startButton.addEventListener("click", () => {
-  startJob().catch((error) => {
-    console.error("Failed to start job:", error);
+  handlePrimaryAction().catch((error) => {
+    console.error("Failed to run primary action:", error);
     renderStatus({
       ...(currentStatus || {}),
       phase: "error",
-      message: t("startJobException")
-    });
-    renderDetailPanelContent();
-  });
-});
-
-previewButton.addEventListener("click", () => {
-  startPreview().catch((error) => {
-    console.error("Failed to start preview:", error);
-    renderStatus({
-      ...(currentStatus || {}),
-      phase: "error",
-      message: t("previewStartException")
+      message: isPreviewReady() ? t("startJobException") : t("previewStartException")
     });
     renderDetailPanelContent();
   });

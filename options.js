@@ -14,7 +14,12 @@ const modelInput = document.getElementById("model");
 const batchSizeInput = document.getElementById("batchSize");
 const autoOrganizeEnabledInput = document.getElementById("autoOrganizeEnabled");
 const autoOrganizeIntervalInput = document.getElementById("autoOrganizeIntervalHours");
+const whitelistSearchInput = document.getElementById("whitelistSearch");
 const whitelistDomainsInput = document.getElementById("whitelistDomains");
+const whitelistSelectionStatus = document.getElementById("whitelistSelectionStatus");
+const whitelistSelected = document.getElementById("whitelistSelected");
+const whitelistSelectedEmpty = document.getElementById("whitelistSelectedEmpty");
+const whitelistDomainList = document.getElementById("whitelistDomainList");
 const protectedRootFoldersInput = document.getElementById("protectedRootFolders");
 const domainFolderRulesInput = document.getElementById("domainFolderRules");
 const customPromptInput = document.getElementById("customPrompt");
@@ -32,9 +37,14 @@ const navButtons = Array.from(document.querySelectorAll("[data-section-target]")
 const sectionPanels = Array.from(document.querySelectorAll("[data-section-panel]"));
 
 let lastProvider = "openai";
+let whitelistSelection = [];
+let whitelistCatalog = [];
+let whitelistCatalogLoaded = false;
 
 I18N.applyDocument(document);
 renderProviderOptions();
+renderWhitelistSelection();
+renderWhitelistDomainList();
 
 function getDefaults(provider) {
   return Providers.getProvider(provider);
@@ -81,6 +91,217 @@ function mergeConfig(raw = {}) {
       typeof raw.domainFolderRules === "string" ? raw.domainFolderRules.trim() : "",
     customPrompt: normalizePromptValue(promptValue)
   };
+}
+
+function normalizeWhitelistDomain(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) {
+    return "";
+  }
+
+  if (/^https?:\/\//.test(trimmed)) {
+    return extractHostname(trimmed);
+  }
+
+  return trimmed.replace(/\/+$/, "");
+}
+
+function parseWhitelistDomains(rawValue) {
+  if (typeof rawValue !== "string" || !rawValue.trim()) {
+    return [];
+  }
+
+  return Array.from(
+    new Set(
+      rawValue
+        .split(/[\n,]+/g)
+        .map((entry) => normalizeWhitelistDomain(entry))
+        .filter(Boolean)
+    )
+  ).sort((a, b) => a.localeCompare(b, "en"));
+}
+
+function serializeWhitelistDomains() {
+  return whitelistSelection.join("\n");
+}
+
+function extractHostname(rawUrl) {
+  try {
+    const url = new URL(rawUrl);
+    if (!/^https?:$/i.test(url.protocol)) {
+      return "";
+    }
+
+    return url.hostname.toLowerCase();
+  } catch (error) {
+    return "";
+  }
+}
+
+function setWhitelistSelection(domains, options = {}) {
+  whitelistSelection = Array.from(
+    new Set((Array.isArray(domains) ? domains : []).map((domain) => normalizeWhitelistDomain(domain)).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b, "en"));
+  whitelistDomainsInput.value = serializeWhitelistDomains();
+  renderWhitelistSelection();
+  renderWhitelistDomainList();
+
+  if (options.markDirty) {
+    markPending();
+  }
+}
+
+function toggleWhitelistDomain(domain) {
+  const normalized = normalizeWhitelistDomain(domain);
+  if (!normalized) {
+    return;
+  }
+
+  const next = new Set(whitelistSelection);
+  if (next.has(normalized)) {
+    next.delete(normalized);
+  } else {
+    next.add(normalized);
+  }
+
+  setWhitelistSelection(Array.from(next), { markDirty: true });
+}
+
+function renderWhitelistSelection() {
+  whitelistSelected.replaceChildren();
+
+  whitelistSelection.forEach((domain) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "chip chip--interactive is-active";
+    button.title = domain;
+    button.setAttribute("aria-label", domain);
+
+    const label = document.createElement("span");
+    label.textContent = domain;
+
+    const remove = document.createElement("span");
+    remove.className = "chip__remove";
+    remove.textContent = "×";
+    remove.setAttribute("aria-hidden", "true");
+
+    button.append(label, remove);
+    button.addEventListener("click", () => {
+      toggleWhitelistDomain(domain);
+    });
+
+    whitelistSelected.appendChild(button);
+  });
+
+  whitelistSelectedEmpty.classList.toggle("hidden", whitelistSelection.length > 0);
+  whitelistSelectionStatus.textContent = t("whitelistSelectionCount", {
+    count: whitelistSelection.length
+  });
+  whitelistSelectionStatus.hidden = false;
+}
+
+function renderWhitelistDomainList() {
+  whitelistDomainList.replaceChildren();
+
+  if (!whitelistCatalogLoaded) {
+    const loading = document.createElement("div");
+    loading.className = "empty-state";
+    loading.textContent = t("whitelistLoading");
+    whitelistDomainList.appendChild(loading);
+    return;
+  }
+
+  const keyword = whitelistSearchInput.value.trim().toLowerCase();
+  const selectedSet = new Set(whitelistSelection);
+  const filtered = whitelistCatalog
+    .filter((item) => item.domain.includes(keyword))
+    .sort((a, b) => {
+      const aSelected = selectedSet.has(a.domain);
+      const bSelected = selectedSet.has(b.domain);
+      if (aSelected !== bSelected) {
+        return aSelected ? -1 : 1;
+      }
+
+      return b.count - a.count || a.domain.localeCompare(b.domain, "en");
+    });
+
+  if (!filtered.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = keyword
+      ? t("whitelistNoResults")
+      : whitelistCatalog.length
+        ? t("whitelistNoResults")
+        : t("whitelistCatalogEmpty");
+    whitelistDomainList.appendChild(empty);
+    return;
+  }
+
+  filtered.slice(0, keyword ? 120 : 80).forEach((item) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `whitelist-option${selectedSet.has(item.domain) ? " is-selected" : ""}`;
+    button.title = item.domain;
+
+    const domain = document.createElement("span");
+    domain.className = "whitelist-option__domain";
+    domain.textContent = item.domain;
+
+    const meta = document.createElement("span");
+    meta.className = "whitelist-option__meta";
+    meta.textContent = t("whitelistBookmarkCount", {
+      count: item.count
+    });
+
+    button.append(domain, meta);
+    button.addEventListener("click", () => {
+      toggleWhitelistDomain(item.domain);
+    });
+
+    whitelistDomainList.appendChild(button);
+  });
+}
+
+async function loadWhitelistDomainCatalog() {
+  whitelistCatalogLoaded = false;
+  renderWhitelistDomainList();
+
+  try {
+    const tree = await chrome.bookmarks.getTree();
+    const counts = new Map();
+
+    const walk = (node) => {
+      if (node.url) {
+        const hostname = extractHostname(node.url);
+        if (hostname) {
+          counts.set(hostname, (counts.get(hostname) || 0) + 1);
+        }
+        return;
+      }
+
+      for (const child of node.children || []) {
+        walk(child);
+      }
+    };
+
+    for (const node of tree) {
+      walk(node);
+    }
+
+    whitelistCatalog = Array.from(counts.entries())
+      .map(([domain, count]) => ({ domain, count }))
+      .sort((a, b) => b.count - a.count || a.domain.localeCompare(b.domain, "en"));
+  } catch (error) {
+    console.error("Failed to load whitelist domain catalog:", error);
+    whitelistCatalog = [];
+  } finally {
+    whitelistCatalogLoaded = true;
+    renderWhitelistDomainList();
+  }
 }
 
 function renderProviderOptions() {
@@ -237,7 +458,7 @@ function populateForm(config) {
   batchSizeInput.value = String(config.batchSize);
   autoOrganizeEnabledInput.value = config.autoOrganizeEnabled ? "true" : "false";
   autoOrganizeIntervalInput.value = String(config.autoOrganizeIntervalHours);
-  whitelistDomainsInput.value = config.whitelistDomains;
+  setWhitelistSelection(parseWhitelistDomains(config.whitelistDomains));
   protectedRootFoldersInput.value = config.protectedRootFolders;
   domainFolderRulesInput.value = config.domainFolderRules;
   customPromptInput.value = config.customPrompt;
@@ -257,7 +478,7 @@ function collectFormData() {
     batchSize: normalizeBatchSize(batchSizeInput.value),
     autoOrganizeEnabled: autoOrganizeEnabledInput.value === "true",
     autoOrganizeIntervalHours: normalizeAutoInterval(autoOrganizeIntervalInput.value),
-    whitelistDomains: whitelistDomainsInput.value.trim(),
+    whitelistDomains: serializeWhitelistDomains(),
     protectedRootFolders: protectedRootFoldersInput.value.trim(),
     domainFolderRules: domainFolderRulesInput.value.trim(),
     customPrompt: customPromptInput.value.trim() || DEFAULT_PROMPT
@@ -643,7 +864,7 @@ async function requestHostAccess() {
 
 function handleFormMutation(event) {
   const targetId = event.target?.id;
-  if (!targetId || targetId === "provider") {
+  if (!targetId || ["provider", "whitelistSearch"].includes(targetId)) {
     return;
   }
 
@@ -676,6 +897,9 @@ providerSelect.addEventListener("change", () => {
 form.addEventListener("submit", saveConfig);
 form.addEventListener("input", handleFormMutation);
 form.addEventListener("change", handleFormMutation);
+whitelistSearchInput.addEventListener("input", () => {
+  renderWhitelistDomainList();
+});
 testApiButton.addEventListener("click", testApiConnection);
 grantAccessButton.addEventListener("click", () => {
   requestHostAccess().catch((error) => {
@@ -702,6 +926,7 @@ chrome.permissions.onRemoved?.addListener(() => {
 });
 
 initializeNavigation();
+void loadWhitelistDomainCatalog();
 
 loadConfig().catch((error) => {
   console.error("Failed to load config:", error);

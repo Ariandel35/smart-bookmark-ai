@@ -3,7 +3,7 @@
 [English](README.md) | [简体中文](README.zh-CN.md)
 
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)
-![Release](https://img.shields.io/badge/Version-1.2.0-1f6d53?style=flat-square)
+![Release](https://img.shields.io/badge/Version-1.3.0-1f6d53?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-black?style=flat-square)
 
 Smart Bookmark AI is a Chrome extension that helps users clean up large bookmark libraries with LLM-assisted classification.
@@ -34,7 +34,7 @@ The overview graphic shows how the popup, settings center, and backup management
 ### Popup
 
 <p align="center">
-  <img src="docs/screenshots/popup-overview.png" alt="Popup overview" width="430" />
+  <img src="docs/screenshots/popup-store.png" alt="Popup overview" width="430" />
 </p>
 
 The popup keeps the main actions close to the top: organize bookmarks, create a manual backup, cancel the current job, and review progress in one place.
@@ -42,7 +42,7 @@ The popup keeps the main actions close to the top: organize bookmarks, create a 
 ### Settings Center
 
 <p align="center">
-  <img src="docs/screenshots/options-organization.png" alt="Settings center" width="860" />
+  <img src="docs/screenshots/options-connection-store.png" alt="Settings center" width="860" />
 </p>
 
 The settings page uses a left-side navigation layout for connection settings, organization rules, automation, and backup management.

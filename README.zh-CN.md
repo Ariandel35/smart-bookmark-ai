@@ -3,7 +3,7 @@
 [English](README.md) | [简体中文](README.zh-CN.md)
 
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)
-![版本](https://img.shields.io/badge/Version-1.2.0-1f6d53?style=flat-square)
+![版本](https://img.shields.io/badge/Version-1.3.0-1f6d53?style=flat-square)
 ![许可证](https://img.shields.io/badge/License-MIT-black?style=flat-square)
 
 Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主要用于帮助用户清理数量庞大、结构混乱的书签库。
@@ -34,7 +34,7 @@ Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主
 ### 弹窗首页
 
 <p align="center">
-  <img src="docs/screenshots/popup-overview.png" alt="弹窗首页" width="430" />
+  <img src="docs/screenshots/popup-store.png" alt="弹窗首页" width="430" />
 </p>
 
 弹窗把主要操作集中在顶部，整理书签、手动备份、取消任务和进度查看都在一个页面里完成。
@@ -42,7 +42,7 @@ Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主
 ### 设置中心
 
 <p align="center">
-  <img src="docs/screenshots/options-organization.png" alt="设置中心" width="860" />
+  <img src="docs/screenshots/options-connection-store.png" alt="设置中心" width="860" />
 </p>
 
 设置中心使用左侧导航分页，分别管理连接配置、整理规则、自动任务和备份管理。

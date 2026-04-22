@@ -2,12 +2,17 @@
 
 ## Unreleased
 
-- Added global taxonomy planning before chunked AI classification
-- Added preview mode so users can inspect the plan before rebuilding bookmarks
-- Added protected root folders and domain folder rules
-- Added classification cache reuse and dead-link cache
-- Expanded provider support and shared provider definitions
+- No unreleased changes yet
+
+## 1.3.0 - 2026-04-22
+
 - Added bilingual interface support for English and Simplified Chinese
+- Refined the popup and settings center into a simpler preview-first workflow
+- Added global taxonomy planning before chunked AI classification
+- Added protected root folders, whitelist website selection, and domain folder rules
+- Added classification cache reuse and dead-link cache for faster reruns
+- Expanded provider support and shared provider definitions
+- Added refreshed GitHub and Chrome Web Store release materials
 - Added modular helper files and local test coverage for parsing, rules, and cache logic
 
 ## 1.2.0 - 2026-04-19

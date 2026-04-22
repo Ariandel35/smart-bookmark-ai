@@ -6,6 +6,7 @@ const STORAGE_KEYS = {
   job: "smartBookmarkActiveJob",
   rootFolderId: "smartBookmarkRootFolderId",
   managedFolderIds: "smartBookmarkManagedFolderIds",
+  managedRootBookmarkIds: "smartBookmarkManagedRootBookmarkIds",
   latestBackupFolderId: "smartBookmarkLatestBackupFolderId",
   latestSnapshotBackupFolderId: "smartBookmarkLatestSnapshotBackupFolderId",
   backupRecords: "smartBookmarkBackupRecords",
@@ -35,6 +36,8 @@ const BACKUP_FOLDER_PREFIX = I18N.getBackupFolderPrefix();
 const BACKUP_RECORD_PREFIX = I18N.getBackupRecordPrefix();
 const MANUAL_FOLDER_TITLE = I18N.getManualFolderTitle();
 const DUPLICATE_FOLDER_TITLE = ux("重复书签", "Duplicate Bookmarks");
+const ROOT_DIRECT_FOLDER_MARKER = "__ROOT_DIRECT__";
+const ROOT_DIRECT_FOLDER_TITLE = ux("根目录", "Root");
 const MANUAL_FOLDER_ALIASES = [
   "待手动分类",
   "待整理",
@@ -44,6 +47,25 @@ const MANUAL_FOLDER_ALIASES = [
   "未处理",
   "Needs Manual Review",
   "Manual Review"
+];
+const ROOT_DIRECT_FOLDER_ALIASES = [
+  "常用",
+  "首页",
+  "主页",
+  "主頁",
+  "常用网站",
+  "常用網址",
+  "常用与首页",
+  "常用與首頁",
+  "home",
+  "homepage",
+  "home page",
+  "favorites",
+  "favorite",
+  "common",
+  "quick access",
+  "top sites",
+  "start page"
 ];
 const DEAD_LINK_CHECK_TIMEOUT_MS = 10_000;
 const DEAD_LINK_DELETE_STATUS_CODES = new Set([404, 410, 451]);
@@ -922,6 +944,7 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
     domainFolderRules,
     protectedRootFolderIds,
     managedFolderIds: [],
+    managedRootBookmarkIds: [],
     snapshotBackupId: snapshotInfo.folderId || "",
     snapshotBackupTitle: snapshotInfo.folderTitle || "",
     unresolvedFolderId,
@@ -1108,6 +1131,7 @@ async function restoreBackupEntry(backupId) {
 
   await chrome.storage.local.set({
     [STORAGE_KEYS.managedFolderIds]: [],
+    [STORAGE_KEYS.managedRootBookmarkIds]: [],
     [STORAGE_KEYS.rootFolderId]: "",
     [STORAGE_KEYS.unresolvedFolderId]: await findExistingUnresolvedFolderId(bookmarkBarNode.id)
   });
@@ -1475,6 +1499,7 @@ async function processNextBatch() {
 
       const rebuildResult = await rebuildOrganizedBookmarks(job);
       job.managedFolderIds = rebuildResult.managedFolderIds;
+      job.managedRootBookmarkIds = rebuildResult.managedRootBookmarkIds;
       job.warnings = rebuildResult.warningEntries;
       job.warningCount = rebuildResult.warningEntries.length;
       job.lastWarning = rebuildResult.warningEntries.at(-1)?.reason || "";
@@ -1634,10 +1659,24 @@ async function processNextDeadScanBatch(job) {
 
 async function finishJob(phase, message, job, overrides = {}) {
   await chrome.alarms.clear(ALARM_NAME);
-  const finalManagedFolderIds = Array.isArray(job?.managedFolderIds) ? job.managedFolderIds : [];
+  const storedManagedState = await chrome.storage.local.get([
+    STORAGE_KEYS.managedFolderIds,
+    STORAGE_KEYS.managedRootBookmarkIds
+  ]);
+  const finalManagedFolderIds = Array.isArray(job?.managedFolderIds)
+    ? job.managedFolderIds
+    : Array.isArray(storedManagedState[STORAGE_KEYS.managedFolderIds])
+      ? storedManagedState[STORAGE_KEYS.managedFolderIds]
+      : [];
+  const finalManagedRootBookmarkIds = Array.isArray(job?.managedRootBookmarkIds)
+    ? job.managedRootBookmarkIds
+    : Array.isArray(storedManagedState[STORAGE_KEYS.managedRootBookmarkIds])
+      ? storedManagedState[STORAGE_KEYS.managedRootBookmarkIds]
+      : [];
   await chrome.storage.local.remove(STORAGE_KEYS.job);
   await chrome.storage.local.set({
     [STORAGE_KEYS.managedFolderIds]: finalManagedFolderIds,
+    [STORAGE_KEYS.managedRootBookmarkIds]: finalManagedRootBookmarkIds,
     [STORAGE_KEYS.rootFolderId]: ""
   });
 
@@ -3071,6 +3110,19 @@ function canonicalizeFolderName(value) {
   return trimmed;
 }
 
+function isRootDirectFolderAlias(value) {
+  if (typeof value !== "string") {
+    return false;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  return normalized ? ROOT_DIRECT_FOLDER_ALIASES.includes(normalized) : false;
+}
+
+function isRootDirectFolderPath(folderPath) {
+  return Array.isArray(folderPath) && folderPath[0] === ROOT_DIRECT_FOLDER_MARKER;
+}
+
 function normalizeFolderPath(folderPath) {
   const rawSegments = Array.isArray(folderPath)
     ? folderPath
@@ -3087,6 +3139,10 @@ function normalizeFolderPath(folderPath) {
 
   if (cleaned.includes(MANUAL_FOLDER_TITLE)) {
     return [MANUAL_FOLDER_TITLE];
+  }
+
+  if (cleaned.length && isRootDirectFolderAlias(cleaned[0])) {
+    return [ROOT_DIRECT_FOLDER_MARKER];
   }
 
   return cleaned.length ? cleaned : [MANUAL_FOLDER_TITLE];
@@ -3219,11 +3275,22 @@ async function rebuildOrganizedBookmarks(job) {
   const currentChildren = await chrome.bookmarks.getChildren(rootFolderId);
   const folderCache = { [rootFolderName]: rootFolderId };
   const managedFolderIds = [];
+  const managedRootBookmarkIds = [];
   const planEntries = [
     ...(Array.isArray(job.preservedBookmarks) ? job.preservedBookmarks : []),
     ...(Array.isArray(job.plannedBookmarks) ? job.plannedBookmarks : [])
   ];
+  const orderedPlanEntries = [...planEntries].sort((a, b) => {
+    const aRoot = isRootDirectFolderPath(a?.folderPath);
+    const bRoot = isRootDirectFolderPath(b?.folderPath);
+    if (aRoot !== bRoot) {
+      return aRoot ? -1 : 1;
+    }
+
+    return 0;
+  });
   let createdCount = 0;
+  let rootDirectInsertIndex = 0;
   const preservedCount = Array.isArray(job.preservedBookmarks) ? job.preservedBookmarks.length : 0;
 
   for (const child of currentChildren) {
@@ -3238,7 +3305,7 @@ async function rebuildOrganizedBookmarks(job) {
     }
   }
 
-  for (const entry of planEntries) {
+  for (const entry of orderedPlanEntries) {
     if (!entry?.url) {
       continue;
     }
@@ -3250,11 +3317,20 @@ async function rebuildOrganizedBookmarks(job) {
       folderCache,
       managedFolderIds
     );
-    await chrome.bookmarks.create({
+    const createPayload = {
       parentId: folderId,
       title: entry.title || t("untitledBookmark"),
       url: entry.url
-    });
+    };
+    if (folderId === rootFolderId && isRootDirectFolderPath(entry.folderPath)) {
+      createPayload.index = rootDirectInsertIndex;
+      rootDirectInsertIndex += 1;
+    }
+
+    const createdBookmark = await chrome.bookmarks.create(createPayload);
+    if (folderId === rootFolderId && isRootDirectFolderPath(entry.folderPath)) {
+      managedRootBookmarkIds.push(createdBookmark.id);
+    }
     createdCount += 1;
   }
 
@@ -3288,7 +3364,8 @@ async function rebuildOrganizedBookmarks(job) {
     createdCount,
     preservedCount,
     warningEntries: realizedWarnings,
-    managedFolderIds: Array.from(new Set(managedFolderIds))
+    managedFolderIds: Array.from(new Set(managedFolderIds)),
+    managedRootBookmarkIds: Array.from(new Set(managedRootBookmarkIds))
   };
 }
 
@@ -3305,6 +3382,10 @@ async function removeBookmarkIfExists(bookmarkId) {
 }
 
 async function ensureFolderPath(rootFolderId, rootFolderName, folderPath, folderCache, managedFolderIds) {
+  if (!Array.isArray(folderPath) || !folderPath.length || isRootDirectFolderPath(folderPath)) {
+    return rootFolderId;
+  }
+
   let parentId = rootFolderId;
   let currentPathKey = rootFolderName;
 
@@ -3466,9 +3547,11 @@ function buildPreviewFolderSummary(planEntries, pendingWarnings = []) {
       continue;
     }
 
-    const topLevel = Array.isArray(entry.folderPath) && entry.folderPath.length
-      ? entry.folderPath[0]
-      : MANUAL_FOLDER_TITLE;
+    const topLevel = isRootDirectFolderPath(entry.folderPath)
+      ? ROOT_DIRECT_FOLDER_TITLE
+      : Array.isArray(entry.folderPath) && entry.folderPath.length
+        ? entry.folderPath[0]
+        : MANUAL_FOLDER_TITLE;
     counts.set(topLevel, (counts.get(topLevel) || 0) + 1);
   }
 
@@ -3482,7 +3565,15 @@ function buildPreviewFolderSummary(planEntries, pendingWarnings = []) {
       title,
       totalBookmarks
     }))
-    .sort((a, b) => b.totalBookmarks - a.totalBookmarks || a.title.localeCompare(b.title, "zh-CN"));
+    .sort((a, b) => {
+      const aRoot = a.title === ROOT_DIRECT_FOLDER_TITLE;
+      const bRoot = b.title === ROOT_DIRECT_FOLDER_TITLE;
+      if (aRoot !== bRoot) {
+        return aRoot ? -1 : 1;
+      }
+
+      return b.totalBookmarks - a.totalBookmarks || a.title.localeCompare(b.title, "zh-CN");
+    });
 }
 
 function buildTaxonomyFallbackTopFolders() {

@@ -11,7 +11,6 @@
       <header class="topbar">
         <div class="topbar__row">
           <div>
-            <div class="topbar__meta" data-i18n="optionsMeta">Smart Bookmark AI / Options</div>
             <h1 class="topbar__title" data-i18n="optionsMainTitle">Settings Center</h1>
           </div>
 
@@ -101,7 +100,6 @@
               <div class="panel__inner">
                 <div class="panel__heading">
                   <div>
-                    <p class="panel__eyebrow" data-i18n="connectionEyebrow">Connection</p>
                     <h2 class="panel__title" data-i18n="connectionTitle">Connection Settings</h2>
                   </div>
                 </div>
@@ -176,7 +174,6 @@
               <div class="panel__inner">
                 <div class="panel__heading">
                   <div>
-                    <p class="panel__eyebrow" data-i18n="organizeEyebrow">Organization</p>
                     <h2 class="panel__title" data-i18n="organizeTitle">Organization Rules</h2>
                   </div>
                 </div>
@@ -196,14 +193,33 @@
                     />
                   </div>
 
-                  <div class="field">
-                    <label for="whitelistDomains" data-i18n="labelWhitelistDomains">Whitelist Domains</label>
-                    <textarea
-                      id="whitelistDomains"
-                      name="whitelistDomains"
-                      data-i18n-placeholder="placeholderWhitelist"
-                      placeholder="One domain per line"
-                    ></textarea>
+                  <div class="field field--full">
+                    <div class="field__toolbar">
+                      <label for="whitelistSearch" data-i18n="labelWhitelistDomains">Whitelist Websites</label>
+                      <span class="field__status" id="whitelistSelectionStatus"></span>
+                    </div>
+                    <input
+                      id="whitelistSearch"
+                      name="whitelistSearch"
+                      type="search"
+                      data-i18n-placeholder="placeholderWhitelistSearch"
+                      placeholder="Search websites"
+                    />
+                    <div class="whitelist-picker">
+                      <div class="whitelist-picker__section">
+                        <div class="whitelist-picker__label" data-i18n="whitelistSelectedTitle">Selected</div>
+                        <div class="chip-list whitelist-picker__selected" id="whitelistSelected"></div>
+                        <div class="empty-state hidden" id="whitelistSelectedEmpty" data-i18n="whitelistSelectedEmpty">
+                          No selected websites
+                        </div>
+                      </div>
+
+                      <div class="whitelist-picker__section">
+                        <div class="whitelist-picker__label" data-i18n="whitelistAvailableTitle">Bookmark Websites</div>
+                        <div class="whitelist-picker__list" id="whitelistDomainList"></div>
+                      </div>
+                    </div>
+                    <input id="whitelistDomains" name="whitelistDomains" type="hidden" />
                   </div>
 
                   <div class="field">
@@ -216,25 +232,30 @@
                     ></textarea>
                   </div>
 
-                  <div class="field">
-                    <label for="domainFolderRules" data-i18n="labelDomainFolderRules">Domain Folder Rules</label>
-                    <textarea
-                      id="domainFolderRules"
-                      name="domainFolderRules"
-                      data-i18n-placeholder="placeholderDomainFolderRules"
-                      placeholder="example.com => Tools / Reading"
-                    ></textarea>
-                  </div>
+                  <details class="advanced-block field--full">
+                    <summary class="advanced-block__summary" data-i18n="advancedSettingsTitle">Advanced Settings</summary>
+                    <div class="advanced-block__content">
+                      <div class="field">
+                        <label for="domainFolderRules" data-i18n="labelDomainFolderRules">Domain Folder Rules</label>
+                        <textarea
+                          id="domainFolderRules"
+                          name="domainFolderRules"
+                          data-i18n-placeholder="placeholderDomainFolderRules"
+                          placeholder="example.com => Tools / Reading"
+                        ></textarea>
+                      </div>
 
-                  <div class="field">
-                    <label for="customPrompt" data-i18n="labelCustomPrompt">Custom Prompt</label>
-                    <textarea
-                      id="customPrompt"
-                      name="customPrompt"
-                      data-i18n-placeholder="placeholderPrompt"
-                      placeholder="Enter custom prompt"
-                    ></textarea>
-                  </div>
+                      <div class="field">
+                        <label for="customPrompt" data-i18n="labelCustomPrompt">Custom Prompt</label>
+                        <textarea
+                          id="customPrompt"
+                          name="customPrompt"
+                          data-i18n-placeholder="placeholderPrompt"
+                          placeholder="Enter custom prompt"
+                        ></textarea>
+                      </div>
+                    </div>
+                  </details>
                 </div>
               </div>
             </section>
@@ -243,7 +264,6 @@
               <div class="panel__inner">
                 <div class="panel__heading">
                   <div>
-                    <p class="panel__eyebrow" data-i18n="automationEyebrow">Automation</p>
                     <h2 class="panel__title" data-i18n="automationTitle">Automation</h2>
                   </div>
                 </div>
@@ -278,7 +298,6 @@
               <div class="panel__inner">
                 <div class="panel__heading">
                   <div>
-                    <p class="panel__eyebrow" data-i18n="backupEyebrow">Backup</p>
                     <h2 class="panel__title" data-i18n="backupTitle">Backup Management</h2>
                   </div>
                   <span class="pill" id="backupStatusBadge" data-i18n="backupLoading">Loading</span>
