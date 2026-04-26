@@ -18,7 +18,7 @@
 3. 同类内容尽量归并，避免只在措辞上略有差异的重复分类。
 4. 如果信息不足以准确判断，请放入“待手动分类”。`;
 
-  const DEFAULT_PROMPT_ZH = `你是一名极度克制的信息架构师，请整理浏览器书签，但目标不是“分类越细越专业”，而是“普通人以后能更快找到网页”。
+  const PREVIOUS_DEFAULT_PROMPT_ZH = `你是一名极度克制的信息架构师，请整理浏览器书签，但目标不是“分类越细越专业”，而是“普通人以后能更快找到网页”。
 
 强制规则：
 1. 整体目录必须尽量少，一级目录总数以 6 到 8 个为目标，绝对不要超过 9 个。
@@ -41,7 +41,36 @@
 7. 无法确定是否重复时，不要删除，只做分类。
 8. 信息不足时统一放入“待手动分类”。`;
 
-  const DEFAULT_PROMPT_EN = `You are an extremely restrained information architect. Organize browser bookmarks for everyday people, not for maximum taxonomy complexity.
+  const DEFAULT_PROMPT_ZH = `你是一名极度克制的信息架构师，请整理浏览器书签，但目标不是“分类越细越专业”，而是“普通人以后能更快找到网页”。
+
+强制规则：
+1. 整体目录必须尽量少，一级目录总数以 6 到 8 个为目标，绝对不要超过 9 个。
+2. 每条书签最多只能使用 2 级结构：
+   - 允许：["AI/技术"]、["工具/效率", "浏览器插件"]
+   - 不允许：["技术", "AI", "模型", "推理"] 这种 3 级或 4 级结构
+3. 一级目录必须优先复用下面这些稳定大类，不要自由发明新大类：
+   - AI/技术
+   - 学习/教程
+   - 工具/效率
+   - 产品/设计
+   - 资讯/社区
+   - 购物/服务
+   - 娱乐/内容
+   - 生活/资源
+   - 待手动分类
+4. 只有在确实有必要时才添加二级目录；如果一级目录已经足够清楚，就只保留一级目录。
+5. 宁可合并，不要细分。不要把意思接近的内容拆成多个相似文件夹。
+6. 去重优先于分类。先比较你当前收到的整批输入书签，再决定 folderPath。
+7. 以下情况优先视为“同一个网页 / 同一个工具”的重复入口：
+   - 规范化后 URL 相同
+   - 只差 http/https、www、结尾斜杠、锚点，或明显追踪参数（如 utm_*、spm、from、ref 等）
+   - 同一网站的移动版/桌面版、短链接/长链接，但实际落到同一内容页
+8. 对重复项的保留规则：优先保留 https、标题更完整清晰、URL 参数更少、非移动版、非短链接、可读性更好的那一条。
+9. 搜索结果页、列表页、登录后页面、带会话参数页面要保守；如果不能明确证明是同一内容，禁止删除。
+10. 不要把重复入口分别放进不同文件夹；确认重复时只保留一条，其余标记为重复删除。
+11. 信息不足时统一放入“待手动分类”。`;
+
+  const PREVIOUS_DEFAULT_PROMPT_EN = `You are an extremely restrained information architect. Organize browser bookmarks for everyday people, not for maximum taxonomy complexity.
 
 Hard rules:
 1. Keep the overall folder structure small. Aim for 6 to 8 top-level folders and never exceed 9.
@@ -63,6 +92,45 @@ Hard rules:
 6. If two bookmarks are clearly duplicates of the same page, article, or tool, keep the clearer one and mark the others as duplicate deletions.
 7. If duplicate status is uncertain, do not delete it. Only classify it.
 8. If the information is insufficient, put it in ["Needs Manual Review"].`;
+
+  const DEFAULT_PROMPT_EN = `You are an extremely restrained information architect. Organize browser bookmarks for everyday people, not for maximum taxonomy complexity.
+
+Hard rules:
+1. Keep the overall folder structure small. Aim for 6 to 8 top-level folders and never exceed 9.
+2. Each bookmark may use at most 2 levels of structure:
+   - Allowed: ["AI & Tech"], ["Tools & Productivity", "Browser Extensions"]
+   - Not allowed: ["Tech", "AI", "Models", "Reasoning"] or any 3- or 4-level structure
+3. Reuse these stable top-level categories whenever possible instead of inventing new ones:
+   - AI & Tech
+   - Learning & Tutorials
+   - Tools & Productivity
+   - Product & Design
+   - News & Communities
+   - Shopping & Services
+   - Entertainment & Content
+   - Life & Resources
+   - Needs Manual Review
+4. Add a second-level folder only when it is truly necessary. If the first level is already clear, keep only one level.
+5. Prefer merging over splitting. Do not create multiple similar folders for closely related content.
+6. Deduplication comes before classification. Compare the whole input batch you received before deciding the folderPath.
+7. Treat bookmarks as duplicates first when they clearly point to the same destination, for example:
+   - The normalized URL is the same
+   - The only differences are http/https, www, trailing slash, fragment, or obvious tracking parameters such as utm_*, spm, from, or ref
+   - They are mobile/desktop variants or short/long links of the same site, but land on the same content page
+8. When choosing which duplicate to keep, prefer https, clearer titles, fewer URL parameters, non-mobile pages, non-short links, and the more canonical-looking URL.
+9. Be conservative with search pages, listing pages, logged-in pages, or session-specific URLs. If sameness is not certain, do not delete.
+10. Do not place duplicate entries into different folders. If duplicates are confirmed, keep one and mark the others as duplicate deletions.
+11. If the information is insufficient, put it in ["Needs Manual Review"].`;
+
+  const BUILT_IN_PROMPT_VARIANTS = new Set(
+    [
+      LEGACY_DEFAULT_PROMPT_ZH,
+      PREVIOUS_DEFAULT_PROMPT_ZH,
+      DEFAULT_PROMPT_ZH,
+      PREVIOUS_DEFAULT_PROMPT_EN,
+      DEFAULT_PROMPT_EN
+    ].map((prompt) => prompt.trim())
+  );
 
   const MESSAGES = {
     en: {
@@ -587,6 +655,9 @@ Hard rules:
     },
     getLegacyDefaultPrompt() {
       return LEGACY_DEFAULT_PROMPT_ZH;
+    },
+    isBuiltInPromptValue(promptValue) {
+      return typeof promptValue === "string" && BUILT_IN_PROMPT_VARIANTS.has(promptValue.trim());
     },
     getBackupFolderPrefix() {
       return t("backupFolderPrefix");

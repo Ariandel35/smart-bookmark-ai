@@ -623,7 +623,8 @@ function buildTaxonomyPlanningMessages(bookmarks, customPrompt) {
 2. 必须包含“${MANUAL_FOLDER_TITLE}”。
 3. 优先复用稳定大类，不要发明零碎目录。
 4. 这些目录名优先参考：${fixedFolders.join("、")}。
-5. 只输出合法 JSON 对象。
+5. 不要因为同一网站出现很多次，或存在重复入口，就额外拆出新的目录。
+6. 只输出合法 JSON 对象。
 
 书签样本：
 ${JSON.stringify(sample, null, 2)}`
@@ -641,7 +642,8 @@ Hard rules:
 2. It must include "${MANUAL_FOLDER_TITLE}".
 3. Reuse stable broad categories instead of inventing fragmented ones.
 4. Prefer names close to: ${fixedFolders.join(", ")}.
-5. Output valid JSON only.
+5. Do not create extra folders only because the same site appears many times or contains duplicate entries.
+6. Output valid JSON only.
 
 Bookmark sample:
 ${JSON.stringify(sample, null, 2)}`
@@ -3030,10 +3032,13 @@ function buildClassificationMessages(
   }
 ]
 4. folderPath 必须是 1 到 2 层字符串数组；如果 action 是 delete_duplicate，也仍然要返回一个简短 folderPath，建议填 ["重复书签"]。
-5. 一级目录必须只从这个全局目录方案中选择：${allowedTopFolders.join("、")}。
-6. 如果无法确认重复，不要删除，action 必须返回 keep。
-7. 如果同一个二级目录名已经被固定归属到某个一级目录，你必须复用该归属，不能换父目录。
-8. 信息不足时统一归入 ["${MANUAL_FOLDER_TITLE}"]。
+5. 先做去重判断，再做分类。请比较当前整批输入，优先识别重复入口。
+6. 以下情况优先视为重复：规范化后 URL 相同；只差 http/https、www、结尾斜杠、锚点、明显追踪参数；或同一网站的移动版/桌面版、短链接/长链接但实际落到同一内容页。
+7. 选择保留项时，优先保留 https、标题更完整清晰、参数更少、非移动版、非短链接、可读性更好的 URL。
+8. 搜索结果页、列表页、登录后页面、带会话参数页面要保守；如果无法确认重复，不要删除，action 必须返回 keep。
+9. 一级目录必须只从这个全局目录方案中选择：${allowedTopFolders.join("、")}。
+10. 如果同一个二级目录名已经被固定归属到某个一级目录，你必须复用该归属，不能换父目录。
+11. 信息不足时统一归入 ["${MANUAL_FOLDER_TITLE}"]。
 
 已有固定归属：
 ${lockLines || "- 当前还没有已锁定的二级目录归属"}
@@ -3055,10 +3060,13 @@ Follow these output rules exactly:
   }
 ]
 4. folderPath must be a string array with 1 or 2 levels. If action is delete_duplicate, still return a short folderPath, for example ["Duplicate Bookmarks"].
-5. The top-level folder must be chosen only from this global taxonomy: ${allowedTopFolders.join(", ")}.
-6. If duplicate status is uncertain, do not delete it. action must be keep.
-7. If a second-level folder has already been locked under a top-level folder, you must reuse that parent and not move it elsewhere.
-8. If information is insufficient, place the bookmark in ["${MANUAL_FOLDER_TITLE}"].
+5. Decide duplicates before classification. Compare the whole current batch first and prioritize identifying duplicate entries.
+6. Treat bookmarks as duplicates first when the normalized URL is the same, when the only differences are http/https, www, trailing slash, fragment, or obvious tracking parameters, or when mobile/desktop or short/long links clearly land on the same content page.
+7. When choosing the kept bookmark, prefer https, clearer titles, fewer parameters, non-mobile pages, non-short links, and the more canonical-looking URL.
+8. Be conservative with search pages, listing pages, logged-in pages, or session-specific URLs. If duplicate status is uncertain, do not delete it. action must be keep.
+9. The top-level folder must be chosen only from this global taxonomy: ${allowedTopFolders.join(", ")}.
+10. If a second-level folder has already been locked under a top-level folder, you must reuse that parent and not move it elsewhere.
+11. If information is insufficient, place the bookmark in ["${MANUAL_FOLDER_TITLE}"].
 
 Locked mappings:
 ${lockLines || "- No locked second-level mappings yet"}
@@ -3472,7 +3480,9 @@ function normalizePromptValue(promptValue) {
     return DEFAULT_PROMPT;
   }
 
-  return promptValue.trim() === LEGACY_DEFAULT_PROMPT.trim() ? DEFAULT_PROMPT : promptValue;
+  return I18N.isBuiltInPromptValue(promptValue) || promptValue.trim() === LEGACY_DEFAULT_PROMPT.trim()
+    ? DEFAULT_PROMPT
+    : promptValue;
 }
 
 async function loadClassificationCacheStore() {

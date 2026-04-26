@@ -508,7 +508,9 @@ function normalizePromptValue(promptValue) {
     return DEFAULT_PROMPT;
   }
 
-  return promptValue.trim() === LEGACY_DEFAULT_PROMPT.trim() ? DEFAULT_PROMPT : promptValue;
+  return I18N.isBuiltInPromptValue(promptValue) || promptValue.trim() === LEGACY_DEFAULT_PROMPT.trim()
+    ? DEFAULT_PROMPT
+    : promptValue;
 }
 
 function resolveSection(sectionId) {
