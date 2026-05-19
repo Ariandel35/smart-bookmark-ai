@@ -142,8 +142,8 @@ node tests/run-tests.js
 
 ## GitHub and Chrome Web Store
 
-- Homepage: [github.com/Ariandel35/smart-bookmark-ai](https://github.com/Ariandel35/smart-bookmark-ai)
-- Support: [github.com/Ariandel35/smart-bookmark-ai/issues](https://github.com/Ariandel35/smart-bookmark-ai/issues)
-- Privacy policy: [github.com/Ariandel35/smart-bookmark-ai/blob/main/PRIVACY.md](https://github.com/Ariandel35/smart-bookmark-ai/blob/main/PRIVACY.md)
+- Homepage: [github.com/Ariandel35/marko](https://github.com/Ariandel35/marko)
+- Support: [github.com/Ariandel35/marko/issues](https://github.com/Ariandel35/marko/issues)
+- Privacy policy: [github.com/Ariandel35/marko/blob/main/PRIVACY.md](https://github.com/Ariandel35/marko/blob/main/PRIVACY.md)
 
 Store submission materials are prepared in [webstore](webstore).

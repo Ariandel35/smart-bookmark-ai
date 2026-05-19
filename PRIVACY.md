@@ -42,4 +42,4 @@ Marko only processes data needed to organize bookmarks.
 
 For public support, use the GitHub repository issue tracker:
 
-`https://github.com/Ariandel35/smart-bookmark-ai/issues`
+`https://github.com/Ariandel35/marko/issues`

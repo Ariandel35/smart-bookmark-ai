@@ -143,8 +143,8 @@ node tests/run-tests.js
 
 ## GitHub 与 Chrome Web Store
 
-- 仓库主页：[github.com/Ariandel35/smart-bookmark-ai](https://github.com/Ariandel35/smart-bookmark-ai)
-- 支持地址：[github.com/Ariandel35/smart-bookmark-ai/issues](https://github.com/Ariandel35/smart-bookmark-ai/issues)
-- 隐私政策：[github.com/Ariandel35/smart-bookmark-ai/blob/main/PRIVACY.md](https://github.com/Ariandel35/smart-bookmark-ai/blob/main/PRIVACY.md)
+- 仓库主页：[github.com/Ariandel35/marko](https://github.com/Ariandel35/marko)
+- 支持地址：[github.com/Ariandel35/marko/issues](https://github.com/Ariandel35/marko/issues)
+- 隐私政策：[github.com/Ariandel35/marko/blob/main/PRIVACY.md](https://github.com/Ariandel35/marko/blob/main/PRIVACY.md)
 
 Chrome 商店上架材料已经整理在 [webstore](webstore) 目录中。
