@@ -32,7 +32,7 @@ const sampleData = {
     smartBookmarkConfig: {
       provider: "deepseek",
       baseUrl: "https://api.deepseek.com",
-      apiKey: "sk-tidymarks-ai-demo",
+      apiKey: "sk-marko-demo",
       model: "deepseek-chat",
       batchSize: 24,
       autoOrganizeEnabled: true,

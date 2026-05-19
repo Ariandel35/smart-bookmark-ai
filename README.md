@@ -1,4 +1,4 @@
-# TidyMarks AI
+# Marko
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
@@ -6,12 +6,12 @@
 ![Release](https://img.shields.io/badge/Version-3.0.0-1f6d53?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-black?style=flat-square)
 
-TidyMarks AI is a Chrome extension that helps users clean up large bookmark libraries with LLM-assisted classification.
+Marko is a Chrome extension that helps users clean up large bookmark libraries with LLM-assisted classification.
 
 It creates a local snapshot backup, checks clearly dead links, removes obvious duplicates, plans a stable global taxonomy, and rebuilds a simpler bookmark structure directly at the bookmark bar root.
 
 <p align="center">
-  <img src="docs/assets/hero.svg" alt="TidyMarks AI hero" width="860" />
+  <img src="docs/assets/hero.svg" alt="Marko hero" width="860" />
 </p>
 
 ## What It Solves
@@ -66,7 +66,7 @@ The settings page keeps the everyday path focused on model connection, rules, au
 
 ## Workflow
 
-TidyMarks AI is designed for safety first. It does not rewrite the bookmark tree while analysis is still in progress.
+Marko is designed for safety first. It does not rewrite the bookmark tree while analysis is still in progress.
 
 <p align="center">
   <img src="docs/assets/workflow.svg" alt="Workflow diagram" width="860" />

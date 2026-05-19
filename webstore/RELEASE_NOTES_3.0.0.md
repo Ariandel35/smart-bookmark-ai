@@ -1,8 +1,8 @@
-# TidyMarks AI 3.0.0 Release Notes
+# Marko 3.0.0 Release Notes
 
 ## 中文
 
-TidyMarks AI 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更直接。
+Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更直接。
 
 - 弹窗改为“预览整理 -> 应用方案”的主流程，避免默认按钮含义不清
 - 配置不完整时，弹窗主按钮会直接进入设置页
@@ -18,7 +18,7 @@ TidyMarks AI 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁�
 
 ## English
 
-TidyMarks AI 3.0.0 focuses on a simpler, more polished workflow.
+Marko 3.0.0 focuses on a simpler, more polished workflow.
 
 - The popup now uses a clear `Preview` -> `Apply Plan` primary flow
 - Incomplete setup routes directly from the popup to settings

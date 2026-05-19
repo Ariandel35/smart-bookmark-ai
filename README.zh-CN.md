@@ -1,4 +1,4 @@
-# TidyMarks AI
+# Marko
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
@@ -6,12 +6,12 @@
 ![版本](https://img.shields.io/badge/Version-3.0.0-1f6d53?style=flat-square)
 ![许可证](https://img.shields.io/badge/License-MIT-black?style=flat-square)
 
-TidyMarks AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主要用于帮助用户清理数量庞大、结构混乱的书签库。
+Marko 是一个基于 Chrome Manifest V3 的书签整理扩展，主要用于帮助用户清理数量庞大、结构混乱的书签库。
 
 它会先创建本地快照备份，再检测明显失效的链接、清理明显重复的书签，先规划全局目录，再结合你选择的大语言模型，对剩余书签进行分批语义分类，最后把整理后的结构直接重建到书签栏根目录。
 
 <p align="center">
-  <img src="docs/assets/hero.svg" alt="TidyMarks AI 首页图" width="860" />
+  <img src="docs/assets/hero.svg" alt="Marko 首页图" width="860" />
 </p>
 
 ## 它解决什么问题

@@ -30,8 +30,8 @@ const DEFAULT_BATCH_SIZE = 50;
 const MIN_BATCH_SIZE = 5;
 const MAX_AUTO_RETRY_BATCH_SIZE = 20;
 const DEFAULT_DEAD_SCAN_BATCH_SIZE = 20;
-const DEFAULT_ROOT_FOLDER = "TidyMarks AI";
-const LEGACY_ROOT_FOLDER = "Smart Bookmark AI";
+const DEFAULT_ROOT_FOLDER = "Marko";
+const LEGACY_ROOT_FOLDERS = ["Smart Bookmark AI", "TidyMarks AI"];
 const BACKUP_DB_NAME = "smart-bookmark-ai-backups";
 const BACKUP_DB_VERSION = 1;
 const BACKUP_DB_STORE = "snapshots";
@@ -1794,7 +1794,7 @@ function isBackupFolderNode(node) {
   return Boolean(
     !node?.url &&
       (title.startsWith(`${DEFAULT_ROOT_FOLDER} Backup`) ||
-        title.startsWith(`${LEGACY_ROOT_FOLDER} Backup`) ||
+        LEGACY_ROOT_FOLDERS.some((folderName) => title.startsWith(`${folderName} Backup`)) ||
         title.startsWith(BACKUP_FOLDER_PREFIX))
   );
 }
@@ -1866,7 +1866,7 @@ function isForbiddenAiRootFolderName(value) {
   const normalized = value.trim().toLowerCase();
   return (
     normalized === DEFAULT_ROOT_FOLDER.toLowerCase() ||
-    normalized === LEGACY_ROOT_FOLDER.toLowerCase() ||
+    LEGACY_ROOT_FOLDERS.some((folderName) => normalized === folderName.toLowerCase()) ||
     /^smart\s*bookmark(\s*ai)?$/i.test(normalized)
   );
 }

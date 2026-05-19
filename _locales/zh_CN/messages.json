@@ -1,11 +1,11 @@
 {
   "extName": {
-    "message": "TidyMarks AI"
+    "message": "Marko"
   },
   "extDescription": {
     "message": "先预览并清理重复与失效链接，再用你自己的 AI 模型重建更清爽的书签结构。"
   },
   "actionTitle": {
-    "message": "TidyMarks AI"
+    "message": "Marko"
   }
 }

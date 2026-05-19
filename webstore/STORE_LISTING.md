@@ -1,4 +1,4 @@
-# TidyMarks AI - Chrome Web Store Copy
+# Marko - Chrome Web Store Copy
 
 ## 中文
 
@@ -9,7 +9,7 @@
 先预览，再用 AI 整理 Chrome 书签，清理明显重复和失效链接，重建更清爽的目录结构。
 
 ### 产品详情
-TidyMarks AI 是一个面向重度书签用户的整理工具，目标不是把书签分得越来越细，而是让用户以后更快找到网页。
+Marko 是一个面向重度书签用户的整理工具，目标不是把书签分得越来越细，而是让用户以后更快找到网页。
 
 点击预览后，扩展会先生成整理方案，而不是直接改动现有书签。确认应用后，它会先创建本地快照备份，再扫描明显失效的链接、清理明显重复项，随后结合你自己配置的模型服务，对剩余书签进行全局规划和分批分类，最后一次性把结果重建到书签根目录。
 
@@ -44,7 +44,7 @@ Use AI to organize Chrome bookmarks: preview the result first, remove clearly de
 Preview first, then use AI to clean dead links, remove obvious duplicates, and rebuild a simpler Chrome bookmark structure.
 
 ### Detailed description
-TidyMarks AI is a bookmark cleanup tool for people with large, messy bookmark libraries. The goal is not to create more folders. The goal is to make websites easier to find later.
+Marko is a bookmark cleanup tool for people with large, messy bookmark libraries. The goal is not to create more folders. The goal is to make websites easier to find later.
 
 When you click Preview, the extension generates a plan before changing anything. After you apply the plan, it creates a local snapshot backup, checks clearly dead links, removes obvious duplicates, plans a stable global folder structure, and uses your chosen model provider to classify bookmarks in batches. The final result is rebuilt directly at the bookmark root in one pass.
 

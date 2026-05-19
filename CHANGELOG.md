@@ -43,4 +43,4 @@
 
 ## 1.0.0 - 2026-04-18
 
-- Initial TidyMarks AI extension implementation
+- Initial Marko extension implementation
