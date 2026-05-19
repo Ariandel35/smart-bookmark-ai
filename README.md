@@ -1,17 +1,17 @@
-# Smart Bookmark AI
+# TidyMarks AI
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)
-![Release](https://img.shields.io/badge/Version-1.3.0-1f6d53?style=flat-square)
+![Release](https://img.shields.io/badge/Version-3.0.0-1f6d53?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-black?style=flat-square)
 
-Smart Bookmark AI is a Chrome extension that helps users clean up large bookmark libraries with LLM-assisted classification.
+TidyMarks AI is a Chrome extension that helps users clean up large bookmark libraries with LLM-assisted classification.
 
 It creates a local snapshot backup, checks clearly dead links, removes obvious duplicates, plans a stable global taxonomy, and rebuilds a simpler bookmark structure directly at the bookmark bar root.
 
 <p align="center">
-  <img src="docs/assets/hero.svg" alt="Smart Bookmark AI hero" width="860" />
+  <img src="docs/assets/hero.svg" alt="TidyMarks AI hero" width="860" />
 </p>
 
 ## What It Solves
@@ -29,7 +29,7 @@ It creates a local snapshot backup, checks clearly dead links, removes obvious d
   <img src="docs/assets/pages.svg" alt="Product overview" width="860" />
 </p>
 
-The overview graphic shows how the popup, settings center, and backup management fit together.
+The overview graphic shows how the popup, settings, and backup management fit together.
 
 ### Popup
 
@@ -37,15 +37,15 @@ The overview graphic shows how the popup, settings center, and backup management
   <img src="docs/screenshots/popup-store.png" alt="Popup overview" width="430" />
 </p>
 
-The popup keeps the main actions close to the top: organize bookmarks, create a manual backup, cancel the current job, and review progress in one place.
+The popup is preview-first: generate a plan, apply it when it looks right, create a manual backup, or cancel a running job from one compact panel.
 
-### Settings Center
+### Settings
 
 <p align="center">
   <img src="docs/screenshots/options-connection-store.png" alt="Settings center" width="860" />
 </p>
 
-The settings page uses a left-side navigation layout for connection settings, organization rules, automation, and backup management.
+The settings page keeps the everyday path focused on model connection, rules, automation, and backups, with advanced rule fields collapsed by default.
 
 ## Highlights
 
@@ -53,6 +53,8 @@ The settings page uses a left-side navigation layout for connection settings, or
 - Custom Base URL, API key, model name, and prompt
 - Global taxonomy planning before chunked classification for more stable folders
 - Preview mode before applying changes to the bookmark tree
+- API testing saves the verified connection settings
+- Slow model requests automatically retry with smaller batches instead of stopping immediately
 - Conservative duplicate cleanup and dead link detection before AI classification
 - Protected root folders and domain-to-folder rules
 - Classification cache reuse and dead link cache for faster reruns
@@ -64,7 +66,7 @@ The settings page uses a left-side navigation layout for connection settings, or
 
 ## Workflow
 
-Smart Bookmark AI is designed for safety first. It does not rewrite the bookmark tree while analysis is still in progress.
+TidyMarks AI is designed for safety first. It does not rewrite the bookmark tree while analysis is still in progress.
 
 <p align="center">
   <img src="docs/assets/workflow.svg" alt="Workflow diagram" width="860" />

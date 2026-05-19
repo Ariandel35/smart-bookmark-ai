@@ -2,7 +2,7 @@
 
 Last updated: 2026-04-19
 
-Smart Bookmark AI only processes data needed to organize bookmarks.
+TidyMarks AI only processes data needed to organize bookmarks.
 
 ## What the extension reads
 

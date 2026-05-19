@@ -4,6 +4,7 @@ const MANAGED_FOLDER_IDS_KEY = "smartBookmarkManagedFolderIds";
 const MANAGED_ROOT_BOOKMARK_IDS_KEY = "smartBookmarkManagedRootBookmarkIds";
 const HOST_ACCESS_ORIGINS = ["https://*/*", "http://*/*"];
 const I18N = globalThis.SmartBookmarkI18n;
+const Providers = globalThis.SmartBookmarkProviders;
 const t = (key, params) => I18N.t(key, params);
 
 const phaseBadge = document.getElementById("phaseBadge");
@@ -65,14 +66,6 @@ function titleCasePhase(phase) {
   return phaseMap[phase] || t("phaseUnknown");
 }
 
-function shorten(text, maxLength = 42) {
-  if (!text) {
-    return "-";
-  }
-
-  return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
-}
-
 function formatDate(dateString) {
   return I18N.formatDate(dateString);
 }
@@ -104,7 +97,33 @@ function getLogKindLabel(kind) {
 }
 
 function hasRunnableConfig(config) {
-  return Boolean(config?.provider && config?.baseUrl && config?.model);
+  if (!config?.provider || !config?.baseUrl || !config?.model) {
+    return false;
+  }
+
+  const provider = Providers?.getProvider?.(config.provider);
+  return Boolean(provider?.apiKeyOptional || config.apiKey);
+}
+
+function getSetupProblem(config) {
+  if (!config?.provider) {
+    return t("setupMissingProvider");
+  }
+
+  if (!config?.baseUrl) {
+    return t("setupMissingBaseUrl");
+  }
+
+  if (!config?.model) {
+    return t("setupMissingModel");
+  }
+
+  const provider = Providers?.getProvider?.(config.provider);
+  if (!provider?.apiKeyOptional && !config?.apiKey) {
+    return t("setupMissingApiKey");
+  }
+
+  return t("setupRequiredDesc");
 }
 
 function isPreviewReady() {
@@ -113,10 +132,16 @@ function isPreviewReady() {
 
 function syncActionButtons() {
   const isRunning = currentStatus?.phase === "running";
-  startButton.disabled = isRunning || !hasRunnableConfig(currentConfig);
+  const isConfigured = hasRunnableConfig(currentConfig);
+  startButton.disabled = isRunning;
   backupButton.disabled = isRunning;
   cancelButton.disabled = !isRunning;
-  startButton.textContent = isPreviewReady() ? t("confirmOrganizeButton") : t("startButton");
+  cancelButton.hidden = !isRunning;
+  startButton.textContent = !isConfigured
+    ? t("setupButton")
+    : isPreviewReady()
+      ? t("confirmOrganizeButton")
+      : t("previewButton");
 }
 
 function renderConfig(_config) {
@@ -188,20 +213,19 @@ function createEmptyState(title, description) {
   return empty;
 }
 
-function createFactItem(label, value) {
-  const item = document.createElement("article");
-  item.className = "record-item";
+function createSetupRequiredState() {
+  const empty = createEmptyState(t("setupRequiredTitle"), getSetupProblem(currentConfig));
 
-  const labelEl = document.createElement("div");
-  labelEl.className = "record-item__meta";
-  labelEl.textContent = label;
+  const action = document.createElement("button");
+  action.type = "button";
+  action.className = "button button--primary button--compact";
+  action.textContent = t("setupButton");
+  action.addEventListener("click", () => {
+    chrome.runtime.openOptionsPage();
+  });
 
-  const valueEl = document.createElement("div");
-  valueEl.className = "record-item__title";
-  valueEl.textContent = value;
-
-  item.append(labelEl, valueEl);
-  return item;
+  empty.appendChild(action);
+  return empty;
 }
 
 function countBookmarks(node) {
@@ -275,79 +299,6 @@ async function loadManagedFolderViews() {
   return views.filter((view) => view.totalBookmarks > 0);
 }
 
-function renderFolderDetail() {
-  const folderViews =
-    Array.isArray(currentStatus?.previewFolders) && currentStatus.previewFolders.length
-      ? currentStatus.previewFolders
-      : currentFolderViews;
-
-  if (!folderViews.length) {
-    return createEmptyState(
-      t("emptyFoldersTitle"),
-      t("emptyFoldersDesc")
-    );
-  }
-
-  const wrapper = document.createElement("div");
-  wrapper.className = "detail-stack";
-
-  const summary = document.createElement("div");
-  summary.className = "info-card";
-
-  const summaryTitle = document.createElement("p");
-  summaryTitle.className = "info-card__title";
-  summaryTitle.textContent = t("folderStatsTitle");
-
-  const summaryDesc = document.createElement("p");
-  summaryDesc.className = "info-card__desc";
-  summaryDesc.textContent = t("folderStatsDesc", {
-    count: folderViews.reduce((sum, item) => sum + item.totalBookmarks, 0)
-  });
-
-  summary.append(summaryTitle, summaryDesc);
-  wrapper.appendChild(summary);
-
-  const tableWrap = document.createElement("div");
-  tableWrap.className = "record-item";
-
-  const table = document.createElement("table");
-  table.className = "result-table";
-
-  const thead = document.createElement("thead");
-  thead.innerHTML = `<tr><th>${t("tableFolder")}</th><th>${t("tableCount")}</th></tr>`;
-
-  const tbody = document.createElement("tbody");
-  [...folderViews]
-    .sort((a, b) => {
-      const rootTitle = t("rootCategoryTitle");
-      const aRoot = a.id === "__root__" || a.title === rootTitle;
-      const bRoot = b.id === "__root__" || b.title === rootTitle;
-      if (aRoot !== bRoot) {
-        return aRoot ? -1 : 1;
-      }
-
-      return b.totalBookmarks - a.totalBookmarks || a.title.localeCompare(b.title, "zh-CN");
-    })
-    .forEach((folderView) => {
-      const row = document.createElement("tr");
-
-      const titleCell = document.createElement("td");
-      titleCell.textContent = folderView.title;
-
-      const countCell = document.createElement("td");
-      countCell.textContent = String(folderView.totalBookmarks);
-
-      row.append(titleCell, countCell);
-      tbody.appendChild(row);
-    });
-
-  table.append(thead, tbody);
-  tableWrap.appendChild(table);
-  wrapper.appendChild(tableWrap);
-
-  return wrapper;
-}
-
 function renderCompactFolderSummary(folderViews) {
   if (!folderViews.length) {
     return null;
@@ -395,126 +346,6 @@ function renderCompactFolderSummary(folderViews) {
   table.append(thead, tbody);
   section.append(title, table);
   return section;
-}
-
-function renderOverviewDetail() {
-  const total = Number(currentStatus?.total || 0);
-  const phase = titleCasePhase(currentStatus?.phase || "idle");
-  const currentBatch =
-    currentStatus?.currentBatch && currentStatus?.totalBatches
-      ? `${currentStatus.currentBatch} / ${currentStatus.totalBatches}`
-      : "—";
-  const providerModel =
-    currentStatus?.provider && currentStatus?.model
-      ? `${currentStatus.provider} / ${currentStatus.model}`
-      : t("noModelUsed");
-
-  const wrapper = document.createElement("div");
-  wrapper.className = "detail-stack";
-
-  const summary = document.createElement("div");
-  summary.className = "info-card";
-
-  const title = document.createElement("p");
-  title.className = "info-card__title";
-  title.textContent = total ? t("totalBookmarksTitle", { count: total }) : t("noTaskTotal");
-
-  const desc = document.createElement("p");
-  desc.className = "info-card__desc";
-  desc.textContent = total
-    ? t("currentStatus", { phase })
-    : t("overviewNoTaskDesc");
-
-  summary.append(title, desc);
-  wrapper.appendChild(summary);
-
-  const messageCard = document.createElement("article");
-  messageCard.className = "record-item";
-
-  const messageTitle = document.createElement("div");
-  messageTitle.className = "record-item__title";
-  messageTitle.textContent = currentStatus?.message || t("notStartedMessage");
-
-  const messageMeta = document.createElement("div");
-  messageMeta.className = "record-item__suggestion";
-  messageMeta.textContent = currentStatus?.detail || DEFAULT_STATUS_DETAIL;
-
-  messageCard.append(messageTitle, messageMeta);
-  wrapper.appendChild(messageCard);
-
-  const facts = document.createElement("div");
-  facts.className = "record-list";
-
-  [
-    [t("factPhase"), phase],
-    [t("factCurrentBatch"), currentBatch],
-    [t("factProviderModel"), providerModel],
-    [t("factReused"), `${Number(currentStatus?.reused || 0)}`],
-    [t("factProtectedRoots"), `${Number(currentStatus?.protectedRootCount || 0)}`],
-    [t("factUpdatedAt"), formatDate(currentStatus?.updatedAt)]
-  ].forEach(([label, value]) => {
-    facts.appendChild(createFactItem(label, value));
-  });
-
-  wrapper.appendChild(facts);
-  return wrapper;
-}
-
-function renderProcessedDetail() {
-  const total = Number(currentStatus?.total || 0);
-  const processed = Number(currentStatus?.processed || 0);
-  const remaining = Math.max(0, total - processed);
-  const progress = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : 0;
-  const currentBatch =
-    currentStatus?.currentBatch && currentStatus?.totalBatches
-      ? `${currentStatus.currentBatch} / ${currentStatus.totalBatches}`
-      : "—";
-
-  const wrapper = document.createElement("div");
-  wrapper.className = "detail-stack";
-
-  const headline = document.createElement("div");
-  headline.className = "info-card";
-
-  const title = document.createElement("p");
-  title.className = "info-card__title";
-  title.textContent = t("processedTitle");
-
-  const desc = document.createElement("p");
-  desc.className = "info-card__desc";
-  desc.textContent = t("processedDesc", { processed, total, progress, remaining });
-
-  headline.append(title, desc);
-  wrapper.appendChild(headline);
-
-  const facts = document.createElement("div");
-  facts.className = "record-list";
-  [
-    [t("factCurrentBatch"), currentBatch],
-    [t("factBatchSize"), `${currentStatus?.batchSize || 0}`],
-    [t("factReused"), `${Number(currentStatus?.reused || 0)}`],
-    [t("factAiClassified"), `${Number(currentStatus?.aiClassified || 0)}`],
-    [t("factUpdatedAt"), formatDate(currentStatus?.updatedAt)]
-  ].forEach(([label, value]) => {
-    facts.appendChild(createFactItem(label, value));
-  });
-  wrapper.appendChild(facts);
-
-  const notes = document.createElement("article");
-  notes.className = "record-item";
-
-  const phaseEl = document.createElement("div");
-  phaseEl.className = "record-item__title";
-  phaseEl.textContent = currentStatus?.message || t("waitingProcessing");
-
-  const metaEl = document.createElement("div");
-  metaEl.className = "record-item__suggestion";
-  metaEl.textContent = currentStatus?.detail || DEFAULT_STATUS_DETAIL;
-
-  notes.append(phaseEl, metaEl);
-  wrapper.appendChild(notes);
-
-  return wrapper;
 }
 
 function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {}) {
@@ -629,7 +460,7 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
 
 function renderMainDetail() {
   if (!hasRunnableConfig(currentConfig)) {
-    return createEmptyState(t("setupRequiredTitle"), t("setupRequiredDesc"));
+    return createSetupRequiredState();
   }
 
   const wrapper = document.createElement("div");
@@ -788,6 +619,11 @@ async function startPreview() {
 }
 
 async function handlePrimaryAction() {
+  if (!hasRunnableConfig(currentConfig)) {
+    chrome.runtime.openOptionsPage();
+    return;
+  }
+
   if (isPreviewReady()) {
     if (!window.confirm(t("previewReadyConfirm"))) {
       return;

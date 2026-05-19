@@ -27,8 +27,11 @@ const t = (key, params) => I18N.t(key, params);
 const isZh = I18N.locale === "zh_CN";
 const ux = (zh, en) => (isZh ? zh : en);
 const DEFAULT_BATCH_SIZE = 50;
+const MIN_BATCH_SIZE = 5;
+const MAX_AUTO_RETRY_BATCH_SIZE = 20;
 const DEFAULT_DEAD_SCAN_BATCH_SIZE = 20;
-const DEFAULT_ROOT_FOLDER = "Smart Bookmark AI";
+const DEFAULT_ROOT_FOLDER = "TidyMarks AI";
+const LEGACY_ROOT_FOLDER = "Smart Bookmark AI";
 const BACKUP_DB_NAME = "smart-bookmark-ai-backups";
 const BACKUP_DB_VERSION = 1;
 const BACKUP_DB_STORE = "snapshots";
@@ -337,6 +340,10 @@ function getProviderLabel(provider) {
   return getProviderDefaults(provider).label || provider || "";
 }
 
+function getDefaultBatchSize(provider) {
+  return provider === "deepseek" ? 20 : DEFAULT_BATCH_SIZE;
+}
+
 async function initializeDefaults() {
   const stored = await chrome.storage.local.get([STORAGE_KEYS.config, STORAGE_KEYS.status]);
 
@@ -409,7 +416,7 @@ function buildDefaultConfig(provider = "openai") {
     baseUrl: defaults.baseUrl,
     apiKey: "",
     model: defaults.model,
-    batchSize: DEFAULT_BATCH_SIZE,
+    batchSize: getDefaultBatchSize(provider),
     autoOrganizeEnabled: false,
     autoOrganizeIntervalHours: 24,
     whitelistDomains: "",
@@ -432,7 +439,7 @@ function mergeConfig(raw = {}) {
     baseUrl: typeof raw.baseUrl === "string" && raw.baseUrl.trim() ? raw.baseUrl.trim() : defaults.baseUrl,
     apiKey: typeof raw.apiKey === "string" ? raw.apiKey.trim() : "",
     model: typeof raw.model === "string" && raw.model.trim() ? raw.model.trim() : defaults.model,
-    batchSize: normalizeBatchSize(raw.batchSize),
+    batchSize: normalizeBatchSize(raw.batchSize, defaults.batchSize),
     autoOrganizeEnabled: Boolean(raw.autoOrganizeEnabled),
     autoOrganizeIntervalHours: normalizeAutoInterval(raw.autoOrganizeIntervalHours),
     whitelistDomains:
@@ -1479,8 +1486,8 @@ async function processNextBatch() {
           job,
           {
             detail: ux(
-              `本次预览生成了全局目录方案。预计归类 ${job.moved} 条，复用缓存 ${job.reused} 条，AI 新分类 ${job.aiClassified} 条，删除 ${job.deleted} 条，${MANUAL_FOLDER_TITLE} ${job.pendingWarnings.length} 条。确认无误后可以继续点击“整理书签”正式应用。`,
-              `This preview generated a global taxonomy plan. It would categorize ${job.moved} bookmarks, reuse ${job.reused} cached results, classify ${job.aiClassified} new bookmarks with AI, delete ${job.deleted}, and leave ${job.pendingWarnings.length} items in "${MANUAL_FOLDER_TITLE}". If it looks good, click Organize to apply it.`
+              `本次预览生成了全局目录方案。预计归类 ${job.moved} 条，复用缓存 ${job.reused} 条，AI 新分类 ${job.aiClassified} 条，删除 ${job.deleted} 条，${MANUAL_FOLDER_TITLE} ${job.pendingWarnings.length} 条。确认无误后点击“应用方案”正式重建。`,
+              `This preview generated a global taxonomy plan. It would categorize ${job.moved} bookmarks, reuse ${job.reused} cached results, classify ${job.aiClassified} new bookmarks with AI, delete ${job.deleted}, and leave ${job.pendingWarnings.length} items in "${MANUAL_FOLDER_TITLE}". If it looks good, click Apply Plan to rebuild.`
             ),
             previewFolders
           }
@@ -1536,6 +1543,10 @@ async function processNextBatch() {
           "If you cancelled it yourself, this is expected. Otherwise, check the network, model latency, or batch size."
         )
       });
+      return;
+    }
+
+    if (isModelTimeoutError(error) && (await retryCurrentBatchWithSmallerBatch(job, error))) {
       return;
     }
 
@@ -1782,7 +1793,9 @@ function isBackupFolderNode(node) {
   const title = typeof node?.title === "string" ? node.title.trim() : "";
   return Boolean(
     !node?.url &&
-      (title.startsWith(`${DEFAULT_ROOT_FOLDER} Backup`) || title.startsWith(BACKUP_FOLDER_PREFIX))
+      (title.startsWith(`${DEFAULT_ROOT_FOLDER} Backup`) ||
+        title.startsWith(`${LEGACY_ROOT_FOLDER} Backup`) ||
+        title.startsWith(BACKUP_FOLDER_PREFIX))
   );
 }
 
@@ -1853,6 +1866,7 @@ function isForbiddenAiRootFolderName(value) {
   const normalized = value.trim().toLowerCase();
   return (
     normalized === DEFAULT_ROOT_FOLDER.toLowerCase() ||
+    normalized === LEGACY_ROOT_FOLDER.toLowerCase() ||
     /^smart\s*bookmark(\s*ai)?$/i.test(normalized)
   );
 }
@@ -3441,6 +3455,67 @@ function isAbortError(error) {
   return error?.abortReason === "cancelled-by-user";
 }
 
+function isModelTimeoutError(error) {
+  return ["first-response-timeout", "request-timeout"].includes(error?.abortReason);
+}
+
+async function retryCurrentBatchWithSmallerBatch(job, error) {
+  if (!job || job.phase !== "running" || job.jobType !== "organize") {
+    return false;
+  }
+
+  const oldBatchSize = normalizeBatchSize(job.batchSize);
+  const remaining = Math.max(0, Number(job.total || 0) - Number(job.processed || 0));
+  const attemptedBatchLength = Math.max(
+    0,
+    Number.parseInt(String(error?.batchLength || Math.min(oldBatchSize, remaining)), 10)
+  );
+  const retryBasis = Math.min(oldBatchSize, attemptedBatchLength || oldBatchSize);
+
+  if (retryBasis <= MIN_BATCH_SIZE || oldBatchSize <= MIN_BATCH_SIZE) {
+    return false;
+  }
+
+  const nextBatchSize = Math.max(
+    MIN_BATCH_SIZE,
+    Math.min(MAX_AUTO_RETRY_BATCH_SIZE, Math.floor(retryBasis / 2))
+  );
+
+  if (nextBatchSize >= oldBatchSize) {
+    return false;
+  }
+
+  const nextJob = {
+    ...job,
+    batchSize: nextBatchSize,
+    totalBatches: Math.ceil(job.total / nextBatchSize),
+    timeoutRetryCount: Number(job.timeoutRetryCount || 0) + 1,
+    config: {
+      ...job.config,
+      batchSize: nextBatchSize
+    }
+  };
+  const currentBatch = Math.floor(nextJob.processed / nextBatchSize) + 1;
+
+  await chrome.storage.local.set({
+    [STORAGE_KEYS.job]: nextJob
+  });
+
+  await updateBatchStatus(nextJob, currentBatch, {
+    message: ux(
+      `${getProviderLabel(nextJob.config.provider)} 响应过慢，已自动把批大小从 ${oldBatchSize} 降到 ${nextBatchSize} 并重试当前批次。`,
+      `${getProviderLabel(nextJob.config.provider)} was too slow, so the batch size was automatically reduced from ${oldBatchSize} to ${nextBatchSize} and the current batch will retry.`
+    ),
+    detail: ux(
+      "这次重试不会丢失已经完成的批次，也不会改动原书签结构。如果最小批大小仍然超时，任务才会停止并提示你更换模型或稍后重试。",
+      "Completed batches are kept and the original bookmark tree is still unchanged. If the minimum batch size still times out, the task will stop and suggest switching models or trying again later."
+    )
+  });
+
+  await scheduleNextBatch();
+  return true;
+}
+
 function toUserMessage(error, fallback) {
   if (error?.message) {
     return error.message;
@@ -3457,13 +3532,13 @@ function truncate(value, maxLength = 140) {
   return value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value;
 }
 
-function normalizeBatchSize(rawValue) {
-  const parsed = Number.parseInt(String(rawValue ?? DEFAULT_BATCH_SIZE), 10);
+function normalizeBatchSize(rawValue, fallback = DEFAULT_BATCH_SIZE) {
+  const parsed = Number.parseInt(String(rawValue ?? fallback), 10);
   if (!Number.isFinite(parsed)) {
-    return DEFAULT_BATCH_SIZE;
+    return fallback;
   }
 
-  return Math.min(100, Math.max(5, parsed));
+  return Math.min(100, Math.max(MIN_BATCH_SIZE, parsed));
 }
 
 function normalizeAutoInterval(rawValue) {
@@ -3704,7 +3779,7 @@ function buildRequestAbortError(reason, config, batchLength) {
   const providerLabel = getProviderLabel(config.provider);
 
   if (reason === "first-response-timeout") {
-    return buildUserFacingError(
+    const error = buildUserFacingError(
       ux(
         `${providerLabel} 在 ${Math.floor(FIRST_RESPONSE_TIMEOUT_MS / 1000)} 秒内没有返回响应，任务已提前停止。`,
         `${providerLabel} did not return a response within ${Math.floor(FIRST_RESPONSE_TIMEOUT_MS / 1000)} seconds, so the task was stopped early.`
@@ -3715,10 +3790,12 @@ function buildRequestAbortError(reason, config, batchLength) {
       ),
       reason
     );
+    error.batchLength = batchLength;
+    return error;
   }
 
   if (reason === "request-timeout") {
-    return buildUserFacingError(
+    const error = buildUserFacingError(
       ux(
         `${providerLabel} 请求超过 ${Math.floor(REQUEST_TIMEOUT_MS / 1000)} 秒仍未完成，任务已停止。`,
         `${providerLabel} did not finish within ${Math.floor(REQUEST_TIMEOUT_MS / 1000)} seconds, so the task was stopped.`
@@ -3729,6 +3806,8 @@ function buildRequestAbortError(reason, config, batchLength) {
       ),
       reason
     );
+    error.batchLength = batchLength;
+    return error;
   }
 
   if (reason === "cancelled-by-user") {

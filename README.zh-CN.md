@@ -1,17 +1,17 @@
-# Smart Bookmark AI
+# TidyMarks AI
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)
-![版本](https://img.shields.io/badge/Version-1.3.0-1f6d53?style=flat-square)
+![版本](https://img.shields.io/badge/Version-3.0.0-1f6d53?style=flat-square)
 ![许可证](https://img.shields.io/badge/License-MIT-black?style=flat-square)
 
-Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主要用于帮助用户清理数量庞大、结构混乱的书签库。
+TidyMarks AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主要用于帮助用户清理数量庞大、结构混乱的书签库。
 
 它会先创建本地快照备份，再检测明显失效的链接、清理明显重复的书签，先规划全局目录，再结合你选择的大语言模型，对剩余书签进行分批语义分类，最后把整理后的结构直接重建到书签栏根目录。
 
 <p align="center">
-  <img src="docs/assets/hero.svg" alt="Smart Bookmark AI 首页图" width="860" />
+  <img src="docs/assets/hero.svg" alt="TidyMarks AI 首页图" width="860" />
 </p>
 
 ## 它解决什么问题
@@ -29,7 +29,7 @@ Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主
   <img src="docs/assets/pages.svg" alt="产品概览图" width="860" />
 </p>
 
-这张概览图用于快速说明弹窗、设置中心和备份管理之间的关系。
+这张概览图用于快速说明弹窗、设置和备份管理之间的关系。
 
 ### 弹窗首页
 
@@ -37,15 +37,15 @@ Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主
   <img src="docs/screenshots/popup-store.png" alt="弹窗首页" width="430" />
 </p>
 
-弹窗把主要操作集中在顶部，整理书签、手动备份、取消任务和进度查看都在一个页面里完成。
+弹窗改为预览优先：先生成方案，看起来合适后再应用；手动备份、运行中取消和进度查看都集中在一个紧凑面板里。
 
-### 设置中心
+### 设置
 
 <p align="center">
-  <img src="docs/screenshots/options-connection-store.png" alt="设置中心" width="860" />
+  <img src="docs/screenshots/options-connection-store.png" alt="设置" width="860" />
 </p>
 
-设置中心使用左侧导航分页，分别管理连接配置、整理规则、自动任务和备份管理。
+设置页保留左侧导航，但把日常路径收敛到模型、规则、自动和备份；高级规则默认收起。
 
 ## 核心特点
 
@@ -53,6 +53,8 @@ Smart Bookmark AI 是一个基于 Chrome Manifest V3 的书签整理扩展，主
 - 支持自定义 Base URL、API Key、模型名和 Prompt
 - 先做全局 taxonomy 规划，再分批分类，减少同类书签被拆散
 - 支持预览模式，先看结果摘要再决定是否正式整理
+- API 检测成功后会直接保存当前连接配置
+- 模型响应过慢时会自动降低当前批大小并重试，不再直接中断整次任务
 - 先扫描明显失效链接，再进行 AI 分类
 - 保守去重，尽量避免误删
 - 支持受保护根目录和域名目录规则

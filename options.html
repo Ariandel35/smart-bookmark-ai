@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title data-i18n="optionsPageTitle">Smart Bookmark AI - Settings</title>
+    <title data-i18n="optionsPageTitle">TidyMarks AI - Settings</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -11,7 +11,7 @@
       <header class="topbar">
         <div class="topbar__row">
           <div>
-            <h1 class="topbar__title" data-i18n="optionsMainTitle">Settings Center</h1>
+            <h1 class="topbar__title" data-i18n="optionsMainTitle">Settings</h1>
           </div>
 
           <div class="topbar__actions topbar__actions--page">
@@ -152,7 +152,7 @@
                   <div class="field field--inline-actions">
                     <div class="field__toolbar">
                       <button class="button button--secondary button--compact" type="button" id="testApiButton">
-                        <span data-i18n="testApiButton">Test API</span>
+                        <span data-i18n="testApiButton">Test & Save</span>
                       </button>
                       <span class="status-text field__status" id="apiTestStatus" aria-live="polite" hidden></span>
                     </div>
@@ -161,7 +161,7 @@
                   <div class="field field--inline-actions">
                     <div class="field__toolbar">
                       <button class="button button--ghost button--compact" type="button" id="grantAccessButton">
-                        <span data-i18n="hostAccessButton">Grant Site Access</span>
+                        <span data-i18n="hostAccessButton">Grant Access</span>
                       </button>
                       <span class="status-text field__status" id="hostAccessStatus" aria-live="polite"></span>
                     </div>
@@ -222,19 +222,19 @@
                     <input id="whitelistDomains" name="whitelistDomains" type="hidden" />
                   </div>
 
-                  <div class="field">
-                    <label for="protectedRootFolders" data-i18n="labelProtectedRootFolders">Protected Root Folders</label>
-                    <textarea
-                      id="protectedRootFolders"
-                      name="protectedRootFolders"
-                      data-i18n-placeholder="placeholderProtectedRootFolders"
-                      placeholder="One root folder per line"
-                    ></textarea>
-                  </div>
-
                   <details class="advanced-block field--full">
                     <summary class="advanced-block__summary" data-i18n="advancedSettingsTitle">Advanced Settings</summary>
                     <div class="advanced-block__content">
+                      <div class="field">
+                        <label for="protectedRootFolders" data-i18n="labelProtectedRootFolders">Protected Root Folders</label>
+                        <textarea
+                          id="protectedRootFolders"
+                          name="protectedRootFolders"
+                          data-i18n-placeholder="placeholderProtectedRootFolders"
+                          placeholder="One root folder per line"
+                        ></textarea>
+                      </div>
+
                       <div class="field">
                         <label for="domainFolderRules" data-i18n="labelDomainFolderRules">Domain Folder Rules</label>
                         <textarea

@@ -5,6 +5,8 @@ const Providers = globalThis.SmartBookmarkProviders;
 const t = (key, params) => I18N.t(key, params);
 const LEGACY_DEFAULT_PROMPT = I18N.getLegacyDefaultPrompt();
 const DEFAULT_PROMPT = I18N.getDefaultPrompt();
+const DEFAULT_BATCH_SIZE = 50;
+const MIN_BATCH_SIZE = 5;
 
 const form = document.getElementById("settingsForm");
 const providerSelect = document.getElementById("provider");
@@ -50,6 +52,10 @@ function getDefaults(provider) {
   return Providers.getProvider(provider);
 }
 
+function getDefaultBatchSize(provider) {
+  return provider === "deepseek" ? 20 : DEFAULT_BATCH_SIZE;
+}
+
 function buildDefaultConfig(provider = "openai") {
   const defaults = getDefaults(provider);
   return {
@@ -57,7 +63,7 @@ function buildDefaultConfig(provider = "openai") {
     baseUrl: defaults.baseUrl,
     apiKey: "",
     model: defaults.model,
-    batchSize: 50,
+    batchSize: getDefaultBatchSize(provider),
     autoOrganizeEnabled: false,
     autoOrganizeIntervalHours: 24,
     whitelistDomains: "",
@@ -80,7 +86,7 @@ function mergeConfig(raw = {}) {
     baseUrl: typeof raw.baseUrl === "string" && raw.baseUrl.trim() ? raw.baseUrl.trim() : defaults.baseUrl,
     apiKey: typeof raw.apiKey === "string" ? raw.apiKey : "",
     model: typeof raw.model === "string" && raw.model.trim() ? raw.model.trim() : defaults.model,
-    batchSize: normalizeBatchSize(raw.batchSize),
+    batchSize: normalizeBatchSize(raw.batchSize, defaults.batchSize),
     autoOrganizeEnabled: Boolean(raw.autoOrganizeEnabled),
     autoOrganizeIntervalHours: normalizeAutoInterval(raw.autoOrganizeIntervalHours),
     whitelistDomains:
@@ -446,8 +452,9 @@ async function ensureOriginAccess(rawUrl) {
 
 async function refreshHostAccessStatus() {
   const granted = await hasBroadHostAccess();
-  setHostAccessStatus(granted ? t("hostAccessGranted") : t("hostAccessMissing"), granted);
+  setHostAccessStatus(granted ? "" : t("hostAccessMissing"), granted);
   grantAccessButton.textContent = granted ? t("hostAccessGrantedButton") : t("hostAccessButton");
+  grantAccessButton.disabled = granted;
 }
 
 function populateForm(config) {
@@ -485,13 +492,13 @@ function collectFormData() {
   };
 }
 
-function normalizeBatchSize(rawValue) {
-  const parsed = Number.parseInt(String(rawValue ?? 50), 10);
+function normalizeBatchSize(rawValue, fallback = DEFAULT_BATCH_SIZE) {
+  const parsed = Number.parseInt(String(rawValue ?? fallback), 10);
   if (!Number.isFinite(parsed)) {
-    return 50;
+    return fallback;
   }
 
-  return Math.min(100, Math.max(5, parsed));
+  return Math.min(100, Math.max(MIN_BATCH_SIZE, parsed));
 }
 
 function normalizeAutoInterval(rawValue) {
@@ -699,6 +706,10 @@ async function saveConfig(event) {
     }
   }
 
+  await saveConfigData(config);
+}
+
+async function saveConfigData(config) {
   await chrome.storage.local.set({ [STORAGE_KEY]: config });
   setSaveBadge(t("saveBadgeSaved"), "success");
 }
@@ -750,7 +761,12 @@ async function testApiConnection() {
       return;
     }
 
-    setApiTestStatus([response.message || t("apiTestSucceeded"), response.detail].filter(Boolean).join(" "));
+    await saveConfigData(config);
+    setApiTestStatus(
+      [response.message || t("apiTestSucceeded"), response.detail, t("apiTestSaved")]
+        .filter(Boolean)
+        .join(" ")
+    );
   } catch (error) {
     console.error("Failed to test API connection:", error);
     setApiTestStatus(t("apiTestException"), true);
@@ -774,7 +790,6 @@ async function createManualBackup() {
       return;
     }
 
-    await refreshBackupStatus();
   } catch (error) {
     console.error("Failed to create manual backup:", error);
     setBackupBadge(t("backupErrorBadge"), "danger");
@@ -805,7 +820,6 @@ async function restoreBackupEntry(backupId) {
       return;
     }
 
-    await refreshBackupStatus();
   } catch (error) {
     console.error("Failed to restore backup entry:", error);
     setBackupBadge(t("backupErrorBadge"), "danger");
@@ -836,7 +850,6 @@ async function deleteBackupEntry(backupId) {
       return;
     }
 
-    await refreshBackupStatus();
   } catch (error) {
     console.error("Failed to delete backup entry:", error);
     setBackupBadge(t("backupErrorBadge"), "danger");
@@ -881,6 +894,8 @@ providerSelect.addEventListener("change", () => {
   const nextProvider = providerSelect.value;
   const previousDefaults = getDefaults(lastProvider);
   const nextDefaults = getDefaults(nextProvider);
+  const previousDefaultBatchSize = getDefaultBatchSize(lastProvider);
+  const nextDefaultBatchSize = getDefaultBatchSize(nextProvider);
 
   if (!baseUrlInput.value.trim() || baseUrlInput.value.trim() === previousDefaults.baseUrl) {
     baseUrlInput.value = nextDefaults.baseUrl;
@@ -888,6 +903,13 @@ providerSelect.addEventListener("change", () => {
 
   if (!modelInput.value.trim() || modelInput.value.trim() === previousDefaults.model) {
     modelInput.value = nextDefaults.model;
+  }
+
+  if (
+    !batchSizeInput.value.trim() ||
+    normalizeBatchSize(batchSizeInput.value) === previousDefaultBatchSize
+  ) {
+    batchSizeInput.value = String(nextDefaultBatchSize);
   }
 
   updateProviderHints(nextProvider);

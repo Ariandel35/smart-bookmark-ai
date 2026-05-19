@@ -1,8 +1,8 @@
-# Smart Bookmark AI 隐私政策
+# TidyMarks AI 隐私政策
 
 最后更新：2026-04-19
 
-Smart Bookmark AI 仅在完成书签整理功能所必需的范围内处理数据。
+TidyMarks AI 仅在完成书签整理功能所必需的范围内处理数据。
 
 ## 1. 我们读取哪些数据
 - 你的 Chrome 书签标题、URL 和当前文件夹路径

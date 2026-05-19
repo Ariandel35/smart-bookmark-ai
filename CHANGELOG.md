@@ -4,6 +4,17 @@
 
 - No unreleased changes yet
 
+## 3.0.0 - 2026-05-08
+
+- Simplified the popup into a preview-first flow with a clearer `Preview` -> `Apply Plan` primary action
+- Added direct setup routing from the popup when provider, model, Base URL, or API key configuration is incomplete
+- Added automatic slow-model recovery that reduces the current batch size and retries after model timeouts
+- Lowered the default DeepSeek batch size for new/reset configurations
+- Moved advanced organization fields behind a single Advanced section to keep everyday rules easier to scan
+- Made successful API tests save the current settings, reducing the setup path to `Test & Save`
+- Refined bilingual labels, status copy, spacing, color tokens, and responsive form behavior
+- Removed unused popup detail-rendering code from the previous multi-tab result view
+
 ## 1.3.0 - 2026-04-22
 
 - Added bilingual interface support for English and Simplified Chinese
@@ -32,4 +43,4 @@
 
 ## 1.0.0 - 2026-04-18
 
-- Initial Smart Bookmark AI extension implementation
+- Initial TidyMarks AI extension implementation

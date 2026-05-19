@@ -1,11 +1,11 @@
 {
   "extName": {
-    "message": "Smart Bookmark AI"
+    "message": "TidyMarks AI"
   },
   "extDescription": {
     "message": "Preview, clean duplicates and dead links, then rebuild a simpler bookmark structure with your own AI model."
   },
   "actionTitle": {
-    "message": "Smart Bookmark AI"
+    "message": "TidyMarks AI"
   }
 }
