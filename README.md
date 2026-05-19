@@ -1,149 +1,147 @@
 # Marko
 
-[English](README.md) | [简体中文](README.zh-CN.md)
-
-![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)
-![Release](https://img.shields.io/badge/Version-3.0.0-1f6d53?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-black?style=flat-square)
-
-Marko is a Chrome extension that helps users clean up large bookmark libraries with LLM-assisted classification.
-
-It creates a local snapshot backup, checks clearly dead links, removes obvious duplicates, plans a stable global taxonomy, and rebuilds a simpler bookmark structure directly at the bookmark bar root.
-
 <p align="center">
-  <img src="docs/assets/hero.svg" alt="Marko hero" width="860" />
+  <img src="icons/icon-128.png" alt="Marko icon" width="88" />
 </p>
 
-## What It Solves
-
-- Too many bookmarks with no usable structure
-- Repeated links that make folders noisy
-- Dead bookmarks that should be removed before reorganization
-- Settings that need to work with different LLM providers
-
-## Interface Preview
-
-### Product Overview
-
 <p align="center">
-  <img src="docs/assets/pages.svg" alt="Product overview" width="860" />
+  <strong>A calmer Chrome bookmark organizer, powered by the model you choose.</strong>
 </p>
 
-The overview graphic shows how the popup, settings, and backup management fit together.
-
-### Popup
-
 <p align="center">
-  <img src="docs/screenshots/popup-store.png" alt="Popup overview" width="430" />
+  <a href="README.md">English</a> ·
+  <a href="README.zh-CN.md">简体中文</a> ·
+  <a href="https://github.com/Ariandel35/marko/issues">Issues</a> ·
+  <a href="PRIVACY.md">Privacy</a>
 </p>
 
-The popup is preview-first: generate a plan, apply it when it looks right, create a manual backup, or cancel a running job from one compact panel.
-
-### Settings
-
 <p align="center">
-  <img src="docs/screenshots/options-connection-store.png" alt="Settings center" width="860" />
+  <img alt="Chrome MV3" src="https://img.shields.io/badge/Chrome-MV3-4285F4?style=flat-square&logo=googlechrome&logoColor=white" />
+  <img alt="Version 3.0.0" src="https://img.shields.io/badge/Version-3.0.0-1f6d53?style=flat-square" />
+  <img alt="MIT License" src="https://img.shields.io/badge/License-MIT-black?style=flat-square" />
 </p>
 
-The settings page keeps the everyday path focused on model connection, rules, automation, and backups, with advanced rule fields collapsed by default.
-
-## Highlights
-
-- Works with OpenAI, DeepSeek, Anthropic, Gemini, OpenRouter, Groq, xAI, Moonshot AI, Ollama, and generic OpenAI-compatible endpoints
-- Custom Base URL, API key, model name, and prompt
-- Global taxonomy planning before chunked classification for more stable folders
-- Preview mode before applying changes to the bookmark tree
-- API testing saves the verified connection settings
-- Slow model requests automatically retry with smaller batches instead of stopping immediately
-- Conservative duplicate cleanup and dead link detection before AI classification
-- Protected root folders and domain-to-folder rules
-- Classification cache reuse and dead link cache for faster reruns
-- Automatic local snapshot backup before each organize run
-- Manual backup, restore, and delete
-- Auto organize with Chrome alarms
-- Reviewable unprocessed and delete logs
-- English and Simplified Chinese interface support
-
-## Workflow
-
-Marko is designed for safety first. It does not rewrite the bookmark tree while analysis is still in progress.
-
 <p align="center">
-  <img src="docs/assets/workflow.svg" alt="Workflow diagram" width="860" />
+  <img src="docs/assets/hero.svg" alt="Marko product hero" width="920" />
 </p>
 
-1. Optionally generate a preview without changing bookmarks
-2. Create a local snapshot backup before a real organize run
-3. Scan links for clearly dead bookmarks
-4. Plan a global folder taxonomy, then classify in chunks
-5. Rebuild the final structure at the bookmark root in one pass
+Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-to-browse structure. It previews an AI-assisted cleanup plan first, creates a local backup before real changes, and only rebuilds your bookmarks after you choose to apply the plan.
 
-## Privacy Summary
+## Why Marko
 
-- Bookmarks are only sent to the model provider you choose
-- API keys and backups are stored locally in the browser
-- Classification cache and dead-link cache are stored locally to speed up later runs
-- Dead link detection sends requests directly to bookmarked websites
-- The extension developer does not receive your bookmark data
+| A messy bookmark library usually has... | Marko responds with... |
+| --- | --- |
+| Duplicate links scattered across folders | Conservative duplicate cleanup before classification |
+| Old links that no longer open | Dead-link checks that remove only clearly failed URLs |
+| Folders created one batch at a time | A global taxonomy plan before chunked classification |
+| Risky one-click cleanup tools | Preview first, backup second, rebuild last |
+| Too many settings for a simple task | A focused popup and a shorter setup path |
 
-Full privacy details: [PRIVACY.md](PRIVACY.md)
+## Product Tour
 
-## Required Permissions
+<p align="center">
+  <img src="docs/assets/pages.svg" alt="Marko popup, settings, and backup pages" width="920" />
+</p>
 
-- `bookmarks`: read, move, delete, and rebuild bookmarks
-- `storage`: save settings, progress, and backup records
-- `alarms`: schedule auto organize jobs
-- Optional website access: requested at runtime for model API access and dead link checks
+<table>
+  <tr>
+    <td width="34%">
+      <img src="docs/screenshots/popup-store.png" alt="Marko popup preview" width="100%" />
+    </td>
+    <td width="33%">
+      <img src="docs/screenshots/options-connection-store.png" alt="Marko model settings" width="100%" />
+    </td>
+    <td width="33%">
+      <img src="docs/screenshots/options-backup-store.png" alt="Marko backup settings" width="100%" />
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Popup</strong><br />Preview, apply, back up, cancel, and watch progress from one compact panel.</td>
+    <td><strong>Connection</strong><br />Choose a provider, test the API, save the working model, and keep advanced fields out of the way.</td>
+    <td><strong>Backups</strong><br />Create, inspect, restore, and delete local bookmark snapshots when you need a rollback point.</td>
+  </tr>
+</table>
 
-## Advanced Rules
+## Safe Organizing Flow
 
-- `Protected root folders`: keep selected top-level bookmark folders untouched during organize runs
-- `Domain folder rules`: force matching domains into specific folders before AI classification
-- `Preview mode`: inspect the planned structure and key counts before rebuilding
-- `Cache reuse`: previously classified bookmarks can be reused locally when the title, URL, and rules signature still match
+<p align="center">
+  <img src="docs/assets/workflow.svg" alt="Marko safe organizing workflow" width="920" />
+</p>
 
-## Repository Structure
+1. Generate a preview plan without changing the current bookmark tree.
+2. Create a local snapshot backup before a real organize run.
+3. Check links and remove only confirmed dead bookmarks.
+4. Detect exact duplicates and preserve uncertain items for review.
+5. Plan a global folder taxonomy, then classify bookmarks in batches.
+6. Rebuild the bookmark bar root in one final pass.
 
-- [manifest.json](manifest.json)
-- [background.js](background.js)
-- [providers.js](providers.js)
-- [json-utils.js](json-utils.js)
-- [rules.js](rules.js)
-- [cache-utils.js](cache-utils.js)
-- [i18n.js](i18n.js)
-- [popup.html](popup.html)
-- [popup.js](popup.js)
-- [options.html](options.html)
-- [options.js](options.js)
-- [styles.css](styles.css)
-- [privacy.html](privacy.html)
-- [tests](tests)
-- [docs/assets](docs/assets)
-- [docs/screenshots](docs/screenshots)
-- [webstore](webstore)
+## What v3.0 Focuses On
 
-## Local Development
+| Area | v3.0 behavior |
+| --- | --- |
+| Main action | `Preview` is the first step. `Apply Plan` appears only when a plan is ready. |
+| Setup | Missing provider, Base URL, model, or API key routes the user to settings. |
+| API settings | `Test & Save` validates the connection and stores the working configuration. |
+| Slow models | Timeout retries automatically shrink the current batch size before giving up. |
+| DeepSeek | New and reset configurations start with a smaller default batch size. |
+| Advanced rules | Protected folders, domain rules, and prompt fields stay available but quieter. |
+| Language | English and Simplified Chinese are both supported in the extension UI. |
 
-1. Open `chrome://extensions`
-2. Enable Developer mode
-3. Click `Load unpacked`
-4. Select this repository root
+## Model Providers
 
-### Syntax checks
+Marko works with OpenAI, DeepSeek, MiniMax, Anthropic, Gemini, OpenRouter, Groq, xAI, Moonshot AI, Ollama, and generic OpenAI-compatible endpoints.
+
+You can configure the provider, Base URL, API key, model name, prompt, batch size, whitelist, protected root folders, and domain-to-folder rules.
+
+## Install Locally
+
+1. Open `chrome://extensions`.
+2. Enable `Developer mode`.
+3. Click `Load unpacked`.
+4. Select this repository root.
+
+## Development
+
+Run the static checks and extension tests:
 
 ```bash
 node --check background.js
-node --check options.js
 node --check popup.js
+node --check options.js
 node --check providers.js
 node --check i18n.js
+node --check rules.js
+node --check cache-utils.js
+node --check json-utils.js
 node tests/run-tests.js
 ```
 
-## GitHub and Chrome Web Store
+Core files:
+
+| File | Purpose |
+| --- | --- |
+| [manifest.json](manifest.json) | Chrome MV3 extension manifest |
+| [background.js](background.js) | Organizing jobs, backups, scanning, and rebuild logic |
+| [providers.js](providers.js) | Provider defaults, request builders, and response parsing |
+| [popup.js](popup.js) | Preview and apply flow |
+| [options.js](options.js) | Settings, API test, backups, and rules |
+| [i18n.js](i18n.js) | English and Simplified Chinese copy |
+| [tests](tests) | JSON, rules, cache, asset, and i18n checks |
+| [docs](docs) | README visuals and screenshots |
+| [webstore](webstore) | Chrome Web Store listing material |
+
+## Privacy Boundaries
+
+- Bookmark titles, URLs, current paths, prompts, API settings, caches, and backups stay in local browser storage unless you start an organize run.
+- During organize or auto organize, bookmark metadata is sent only to the model provider you configured.
+- API keys are stored locally and are never sent to this project or its developer.
+- Dead-link checks connect directly to bookmarked websites.
+- Snapshot backups are local and can be restored or deleted from the settings page.
+
+Read the full policy in [PRIVACY.md](PRIVACY.md).
+
+## Links
 
 - Homepage: [github.com/Ariandel35/marko](https://github.com/Ariandel35/marko)
 - Support: [github.com/Ariandel35/marko/issues](https://github.com/Ariandel35/marko/issues)
 - Privacy policy: [github.com/Ariandel35/marko/blob/main/PRIVACY.md](https://github.com/Ariandel35/marko/blob/main/PRIVACY.md)
-
-Store submission materials are prepared in [webstore](webstore).

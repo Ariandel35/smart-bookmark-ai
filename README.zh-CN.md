@@ -1,150 +1,147 @@
 # Marko
 
-[English](README.md) | [简体中文](README.zh-CN.md)
-
-![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)
-![版本](https://img.shields.io/badge/Version-3.0.0-1f6d53?style=flat-square)
-![许可证](https://img.shields.io/badge/License-MIT-black?style=flat-square)
-
-Marko 是一个基于 Chrome Manifest V3 的书签整理扩展，主要用于帮助用户清理数量庞大、结构混乱的书签库。
-
-它会先创建本地快照备份，再检测明显失效的链接、清理明显重复的书签，先规划全局目录，再结合你选择的大语言模型，对剩余书签进行分批语义分类，最后把整理后的结构直接重建到书签栏根目录。
-
 <p align="center">
-  <img src="docs/assets/hero.svg" alt="Marko 首页图" width="860" />
+  <img src="icons/icon-128.png" alt="Marko 图标" width="88" />
 </p>
 
-## 它解决什么问题
-
-- 书签太多，根本找不到想看的网页
-- 重复链接过多，文件夹越堆越乱
-- 失效书签长期残留，影响整理质量
-- 不同模型服务商需要灵活配置
-
-## 界面预览
-
-### 产品概览
-
 <p align="center">
-  <img src="docs/assets/pages.svg" alt="产品概览图" width="860" />
+  <strong>一个更克制的 Chrome 书签整理工具，由你选择的模型驱动。</strong>
 </p>
 
-这张概览图用于快速说明弹窗、设置和备份管理之间的关系。
-
-### 弹窗首页
-
 <p align="center">
-  <img src="docs/screenshots/popup-store.png" alt="弹窗首页" width="430" />
+  <a href="README.md">English</a> ·
+  <a href="README.zh-CN.md">简体中文</a> ·
+  <a href="https://github.com/Ariandel35/marko/issues">问题反馈</a> ·
+  <a href="PRIVACY.md">隐私说明</a>
 </p>
 
-弹窗改为预览优先：先生成方案，看起来合适后再应用；手动备份、运行中取消和进度查看都集中在一个紧凑面板里。
-
-### 设置
-
 <p align="center">
-  <img src="docs/screenshots/options-connection-store.png" alt="设置" width="860" />
+  <img alt="Chrome MV3" src="https://img.shields.io/badge/Chrome-MV3-4285F4?style=flat-square&logo=googlechrome&logoColor=white" />
+  <img alt="Version 3.0.0" src="https://img.shields.io/badge/Version-3.0.0-1f6d53?style=flat-square" />
+  <img alt="MIT License" src="https://img.shields.io/badge/License-MIT-black?style=flat-square" />
 </p>
 
-设置页保留左侧导航，但把日常路径收敛到模型、规则、自动和备份；高级规则默认收起。
-
-## 核心特点
-
-- 支持 OpenAI、DeepSeek、Anthropic、Gemini、OpenRouter、Groq、xAI、Moonshot AI、Ollama，以及通用 OpenAI Compatible 接口
-- 支持自定义 Base URL、API Key、模型名和 Prompt
-- 先做全局 taxonomy 规划，再分批分类，减少同类书签被拆散
-- 支持预览模式，先看结果摘要再决定是否正式整理
-- API 检测成功后会直接保存当前连接配置
-- 模型响应过慢时会自动降低当前批大小并重试，不再直接中断整次任务
-- 先扫描明显失效链接，再进行 AI 分类
-- 保守去重，尽量避免误删
-- 支持受保护根目录和域名目录规则
-- 支持分类缓存与死链缓存，加快重复整理
-- 每次整理前自动创建本地快照备份
-- 支持手动备份、恢复与删除
-- 支持自动静默整理
-- 支持中英文界面切换
-- 支持查看未处理项与删除记录
-
-## 工作流程
-
-这个扩展强调“先分析、后重建”，不会在分析还没结束时一边跑一边改动你的原始书签结构。
-
 <p align="center">
-  <img src="docs/assets/workflow.svg" alt="工作流程图" width="860" />
+  <img src="docs/assets/hero.svg" alt="Marko 产品封面" width="920" />
 </p>
 
-1. 可先生成预览，不直接改动书签
-2. 正式整理前创建本地快照备份
-3. 扫描明显失效的书签链接
-4. 先规划全局目录，再分批分类
-5. 一次性在根目录重建新的书签结构
+Marko 用来把拥挤的 Chrome 书签栏整理成更少、更清楚、更容易浏览的结构。它先生成 AI 辅助整理预览，正式改动前创建本地备份，只有在你确认后才重建书签。
 
-## 隐私摘要
+## 为什么需要 Marko
 
-- 书签内容只会发送到你自己选择的模型服务商
-- API Key 和备份数据只保存在本地浏览器
-- 分类缓存和死链缓存也只保存在本地
-- 失效链接检测会直接访问书签对应的网站
-- 扩展开发者不会接收你的书签数据
+| 混乱书签库常见问题 | Marko 的处理方式 |
+| --- | --- |
+| 同一个链接散落在多个文件夹 | 分类前先做保守去重 |
+| 很多旧链接已经打不开 | 只删除确认失效的链接 |
+| 每批分类都临时生成文件夹 | 先规划全局目录，再分批归类 |
+| 一键整理风险太高 | 先预览，再备份，最后重建 |
+| 设置项太多，主流程不够直接 | 弹窗更聚焦，设置路径更短 |
 
-完整隐私说明见 [PRIVACY.md](PRIVACY.md)。
+## 界面一览
 
-## 所需权限
+<p align="center">
+  <img src="docs/assets/pages.svg" alt="Marko 弹窗、设置和备份页面" width="920" />
+</p>
 
-- `bookmarks`：读取、移动、删除和重建书签
-- `storage`：保存设置、任务状态和备份记录
-- `alarms`：支持自动整理和批次调度
-- 网站访问权限：运行时申请，用于模型 API 请求和失效链接检测
+<table>
+  <tr>
+    <td width="34%">
+      <img src="docs/screenshots/popup-store.png" alt="Marko 弹窗预览" width="100%" />
+    </td>
+    <td width="33%">
+      <img src="docs/screenshots/options-connection-store.png" alt="Marko 模型设置" width="100%" />
+    </td>
+    <td width="33%">
+      <img src="docs/screenshots/options-backup-store.png" alt="Marko 备份设置" width="100%" />
+    </td>
+  </tr>
+  <tr>
+    <td><strong>弹窗</strong><br />预览、应用、备份、取消和进度查看集中在一个紧凑面板里。</td>
+    <td><strong>连接</strong><br />选择服务商，测试 API，保存可用模型，高级项默认不打扰主流程。</td>
+    <td><strong>备份</strong><br />创建、查看、恢复和删除本地书签快照，需要回滚时有明确入口。</td>
+  </tr>
+</table>
 
-## 高级规则
+## 安全整理流程
 
-- `受保护根目录`：整理时跳过指定的书签根目录，避免误动重要文件夹
-- `域名目录规则`：让指定域名在进入 AI 分类前，先固定归到你指定的目录
-- `预览模式`：先查看预计的目录结构和统计，再决定是否真正重建
-- `缓存复用`：当书签标题、URL 和规则签名不变时，可直接复用之前的分类结果
+<p align="center">
+  <img src="docs/assets/workflow.svg" alt="Marko 安全整理流程" width="920" />
+</p>
 
-## 仓库结构
+1. 先生成预览方案，不改动当前书签树。
+2. 正式整理前创建本地快照备份。
+3. 检查链接，只删除确认失效的书签。
+4. 识别完全重复项，把不确定内容留给人工查看。
+5. 先规划全局文件夹结构，再分批分类。
+6. 最后一次性重建书签栏根目录。
 
-- [manifest.json](manifest.json)
-- [background.js](background.js)
-- [providers.js](providers.js)
-- [json-utils.js](json-utils.js)
-- [rules.js](rules.js)
-- [cache-utils.js](cache-utils.js)
-- [i18n.js](i18n.js)
-- [popup.html](popup.html)
-- [popup.js](popup.js)
-- [options.html](options.html)
-- [options.js](options.js)
-- [styles.css](styles.css)
-- [privacy.html](privacy.html)
-- [tests](tests)
-- [docs/assets](docs/assets)
-- [docs/screenshots](docs/screenshots)
-- [webstore](webstore)
+## v3.0 重点
 
-## 本地开发
+| 模块 | v3.0 行为 |
+| --- | --- |
+| 主操作 | `预览整理` 是第一步，只有方案准备好后才显示 `应用方案`。 |
+| 设置补全 | 缺少服务商、Base URL、模型或 API Key 时，会直接引导到设置页。 |
+| API 设置 | `测试并保存` 会验证连接，并保存当前可用配置。 |
+| 慢模型 | 请求超时后会先自动缩小当前批大小并重试，而不是立刻结束整次任务。 |
+| DeepSeek | 新配置和重置配置默认使用更小批量，减少 90 秒超时概率。 |
+| 高级规则 | 受保护根目录、域名规则和 Prompt 仍然可用，但默认更安静。 |
+| 语言 | 扩展界面支持英文和简体中文。 |
 
-1. 打开 `chrome://extensions`
-2. 启用“开发者模式”
-3. 点击“加载已解压的扩展程序”
-4. 选择当前仓库根目录
+## 模型服务
 
-### 语法检查
+Marko 支持 OpenAI、DeepSeek、MiniMax、Anthropic、Gemini、OpenRouter、Groq、xAI、Moonshot AI、Ollama，以及通用 OpenAI Compatible 接口。
+
+你可以配置服务商、Base URL、API Key、模型名、Prompt、批大小、白名单、受保护根目录和域名目录规则。
+
+## 本地安装
+
+1. 打开 `chrome://extensions`。
+2. 启用 `开发者模式`。
+3. 点击 `加载已解压的扩展程序`。
+4. 选择当前仓库根目录。
+
+## 开发检查
+
+运行静态检查和扩展测试：
 
 ```bash
 node --check background.js
-node --check options.js
 node --check popup.js
+node --check options.js
 node --check providers.js
 node --check i18n.js
+node --check rules.js
+node --check cache-utils.js
+node --check json-utils.js
 node tests/run-tests.js
 ```
 
-## GitHub 与 Chrome Web Store
+主要文件：
+
+| 文件 | 作用 |
+| --- | --- |
+| [manifest.json](manifest.json) | Chrome MV3 扩展清单 |
+| [background.js](background.js) | 整理任务、备份、扫描和重建逻辑 |
+| [providers.js](providers.js) | 模型服务默认值、请求构造和响应解析 |
+| [popup.js](popup.js) | 预览和应用流程 |
+| [options.js](options.js) | 设置、API 测试、备份和规则 |
+| [i18n.js](i18n.js) | 英文和简体中文文案 |
+| [tests](tests) | JSON、规则、缓存、静态资源和 i18n 检查 |
+| [docs](docs) | README 配图和截图 |
+| [webstore](webstore) | Chrome Web Store 上架材料 |
+
+## 隐私边界
+
+- 书签标题、URL、当前路径、Prompt、API 设置、缓存和备份默认都留在本地浏览器。
+- 只有你启动整理或自动整理时，书签元数据才会发送给你配置的模型服务商。
+- API Key 只保存在本地，不会发送给本项目或开发者。
+- 失效链接检测会直接访问书签对应的网站。
+- 快照备份保存在本地，可以在设置页恢复或删除。
+
+完整说明见 [PRIVACY.md](PRIVACY.md)。
+
+## 链接
 
 - 仓库主页：[github.com/Ariandel35/marko](https://github.com/Ariandel35/marko)
-- 支持地址：[github.com/Ariandel35/marko/issues](https://github.com/Ariandel35/marko/issues)
+- 问题反馈：[github.com/Ariandel35/marko/issues](https://github.com/Ariandel35/marko/issues)
 - 隐私政策：[github.com/Ariandel35/marko/blob/main/PRIVACY.md](https://github.com/Ariandel35/marko/blob/main/PRIVACY.md)
-
-Chrome 商店上架材料已经整理在 [webstore](webstore) 目录中。
