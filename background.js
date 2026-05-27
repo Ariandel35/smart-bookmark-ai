@@ -71,6 +71,7 @@ const ROOT_DIRECT_FOLDER_ALIASES = [
   "start page"
 ];
 const DEAD_LINK_CHECK_TIMEOUT_MS = 10_000;
+const DEAD_LINK_SCAN_CONCURRENCY = 6;
 const DEAD_LINK_DELETE_STATUS_CODES = new Set([404, 410, 451]);
 const KEEP_ALIVE_INTERVAL_MS = 25_000;
 const FIRST_RESPONSE_TIMEOUT_MS = 25_000;
@@ -898,22 +899,46 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
     );
   }
 
-  let taxonomyTopFolders = buildTaxonomyFallbackTopFolders();
-  let taxonomyPlanningNote = "";
-  try {
-    taxonomyTopFolders = await withKeepAlive(() => planGlobalTaxonomy(bookmarks, config));
-  } catch (error) {
-    console.warn("Failed to plan global taxonomy, falling back to defaults:", error);
-    taxonomyPlanningNote = ux(
-      "全局目录规划失败，已回退到默认稳定大类。",
-      "Global taxonomy planning failed, so the extension fell back to the default stable folders."
-    );
-  }
   const classificationSignature = Rules.buildClassificationSignature(config, MANUAL_FOLDER_TITLE);
   const domainFolderRules = Rules.parseDomainFolderRules(
     config.domainFolderRules,
     MANUAL_FOLDER_TITLE
   );
+  const startupClassificationCacheStore = await loadClassificationCacheStore();
+  const startupClassificationCacheBucket = normalizeClassificationCacheBucket(
+    startupClassificationCacheStore[classificationSignature]?.items || {}
+  );
+  const startupForcedPlans = buildForcedPlans(bookmarks, domainFolderRules);
+  const startupCachedPlans = buildCachedPlans(
+    startupForcedPlans.remaining,
+    startupClassificationCacheBucket
+  );
+  const startupAiCandidateCount = startupCachedPlans.remaining.length;
+  let taxonomyTopFolders = buildTaxonomyFallbackTopFolders();
+  let taxonomyPlanningNote = "";
+
+  if (startupAiCandidateCount) {
+    try {
+      taxonomyTopFolders = await withKeepAlive(() => planGlobalTaxonomy(bookmarks, config));
+    } catch (error) {
+      console.warn("Failed to plan global taxonomy, falling back to defaults:", error);
+      taxonomyPlanningNote = ux(
+        "全局目录规划失败，已回退到默认稳定大类。",
+        "Global taxonomy planning failed, so the extension fell back to the default stable folders."
+      );
+    }
+  } else {
+    taxonomyPlanningNote = "";
+  }
+  const taxonomyFlowDetail = startupAiCandidateCount
+    ? ux(
+        "先生成全局目录方案，再按批分类。",
+        "The extension plans a global taxonomy first, then classifies in batches."
+      )
+    : ux(
+        "当前书签已命中本地规则或分类缓存，跳过模型目录规划。",
+        "Local rules or the classification cache cover the current bookmarks, so model taxonomy planning is skipped."
+      );
 
   const totalBatches = Math.ceil(bookmarks.length / config.batchSize);
   const runId = crypto.randomUUID();
@@ -990,8 +1015,8 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
       startedAt,
       finishedAt: "",
       detail: ux(
-        `${runContext.trigger === "auto" ? "这是一次自动静默整理。" : jobMode === "preview" ? "这是一次手动预览。" : "这是一次手动整理。"} 批大小 ${config.batchSize}。${snapshotInfo.detail} 先生成全局目录方案，再按批分类。${taxonomyPlanningNote ? `${taxonomyPlanningNote} ` : ""}${jobMode === "preview" ? "预览不会落地改动。" : "最终会一次性重建书签结构，中途不会边跑边改。"} 受保护根目录 ${protectedRootFolderIds.length} 个，目录规则 ${domainFolderRules.length} 条。`.trim(),
-        `${runContext.trigger === "auto" ? "This is an automatic silent run." : jobMode === "preview" ? "This is a manual preview." : "This is a manual organize run."} Batch size ${config.batchSize}. ${snapshotInfo.detail} The extension plans a global taxonomy first, then classifies in batches. ${taxonomyPlanningNote ? `${taxonomyPlanningNote} ` : ""}${jobMode === "preview" ? "The preview does not apply any changes." : "The final rebuild happens in one pass instead of mutating bookmarks mid-run."} Protected root folders: ${protectedRootFolderIds.length}. Domain rules: ${domainFolderRules.length}.`.trim()
+        `${runContext.trigger === "auto" ? "这是一次自动静默整理。" : jobMode === "preview" ? "这是一次手动预览。" : "这是一次手动整理。"} 批大小 ${config.batchSize}。${snapshotInfo.detail} ${taxonomyFlowDetail}${taxonomyPlanningNote ? ` ${taxonomyPlanningNote}` : ""}${jobMode === "preview" ? " 预览不会落地改动。" : " 最终会一次性重建书签结构，中途不会边跑边改。"} 受保护根目录 ${protectedRootFolderIds.length} 个，目录规则 ${domainFolderRules.length} 条。`.trim(),
+        `${runContext.trigger === "auto" ? "This is an automatic silent run." : jobMode === "preview" ? "This is a manual preview." : "This is a manual organize run."} Batch size ${config.batchSize}. ${snapshotInfo.detail} ${taxonomyFlowDetail}${taxonomyPlanningNote ? ` ${taxonomyPlanningNote}` : ""}${jobMode === "preview" ? " The preview does not apply any changes." : " The final rebuild happens in one pass instead of mutating bookmarks mid-run."} Protected root folders: ${protectedRootFolderIds.length}. Domain rules: ${domainFolderRules.length}.`.trim()
       )
     })
   );
@@ -2595,6 +2620,11 @@ async function scanDeadBookmarksBatch(batch, reportStage = () => {}, options = {
   const nextDeadLinkCache = {
     ...((options.cache && typeof options.cache === "object") ? options.cache : {})
   };
+  const safeBatch = Array.isArray(batch) ? batch : [];
+  const scanConcurrency = Math.min(DEAD_LINK_SCAN_CONCURRENCY, Math.max(1, safeBatch.length));
+  const inFlightHealthChecks = new Map();
+  const scanResults = new Array(safeBatch.length);
+  let completedCount = 0;
   let deletedCount = 0;
   let warningCount = 0;
   let lastWarning = "";
@@ -2603,104 +2633,62 @@ async function scanDeadBookmarksBatch(batch, reportStage = () => {}, options = {
   const healthyBookmarks = [];
   const pendingWarnings = [];
 
-  for (let index = 0; index < batch.length; index += 1) {
-    const bookmark = batch[index];
+  if (!safeBatch.length) {
+    return {
+      deletedCount,
+      warningCount,
+      lastWarning,
+      warningEntries,
+      deletedEntries,
+      healthyBookmarks,
+      pendingWarnings,
+      nextDeadLinkCache
+    };
+  }
+
+  await reportStage({
+    message: ux(
+      `正在并发检测 ${safeBatch.length} 条链接状态。`,
+      `Checking ${safeBatch.length} links in parallel.`
+    ),
+    detail: ux(
+      `本批最多同时检测 ${scanConcurrency} 条链接；只有确认失效的链接才会自动删除或从重建方案中移除。`,
+      `Up to ${scanConcurrency} links are checked at the same time. Only confirmed dead links are removed or excluded from rebuild.`
+    )
+  });
+
+  await runWithConcurrency(safeBatch, scanConcurrency, async (bookmark, index) => {
+    scanResults[index] = await scanSingleBookmarkHealth(bookmark, {
+      shouldMutate,
+      nextDeadLinkCache,
+      inFlightHealthChecks
+    });
+
+    completedCount += 1;
     await reportStage({
       message: ux(
         `正在检测失效书签：${bookmark.title || bookmark.url}`,
         `Checking link health: ${bookmark.title || bookmark.url}`
       ),
       detail: ux(
-        `当前进度 ${index + 1}/${batch.length}。正在检查 ${truncate(bookmark.url, 90)}`,
-        `Progress ${index + 1}/${batch.length}. Checking ${truncate(bookmark.url, 90)}`
+        `当前进度 ${completedCount}/${safeBatch.length}。最近完成 ${truncate(bookmark.url, 90)}`,
+        `Progress ${completedCount}/${safeBatch.length}. Recently finished ${truncate(bookmark.url, 90)}`
       )
     });
+  });
 
-    try {
-      const result = await checkBookmarkHealth(bookmark.url, nextDeadLinkCache);
-      if (result.isDead) {
-        if (shouldMutate) {
-          await chrome.bookmarks.remove(bookmark.id);
-        }
-        deletedCount += 1;
-        deletedEntries.push(
-          buildLogEntry(
-            "dead_link_deleted",
-            bookmark,
-            shouldMutate
-              ? ux(
-                  `已确认失效并自动删除：${result.reason || "HTTP 404 / 410 / 451"}`,
-                  `Confirmed dead and removed automatically: ${result.reason || "HTTP 404 / 410 / 451"}`
-                )
-              : ux(
-                  `已确认失效，重建时不会保留：${result.reason || "HTTP 404 / 410 / 451"}`,
-                  `Confirmed dead and excluded from rebuild: ${result.reason || "HTTP 404 / 410 / 451"}`
-                ),
-            shouldMutate
-              ? ux(
-                  "扩展只会删除明确失效的链接。如果你仍然需要它，可以稍后手动重新添加。",
-                  "The extension removes only clearly dead links. If you still need it, you can add it again manually later."
-                )
-              : ux(
-                  "本次整理会在最终重建时跳过这类明确失效的链接，原始结构仍已备份。",
-                  "This organize run will skip clearly dead links during the final rebuild. The original structure is still backed up."
-                )
-          )
-        );
-      } else if (!result.isHealthy) {
-        const reason = ux(
-          `书签《${bookmark.title}》状态不明确，未自动删除：${result.reason || "检测超时或目标站点拒绝访问"}`,
-          `Bookmark "${bookmark.title}" has an uncertain status and was not deleted automatically: ${result.reason || "Timeout or the target site rejected the request"}`
-        );
-        const suggestion = ux(
-          "这通常是目标站点拒绝 HEAD 请求、需要登录或暂时超时。建议手动打开确认，扩展不会直接删除这类链接。",
-          "This usually means the target site rejects HEAD requests, requires sign-in, or timed out temporarily. Open it manually to confirm. The extension will not remove links like this automatically."
-        );
-        warningCount += 1;
-        lastWarning = reason;
-        warningEntries.push(buildLogEntry("scan_uncertain", bookmark, reason, suggestion));
-        pendingWarnings.push({
-          title: bookmark.title || t("untitledBookmark"),
-          url: bookmark.url,
-          kind: "scan_uncertain",
-          reason,
-          suggestion
-        });
-      } else {
-        healthyBookmarks.push(bookmark);
-      }
-    } catch (error) {
-      if (error?.abortReason === "cancelled-by-user") {
-        throw error;
-      }
-
-      warningCount += 1;
-      lastWarning = ux(
-        `书签《${bookmark.title}》检测失败：${toUserMessage(error, "未知错误")}`,
-        `Failed to check "${bookmark.title}": ${toUserMessage(error, "Unknown error")}`
-      );
-      warningEntries.push(
-        buildLogEntry(
-          "scan_failed",
-          bookmark,
-          lastWarning,
-          ux(
-            "建议稍后重试一次；如果目标网站限制访问，手动打开通常比后台探测更准确。",
-            "Try again later. If the target site blocks background requests, opening it manually is usually more reliable."
-          )
-        )
-      );
-      pendingWarnings.push({
-        title: bookmark.title || t("untitledBookmark"),
-        url: bookmark.url,
-        kind: "scan_failed",
-        reason: lastWarning,
-        suggestion: ux(
-          "建议稍后重试一次；如果目标网站限制访问，手动打开通常比后台探测更准确。",
-          "Try again later. If the target site blocks background requests, opening it manually is usually more reliable."
-        )
-      });
+  for (const result of scanResults) {
+    if (!result) {
+      continue;
     }
+
+    deletedCount += result.deletedCount;
+    warningCount += result.warningCount;
+    lastWarning = result.lastWarning || lastWarning;
+    warningEntries.push(...result.warningEntries);
+    deletedEntries.push(...result.deletedEntries);
+    healthyBookmarks.push(...result.healthyBookmarks);
+    pendingWarnings.push(...result.pendingWarnings);
   }
 
   return {
@@ -2713,6 +2701,186 @@ async function scanDeadBookmarksBatch(batch, reportStage = () => {}, options = {
     pendingWarnings,
     nextDeadLinkCache
   };
+}
+
+async function runWithConcurrency(items, concurrency, worker) {
+  let nextIndex = 0;
+  let firstError = null;
+  const workerCount = Math.min(Math.max(1, concurrency), items.length);
+
+  async function runWorker() {
+    while (nextIndex < items.length && !firstError) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+
+      try {
+        await worker(items[currentIndex], currentIndex);
+      } catch (error) {
+        firstError = error;
+        break;
+      }
+    }
+  }
+
+  await Promise.all(Array.from({ length: workerCount }, () => runWorker()));
+
+  if (firstError) {
+    throw firstError;
+  }
+}
+
+async function scanSingleBookmarkHealth(bookmark, options = {}) {
+  const shouldMutate = options.shouldMutate !== false;
+  const nextDeadLinkCache =
+    options.nextDeadLinkCache && typeof options.nextDeadLinkCache === "object"
+      ? options.nextDeadLinkCache
+      : {};
+  const inFlightHealthChecks =
+    options.inFlightHealthChecks instanceof Map ? options.inFlightHealthChecks : new Map();
+  const warningEntries = [];
+  const deletedEntries = [];
+  const healthyBookmarks = [];
+  const pendingWarnings = [];
+  let deletedCount = 0;
+  let warningCount = 0;
+  let lastWarning = "";
+
+  try {
+    const result = await checkBookmarkHealthWithBatchDedupe(
+      bookmark.url,
+      nextDeadLinkCache,
+      inFlightHealthChecks
+    );
+    if (result.isDead) {
+      if (shouldMutate) {
+        await chrome.bookmarks.remove(bookmark.id);
+      }
+      deletedCount += 1;
+      deletedEntries.push(
+        buildLogEntry(
+          "dead_link_deleted",
+          bookmark,
+          shouldMutate
+            ? ux(
+                `已确认失效并自动删除：${result.reason || "HTTP 404 / 410 / 451"}`,
+                `Confirmed dead and removed automatically: ${result.reason || "HTTP 404 / 410 / 451"}`
+              )
+            : ux(
+                `已确认失效，重建时不会保留：${result.reason || "HTTP 404 / 410 / 451"}`,
+                `Confirmed dead and excluded from rebuild: ${result.reason || "HTTP 404 / 410 / 451"}`
+              ),
+          shouldMutate
+            ? ux(
+                "扩展只会删除明确失效的链接。如果你仍然需要它，可以稍后手动重新添加。",
+                "The extension removes only clearly dead links. If you still need it, you can add it again manually later."
+              )
+            : ux(
+                "本次整理会在最终重建时跳过这类明确失效的链接，原始结构仍已备份。",
+                "This organize run will skip clearly dead links during the final rebuild. The original structure is still backed up."
+              )
+        )
+      );
+    } else if (!result.isHealthy) {
+      const reason = ux(
+        `书签《${bookmark.title}》状态不明确，未自动删除：${result.reason || "检测超时或目标站点拒绝访问"}`,
+        `Bookmark "${bookmark.title}" has an uncertain status and was not deleted automatically: ${result.reason || "Timeout or the target site rejected the request"}`
+      );
+      const suggestion = ux(
+        "这通常是目标站点拒绝 HEAD 请求、需要登录或暂时超时。建议手动打开确认，扩展不会直接删除这类链接。",
+        "This usually means the target site rejects HEAD requests, requires sign-in, or timed out temporarily. Open it manually to confirm. The extension will not remove links like this automatically."
+      );
+      warningCount += 1;
+      lastWarning = reason;
+      warningEntries.push(buildLogEntry("scan_uncertain", bookmark, reason, suggestion));
+      pendingWarnings.push({
+        title: bookmark.title || t("untitledBookmark"),
+        url: bookmark.url,
+        kind: "scan_uncertain",
+        reason,
+        suggestion
+      });
+    } else {
+      healthyBookmarks.push(bookmark);
+    }
+  } catch (error) {
+    if (error?.abortReason === "cancelled-by-user") {
+      throw error;
+    }
+
+    warningCount += 1;
+    lastWarning = ux(
+      `书签《${bookmark.title}》检测失败：${toUserMessage(error, "未知错误")}`,
+      `Failed to check "${bookmark.title}": ${toUserMessage(error, "Unknown error")}`
+    );
+    warningEntries.push(
+      buildLogEntry(
+        "scan_failed",
+        bookmark,
+        lastWarning,
+        ux(
+          "建议稍后重试一次；如果目标网站限制访问，手动打开通常比后台探测更准确。",
+          "Try again later. If the target site blocks background requests, opening it manually is usually more reliable."
+        )
+      )
+    );
+    pendingWarnings.push({
+      title: bookmark.title || t("untitledBookmark"),
+      url: bookmark.url,
+      kind: "scan_failed",
+      reason: lastWarning,
+      suggestion: ux(
+        "建议稍后重试一次；如果目标网站限制访问，手动打开通常比后台探测更准确。",
+        "Try again later. If the target site blocks background requests, opening it manually is usually more reliable."
+      )
+    });
+  }
+
+  return {
+    deletedCount,
+    warningCount,
+    lastWarning,
+    warningEntries,
+    deletedEntries,
+    healthyBookmarks,
+    pendingWarnings
+  };
+}
+
+async function checkBookmarkHealthWithBatchDedupe(rawUrl, cacheStore, inFlightHealthChecks) {
+  if (!/^https?:\/\//i.test(rawUrl)) {
+    return await checkBookmarkHealth(rawUrl, cacheStore);
+  }
+
+  const cacheKey = CacheUtils.normalizeCacheUrl(rawUrl);
+  if (!cacheKey) {
+    return await checkBookmarkHealth(rawUrl, cacheStore);
+  }
+
+  const cachedEntry = cacheStore[cacheKey];
+  if (cachedEntry && CacheUtils.isDeadLinkCacheFresh(cachedEntry)) {
+    return {
+      ...cachedEntry.result
+    };
+  }
+
+  if (inFlightHealthChecks.has(cacheKey)) {
+    return {
+      ...(await inFlightHealthChecks.get(cacheKey))
+    };
+  }
+
+  const healthCheck = checkBookmarkHealth(rawUrl, cacheStore);
+  inFlightHealthChecks.set(cacheKey, healthCheck);
+
+  try {
+    return {
+      ...(await healthCheck)
+    };
+  } finally {
+    if (inFlightHealthChecks.get(cacheKey) === healthCheck) {
+      inFlightHealthChecks.delete(cacheKey);
+    }
+  }
 }
 
 async function checkBookmarkHealth(rawUrl, cacheStore = {}) {
