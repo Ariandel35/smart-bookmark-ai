@@ -650,6 +650,8 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /reusableLocalCheck\?\.bookmarkState \|\| await collectBookmarkPlanningState/);
   assert.match(backgroundSource, /validateConfig\(config, \{ requireModelAccess: false \}\)/);
   assert.match(backgroundSource, /validateConfig\(config, \{ requireModelAccess: true \}\)/);
+  assert.match(backgroundSource, /function hasRequiredProviderCredential/);
+  assert.match(backgroundSource, /requireModelAccess && !hasRequiredProviderCredential\(config\)/);
   assert.match(backgroundSource, /!shouldCheckDeadLinks\(runtimeConfig\) && !startupAiCandidateCount/);
   assert.match(backgroundSource, /one-bookmark mini-batch/);
   assert.match(backgroundSource, /first-response-timeout\|request-timeout/);
@@ -774,6 +776,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(backgroundSource, /baseUrl:\s*providerKnown && typeof raw\.baseUrl === "string"/);
   assert.match(backgroundSource, /apiKey: providerKnown && typeof raw\.apiKey === "string" \? raw\.apiKey\.trim\(\) : ""/);
   assert.match(backgroundSource, /model:\s*providerKnown && typeof raw\.model === "string"/);
+  assert.match(backgroundSource, /if \(!hasRequiredProviderCredential\(config\)\) \{[\s\S]*chrome\.alarms\.clear\(AUTO_ORGANIZE_ALARM_NAME\)/);
 
   assert.match(optionsSource, /pendingBackupAction/);
   assert.match(optionsSource, /backupActionInFlight/);

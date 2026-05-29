@@ -78,6 +78,7 @@
 - Test & Save now also verifies automatic-organize access requirements before saving auto-enabled settings
 - Popup setup checks now reject unknown provider IDs instead of treating any non-empty provider value as configured
 - Unknown stored provider IDs now fall back to default provider, Base URL, model, and empty API key instead of mixing stale provider fields into the default provider
+- Automatic organize alarms are now cleared instead of scheduled when the selected provider requires an API key and none is saved
 - Backup create, restore, and delete actions now lock related controls while an operation is in flight
 - Settings now validate raw numeric input instead of silently clamping invalid batch sizes or automation intervals
 - Updated privacy, Chrome Web Store, README, locale, and visual materials to describe optional dead-link checks accurately

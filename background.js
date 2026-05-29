@@ -2635,7 +2635,6 @@ async function finishJob(phase, message, job, overrides = {}) {
 
 function validateConfig(config, options = {}) {
   const requireModelAccess = options.requireModelAccess !== false;
-  const defaults = getProviderDefaults(config.provider);
 
   if (!config.baseUrl) {
     throw new Error(ux("Base URL 不能为空。", "Base URL is required."));
@@ -2671,7 +2670,7 @@ function validateConfig(config, options = {}) {
     );
   }
 
-  if (requireModelAccess && !defaults.apiKeyOptional && !config.apiKey) {
+  if (requireModelAccess && !hasRequiredProviderCredential(config)) {
     throw new Error(
       ux(
         `${getProviderLabel(config.provider)} 需要 API Key。`,
@@ -2679,6 +2678,11 @@ function validateConfig(config, options = {}) {
       )
     );
   }
+}
+
+function hasRequiredProviderCredential(config = {}) {
+  const defaults = getProviderDefaults(config.provider);
+  return Boolean(defaults.apiKeyOptional || config.apiKey);
 }
 
 function findBookmarksBarNode(tree) {
@@ -3346,6 +3350,14 @@ async function syncAutoOrganizeAlarm() {
   const existingAlarm = await chrome.alarms.get(AUTO_ORGANIZE_ALARM_NAME);
 
   if (!config.autoOrganizeEnabled) {
+    if (existingAlarm) {
+      await chrome.alarms.clear(AUTO_ORGANIZE_ALARM_NAME);
+    }
+
+    return;
+  }
+
+  if (!hasRequiredProviderCredential(config)) {
     if (existingAlarm) {
       await chrome.alarms.clear(AUTO_ORGANIZE_ALARM_NAME);
     }
