@@ -742,6 +742,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /showSettingsIssue\(t\("modelRequired"\), "connection", "model"\)/);
   assert.match(optionsSource, /showSettingsIssue\(t\("batchSizeValidation"\), "organize", "batchSize"\)/);
   assert.match(optionsSource, /showSettingsIssue\(t\("autoIntervalValidation"\), "automation", "autoOrganizeIntervalHours"\)/);
+  assert.match(optionsSource, /if \(config\.autoOrganizeEnabled && !defaults\.apiKeyOptional && !config\.apiKey\)/);
   assert.match(optionsSource, /showSettingsIssue\(t\("requiredApiKey", \{ provider: defaults\.label \}\), "connection", "apiKey"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("baseUrlRequired"\), "baseUrl"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("baseUrlInvalid"\), "baseUrl"\)/);

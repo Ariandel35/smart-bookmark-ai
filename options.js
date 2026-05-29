@@ -1072,7 +1072,7 @@ async function saveConfig(event) {
     return;
   }
 
-  if (!defaults.apiKeyOptional && !config.apiKey) {
+  if (config.autoOrganizeEnabled && !defaults.apiKeyOptional && !config.apiKey) {
     showSettingsIssue(t("requiredApiKey", { provider: defaults.label }), "connection", "apiKey");
     return;
   }
