@@ -419,6 +419,7 @@ void bootstrapState();
 function buildIdleStatus(overrides = {}) {
   return {
     phase: "idle",
+    cancelRequested: false,
     message: t("progressWaiting"),
     detail: "",
     provider: "",
@@ -1502,6 +1503,7 @@ async function requestCancellation() {
 
   await updateStatus({
     phase: "running",
+    cancelRequested: true,
     message: ux("已收到取消请求，当前批次结束后会停止任务。", "Cancellation requested. The task will stop after the current batch."),
     detail: ux(
       "如果模型请求仍在进行，会尝试立即中止；已经完成的移动和删除不会回滚。",
@@ -2534,6 +2536,7 @@ async function finishJob(phase, message, job, overrides = {}) {
 
   await updateStatus({
     phase,
+    cancelRequested: false,
     message,
     provider:
       job?.jobType === "dead_scan"
@@ -4807,6 +4810,7 @@ function normalizeTaxonomyLockKey(value) {
 async function updateBatchStatus(job, currentBatch, patch) {
   return updateStatus({
     phase: "running",
+    cancelRequested: Boolean(job.cancelRequested),
     provider: job.jobType === "dead_scan" ? "" : getProviderLabel(job.config.provider),
     model: job.jobType === "dead_scan" ? "" : job.config.model,
     total: job.total,

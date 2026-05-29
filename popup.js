@@ -202,14 +202,16 @@ function isPreviewReady() {
 
 function syncActionButtons() {
   const isRunning = currentStatus?.phase === "running";
+  const isCancelling = Boolean(currentStatus?.cancelRequested);
   const isConfigured = hasPreviewAttemptConfig(currentConfig);
   startButton.disabled = popupActionInFlight || isRunning;
   backupButton.disabled = popupActionInFlight || isRunning;
-  cancelButton.disabled = popupActionInFlight || !isRunning;
+  cancelButton.disabled = popupActionInFlight || !isRunning || isCancelling;
   cancelButton.hidden = !isRunning;
   startButton.setAttribute("aria-busy", String(popupActionInFlight));
   backupButton.setAttribute("aria-busy", String(popupActionInFlight));
   cancelButton.setAttribute("aria-busy", String(popupActionInFlight));
+  cancelButton.textContent = isCancelling ? t("cancelRequestedButton") : t("cancelButton");
   startButton.textContent = !isConfigured
     ? t("setupButton")
     : isPreviewReady()

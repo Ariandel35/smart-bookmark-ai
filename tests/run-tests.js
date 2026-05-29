@@ -286,7 +286,9 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /popupCancellingStatus/);
   assert.match(popupSource, /startButton\.disabled = popupActionInFlight \|\| isRunning/);
   assert.match(popupSource, /backupButton\.disabled = popupActionInFlight \|\| isRunning/);
-  assert.match(popupSource, /cancelButton\.disabled = popupActionInFlight \|\| !isRunning/);
+  assert.match(popupSource, /const isCancelling = Boolean\(currentStatus\?\.cancelRequested\)/);
+  assert.match(popupSource, /cancelButton\.disabled = popupActionInFlight \|\| !isRunning \|\| isCancelling/);
+  assert.match(popupSource, /cancelButton\.textContent = isCancelling \? t\("cancelRequestedButton"\) : t\("cancelButton"\)/);
   assert.match(popupSource, /createApplyConfirmationState/);
   assert.match(popupSource, /renderResponseError/);
   assert.match(popupSource, /detail: response\?\.detail \|\| ""/);
@@ -318,6 +320,13 @@ function testPreviewApplySurface() {
   const stylesSource = fs.readFileSync(path.join(ROOT_DIR, "styles.css"), "utf8");
   assert.match(stylesSource, /\.confirm-strip/);
   assert.match(stylesSource, /\.popup-action-status/);
+
+  const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
+  assert.match(i18nSource, /cancelRequestedButton/);
+
+  const backgroundSourceForCancel = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
+  assert.match(backgroundSourceForCancel, /cancelRequested: true/);
+  assert.match(backgroundSourceForCancel, /cancelRequested: Boolean\(job\.cancelRequested\)/);
 }
 
 function testSlowModelResilienceSurface() {
