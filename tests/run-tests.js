@@ -484,6 +484,9 @@ function testPreviewApplySurface() {
   assert.match(backgroundSource, /smartBookmarkPreviewPlan/);
   assert.match(backgroundSource, /APPLY_PREVIEW_PLAN/);
   assert.match(backgroundSource, /applyPreviewPlan/);
+  assert.match(backgroundSource, /previewApplyRetryAvailable: false/);
+  assert.match(backgroundSource, /const statusPatch = \{\n    previewApplyRetryAvailable: false,/);
+  assert.match(backgroundSource, /previewApplyRetryAvailable: true/);
   assert.match(backgroundSource, /savePreviewPlan/);
   assert.match(backgroundSource, /buildBookmarkSetSignature/);
   assert.match(backgroundSource, /does not call the model again/);
@@ -518,7 +521,8 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /currentPreviewPlan/);
   assert.match(popupSource, /isSavedPreviewPlanUsable/);
   assert.match(popupSource, /function canApplyPreviewPlan/);
-  assert.match(popupSource, /isPreviewReady\(\) \|\| \(currentStatus\?\.phase === "error" && isSavedPreviewPlanUsable\(currentPreviewPlan\)\)/);
+  assert.match(popupSource, /Boolean\(currentStatus\?\.previewApplyRetryAvailable\) && isSavedPreviewPlanUsable\(currentPreviewPlan\)/);
+  assert.doesNotMatch(popupSource, /currentStatus\?\.phase === "error" && isSavedPreviewPlanUsable\(currentPreviewPlan\)/);
   assert.match(popupSource, /applyConfirmationVisible/);
   assert.match(popupSource, /popupActionInFlight/);
   assert.match(popupSource, /setPopupActionInFlight/);
@@ -941,6 +945,7 @@ function testReleaseMaterialsCurrent() {
   const readme = fs.readFileSync(path.join(ROOT_DIR, "README.md"), "utf8");
   const readmeZh = fs.readFileSync(path.join(ROOT_DIR, "README.zh-CN.md"), "utf8");
   assert.match(changelog, /without a second model request/);
+  assert.match(changelog, /only for explicit preview-apply failures/);
   assert.match(changelog, /runtime batches are capped to ten bookmarks/);
   assert.match(changelog, /five-bookmark model requests/);
   assert.match(changelog, /mini-request timeouts now keep completed mini results/);
@@ -966,6 +971,7 @@ function testReleaseMaterialsCurrent() {
     "utf8"
   );
   assert.match(releaseNotes, /without another model request/);
+  assert.match(releaseNotes, /only for preview-apply failures/);
   assert.match(releaseNotes, /re-split large batches before each request/);
   assert.match(releaseNotes, /cap runtime batches at 10 bookmarks/);
   assert.match(releaseNotes, /cap each model request at 5 bookmarks/);
@@ -990,6 +996,7 @@ function testReleaseMaterialsCurrent() {
 
   const storeListing = fs.readFileSync(path.join(ROOT_DIR, "webstore/STORE_LISTING.md"), "utf8");
   assert.match(storeListing, /without calling the model again/);
+  assert.match(storeListing, /only after a preview-apply failure/);
   assert.match(storeListing, /re-split large batches before each request/);
   assert.match(storeListing, /cap runtime batches at 10 bookmarks/);
   assert.match(storeListing, /cap each model request at 5 bookmarks/);

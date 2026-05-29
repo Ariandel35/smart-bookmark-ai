@@ -6,6 +6,7 @@
 - Reduced popup and settings permission requests in Fast mode to the configured model API origin
 - Applying a saved preview plan now reuses the stored plan and rebuilds locally without a second model request
 - If applying a saved preview hits a recoverable failure, the popup now keeps the Apply Plan path available so users can retry without generating the model plan again
+- Apply Plan retry is now shown only for explicit preview-apply failures instead of any generic error that happens while a saved preview exists
 - Applying a stale preview now shows specific guidance when settings or bookmarks changed
 - Saved previews are now invalidated automatically when settings or bookmarks change
 - Popup summary details now stay visible for non-error status messages such as invalidated previews

@@ -246,7 +246,10 @@ function isSavedPreviewPlanUsable(previewPlan) {
 }
 
 function canApplyPreviewPlan() {
-  return isPreviewReady() || (currentStatus?.phase === "error" && isSavedPreviewPlanUsable(currentPreviewPlan));
+  return (
+    isPreviewReady() ||
+    (Boolean(currentStatus?.previewApplyRetryAvailable) && isSavedPreviewPlanUsable(currentPreviewPlan))
+  );
 }
 
 function syncActionButtons() {

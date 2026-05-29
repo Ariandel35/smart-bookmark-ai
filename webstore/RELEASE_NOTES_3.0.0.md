@@ -36,6 +36,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - The popup now uses a clear `Preview` -> `Apply Plan` primary flow
 - Applying a ready preview reuses the saved plan and rebuilds locally without another model request
 - If applying a saved preview hits a recoverable failure, the popup keeps the apply path available so the saved plan can be retried
+- Apply Plan retry is shown only for preview-apply failures, not unrelated error states that merely still have a saved preview
 - Incomplete setup routes directly from the popup to settings
 - Slow providers such as DeepSeek re-split large batches before each request, cap runtime batches at 10 bookmarks, cap each model request at 5 bookmarks, use limited mini-request concurrency, shorter request timeouts, a shorter built-in request prompt, and a tighter output budget; when one mini request times out, completed mini results are kept and only the failed block shrinks down to one-bookmark retries
 - Added Fast and Complete speed modes: Fast skips dead-link checks and the extra taxonomy-planning request, while Complete keeps link checks and global planning

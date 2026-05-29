@@ -462,6 +462,7 @@ function buildIdleStatus(overrides = {}) {
     protectedRootCount: 0,
     currentBatch: 0,
     totalBatches: 0,
+    previewApplyRetryAvailable: false,
     startedAt: "",
     finishedAt: "",
     updatedAt: new Date().toISOString(),
@@ -798,9 +799,13 @@ async function readStoredConfig() {
 }
 
 async function updateStatus(patch) {
+  const statusPatch = {
+    previewApplyRetryAvailable: false,
+    ...patch
+  };
   currentStatus = {
     ...currentStatus,
-    ...patch,
+    ...statusPatch,
     updatedAt: new Date().toISOString()
   };
 
@@ -2552,6 +2557,7 @@ async function applyPreviewPlan() {
           "任务已停止。预览方案仍保留，你可以修复问题后重试；如果书签已发生变化，请重新生成预览。",
           "The task has stopped. The preview plan is still kept so you can retry after fixing the issue. If bookmarks changed, generate a new preview."
         ),
+      previewApplyRetryAvailable: true,
       finishedAt: new Date().toISOString()
     });
     await chrome.storage.local.remove(STORAGE_KEYS.job);

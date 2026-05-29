@@ -66,6 +66,7 @@ Key features:
 - Slow providers such as DeepSeek re-split large batches before each request, cap runtime batches at 10 bookmarks, cap each model request at 5 bookmarks, use limited mini-request concurrency, shorter request timeouts, shorter built-in prompts, and tighter output budgets; when one mini request times out, completed mini results are kept and only the failed block shrinks down to one-bookmark retries
 - Applying a generated preview reuses the saved plan and rebuilds locally without another model request
 - Recoverable apply failures keep the saved preview retry path available after the issue is fixed
+- Apply Plan retry appears only after a preview-apply failure, not after unrelated errors
 - Unprocessed items stay read-only until an organize/apply run completes, with keep/delete actions shown only for actionable items
 - Popup and settings actions use inline confirmations and validation feedback instead of browser dialogs
 - Settings load keeps saved connection fields visible even when backup or permission status refreshes fail
