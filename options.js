@@ -427,7 +427,7 @@ function removeDescribedByTokens(field, tokensToRemove) {
 }
 
 function clearSettingsFieldIssues() {
-  Array.from(form.querySelectorAll("[aria-invalid], [aria-describedby]")).forEach((field) => {
+  Array.from(form.querySelectorAll("[aria-invalid]")).forEach((field) => {
     field.removeAttribute("aria-invalid");
     removeDescribedByTokens(field, [settingsActionStatus.id, apiTestStatus.id]);
   });

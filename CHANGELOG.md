@@ -32,6 +32,7 @@
 - Settings save and reset buttons are now explicitly associated with the inline settings action status text
 - Settings save and backup inline status messages now expose live status semantics for assistive technologies
 - Settings navigation now uses linked tab and panel semantics with arrow-key navigation
+- Settings field validation cleanup now preserves persistent status descriptions on Save, Reset, API test, and access controls
 - Backup create, restore, delete, and inline confirmation buttons are now explicitly associated with the backup action status text
 - Backup list action buttons now include the specific backup name in their accessible labels
 - Backup restore/delete confirmations now move focus into the inline confirmation and return it to the matching action when dismissed

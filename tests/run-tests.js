@@ -704,6 +704,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /button\.setAttribute\("aria-pressed", String\(isSelected\)\)/);
   assert.match(optionsSource, /const isSelected = selectedSet\.has\(item\.domain\)/);
   assert.match(optionsSource, /clearSettingsFieldIssues/);
+  assert.match(optionsSource, /form\.querySelectorAll\("\[aria-invalid\]"\)/);
+  assert.doesNotMatch(optionsSource, /querySelectorAll\("\[aria-invalid\], \[aria-describedby\]"\)/);
   assert.match(optionsSource, /getDescribedByTokens/);
   assert.match(optionsSource, /addDescribedByToken/);
   assert.match(optionsSource, /removeDescribedByTokens/);
