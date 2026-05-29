@@ -94,6 +94,10 @@ const NEXT_BATCH_DELAY_MS = 150;
 const MODEL_INPUT_TITLE_MAX_LENGTH = 120;
 const MODEL_INPUT_URL_MAX_LENGTH = 260;
 const MODEL_INPUT_PATH_MAX_LENGTH = 140;
+const TAXONOMY_OUTPUT_TOKEN_BUDGET = 384;
+const CLASSIFICATION_OUTPUT_TOKEN_BASE = 256;
+const CLASSIFICATION_OUTPUT_TOKENS_PER_BOOKMARK = 80;
+const CLASSIFICATION_OUTPUT_TOKEN_MAX = 4096;
 const LOCAL_REQUIREMENT_CHECK_TTL_MS = 15_000;
 const MAX_BACKUP_RECORDS = 10;
 const MAX_CLASSIFICATION_SIGNATURES = 6;
@@ -479,6 +483,14 @@ function getTaxonomyPlanningTimeoutMs(config = {}) {
   return TAXONOMY_TIMEOUT_CAPS_MS[config.provider] || DEFAULT_TAXONOMY_TIMEOUT_MS;
 }
 
+function getClassificationOutputTokenBudget(batchLength) {
+  const safeBatchLength = Math.max(1, Number.parseInt(String(batchLength || 1), 10) || 1);
+  return Math.min(
+    CLASSIFICATION_OUTPUT_TOKEN_MAX,
+    CLASSIFICATION_OUTPUT_TOKEN_BASE + safeBatchLength * CLASSIFICATION_OUTPUT_TOKENS_PER_BOOKMARK
+  );
+}
+
 async function initializeDefaults() {
   const stored = await chrome.storage.local.get([STORAGE_KEYS.config, STORAGE_KEYS.status]);
 
@@ -837,7 +849,10 @@ async function planGlobalTaxonomy(bookmarks, config) {
     config.customPrompt,
     getTaxonomyPlanningSampleSize(config)
   );
-  const requestSpec = Providers.buildRequest(config, messages, { mode: "organize" });
+  const requestSpec = Providers.buildRequest(config, messages, {
+    mode: "organize",
+    outputTokenBudget: TAXONOMY_OUTPUT_TOKEN_BUDGET
+  });
   const controller = new AbortController();
   const timer = setTimeout(
     () => controller.abort("taxonomy-timeout"),
@@ -3831,7 +3846,11 @@ async function classifyBatchWithModel(
     taxonomyLocks,
     taxonomyTopFolders
   );
-  const requestSpec = Providers.buildRequest(config, messages, { mode: "organize" });
+  const outputTokenBudget = getClassificationOutputTokenBudget(batch.length);
+  const requestSpec = Providers.buildRequest(config, messages, {
+    mode: "organize",
+    outputTokenBudget
+  });
 
   activeAbortController = new AbortController();
   let abortReason = "";
@@ -3855,8 +3874,8 @@ async function classifyBatchWithModel(
         `Stage 1: sending a classification request for ${batch.length} bookmarks to the model.`
       ),
       detail: ux(
-        `请求地址：${truncate(requestSpec.endpoint, 90)}。如果 25 秒内没有收到响应，会主动停止并提示你减小批大小。`,
-        `Endpoint: ${truncate(requestSpec.endpoint, 90)}. If no response is received within 25 seconds, the request will stop and suggest reducing the batch size.`
+        `请求地址：${truncate(requestSpec.endpoint, 90)}。输出预算 ${outputTokenBudget} tokens；如果 25 秒内没有收到响应，会主动停止并提示你减小批大小。`,
+        `Endpoint: ${truncate(requestSpec.endpoint, 90)}. Output budget: ${outputTokenBudget} tokens. If no response is received within 25 seconds, the request will stop and suggest reducing the batch size.`
       )
     });
 

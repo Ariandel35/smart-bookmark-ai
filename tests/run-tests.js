@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const JsonUtils = require("../json-utils.js");
+const Providers = require("../providers.js");
 const Rules = require("../rules.js");
 const CacheUtils = require("../cache-utils.js");
 
@@ -68,6 +69,57 @@ function testCacheUtils() {
     CacheUtils.isDeadLinkCacheFresh(entry, now + CacheUtils.DEAD_LINK_TTL_MS.healthy + 1),
     false
   );
+}
+
+function testProviderOutputTokenBudgets() {
+  const messages = [{ role: "user", content: "Return JSON only." }];
+  const openAiRequest = Providers.buildRequest(
+    {
+      provider: "deepseek",
+      baseUrl: "https://api.deepseek.com",
+      model: "deepseek-chat",
+      apiKey: "test"
+    },
+    messages,
+    { mode: "organize", outputTokenBudget: 1216 }
+  );
+  assert.equal(openAiRequest.body.max_tokens, 1216);
+
+  const anthropicRequest = Providers.buildRequest(
+    {
+      provider: "anthropic",
+      baseUrl: "https://api.anthropic.com/v1",
+      model: "claude-sonnet-4-5",
+      apiKey: "test"
+    },
+    messages,
+    { mode: "organize", outputTokenBudget: 384 }
+  );
+  assert.equal(anthropicRequest.body.max_tokens, 384);
+
+  const geminiRequest = Providers.buildRequest(
+    {
+      provider: "gemini",
+      baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+      model: "gemini-2.5-flash",
+      apiKey: "test"
+    },
+    messages,
+    { mode: "organize", outputTokenBudget: 512 }
+  );
+  assert.equal(geminiRequest.body.generationConfig.maxOutputTokens, 512);
+
+  const testRequest = Providers.buildRequest(
+    {
+      provider: "deepseek",
+      baseUrl: "https://api.deepseek.com",
+      model: "deepseek-chat",
+      apiKey: "test"
+    },
+    messages,
+    { mode: "test", outputTokenBudget: 2048 }
+  );
+  assert.equal(testRequest.body.max_tokens, 8);
 }
 
 function loadI18nForLanguage(language) {
@@ -251,8 +303,11 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /deepseek: 12/);
   assert.match(backgroundSource, /getRuntimeBatchSize/);
   assert.match(backgroundSource, /MODEL_INPUT_URL_MAX_LENGTH/);
+  assert.match(backgroundSource, /CLASSIFICATION_OUTPUT_TOKENS_PER_BOOKMARK/);
+  assert.match(backgroundSource, /getClassificationOutputTokenBudget/);
   assert.match(backgroundSource, /buildModelBookmarkInputPayload/);
   assert.match(backgroundSource, /compactModelUrl/);
+  assert.match(backgroundSource, /outputTokenBudget/);
   assert.match(backgroundSource, /JSON\.stringify\(inputPayload\)/);
   assert.match(backgroundSource, /TAXONOMY_SAMPLE_SIZE_CAPS/);
   assert.match(backgroundSource, /getTaxonomyPlanningTimeoutMs/);
@@ -386,6 +441,7 @@ function testI18nCoverage() {
 
 function main() {
   testJsonUtils();
+  testProviderOutputTokenBudgets();
   testRules();
   testCacheUtils();
   testStaticExtensionAssets();

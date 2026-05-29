@@ -196,7 +196,16 @@
     return headers;
   }
 
-  function buildOpenAiPayload(provider, config, messages, mode) {
+  function normalizeOutputTokenBudget(value) {
+    const parsed = Number.parseInt(String(value || ""), 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return 0;
+    }
+
+    return Math.min(8192, Math.max(64, parsed));
+  }
+
+  function buildOpenAiPayload(provider, config, messages, mode, outputTokenBudget = 0) {
     const payload = {
       model: config.model,
       messages: (Array.isArray(messages) ? messages : []).map((message) => ({
@@ -214,6 +223,8 @@
 
     if (mode === "test") {
       payload.max_tokens = 8;
+    } else if (outputTokenBudget) {
+      payload.max_tokens = outputTokenBudget;
     }
 
     if (provider.id === "minimax") {
@@ -223,11 +234,11 @@
     return payload;
   }
 
-  function buildAnthropicPayload(config, messages, mode) {
+  function buildAnthropicPayload(config, messages, mode, outputTokenBudget = 0) {
     const { systemText, conversation } = splitSystemAndMessages(messages);
     const payload = {
       model: config.model,
-      max_tokens: mode === "test" ? 32 : 2048,
+      max_tokens: mode === "test" ? 32 : outputTokenBudget || 2048,
       messages: conversation.map((message) => ({
         role: message.role === "assistant" ? "assistant" : "user",
         content: [{ type: "text", text: message.content }]
@@ -242,7 +253,7 @@
     return payload;
   }
 
-  function buildGeminiPayload(messages, mode) {
+  function buildGeminiPayload(messages, mode, outputTokenBudget = 0) {
     const { systemText, conversation } = splitSystemAndMessages(messages);
     const userText = conversation
       .map((message) => `${message.role === "assistant" ? "Assistant" : "User"}:\n${message.content}`)
@@ -265,7 +276,8 @@
 
     if (mode !== "test") {
       payload.generationConfig = {
-        temperature: 0.1
+        temperature: 0.1,
+        ...(outputTokenBudget ? { maxOutputTokens: outputTokenBudget } : {})
       };
     }
 
@@ -275,19 +287,20 @@
   function buildRequest(config, messages, options = {}) {
     const provider = getProvider(config?.provider);
     const mode = options.mode === "test" ? "test" : "organize";
+    const outputTokenBudget = normalizeOutputTokenBudget(options.outputTokenBudget);
     const endpoint = buildEndpoint(provider, config || {});
     const headers = buildHeaders(provider, config || {});
     let body;
 
     switch (provider.apiStyle) {
       case "anthropic":
-        body = buildAnthropicPayload(config || {}, messages, mode);
+        body = buildAnthropicPayload(config || {}, messages, mode, outputTokenBudget);
         break;
       case "gemini":
-        body = buildGeminiPayload(messages, mode);
+        body = buildGeminiPayload(messages, mode, outputTokenBudget);
         break;
       default:
-        body = buildOpenAiPayload(provider, config || {}, messages, mode);
+        body = buildOpenAiPayload(provider, config || {}, messages, mode, outputTokenBudget);
         break;
     }
 
@@ -366,11 +379,17 @@
     }
   }
 
-  globalScope.SmartBookmarkProviders = {
+  const api = {
     getProvider,
     listProviders,
     hasProvider,
     buildRequest,
     extractText
   };
+
+  globalScope.SmartBookmarkProviders = api;
+
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = api;
+  }
 })(globalThis);

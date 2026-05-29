@@ -9,7 +9,7 @@
 - Saved previews are now invalidated automatically when settings or bookmarks change
 - Popup summary details now stay visible for non-error status messages such as invalidated previews
 - DeepSeek runs are capped to a safer runtime batch size before the first model request, then timeout retries can shrink again
-- Model classification prompts now compact bookmark titles, URLs, paths, and JSON payloads to reduce slow-provider latency
+- Model classification prompts now compact bookmark titles, URLs, paths, JSON payloads, and output budgets to reduce slow-provider latency
 - Replaced blocking browser alert/confirm flows in popup and settings with inline confirmations and status messages
 - Popup actions now disable related controls immediately to avoid duplicate apply, preview, or backup requests
 - Fast mode now finishes locally when rules and the classification cache cover every bookmark, skipping model calls and batch scheduling

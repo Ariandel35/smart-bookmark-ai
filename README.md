@@ -97,7 +97,7 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 | Main action | `Preview` is the first step. `Apply Plan` appears only when a plan is ready. |
 | Setup | Missing provider, Base URL, or model routes the user to settings. API access is requested only when uncached bookmarks need a model call. |
 | API settings | `Test & Save` validates the connection and stores the working configuration. |
-| Slow models | DeepSeek runs use a smaller runtime batch, compact model input, and timeout retries that shrink again if needed. |
+| Slow models | DeepSeek runs use a smaller runtime batch, compact model input, bounded output, and timeout retries that shrink again if needed. |
 | Apply speed | Applying a ready preview reuses the saved plan and rebuilds locally without a second model run. |
 | Speed mode | Fast mode skips dead-link checks and the extra taxonomy-planning request; Complete mode keeps both checks and global planning. |
 | Local reruns | If rules and cached classifications cover every bookmark, Marko can preview without asking for an API key or model endpoint access. |
