@@ -9,6 +9,7 @@
 - Saved previews are now invalidated automatically when settings or bookmarks change
 - Popup summary details now stay visible for non-error status messages such as invalidated previews
 - DeepSeek runtime batch size is capped to five bookmarks per model request and uses shorter response timeouts before timeout retries shrink again
+- Slow-provider model calls are now split again right before the request is sent, so stale large batches cannot submit one oversized request
 - Slow-model timeout retries can now split the current run below the saved batch size down to one-bookmark mini-batches, and DeepSeek uses a tighter output budget to reduce response latency
 - Applying a preview generated after slow-model mini-batch retries now preserves the preview's runtime batch display instead of clamping it back to the saved setting
 - Model requests now use a compact built-in strategy prompt plus compact bookmark titles, URLs, paths, JSON payloads, and output budgets to reduce slow-provider latency
@@ -79,6 +80,7 @@
 - Popup setup checks now reject unknown provider IDs instead of treating any non-empty provider value as configured
 - Unknown stored provider IDs now fall back to default provider, Base URL, model, and empty API key instead of mixing stale provider fields into the default provider
 - Automatic organize alarms are now cleared instead of scheduled when the selected provider requires an API key and none is saved
+- Invalid stored automatic-organize settings now load as disabled when the selected provider needs an API key that is not saved
 - Backup create, restore, and delete actions now lock related controls while an operation is in flight
 - Settings now validate raw numeric input instead of silently clamping invalid batch sizes or automation intervals
 - Updated privacy, Chrome Web Store, README, locale, and visual materials to describe optional dead-link checks accurately

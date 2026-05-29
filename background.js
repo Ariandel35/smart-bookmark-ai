@@ -480,6 +480,24 @@ function getRuntimeBatchSize(config = {}) {
   return cap ? Math.min(configuredBatchSize, cap) : configuredBatchSize;
 }
 
+function getModelRequestBatchSizeCap(config = {}) {
+  return RUNTIME_BATCH_SIZE_CAPS[config.provider] || 0;
+}
+
+function splitIntoModelRequestBatches(batch, config = {}) {
+  const safeBatch = Array.isArray(batch) ? batch : [];
+  const cap = getModelRequestBatchSizeCap(config);
+  if (!cap || safeBatch.length <= cap) {
+    return [safeBatch];
+  }
+
+  const chunks = [];
+  for (let index = 0; index < safeBatch.length; index += cap) {
+    chunks.push(safeBatch.slice(index, index + cap));
+  }
+  return chunks;
+}
+
 function buildRuntimeBatchAdjustmentNote(config = {}, runtimeBatchSize) {
   const configuredBatchSize = normalizeBatchSize(config.batchSize);
   if (runtimeBatchSize >= configuredBatchSize) {
@@ -635,6 +653,8 @@ function mergeConfig(raw = {}) {
     typeof raw.customPrompt === "string" && raw.customPrompt.trim()
       ? raw.customPrompt
       : defaults.customPrompt;
+  const apiKey = providerKnown && typeof raw.apiKey === "string" ? raw.apiKey.trim() : "";
+  const autoOrganizeEnabled = Boolean(raw.autoOrganizeEnabled) && Boolean(defaults.apiKeyOptional || apiKey);
 
   return {
     provider,
@@ -642,14 +662,14 @@ function mergeConfig(raw = {}) {
       providerKnown && typeof raw.baseUrl === "string" && raw.baseUrl.trim()
         ? raw.baseUrl.trim()
         : defaults.baseUrl,
-    apiKey: providerKnown && typeof raw.apiKey === "string" ? raw.apiKey.trim() : "",
+    apiKey,
     model:
       providerKnown && typeof raw.model === "string" && raw.model.trim()
         ? raw.model.trim()
         : defaults.model,
     batchSize: normalizeBatchSize(raw.batchSize, defaults.batchSize),
     linkCheckMode: normalizeLinkCheckMode(raw.linkCheckMode || defaults.linkCheckMode),
-    autoOrganizeEnabled: Boolean(raw.autoOrganizeEnabled),
+    autoOrganizeEnabled,
     autoOrganizeIntervalHours: normalizeAutoInterval(raw.autoOrganizeIntervalHours),
     whitelistDomains:
       typeof raw.whitelistDomains === "string" ? raw.whitelistDomains.trim() : "",
@@ -3927,6 +3947,37 @@ async function classifyBatchWithModel(
   taxonomyLocks = {},
   taxonomyTopFolders = []
 ) {
+  const requestBatches = splitIntoModelRequestBatches(batch, config);
+  if (requestBatches.length > 1) {
+    const results = [];
+    for (let index = 0; index < requestBatches.length; index += 1) {
+      const requestBatch = requestBatches[index];
+      await reportStage({
+        message: ux(
+          `正在拆分慢模型请求 ${index + 1}/${requestBatches.length}。`,
+          `Splitting slow-model request ${index + 1}/${requestBatches.length}.`
+        ),
+        detail: ux(
+          `本次只发送 ${requestBatch.length} 条，避免单个大批量请求长时间卡住。`,
+          `Only ${requestBatch.length} bookmarks are sent this time to avoid one large request stalling.`
+        )
+      });
+      results.push(
+        ...(await classifyBatchWithModel(
+          requestBatch,
+          {
+            ...config,
+            batchSize: requestBatch.length
+          },
+          reportStage,
+          taxonomyLocks,
+          taxonomyTopFolders
+        ))
+      );
+    }
+    return results;
+  }
+
   const messages = buildClassificationMessages(
     batch,
     config.customPrompt,

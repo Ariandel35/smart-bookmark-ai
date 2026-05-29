@@ -96,6 +96,8 @@ function mergeConfig(raw = {}) {
     typeof raw.customPrompt === "string" && raw.customPrompt.trim()
       ? raw.customPrompt
       : defaults.customPrompt;
+  const apiKey = providerKnown && typeof raw.apiKey === "string" ? raw.apiKey.trim() : "";
+  const autoOrganizeEnabled = Boolean(raw.autoOrganizeEnabled) && Boolean(defaults.apiKeyOptional || apiKey);
 
   return {
     provider,
@@ -103,14 +105,14 @@ function mergeConfig(raw = {}) {
       providerKnown && typeof raw.baseUrl === "string" && raw.baseUrl.trim()
         ? raw.baseUrl.trim()
         : defaults.baseUrl,
-    apiKey: providerKnown && typeof raw.apiKey === "string" ? raw.apiKey : "",
+    apiKey,
     model:
       providerKnown && typeof raw.model === "string" && raw.model.trim()
         ? raw.model.trim()
         : defaults.model,
     batchSize: normalizeBatchSize(raw.batchSize, defaults.batchSize),
     linkCheckMode: normalizeLinkCheckMode(raw.linkCheckMode || defaults.linkCheckMode),
-    autoOrganizeEnabled: Boolean(raw.autoOrganizeEnabled),
+    autoOrganizeEnabled,
     autoOrganizeIntervalHours: normalizeAutoInterval(raw.autoOrganizeIntervalHours),
     whitelistDomains:
       typeof raw.whitelistDomains === "string" ? raw.whitelistDomains.trim() : "",

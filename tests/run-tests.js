@@ -615,6 +615,9 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /RUNTIME_BATCH_SIZE_CAPS/);
   assert.match(backgroundSource, /deepseek: 5/);
   assert.match(backgroundSource, /getRuntimeBatchSize/);
+  assert.match(backgroundSource, /getModelRequestBatchSizeCap/);
+  assert.match(backgroundSource, /splitIntoModelRequestBatches/);
+  assert.match(backgroundSource, /Splitting slow-model request/);
   assert.match(backgroundSource, /MIN_AUTO_RETRY_BATCH_SIZE = 1/);
   assert.match(backgroundSource, /normalizeRetryBatchSize/);
   assert.match(backgroundSource, /FIRST_RESPONSE_TIMEOUT_CAPS_MS/);
@@ -688,9 +691,12 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /showSettingsIssue/);
   assert.match(optionsSource, /isValidHttpUrl/);
   assert.match(optionsSource, /const providerKnown = Boolean\(raw\.provider && Providers\.hasProvider\(raw\.provider\)\)/);
+  assert.match(optionsSource, /const apiKey = providerKnown && typeof raw\.apiKey === "string" \? raw\.apiKey\.trim\(\) : ""/);
+  assert.match(optionsSource, /const autoOrganizeEnabled = Boolean\(raw\.autoOrganizeEnabled\) && Boolean\(defaults\.apiKeyOptional \|\| apiKey\)/);
   assert.match(optionsSource, /baseUrl:\s*providerKnown && typeof raw\.baseUrl === "string"/);
-  assert.match(optionsSource, /apiKey: providerKnown && typeof raw\.apiKey === "string" \? raw\.apiKey : ""/);
+  assert.match(optionsSource, /apiKey,/);
   assert.match(optionsSource, /model:\s*providerKnown && typeof raw\.model === "string"/);
+  assert.match(optionsSource, /autoOrganizeEnabled,/);
   assert.match(optionsSource, /t\("whitelistRemoveDomain", \{ domain \}\)/);
   assert.match(optionsSource, /button\.setAttribute\("aria-pressed", String\(isSelected\)\)/);
   assert.match(optionsSource, /const isSelected = selectedSet\.has\(item\.domain\)/);
@@ -773,9 +779,12 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(backgroundSource, /isValidHttpUrl/);
   assert.match(backgroundSource, /Base URL must be a valid http or https URL/);
   assert.match(backgroundSource, /const providerKnown = Boolean\(raw\.provider && Providers\.hasProvider\(raw\.provider\)\)/);
+  assert.match(backgroundSource, /const apiKey = providerKnown && typeof raw\.apiKey === "string" \? raw\.apiKey\.trim\(\) : ""/);
+  assert.match(backgroundSource, /const autoOrganizeEnabled = Boolean\(raw\.autoOrganizeEnabled\) && Boolean\(defaults\.apiKeyOptional \|\| apiKey\)/);
   assert.match(backgroundSource, /baseUrl:\s*providerKnown && typeof raw\.baseUrl === "string"/);
-  assert.match(backgroundSource, /apiKey: providerKnown && typeof raw\.apiKey === "string" \? raw\.apiKey\.trim\(\) : ""/);
+  assert.match(backgroundSource, /apiKey,/);
   assert.match(backgroundSource, /model:\s*providerKnown && typeof raw\.model === "string"/);
+  assert.match(backgroundSource, /autoOrganizeEnabled,/);
   assert.match(backgroundSource, /if \(!hasRequiredProviderCredential\(config\)\) \{[\s\S]*chrome\.alarms\.clear\(AUTO_ORGANIZE_ALARM_NAME\)/);
 
   assert.match(optionsSource, /pendingBackupAction/);

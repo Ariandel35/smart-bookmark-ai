@@ -101,7 +101,7 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 | Apply speed | Applying a ready preview reuses the saved plan and rebuilds locally without a second model run. |
 | Speed mode | Fast mode skips dead-link checks and the extra taxonomy-planning request; Complete mode keeps both checks and global planning. |
 | Local reruns | If rules and cached classifications cover every bookmark, Marko can preview without asking for an API key or model endpoint access. |
-| DeepSeek | New/reset configurations start at 5, older large-batch settings are capped per run, and slow retries split further without changing the saved setting. |
+| DeepSeek | New/reset configurations start at 5, older large-batch settings are capped per run and re-split before each model request, and slow retries split further without changing the saved setting. |
 | Advanced rules | Protected folders, domain rules, and prompt fields stay available but quieter. |
 | Language | English and Simplified Chinese are both supported in the extension UI. |
 
