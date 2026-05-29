@@ -41,6 +41,7 @@
 - Static UI checks now verify unique HTML IDs and valid label, form, and ARIA element references
 - Static release checks now verify manifest entry points, localized manifest messages, action icons, and permission boundaries
 - Added a machine-readable extension package file list and tests to keep store upload packages limited to runtime files
+- Added a dependency-free webstore package builder that creates the upload zip from the runtime file list
 - Settings validation errors now move focus to the affected field and mark it for assistive technologies
 - Invalid settings fields now show a visible error border and soft error background
 - Invalid settings action buttons now show the same visible error treatment as invalid fields

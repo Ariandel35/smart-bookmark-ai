@@ -298,6 +298,14 @@ function testStaticExtensionAssets() {
 
 function testExtensionPackageFileList() {
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "manifest.json"), "utf8"));
+  const buildScriptSource = fs.readFileSync(
+    path.join(ROOT_DIR, "webstore/build_extension_package.mjs"),
+    "utf8"
+  );
+  assert.match(buildScriptSource, /EXTENSION_PACKAGE_FILES\.json/);
+  assert.match(buildScriptSource, /buildZip/);
+  assert.match(buildScriptSource, /--out/);
+
   const packageList = JSON.parse(
     fs.readFileSync(path.join(ROOT_DIR, "webstore/EXTENSION_PACKAGE_FILES.json"), "utf8")
   );
