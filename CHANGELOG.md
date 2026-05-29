@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Added Fast and Complete speed modes so users can choose quicker, lower-permission organizing or full dead-link checks
+- Added Fast and Complete speed modes so users can choose quicker organizing that skips extra checks and taxonomy planning, or full dead-link checks with global planning
 - Reduced popup and settings permission requests in Fast mode to the configured model API origin
 - Applying a saved preview plan now reuses the stored plan and rebuilds locally without a second model request
 - DeepSeek runs are capped to a safer runtime batch size before the first model request, then timeout retries can shrink again
@@ -25,7 +25,7 @@
 
 - Added bilingual interface support for English and Simplified Chinese
 - Refined the popup and settings center into a simpler preview-first workflow
-- Added global taxonomy planning before chunked AI classification
+- Added global taxonomy planning before chunked AI classification for Complete mode
 - Added protected root folders, whitelist website selection, and domain folder rules
 - Added classification cache reuse and dead-link cache for faster reruns
 - Expanded provider support and shared provider definitions

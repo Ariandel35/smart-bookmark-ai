@@ -196,7 +196,7 @@ function testSpeedModeSurface() {
   assert.match(storeListing, /Complete mode/);
 
   const privacyPolicy = fs.readFileSync(path.join(ROOT_DIR, "PRIVACY.md"), "utf8");
-  assert.match(privacyPolicy, /Fast mode skips dead-link checks/);
+  assert.match(privacyPolicy, /Fast mode skips dead-link checks and the separate taxonomy-planning model request/);
   assert.match(privacyPolicy, /Complete link checks/);
 }
 
@@ -227,6 +227,8 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /getRuntimeBatchSize/);
   assert.match(backgroundSource, /TAXONOMY_SAMPLE_SIZE_CAPS/);
   assert.match(backgroundSource, /getTaxonomyPlanningTimeoutMs/);
+  assert.match(backgroundSource, /shouldPlanGlobalTaxonomy/);
+  assert.match(backgroundSource, /Fast mode skipped the separate taxonomy-planning request/);
   assert.match(backgroundSource, /first-response-timeout\|request-timeout/);
 }
 

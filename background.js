@@ -1013,7 +1013,8 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
   let taxonomyTopFolders = buildTaxonomyFallbackTopFolders();
   let taxonomyPlanningNote = "";
 
-  if (startupAiCandidateCount) {
+  const planTaxonomy = shouldPlanGlobalTaxonomy(runtimeConfig);
+  if (startupAiCandidateCount && planTaxonomy) {
     try {
       taxonomyTopFolders = await withKeepAlive(() => planGlobalTaxonomy(bookmarks, runtimeConfig));
     } catch (error) {
@@ -1023,26 +1024,36 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
         "Global taxonomy planning failed, so the extension fell back to the default stable folders."
       );
     }
+  } else if (startupAiCandidateCount) {
+    taxonomyPlanningNote = ux(
+      "快速模式已跳过单独的全局目录规划请求，直接使用内置稳定大类。",
+      "Fast mode skipped the separate taxonomy-planning request and used the built-in stable folders."
+    );
   } else {
     taxonomyPlanningNote = "";
   }
-  const taxonomyFlowDetail = startupAiCandidateCount
+  const taxonomyFlowDetail = !startupAiCandidateCount
     ? ux(
-        "先生成全局目录方案，再按批分类。",
-        "The extension plans a global taxonomy first, then classifies in batches."
-      )
-    : ux(
         "当前书签已命中本地规则或分类缓存，跳过模型目录规划。",
         "Local rules or the classification cache cover the current bookmarks, so model taxonomy planning is skipped."
-      );
+      )
+    : planTaxonomy
+      ? ux(
+          "完整模式会先生成全局目录方案，再按批分类。",
+          "Complete mode plans a global taxonomy first, then classifies in batches."
+        )
+      : ux(
+          "快速模式会跳过单独的全局目录规划，直接按内置稳定大类分类。",
+          "Fast mode skips the separate taxonomy-planning request and classifies directly into built-in stable folders."
+        );
   const linkCheckDetail = shouldCheckDeadLinks(runtimeConfig)
     ? ux(
-        "完整检查模式会在分类前检测失效链接。",
-        "Complete mode checks dead links before classification."
+        "完整模式会在分类前检测失效链接，并保留额外的全局目录规划。",
+        "Complete mode checks dead links before classification and keeps the extra global taxonomy planning step."
       )
     : ux(
-        "快速模式会跳过失效链接检测，只做去重、规则、缓存和模型分类。",
-        "Fast mode skips dead-link checks and only runs duplicate cleanup, rules, cache reuse, and model classification."
+        "快速模式会跳过失效链接检测和单独目录规划，只做去重、规则、缓存和模型分类。",
+        "Fast mode skips dead-link checks and the separate taxonomy-planning request, then runs duplicate cleanup, rules, cache reuse, and model classification."
       );
 
   const totalBatches = Math.ceil(bookmarks.length / runtimeBatchSize);
@@ -1481,10 +1492,10 @@ async function processNextBatch() {
       detail: ux(
         checkDeadLinks
           ? `本批 ${batch.length} 条。会先识别确认失效的链接，把状态不明确的链接留到“${MANUAL_FOLDER_TITLE}”，再对剩余书签做 AI 分类。提交前不会改动现有书签树。`
-          : `本批 ${batch.length} 条。快速模式会跳过链接可用性探测，直接进入去重、规则、缓存和 AI 分类。提交前不会改动现有书签树。`,
+          : `本批 ${batch.length} 条。快速模式会跳过链接可用性探测和单独目录规划，直接进入去重、规则、缓存和 AI 分类。提交前不会改动现有书签树。`,
         checkDeadLinks
           ? `${batch.length} items in this batch. Confirmed dead links are removed first, uncertain links are kept in "${MANUAL_FOLDER_TITLE}", and only the remaining bookmarks are sent to AI. The bookmark tree is not changed before the final rebuild.`
-          : `${batch.length} items in this batch. Fast mode skips link availability checks and goes straight to duplicate cleanup, rules, cache reuse, and AI classification. The bookmark tree is not changed before the final rebuild.`
+          : `${batch.length} items in this batch. Fast mode skips link availability checks and the separate taxonomy plan, then goes straight to duplicate cleanup, rules, cache reuse, and AI classification. The bookmark tree is not changed before the final rebuild.`
       )
     });
 
@@ -1621,6 +1632,12 @@ async function processNextBatch() {
           [...(job.preservedBookmarks || []), ...(job.plannedBookmarks || [])],
           job.pendingWarnings
         );
+        const previewTaxonomyDetailZh = shouldPlanGlobalTaxonomy(job.config)
+          ? "本次预览生成了全局目录方案。"
+          : "本次预览使用内置稳定大类，跳过了单独的目录规划请求。";
+        const previewTaxonomyDetailEn = shouldPlanGlobalTaxonomy(job.config)
+          ? "This preview generated a global taxonomy plan."
+          : "This preview used the built-in stable folders and skipped the separate taxonomy-planning request.";
         job.previewFolders = previewFolders;
         await savePreviewPlan(job, previewFolders);
         await finishJob(
@@ -1632,8 +1649,8 @@ async function processNextBatch() {
           job,
           {
             detail: ux(
-              `本次预览生成了全局目录方案。预计归类 ${job.moved} 条，复用缓存 ${job.reused} 条，AI 新分类 ${job.aiClassified} 条，删除 ${job.deleted} 条，${MANUAL_FOLDER_TITLE} ${job.pendingWarnings.length} 条。确认无误后点击“应用方案”正式重建。`,
-              `This preview generated a global taxonomy plan. It would categorize ${job.moved} bookmarks, reuse ${job.reused} cached results, classify ${job.aiClassified} new bookmarks with AI, delete ${job.deleted}, and leave ${job.pendingWarnings.length} items in "${MANUAL_FOLDER_TITLE}". If it looks good, click Apply Plan to rebuild.`
+              `${previewTaxonomyDetailZh}预计归类 ${job.moved} 条，复用缓存 ${job.reused} 条，AI 新分类 ${job.aiClassified} 条，删除 ${job.deleted} 条，${MANUAL_FOLDER_TITLE} ${job.pendingWarnings.length} 条。确认无误后点击“应用方案”正式重建。`,
+              `${previewTaxonomyDetailEn} It would categorize ${job.moved} bookmarks, reuse ${job.reused} cached results, classify ${job.aiClassified} new bookmarks with AI, delete ${job.deleted}, and leave ${job.pendingWarnings.length} items in "${MANUAL_FOLDER_TITLE}". If it looks good, click Apply Plan to rebuild.`
             ),
             previewFolders
           }
@@ -4159,6 +4176,10 @@ function normalizeLinkCheckMode(rawValue) {
 }
 
 function shouldCheckDeadLinks(config = {}) {
+  return normalizeLinkCheckMode(config.linkCheckMode) === LINK_CHECK_MODE_COMPLETE;
+}
+
+function shouldPlanGlobalTaxonomy(config = {}) {
   return normalizeLinkCheckMode(config.linkCheckMode) === LINK_CHECK_MODE_COMPLETE;
 }
 

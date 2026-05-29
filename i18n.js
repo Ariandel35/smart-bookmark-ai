@@ -197,7 +197,7 @@ Hard rules:
       linkCheckFast: "Fast",
       linkCheckComplete: "Complete",
       hintLinkCheckMode:
-        "Fast skips dead-link checks during organize. Complete checks links before classification.",
+        "Fast skips dead-link checks and the separate taxonomy plan. Complete checks links and plans the global taxonomy first.",
       labelWhitelistDomains: "Whitelist Websites",
       labelProtectedRootFolders: "Protected Root Folders",
       labelDomainFolderRules: "Domain Folder Rules",
@@ -346,7 +346,7 @@ Hard rules:
         "Only when you actively organize bookmarks or enable auto organize, bookmark titles, URLs, current paths, and your custom prompt are sent to the model provider you chose.",
       privacyDeadLinkTitle: "Dead-link checks",
       privacyDeadLinkDesc:
-        "When complete link checks are enabled, organize sends direct HEAD / GET requests to bookmarked websites. Fast mode skips these checks.",
+        "When complete link checks are enabled, organize sends direct HEAD / GET requests to bookmarked websites and keeps the separate taxonomy-planning request. Fast mode skips both extras.",
       privacyStorageTitle: "Local storage",
       privacyStorageDesc:
         "API keys, provider settings, model names, whitelist rules, and backup snapshots are stored locally in browser storage and IndexedDB.",
@@ -426,7 +426,7 @@ Hard rules:
       labelLinkCheckMode: "速度模式",
       linkCheckFast: "快速",
       linkCheckComplete: "完整",
-      hintLinkCheckMode: "快速模式会在整理时跳过失效链接检测；完整模式会在分类前检查链接。",
+      hintLinkCheckMode: "快速模式会跳过失效链接检测和单独目录规划；完整模式会先检查链接并规划全局目录。",
       labelWhitelistDomains: "白名单网站",
       labelProtectedRootFolders: "受保护根目录",
       labelDomainFolderRules: "域名目录规则",
@@ -566,7 +566,7 @@ Hard rules:
       privacyThirdPartyDesc:
         "只有在你主动整理书签或开启自动整理时，书签标题、URL、现有路径和自定义 Prompt 才会发送到你选择的模型服务商。",
       privacyDeadLinkTitle: "失效链接检测",
-      privacyDeadLinkDesc: "开启完整链接检查时，整理流程会直接向书签对应的网站发送 HEAD / GET 请求；快速模式会跳过这些检测。",
+      privacyDeadLinkDesc: "开启完整链接检查时，整理流程会直接向书签对应的网站发送 HEAD / GET 请求，并保留单独目录规划请求；快速模式会跳过这两项额外步骤。",
       privacyStorageTitle: "本地存储",
       privacyStorageDesc: "API Key、Provider、模型名、白名单和备份快照都保存在你的浏览器本地存储与 IndexedDB 中。",
       privacyControlTitle: "你可以控制的内容",

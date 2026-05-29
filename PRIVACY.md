@@ -14,14 +14,14 @@ Marko only processes data needed to organize bookmarks.
 
 - To check whether bookmarked links are clearly dead when Complete link checks are enabled
 - To send bookmark context to the model provider you choose for classification
-- To generate preview plans and stable taxonomy suggestions before a full rebuild
+- To generate preview plans and, in Complete mode, stable taxonomy suggestions before a full rebuild
 - To create a local snapshot backup before reorganizing bookmarks
 - To render progress, delete logs, and unprocessed items in the UI
 
 ## Where data is sent
 
 - Bookmark title, URL, current path, and custom prompt are only sent to the model provider you configure
-- Fast mode skips dead-link checks during organize runs
+- Fast mode skips dead-link checks and the separate taxonomy-planning model request during organize runs
 - Complete link checks send HEAD / GET requests directly to bookmarked websites
 
 ## Local storage
@@ -34,7 +34,7 @@ Marko only processes data needed to organize bookmarks.
 ## Your control
 
 - You can change or remove API settings at any time
-- You can choose Fast mode for fewer permissions and faster previews, or Complete mode for link checks before classification
+- You can choose Fast mode for fewer requests, fewer permissions, and faster previews, or Complete mode for link checks and global planning before classification
 - You can turn off auto organize
 - You can whitelist domains
 - You can delete or restore backups

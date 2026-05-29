@@ -33,7 +33,7 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 | --- | --- |
 | Duplicate links scattered across folders | Conservative duplicate cleanup before classification |
 | Old links that no longer open | Dead-link checks that remove only clearly failed URLs |
-| Folders created one batch at a time | A global taxonomy plan before chunked classification |
+| Folders created one batch at a time | Stable root categories in Fast mode; global planning in Complete mode |
 | Risky one-click cleanup tools | Preview first, backup second, rebuild last |
 | Too many settings for a simple task | A focused popup and a shorter setup path |
 
@@ -87,7 +87,7 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 2. Create a local snapshot backup before a real organize run.
 3. Check links and remove only confirmed dead bookmarks.
 4. Detect exact duplicates and preserve uncertain items for review.
-5. Plan a global folder taxonomy, then classify bookmarks in batches.
+5. Use stable root folders in Fast mode, or plan a global taxonomy in Complete mode, then classify bookmarks in batches.
 6. Rebuild the bookmark bar root in one final pass.
 
 ## What v3.0 Focuses On
@@ -99,7 +99,7 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 | API settings | `Test & Save` validates the connection and stores the working configuration. |
 | Slow models | DeepSeek runs are capped to a safer runtime batch size before the first request, then timeout retries shrink again if needed. |
 | Apply speed | Applying a ready preview reuses the saved plan and rebuilds locally without a second model run. |
-| Speed mode | Fast mode skips dead-link checks for quicker previews; Complete mode checks links before classification. |
+| Speed mode | Fast mode skips dead-link checks and the extra taxonomy-planning request; Complete mode keeps both checks and global planning. |
 | DeepSeek | New/reset configurations start smaller, and older large-batch settings are capped per run to reduce 90-second stalls. |
 | Advanced rules | Protected folders, domain rules, and prompt fields stay available but quieter. |
 | Language | English and Simplified Chinese are both supported in the extension UI. |
@@ -152,7 +152,7 @@ Core files:
 - Bookmark titles, URLs, current paths, prompts, API settings, caches, and backups stay in local browser storage unless you start an organize run.
 - During organize or auto organize, bookmark metadata is sent only to the model provider you configured.
 - API keys are stored locally and are never sent to this project or its developer.
-- Complete link checks connect directly to bookmarked websites; Fast mode skips those checks.
+- Complete mode connects directly to bookmarked websites for link checks and adds a separate taxonomy-planning request; Fast mode skips both extras.
 - Snapshot backups are local and can be restored or deleted from the settings page.
 
 Read the full policy in [PRIVACY.md](PRIVACY.md).
