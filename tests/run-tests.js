@@ -468,6 +468,10 @@ function testSpeedModeSurface() {
   const privacyPolicy = fs.readFileSync(path.join(ROOT_DIR, "PRIVACY.md"), "utf8");
   assert.match(privacyPolicy, /Fast mode skips dead-link checks and the separate taxonomy-planning model request/);
   assert.match(privacyPolicy, /Complete link checks/);
+
+  const privacyHtml = fs.readFileSync(path.join(ROOT_DIR, "privacy.html"), "utf8");
+  assert.match(privacyHtml, /separate taxonomy-planning request/);
+  assert.match(privacyHtml, /Fast mode skips both extras/);
 }
 
 function testPreviewApplySurface() {
