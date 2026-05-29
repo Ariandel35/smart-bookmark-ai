@@ -629,6 +629,16 @@ function testReleaseMaterialsCurrent() {
   const reviewNotes = fs.readFileSync(path.join(ROOT_DIR, "webstore/REVIEW_NOTES.md"), "utf8");
   assert.match(reviewNotes, /复用已保存方案/);
 
+  const webstorePrivacyPolicy = fs.readFileSync(
+    path.join(ROOT_DIR, "webstore/PRIVACY_POLICY.md"),
+    "utf8"
+  );
+  assert.match(webstorePrivacyPolicy, /最后更新：2026-05-30/);
+  assert.match(webstorePrivacyPolicy, /模型服务商、Base URL、模型名/);
+  assert.match(webstorePrivacyPolicy, /完整模式还会在分类前生成全局目录方案/);
+  assert.match(webstorePrivacyPolicy, /快速模式会跳过失效链接检测和单独目录规划请求/);
+  assert.match(webstorePrivacyPolicy, /完整模式会直接访问书签对应的网站/);
+
   const publishChecklist = fs.readFileSync(
     path.join(ROOT_DIR, "webstore/PUBLISH_CHECKLIST.md"),
     "utf8"
