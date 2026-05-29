@@ -222,6 +222,7 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /createApplyConfirmationState/);
   assert.match(popupSource, /renderResponseError/);
   assert.match(popupSource, /detail: response\?\.detail \|\| ""/);
+  assert.match(popupSource, /currentStatus\?\.detail \|\|/);
   assert.doesNotMatch(popupSource, /START_ORGANIZE/);
   assert.doesNotMatch(popupSource, /window\.confirm/);
 

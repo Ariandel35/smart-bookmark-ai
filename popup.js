@@ -595,9 +595,10 @@ function renderMainDetail() {
   const summaryDesc = document.createElement("div");
   summaryDesc.className = "record-item__suggestion";
   const summaryDetail =
-    currentStatus?.phase === "error" || currentStatus?.phase === "preview"
-      ? currentStatus?.detail || DEFAULT_STATUS_DETAIL
-      : "";
+    currentStatus?.detail ||
+    (currentStatus?.phase === "error" || currentStatus?.phase === "preview"
+      ? DEFAULT_STATUS_DETAIL
+      : "");
   summaryDesc.textContent = summaryDetail;
 
   summary.append(summaryTitle);
