@@ -14,6 +14,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 预览会先检查本地规则和缓存覆盖情况，只有未缓存书签需要模型时才要求 API Key 或模型接口授权
 - API 检测成功后自动保存当前连接配置
 - 弹窗应用方案、备份恢复/删除和设置校验都改成页面内确认与状态提示，不再弹出浏览器原生对话框
+- 恢复备份前会先为当前书签创建新的本地快照，并在清理旧备份时保留正在恢复的备份记录
 - 批大小和自动整理间隔会校验原始输入，避免非法数值被静默改写
 - 整理规则页默认只保留常用项，高级规则收起到 Advanced
 - 优化中英文标签、状态文案、间距、颜色和移动端表单表现
@@ -37,6 +38,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Preview checks local rule/cache coverage first, then asks for an API key or model endpoint access only when uncached bookmarks need the model
 - Successful API tests now save the verified connection settings
 - Popup apply, backup restore/delete, and settings validation now use inline confirmations and status messages instead of browser dialogs
+- Backup restore now creates a fresh local snapshot of the current bookmarks first and preserves the selected backup while retention cleanup runs
 - Batch size and auto interval fields validate raw input instead of silently clamping invalid values
 - Everyday organization rules stay visible while advanced rules are collapsed
 - Refined bilingual labels, status copy, spacing, colors, and responsive form behavior

@@ -500,6 +500,12 @@ function testPreviewApplySurface() {
   assert.match(backgroundSource, /getBookmarkById/);
   assert.match(backgroundSource, /Stale unprocessed record removed/);
   assert.match(backgroundSource, /existingBookmark\.id/);
+  assert.match(backgroundSource, /Pre-restore backup failed/);
+  assert.match(backgroundSource, /createCurrentSnapshotBackup\(bookmarkBarNode, "manual", \{ preserveIds: \[backupId\] \}\)/);
+  assert.match(backgroundSource, /limitBackupRecords\(records, maxRecords = MAX_BACKUP_RECORDS, options = \{\}\)/);
+  assert.match(backgroundSource, /preserveIds/);
+  assert.match(backgroundSource, /addBackupRecord\(record, source = "manual", options = \{\}\)/);
+  assert.match(backgroundSource, /createCurrentSnapshotBackup\(bookmarkBarNode, source = "manual", options = \{\}\)/);
 
   const popupSource = fs.readFileSync(path.join(ROOT_DIR, "popup.js"), "utf8");
   assert.match(popupSource, /APPLY_PREVIEW_PLAN/);
@@ -906,11 +912,14 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
   assert.match(changelog, /inline confirmations and status messages/);
   assert.match(changelog, /raw numeric input/);
+  assert.match(changelog, /fresh pre-restore snapshot/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run package:webstore/);
+  assert.match(readme, /restoring creates a fresh local snapshot first/);
   assert.match(readmeZh, /请求前再次拆分/);
   assert.match(readmeZh, /npm test/);
   assert.match(readmeZh, /npm run package:webstore/);
+  assert.match(readmeZh, /恢复前会先创建新的本地快照/);
 
   const releaseNotes = fs.readFileSync(
     path.join(ROOT_DIR, "webstore/RELEASE_NOTES_3.0.0.md"),
@@ -923,6 +932,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /limited mini-request concurrency/);
   assert.match(releaseNotes, /shorter built-in/);
   assert.match(releaseNotes, /inline confirmations and status messages/);
+  assert.match(releaseNotes, /creates a fresh local snapshot/);
   assert.match(releaseNotes, /silently clamping invalid values/);
 
   const historicalReleaseNotes = fs.readFileSync(
@@ -942,6 +952,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /OpenAI、DeepSeek、MiniMax、Anthropic/);
   assert.match(storeListing, /OpenAI, DeepSeek, MiniMax, Anthropic/);
   assert.match(storeListing, /inline confirmations and validation feedback/);
+  assert.match(storeListing, /fresh pre-restore snapshot/);
   assert.match(storeListing, /Popup inline apply confirmation/);
   assert.match(storeListing, /Backup management with inline restore confirmation/);
 

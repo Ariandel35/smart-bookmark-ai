@@ -29,7 +29,7 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 支持白名单网站、受保护根目录和域名目录规则
 - 支持分类缓存和死链缓存，加快重复整理
 - 每次正式整理前自动创建本地快照备份
-- 支持手动备份、恢复和删除备份
+- 支持手动备份、恢复和删除备份；恢复前会先保存当前书签快照，便于回退
 - 支持自动静默整理
 - 支持查看未处理项目和删除记录
 
@@ -69,7 +69,7 @@ Key features:
 - Whitelist websites, protected root folders, and domain folder rules
 - Classification cache reuse and dead-link cache for faster reruns
 - Automatic local snapshot backup before each real organize run
-- Manual backup, restore, and delete
+- Manual backup, restore, and delete, with a fresh pre-restore snapshot before replacing current bookmarks
 - Auto organize support
 - Reviewable unprocessed and deletion logs
 

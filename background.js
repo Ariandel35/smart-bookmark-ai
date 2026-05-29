@@ -1730,6 +1730,28 @@ async function restoreBackupEntry(backupId) {
   const tree = await chrome.bookmarks.getTree();
   const bookmarkBarNode = findBookmarksBarNode(tree);
   const currentChildren = await chrome.bookmarks.getChildren(bookmarkBarNode.id);
+  const currentRestorableNodes = flattenForbiddenRootNodes(
+    currentChildren.filter((node) => !isBackupFolderNode(node))
+  );
+  const preRestoreSnapshotInfo = currentRestorableNodes.length
+    ? await createCurrentSnapshotBackup(bookmarkBarNode, "manual", { preserveIds: [backupId] })
+    : {
+        created: false,
+        detail: ux(
+          "恢复前没有需要额外备份的当前书签。",
+          "There were no current bookmarks that needed an extra pre-restore backup."
+        )
+      };
+
+  if (currentRestorableNodes.length && !preRestoreSnapshotInfo.created) {
+    throw buildUserFacingError(
+      ux("恢复前备份失败，任务已停止。", "Pre-restore backup failed, so the task was stopped."),
+      ux(
+        "为避免恢复后无法回到当前书签状态，Marko 需要先创建当前状态快照。请检查浏览器存储空间后再重试。",
+        "To make the restore reversible, Marko needs to create a snapshot of the current bookmark state first. Check browser storage space and try again."
+      )
+    );
+  }
 
   for (const child of currentChildren) {
     if (child.url) {
@@ -1754,14 +1776,15 @@ async function restoreBackupEntry(backupId) {
 
   const records = await syncBackupRecords();
   const restoredRecord = records.find((record) => record.id === backupId);
+  const preRestoreDetail = preRestoreSnapshotInfo.created ? `${preRestoreSnapshotInfo.detail} ` : "";
 
   await updateStatus(
     buildIdleStatus({
       phase: "completed",
       message: ux("已恢复最近备份。", "Latest backup restored."),
       detail: ux(
-        `已从“${restoredRecord?.title || "最近备份"}”恢复 ${restoredTopLevelNodes.length} 个顶层项目。`,
-        `Restored ${restoredTopLevelNodes.length} top-level items from "${restoredRecord?.title || "latest backup"}".`
+        `${preRestoreDetail}已从“${restoredRecord?.title || "最近备份"}”恢复 ${restoredTopLevelNodes.length} 个顶层项目。`,
+        `${preRestoreDetail}Restored ${restoredTopLevelNodes.length} top-level items from "${restoredRecord?.title || "latest backup"}".`
       ),
       finishedAt: new Date().toISOString()
     })
@@ -3009,7 +3032,7 @@ function normalizeBackupRecords(rawRecords) {
     .filter((record) => record.id && !seen.has(record.id) && seen.add(record.id));
 }
 
-function limitBackupRecords(records, maxRecords = MAX_BACKUP_RECORDS) {
+function limitBackupRecords(records, maxRecords = MAX_BACKUP_RECORDS, options = {}) {
   const normalized = normalizeBackupRecords(records);
   if (normalized.length <= maxRecords) {
     return {
@@ -3019,23 +3042,34 @@ function limitBackupRecords(records, maxRecords = MAX_BACKUP_RECORDS) {
   }
 
   const keepIds = new Set();
+  const preserveIds = new Set(
+    Array.isArray(options.preserveIds)
+      ? options.preserveIds.map((id) => String(id || "")).filter(Boolean)
+      : []
+  );
   const manualRecords = normalized.filter((record) => record.source === "manual");
   const autoRecords = normalized.filter((record) => record.source === "auto");
 
-  for (const record of manualRecords) {
+  const addKeptRecord = (record) => {
     if (keepIds.size >= maxRecords) {
-      break;
+      return;
     }
 
     keepIds.add(record.id);
+  };
+
+  for (const record of normalized) {
+    if (preserveIds.has(record.id)) {
+      addKeptRecord(record);
+    }
+  }
+
+  for (const record of manualRecords) {
+    addKeptRecord(record);
   }
 
   for (const record of autoRecords) {
-    if (keepIds.size >= maxRecords) {
-      break;
-    }
-
-    keepIds.add(record.id);
+    addKeptRecord(record);
   }
 
   return {
@@ -3174,7 +3208,7 @@ async function syncBackupRecords() {
   return keptRecords;
 }
 
-async function addBackupRecord(record, source = "manual") {
+async function addBackupRecord(record, source = "manual", options = {}) {
   const currentRecords = await syncBackupRecords();
   const nextRecords = [
     {
@@ -3186,7 +3220,7 @@ async function addBackupRecord(record, source = "manual") {
     ...currentRecords.filter((item) => item.id !== record.id)
   ];
 
-  const { keptRecords, overflowRecords } = limitBackupRecords(nextRecords);
+  const { keptRecords, overflowRecords } = limitBackupRecords(nextRecords, MAX_BACKUP_RECORDS, options);
 
   for (const record of overflowRecords) {
     await deleteBackupSnapshot(record.id);
@@ -3258,7 +3292,7 @@ async function ensureUnresolvedFolder(bookmarkBarId) {
   return folder.id;
 }
 
-async function createCurrentSnapshotBackup(bookmarkBarNode, source = "manual") {
+async function createCurrentSnapshotBackup(bookmarkBarNode, source = "manual", options = {}) {
   const topLevelNodes = Array.isArray(bookmarkBarNode?.children)
     ? flattenForbiddenRootNodes(bookmarkBarNode.children.filter((node) => !isBackupFolderNode(node)))
     : [];
@@ -3279,7 +3313,10 @@ async function createCurrentSnapshotBackup(bookmarkBarNode, source = "manual") {
       title: backupTitle,
       createdAt: new Date().toISOString()
     },
-    source
+    source,
+    {
+      preserveIds: Array.isArray(options.preserveIds) ? options.preserveIds : []
+    }
   );
 
   return {

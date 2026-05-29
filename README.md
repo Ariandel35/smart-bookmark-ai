@@ -58,7 +58,7 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
   <tr>
     <td><strong>Popup</strong><br />Preview, apply, back up, cancel, and watch progress from one compact panel.</td>
     <td><strong>Connection</strong><br />Choose a provider, test the API, save the working model, and keep advanced fields out of the way.</td>
-    <td><strong>Backups</strong><br />Create, inspect, restore, and delete local bookmark snapshots when you need a rollback point.</td>
+    <td><strong>Backups</strong><br />Create, inspect, restore, and delete local bookmark snapshots; restore first saves the current state as a new rollback point.</td>
   </tr>
 </table>
 
@@ -152,7 +152,7 @@ Core files:
 - During organize or auto organize, bookmark metadata is sent only to the model provider you configured.
 - API keys are stored locally and are never sent to this project or its developer.
 - Complete mode connects directly to bookmarked websites for link checks and adds a separate taxonomy-planning request; Fast mode skips both extras.
-- Snapshot backups are local and can be restored or deleted from the settings page.
+- Snapshot backups are local and can be restored or deleted from the settings page; restoring creates a fresh local snapshot first.
 
 Read the full policy in [PRIVACY.md](PRIVACY.md).
 
