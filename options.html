@@ -241,7 +241,11 @@
                       step="1"
                       inputmode="numeric"
                       placeholder="50"
+                      aria-describedby="batchSizeHint"
                     />
+                    <p class="field__hint" id="batchSizeHint" data-i18n="hintBatchSize">
+                      Use 5 to 100. Smaller batches are safer for slower models.
+                    </p>
                   </div>
 
                   <div class="field">
@@ -363,7 +367,11 @@
                       step="1"
                       inputmode="numeric"
                       placeholder="24"
+                      aria-describedby="autoOrganizeIntervalHint"
                     />
+                    <p class="field__hint" id="autoOrganizeIntervalHint" data-i18n="hintAutoOrganizeInterval">
+                      Use 1 to 168 hours.
+                    </p>
                   </div>
                 </div>
               </div>

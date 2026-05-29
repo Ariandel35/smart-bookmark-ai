@@ -383,12 +383,42 @@ function clearApiTestStatus() {
   setApiTestStatus("");
 }
 
+function getDescribedByTokens(field) {
+  return String(field.getAttribute("aria-describedby") || "")
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function setDescribedByTokens(field, tokens) {
+  const uniqueTokens = Array.from(new Set(tokens.filter(Boolean)));
+  if (!uniqueTokens.length) {
+    field.removeAttribute("aria-describedby");
+    return;
+  }
+
+  field.setAttribute("aria-describedby", uniqueTokens.join(" "));
+}
+
+function addDescribedByToken(field, token) {
+  if (!token) {
+    return;
+  }
+
+  setDescribedByTokens(field, [...getDescribedByTokens(field), token]);
+}
+
+function removeDescribedByTokens(field, tokensToRemove) {
+  const removeSet = new Set(tokensToRemove.filter(Boolean));
+  setDescribedByTokens(
+    field,
+    getDescribedByTokens(field).filter((token) => !removeSet.has(token))
+  );
+}
+
 function clearSettingsFieldIssues() {
   Array.from(form.querySelectorAll("[aria-invalid], [aria-describedby]")).forEach((field) => {
     field.removeAttribute("aria-invalid");
-    if ([settingsActionStatus.id, apiTestStatus.id].includes(field.getAttribute("aria-describedby"))) {
-      field.removeAttribute("aria-describedby");
-    }
+    removeDescribedByTokens(field, [settingsActionStatus.id, apiTestStatus.id]);
   });
 }
 
@@ -433,7 +463,7 @@ function markSettingsFieldIssue(fieldId, describedByElement = settingsActionStat
 
   field.setAttribute("aria-invalid", "true");
   if (describedByElement?.id) {
-    field.setAttribute("aria-describedby", describedByElement.id);
+    addDescribedByToken(field, describedByElement.id);
   }
 }
 

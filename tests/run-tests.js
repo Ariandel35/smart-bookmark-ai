@@ -401,6 +401,10 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="grantAccessButton"[\s\S]*aria-describedby="hostAccessStatus"/);
   assert.match(optionsHtml, /id="linkCheckMode"[\s\S]*aria-describedby="linkCheckModeHint"/);
   assert.match(optionsHtml, /id="linkCheckModeHint"[\s\S]*data-i18n="hintLinkCheckMode"/);
+  assert.match(optionsHtml, /id="batchSize"[\s\S]*aria-describedby="batchSizeHint"/);
+  assert.match(optionsHtml, /id="batchSizeHint"[\s\S]*data-i18n="hintBatchSize"/);
+  assert.match(optionsHtml, /id="autoOrganizeIntervalHours"[\s\S]*aria-describedby="autoOrganizeIntervalHint"/);
+  assert.match(optionsHtml, /id="autoOrganizeIntervalHint"[\s\S]*data-i18n="hintAutoOrganizeInterval"/);
   assert.match(optionsHtml, /id="whitelistSelectionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.match(optionsHtml, /id="whitelistSearch"[\s\S]*aria-describedby="whitelistSelectionStatus"/);
   assert.match(optionsHtml, /id="saveButton"/);
@@ -408,11 +412,15 @@ function testOptionsBackupInlineConfirmationSurface() {
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
   assert.match(optionsSource, /showSettingsIssue/);
   assert.match(optionsSource, /clearSettingsFieldIssues/);
+  assert.match(optionsSource, /getDescribedByTokens/);
+  assert.match(optionsSource, /addDescribedByToken/);
+  assert.match(optionsSource, /removeDescribedByTokens/);
   assert.match(optionsSource, /focusSettingsField/);
   assert.match(optionsSource, /markSettingsFieldIssue/);
   assert.match(optionsSource, /showApiTestIssue/);
   assert.match(optionsSource, /field\.setAttribute\("aria-invalid", "true"\)/);
-  assert.match(optionsSource, /field\.setAttribute\("aria-describedby", describedByElement\.id\)/);
+  assert.match(optionsSource, /addDescribedByToken\(field, describedByElement\.id\)/);
+  assert.match(optionsSource, /removeDescribedByTokens\(field, \[settingsActionStatus\.id, apiTestStatus\.id\]\)/);
   assert.match(optionsSource, /window\.requestAnimationFrame\(\(\) => \{\n    field\.focus\(\);/);
   assert.match(optionsSource, /button\.tabIndex = isActive \? 0 : -1/);
   assert.match(optionsSource, /handleNavigationKeydown/);
@@ -492,6 +500,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(stylesSource, /border-color: var\(--danger\)/);
 
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
+  assert.match(i18nSource, /hintBatchSize/);
+  assert.match(i18nSource, /hintAutoOrganizeInterval/);
   assert.match(i18nSource, /settingsSavedStatus/);
   assert.match(i18nSource, /settingsSavingStatus/);
   assert.match(i18nSource, /settingsLoadException/);
