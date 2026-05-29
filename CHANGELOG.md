@@ -73,6 +73,7 @@
 - Test & Save now distinguishes a successful API test from a later settings-save failure
 - Settings and popup setup checks now reject invalid Base URLs before permission checks or model requests
 - Settings now distinguish load-failure and save-failure badges so failed saves are not mislabeled as load errors
+- Changing providers now clears the existing API key with an inline notice to avoid reusing one provider's secret with another provider
 - Backup create, restore, and delete actions now lock related controls while an operation is in flight
 - Settings now validate raw numeric input instead of silently clamping invalid batch sizes or automation intervals
 - Updated privacy, Chrome Web Store, README, locale, and visual materials to describe optional dead-link checks accurately

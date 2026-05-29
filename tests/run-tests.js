@@ -589,6 +589,7 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /navEyebrow: "导航"/);
   assert.match(i18nSource, /saveBadgeFailed: "失败"/);
   assert.match(i18nSource, /saveBadgeLoadFailed: "读取失败"/);
+  assert.match(i18nSource, /apiKeyClearedOnProviderChange: "已清空 API Key，避免把旧服务商密钥用于新服务商。"/);
   assert.match(i18nSource, /connectionTitle: "模型连接"/);
   assert.match(i18nSource, /labelProvider: "服务商"/);
   assert.match(i18nSource, /labelModel: "模型名称"/);
@@ -752,6 +753,10 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /Failed to refresh host access status after reset/);
   assert.match(optionsSource, /Failed to refresh host access status after config load failure/);
   assert.match(optionsSource, /Failed to refresh host access status after provider change/);
+  assert.match(optionsSource, /const providerChanged = nextProvider !== lastProvider/);
+  assert.match(optionsSource, /const shouldClearApiKey = providerChanged && Boolean\(apiKeyInput\.value\.trim\(\)\)/);
+  assert.match(optionsSource, /apiKeyInput\.value = ""/);
+  assert.match(optionsSource, /setApiTestStatus\(t\("apiKeyClearedOnProviderChange"\)\)/);
   assert.match(optionsSource, /providerSelect\.addEventListener\("change"[\s\S]*markPending\(\);[\s\S]*refreshHostAccessStatus/);
 
   const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");

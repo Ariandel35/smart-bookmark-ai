@@ -1355,13 +1355,19 @@ function handleFormMutation(event) {
 
 providerSelect.addEventListener("change", () => {
   const nextProvider = providerSelect.value;
+  const providerChanged = nextProvider !== lastProvider;
   const previousDefaults = getDefaults(lastProvider);
   const nextDefaults = getDefaults(nextProvider);
   const previousDefaultBatchSize = getDefaultBatchSize(lastProvider);
   const nextDefaultBatchSize = getDefaultBatchSize(nextProvider);
+  const shouldClearApiKey = providerChanged && Boolean(apiKeyInput.value.trim());
 
   if (!baseUrlInput.value.trim() || baseUrlInput.value.trim() === previousDefaults.baseUrl) {
     baseUrlInput.value = nextDefaults.baseUrl;
+  }
+
+  if (shouldClearApiKey) {
+    apiKeyInput.value = "";
   }
 
   if (!modelInput.value.trim() || modelInput.value.trim() === previousDefaults.model) {
@@ -1377,7 +1383,11 @@ providerSelect.addEventListener("change", () => {
 
   updateProviderHints(nextProvider);
   lastProvider = nextProvider;
-  clearApiTestStatus();
+  if (shouldClearApiKey) {
+    setApiTestStatus(t("apiKeyClearedOnProviderChange"));
+  } else {
+    clearApiTestStatus();
+  }
   markPending();
   void refreshHostAccessStatus().catch((error) => {
     console.error("Failed to refresh host access status after provider change:", error);
