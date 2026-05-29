@@ -621,12 +621,14 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
       keepButton.type = "button";
       keepButton.className = "button button--secondary button--compact";
       keepButton.textContent = t("keepButton");
+      keepButton.setAttribute("aria-describedby", popupActionStatus.id);
       keepButton.disabled = popupActionInFlight;
 
       const deleteButton = document.createElement("button");
       deleteButton.type = "button";
       deleteButton.className = "button button--danger button--compact";
       deleteButton.textContent = t("deleteButton");
+      deleteButton.setAttribute("aria-describedby", popupActionStatus.id);
       deleteButton.disabled = popupActionInFlight;
 
       const lockEntryActions = () => {

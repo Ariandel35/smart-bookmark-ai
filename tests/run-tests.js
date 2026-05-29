@@ -319,6 +319,8 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /modelAccessRequiredForUncachedPreview/);
   assert.match(popupSource, /async function createManualBackup\(\) \{\n  setPopupActionInFlight\(true, t\("popupCreatingBackupStatus"\)\);/);
   assert.match(popupSource, /async function cancelJob\(\) \{\n  setPopupActionInFlight\(true, t\("popupCancellingStatus"\)\);/);
+  assert.match(popupSource, /keepButton\.setAttribute\("aria-describedby", popupActionStatus\.id\)/);
+  assert.match(popupSource, /deleteButton\.setAttribute\("aria-describedby", popupActionStatus\.id\)/);
   assert.match(popupSource, /const lockEntryActions = \(\) => \{\n        keepButton\.disabled = true;\n        deleteButton\.disabled = true;/);
   assert.match(popupSource, /keepButton\.addEventListener\("click", \(\) => \{\n        lockEntryActions\(\);/);
   assert.match(popupSource, /deleteButton\.addEventListener\("click", \(\) => \{\n        lockEntryActions\(\);/);
