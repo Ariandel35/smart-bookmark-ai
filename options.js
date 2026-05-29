@@ -99,9 +99,15 @@ function mergeConfig(raw = {}) {
 
   return {
     provider,
-    baseUrl: typeof raw.baseUrl === "string" && raw.baseUrl.trim() ? raw.baseUrl.trim() : defaults.baseUrl,
+    baseUrl:
+      providerKnown && typeof raw.baseUrl === "string" && raw.baseUrl.trim()
+        ? raw.baseUrl.trim()
+        : defaults.baseUrl,
     apiKey: providerKnown && typeof raw.apiKey === "string" ? raw.apiKey : "",
-    model: typeof raw.model === "string" && raw.model.trim() ? raw.model.trim() : defaults.model,
+    model:
+      providerKnown && typeof raw.model === "string" && raw.model.trim()
+        ? raw.model.trim()
+        : defaults.model,
     batchSize: normalizeBatchSize(raw.batchSize, defaults.batchSize),
     linkCheckMode: normalizeLinkCheckMode(raw.linkCheckMode || defaults.linkCheckMode),
     autoOrganizeEnabled: Boolean(raw.autoOrganizeEnabled),

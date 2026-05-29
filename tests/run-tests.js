@@ -686,7 +686,9 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /showSettingsIssue/);
   assert.match(optionsSource, /isValidHttpUrl/);
   assert.match(optionsSource, /const providerKnown = Boolean\(raw\.provider && Providers\.hasProvider\(raw\.provider\)\)/);
+  assert.match(optionsSource, /baseUrl:\s*providerKnown && typeof raw\.baseUrl === "string"/);
   assert.match(optionsSource, /apiKey: providerKnown && typeof raw\.apiKey === "string" \? raw\.apiKey : ""/);
+  assert.match(optionsSource, /model:\s*providerKnown && typeof raw\.model === "string"/);
   assert.match(optionsSource, /t\("whitelistRemoveDomain", \{ domain \}\)/);
   assert.match(optionsSource, /button\.setAttribute\("aria-pressed", String\(isSelected\)\)/);
   assert.match(optionsSource, /const isSelected = selectedSet\.has\(item\.domain\)/);
@@ -769,7 +771,9 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(backgroundSource, /isValidHttpUrl/);
   assert.match(backgroundSource, /Base URL must be a valid http or https URL/);
   assert.match(backgroundSource, /const providerKnown = Boolean\(raw\.provider && Providers\.hasProvider\(raw\.provider\)\)/);
+  assert.match(backgroundSource, /baseUrl:\s*providerKnown && typeof raw\.baseUrl === "string"/);
   assert.match(backgroundSource, /apiKey: providerKnown && typeof raw\.apiKey === "string" \? raw\.apiKey\.trim\(\) : ""/);
+  assert.match(backgroundSource, /model:\s*providerKnown && typeof raw\.model === "string"/);
 
   assert.match(optionsSource, /pendingBackupAction/);
   assert.match(optionsSource, /backupActionInFlight/);
