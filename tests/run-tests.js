@@ -223,6 +223,10 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /renderResponseError/);
   assert.match(popupSource, /detail: response\?\.detail \|\| ""/);
   assert.match(popupSource, /currentStatus\?\.detail \|\|/);
+  assert.match(popupSource, /applyButton\.disabled = true/);
+  assert.match(popupSource, /cancelButton\.disabled = true/);
+  assert.match(popupSource, /startButton\.disabled = true;\n  backupButton\.disabled = true;\n  const granted = await ensureOrganizeAccess/);
+  assert.match(popupSource, /async function createManualBackup\(\) \{\n  startButton\.disabled = true;/);
   assert.doesNotMatch(popupSource, /START_ORGANIZE/);
   assert.doesNotMatch(popupSource, /window\.confirm/);
 

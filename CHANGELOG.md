@@ -10,6 +10,7 @@
 - Popup summary details now stay visible for non-error status messages such as invalidated previews
 - DeepSeek runs are capped to a safer runtime batch size before the first model request, then timeout retries can shrink again
 - Replaced blocking browser alert/confirm flows in popup and settings with inline confirmations and status messages
+- Popup actions now disable related controls immediately to avoid duplicate apply, preview, or backup requests
 - Backup create, restore, and delete actions now lock related controls while an operation is in flight
 - Settings now validate raw numeric input instead of silently clamping invalid batch sizes or automation intervals
 - Updated privacy, Chrome Web Store, README, locale, and visual materials to describe optional dead-link checks accurately

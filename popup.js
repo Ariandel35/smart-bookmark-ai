@@ -317,7 +317,10 @@ function createApplyConfirmationState() {
   applyButton.className = "button button--primary button--compact";
   applyButton.textContent = t("applyConfirmPrimary");
   applyButton.addEventListener("click", () => {
+    applyButton.disabled = true;
+    cancelButton.disabled = true;
     applyConfirmationVisible = false;
+    renderDetailPanelContent();
     startJob().catch((error) => {
       console.error("Failed to apply preview plan:", error);
       renderStatus({
@@ -700,6 +703,7 @@ async function startJob() {
 
 async function startPreview() {
   startButton.disabled = true;
+  backupButton.disabled = true;
   const granted = await ensureOrganizeAccess(currentConfig);
 
   if (!granted) {
@@ -738,6 +742,7 @@ async function handlePrimaryAction() {
 }
 
 async function createManualBackup() {
+  startButton.disabled = true;
   backupButton.disabled = true;
   const response = await chrome.runtime.sendMessage({ type: "CREATE_MANUAL_BACKUP" });
 
