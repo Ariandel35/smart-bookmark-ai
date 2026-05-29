@@ -160,6 +160,15 @@ textarea {
   flex: 1 1 auto;
 }
 
+.popup-action-status {
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.popup-action-status[hidden] {
+  display: none;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: 176px minmax(0, 1fr);

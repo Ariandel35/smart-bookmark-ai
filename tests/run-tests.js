@@ -276,6 +276,14 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /applyConfirmationVisible/);
   assert.match(popupSource, /popupActionInFlight/);
   assert.match(popupSource, /setPopupActionInFlight/);
+  assert.match(popupSource, /setPopupActionStatus/);
+  assert.match(popupSource, /popupCheckingCoverageStatus/);
+  assert.match(popupSource, /popupRequestingAccessStatus/);
+  assert.match(popupSource, /popupStartingPreviewStatus/);
+  assert.match(popupSource, /popupApplyingPlanStatus/);
+  assert.match(popupSource, /popupCreatingBackupStatus/);
+  assert.match(popupSource, /popupResolvingItemStatus/);
+  assert.match(popupSource, /popupCancellingStatus/);
   assert.match(popupSource, /startButton\.disabled = popupActionInFlight \|\| isRunning/);
   assert.match(popupSource, /backupButton\.disabled = popupActionInFlight \|\| isRunning/);
   assert.match(popupSource, /cancelButton\.disabled = popupActionInFlight \|\| !isRunning/);
@@ -292,8 +300,8 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /localRequirementCheckId: requirement\.checkId \|\| ""/);
   assert.match(popupSource, /requirement\.needsModel \|\| requirement\.requiresBroadHostAccess/);
   assert.match(popupSource, /modelAccessRequiredForUncachedPreview/);
-  assert.match(popupSource, /async function createManualBackup\(\) \{\n  setPopupActionInFlight\(true\);/);
-  assert.match(popupSource, /async function cancelJob\(\) \{\n  setPopupActionInFlight\(true\);/);
+  assert.match(popupSource, /async function createManualBackup\(\) \{\n  setPopupActionInFlight\(true, t\("popupCreatingBackupStatus"\)\);/);
+  assert.match(popupSource, /async function cancelJob\(\) \{\n  setPopupActionInFlight\(true, t\("popupCancellingStatus"\)\);/);
   assert.match(popupSource, /const lockEntryActions = \(\) => \{\n        keepButton\.disabled = true;\n        deleteButton\.disabled = true;/);
   assert.match(popupSource, /keepButton\.addEventListener\("click", \(\) => \{\n        lockEntryActions\(\);/);
   assert.match(popupSource, /deleteButton\.addEventListener\("click", \(\) => \{\n        lockEntryActions\(\);/);
@@ -301,12 +309,15 @@ function testPreviewApplySurface() {
   assert.doesNotMatch(popupSource, /window\.confirm/);
 
   const popupHtml = fs.readFileSync(path.join(ROOT_DIR, "popup.html"), "utf8");
+  assert.match(popupHtml, /id="popupActionStatus"/);
+  assert.match(popupHtml, /role="status"/);
   assert.match(popupHtml, /id="progressTrack"/);
   assert.match(popupHtml, /role="progressbar"/);
   assert.match(popupHtml, /data-i18n-aria-label="progressAriaLabel"/);
 
   const stylesSource = fs.readFileSync(path.join(ROOT_DIR, "styles.css"), "utf8");
   assert.match(stylesSource, /\.confirm-strip/);
+  assert.match(stylesSource, /\.popup-action-status/);
 }
 
 function testSlowModelResilienceSurface() {

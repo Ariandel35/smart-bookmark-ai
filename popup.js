@@ -24,6 +24,7 @@ const startButton = document.getElementById("startButton");
 const backupButton = document.getElementById("backupButton");
 const cancelButton = document.getElementById("cancelButton");
 const optionsButton = document.getElementById("optionsButton");
+const popupActionStatus = document.getElementById("popupActionStatus");
 
 let refreshTimer = null;
 let currentConfig = null;
@@ -216,8 +217,15 @@ function syncActionButtons() {
       : t("previewButton");
 }
 
-function setPopupActionInFlight(inFlight) {
+function setPopupActionStatus(message = "") {
+  const text = String(message || "").trim();
+  popupActionStatus.textContent = text;
+  popupActionStatus.hidden = !text;
+}
+
+function setPopupActionInFlight(inFlight, message = "") {
   popupActionInFlight = Boolean(inFlight);
+  setPopupActionStatus(popupActionInFlight ? message : "");
   syncActionButtons();
 }
 
@@ -719,7 +727,7 @@ async function refreshAll() {
 }
 
 async function startJob() {
-  setPopupActionInFlight(true);
+  setPopupActionInFlight(true, t("popupApplyingPlanStatus"));
 
   try {
     const response = await chrome.runtime.sendMessage({ type: "APPLY_PREVIEW_PLAN" });
@@ -737,7 +745,7 @@ async function startJob() {
 }
 
 async function startPreview() {
-  setPopupActionInFlight(true);
+  setPopupActionInFlight(true, t("popupCheckingCoverageStatus"));
 
   try {
     const requirement = await chrome.runtime.sendMessage({ type: "CHECK_LOCAL_MODEL_REQUIREMENT" });
@@ -761,6 +769,9 @@ async function startPreview() {
     }
 
     const shouldRequestAccess = requirement.needsModel || requirement.requiresBroadHostAccess;
+    if (shouldRequestAccess) {
+      setPopupActionStatus(t("popupRequestingAccessStatus"));
+    }
     const granted = shouldRequestAccess ? await ensureOrganizeAccess(currentConfig) : true;
 
     if (!granted) {
@@ -772,6 +783,7 @@ async function startPreview() {
       return;
     }
 
+    setPopupActionStatus(t("popupStartingPreviewStatus"));
     const response = await chrome.runtime.sendMessage({
       type: "START_PREVIEW",
       localRequirementCheckId: requirement.checkId || ""
@@ -805,7 +817,7 @@ async function handlePrimaryAction() {
 }
 
 async function createManualBackup() {
-  setPopupActionInFlight(true);
+  setPopupActionInFlight(true, t("popupCreatingBackupStatus"));
 
   try {
     const response = await chrome.runtime.sendMessage({ type: "CREATE_MANUAL_BACKUP" });
@@ -823,7 +835,7 @@ async function createManualBackup() {
 }
 
 async function resolveUnprocessedEntry(entryId, action) {
-  setPopupActionInFlight(true);
+  setPopupActionInFlight(true, t("popupResolvingItemStatus"));
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -845,7 +857,7 @@ async function resolveUnprocessedEntry(entryId, action) {
 }
 
 async function cancelJob() {
-  setPopupActionInFlight(true);
+  setPopupActionInFlight(true, t("popupCancellingStatus"));
 
   try {
     const response = await chrome.runtime.sendMessage({ type: "CANCEL_JOB" });
