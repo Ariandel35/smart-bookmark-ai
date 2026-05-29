@@ -364,8 +364,13 @@ function testPreviewApplySurface() {
 function testSlowModelResilienceSurface() {
   const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSource, /RUNTIME_BATCH_SIZE_CAPS/);
-  assert.match(backgroundSource, /deepseek: 8/);
+  assert.match(backgroundSource, /deepseek: 5/);
   assert.match(backgroundSource, /getRuntimeBatchSize/);
+  assert.match(backgroundSource, /FIRST_RESPONSE_TIMEOUT_CAPS_MS/);
+  assert.match(backgroundSource, /REQUEST_TIMEOUT_CAPS_MS/);
+  assert.match(backgroundSource, /getFirstResponseTimeoutMs/);
+  assert.match(backgroundSource, /getRequestTimeoutMs/);
+  assert.match(backgroundSource, /formatTimeoutSeconds/);
   assert.match(backgroundSource, /COMPACT_DEFAULT_PROMPT/);
   assert.match(backgroundSource, /buildModelStrategyPrompt/);
   assert.match(backgroundSource, /I18N\.isBuiltInPromptValue/);

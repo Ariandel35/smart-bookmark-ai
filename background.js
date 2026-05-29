@@ -31,7 +31,7 @@ const DEFAULT_BATCH_SIZE = 50;
 const MIN_BATCH_SIZE = 5;
 const MAX_AUTO_RETRY_BATCH_SIZE = 20;
 const RUNTIME_BATCH_SIZE_CAPS = {
-  deepseek: 8
+  deepseek: 5
 };
 const DEFAULT_DEAD_SCAN_BATCH_SIZE = 20;
 const DEFAULT_TAXONOMY_SAMPLE_SIZE = 160;
@@ -90,6 +90,12 @@ const DEAD_LINK_DELETE_STATUS_CODES = new Set([404, 410, 451]);
 const KEEP_ALIVE_INTERVAL_MS = 25_000;
 const FIRST_RESPONSE_TIMEOUT_MS = 25_000;
 const REQUEST_TIMEOUT_MS = 90_000;
+const FIRST_RESPONSE_TIMEOUT_CAPS_MS = {
+  deepseek: 15_000
+};
+const REQUEST_TIMEOUT_CAPS_MS = {
+  deepseek: 45_000
+};
 const NEXT_BATCH_DELAY_MS = 150;
 const MODEL_INPUT_TITLE_MAX_LENGTH = 120;
 const MODEL_INPUT_URL_MAX_LENGTH = 260;
@@ -457,7 +463,7 @@ function getProviderLabel(provider) {
 }
 
 function getDefaultBatchSize(provider) {
-  return provider === "deepseek" ? 8 : DEFAULT_BATCH_SIZE;
+  return provider === "deepseek" ? 5 : DEFAULT_BATCH_SIZE;
 }
 
 function getRuntimeBatchSize(config = {}) {
@@ -473,9 +479,23 @@ function buildRuntimeBatchAdjustmentNote(config = {}, runtimeBatchSize) {
   }
 
   return ux(
-    `${getProviderLabel(config.provider)} 本次运行已自动把批大小从 ${configuredBatchSize} 压到 ${runtimeBatchSize}，避免慢模型先撞 90 秒超时。`,
-    `${getProviderLabel(config.provider)} automatically capped this run from batch size ${configuredBatchSize} to ${runtimeBatchSize} to avoid hitting the 90-second timeout first.`
+    `${getProviderLabel(config.provider)} 本次运行已自动把批大小从 ${configuredBatchSize} 压到 ${runtimeBatchSize}，减少慢模型长时间等待。`,
+    `${getProviderLabel(config.provider)} automatically capped this run from batch size ${configuredBatchSize} to ${runtimeBatchSize} to reduce slow-model stalls.`
   );
+}
+
+function getFirstResponseTimeoutMs(config = {}) {
+  const cap = FIRST_RESPONSE_TIMEOUT_CAPS_MS[config.provider] || 0;
+  return cap ? Math.min(FIRST_RESPONSE_TIMEOUT_MS, cap) : FIRST_RESPONSE_TIMEOUT_MS;
+}
+
+function getRequestTimeoutMs(config = {}) {
+  const cap = REQUEST_TIMEOUT_CAPS_MS[config.provider] || 0;
+  return cap ? Math.min(REQUEST_TIMEOUT_MS, cap) : REQUEST_TIMEOUT_MS;
+}
+
+function formatTimeoutSeconds(milliseconds) {
+  return Math.max(1, Math.floor(milliseconds / 1000));
 }
 
 function getTaxonomyPlanningSampleSize(config = {}) {
@@ -1899,8 +1919,8 @@ async function processNextBatch() {
                 `Waiting for the model response for batch ${currentBatch}/${job.totalBatches}.`
               ),
               detail: ux(
-                "已启用后台 keep-alive 心跳。若模型 25 秒内没有返回响应，会主动超时并提示减小批大小或检查网络。",
-                "Keep-alive is active. If the model does not return a first response within 25 seconds, the task will time out and suggest reducing batch size or checking the network."
+                `已启用后台 keep-alive 心跳。若模型 ${formatTimeoutSeconds(getFirstResponseTimeoutMs(job.config))} 秒内没有返回响应，会主动超时并提示减小批大小或检查网络。`,
+                `Keep-alive is active. If the model does not return a first response within ${formatTimeoutSeconds(getFirstResponseTimeoutMs(job.config))} seconds, the task will time out and suggest reducing batch size or checking the network.`
               )
             })
         )
@@ -3869,6 +3889,8 @@ async function classifyBatchWithModel(
     mode: "organize",
     outputTokenBudget
   });
+  const firstResponseTimeoutMs = getFirstResponseTimeoutMs(config);
+  const requestTimeoutMs = getRequestTimeoutMs(config);
 
   activeAbortController = new AbortController();
   let abortReason = "";
@@ -3880,10 +3902,10 @@ async function classifyBatchWithModel(
   };
   const firstResponseTimer = setTimeout(() => {
     abortWithReason("first-response-timeout");
-  }, FIRST_RESPONSE_TIMEOUT_MS);
+  }, firstResponseTimeoutMs);
   const totalTimeoutTimer = setTimeout(() => {
     abortWithReason("request-timeout");
-  }, REQUEST_TIMEOUT_MS);
+  }, requestTimeoutMs);
 
   try {
     await reportStage({
@@ -3892,8 +3914,8 @@ async function classifyBatchWithModel(
         `Stage 1: sending a classification request for ${batch.length} bookmarks to the model.`
       ),
       detail: ux(
-        `请求地址：${truncate(requestSpec.endpoint, 90)}。输出预算 ${outputTokenBudget} tokens；如果 25 秒内没有收到响应，会主动停止并提示你减小批大小。`,
-        `Endpoint: ${truncate(requestSpec.endpoint, 90)}. Output budget: ${outputTokenBudget} tokens. If no response is received within 25 seconds, the request will stop and suggest reducing the batch size.`
+        `请求地址：${truncate(requestSpec.endpoint, 90)}。输出预算 ${outputTokenBudget} tokens；如果 ${formatTimeoutSeconds(firstResponseTimeoutMs)} 秒内没有收到响应，会主动停止并提示你减小批大小。`,
+        `Endpoint: ${truncate(requestSpec.endpoint, 90)}. Output budget: ${outputTokenBudget} tokens. If no response is received within ${formatTimeoutSeconds(firstResponseTimeoutMs)} seconds, the request will stop and suggest reducing the batch size.`
       )
     });
 
@@ -4540,7 +4562,7 @@ function isModelTimeoutError(error) {
   const text = [error?.message, error?.userMessage, error?.userDetail]
     .filter(Boolean)
     .join(" ");
-  return /first-response-timeout|request-timeout|25 秒|90 秒|within 25 seconds|within 90 seconds/i.test(text);
+  return /first-response-timeout|request-timeout|15 秒|25 秒|45 秒|90 秒|within 15 seconds|within 25 seconds|within 45 seconds|within 90 seconds/i.test(text);
 }
 
 async function retryCurrentBatchWithSmallerBatch(job, error) {
@@ -4874,16 +4896,18 @@ async function withKeepAlive(task, onHeartbeatStart = null) {
 
 function buildRequestAbortError(reason, config, batchLength) {
   const providerLabel = getProviderLabel(config.provider);
+  const firstResponseTimeoutSeconds = formatTimeoutSeconds(getFirstResponseTimeoutMs(config));
+  const requestTimeoutSeconds = formatTimeoutSeconds(getRequestTimeoutMs(config));
 
   if (reason === "first-response-timeout") {
     const error = buildUserFacingError(
       ux(
-        `${providerLabel} 在 ${Math.floor(FIRST_RESPONSE_TIMEOUT_MS / 1000)} 秒内没有返回响应，任务已提前停止。`,
-        `${providerLabel} did not return a response within ${Math.floor(FIRST_RESPONSE_TIMEOUT_MS / 1000)} seconds, so the task was stopped early.`
+        `${providerLabel} 在 ${firstResponseTimeoutSeconds} 秒内没有返回响应，任务已提前停止。`,
+        `${providerLabel} did not return a response within ${firstResponseTimeoutSeconds} seconds, so the task was stopped early.`
       ),
       ux(
-        `这通常意味着模型首包太慢，容易撞到 Chrome Manifest V3 后台生命周期限制。建议先把批大小调小到 10-20，再检查网络、Base URL 和模型负载。当前批量：${batchLength}。`,
-        `This usually means the first token was too slow and may hit Chrome Manifest V3 service worker lifetime limits. Try reducing the batch size to 10-20 first, then check the network, Base URL, and model load. Current batch size: ${batchLength}.`
+        `这通常意味着模型首包太慢，容易撞到 Chrome Manifest V3 后台生命周期限制。建议先把批大小调小到 5-10，再检查网络、Base URL 和模型负载。当前批量：${batchLength}。`,
+        `This usually means the first token was too slow and may hit Chrome Manifest V3 service worker lifetime limits. Try reducing the batch size to 5-10 first, then check the network, Base URL, and model load. Current batch size: ${batchLength}.`
       ),
       reason
     );
@@ -4894,8 +4918,8 @@ function buildRequestAbortError(reason, config, batchLength) {
   if (reason === "request-timeout") {
     const error = buildUserFacingError(
       ux(
-        `${providerLabel} 请求超过 ${Math.floor(REQUEST_TIMEOUT_MS / 1000)} 秒仍未完成，任务已停止。`,
-        `${providerLabel} did not finish within ${Math.floor(REQUEST_TIMEOUT_MS / 1000)} seconds, so the task was stopped.`
+        `${providerLabel} 请求超过 ${requestTimeoutSeconds} 秒仍未完成，任务已停止。`,
+        `${providerLabel} did not finish within ${requestTimeoutSeconds} seconds, so the task was stopped.`
       ),
       ux(
         `模型虽然可能已经开始处理，但完整响应仍然过慢。建议减小批大小、换更快的模型，或确认接口没有卡在排队状态。当前批量：${batchLength}。`,
