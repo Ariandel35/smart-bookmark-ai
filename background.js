@@ -667,6 +667,10 @@ function buildHostOriginPattern(rawUrl) {
   }
 }
 
+function isValidHttpUrl(rawUrl) {
+  return Boolean(buildHostOriginPattern(rawUrl));
+}
+
 async function hasBroadHostAccess() {
   try {
     return await chrome.permissions.contains({ origins: HOST_ACCESS_ORIGINS });
@@ -678,7 +682,7 @@ async function hasBroadHostAccess() {
 async function hasOriginAccess(rawUrl) {
   const originPattern = buildHostOriginPattern(rawUrl);
   if (!originPattern) {
-    return true;
+    return false;
   }
 
   if (await hasBroadHostAccess()) {
@@ -2628,6 +2632,15 @@ function validateConfig(config, options = {}) {
 
   if (!config.baseUrl) {
     throw new Error(ux("Base URL 不能为空。", "Base URL is required."));
+  }
+
+  if (!isValidHttpUrl(config.baseUrl)) {
+    throw new Error(
+      ux(
+        "Base URL 必须是有效的 http 或 https 地址。",
+        "Base URL must be a valid http or https URL."
+      )
+    );
   }
 
   if (!config.model) {

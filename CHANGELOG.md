@@ -71,6 +71,7 @@
 - Settings load failures now show a clear inline fallback message when defaults are displayed
 - Settings save failures now show a clear inline error instead of leaving the page in a saving state
 - Test & Save now distinguishes a successful API test from a later settings-save failure
+- Settings and popup setup checks now reject invalid Base URLs before permission checks or model requests
 - Backup create, restore, and delete actions now lock related controls while an operation is in flight
 - Settings now validate raw numeric input instead of silently clamping invalid batch sizes or automation intervals
 - Updated privacy, Chrome Web Store, README, locale, and visual materials to describe optional dead-link checks accurately

@@ -518,6 +518,10 @@ function buildOriginPattern(rawUrl) {
   }
 }
 
+function isValidHttpUrl(rawUrl) {
+  return Boolean(buildOriginPattern(rawUrl));
+}
+
 async function hasBroadHostAccess() {
   try {
     return await chrome.permissions.contains({ origins: HOST_ACCESS_ORIGINS });
@@ -529,7 +533,7 @@ async function hasBroadHostAccess() {
 async function hasOriginAccess(rawUrl) {
   const originPattern = buildOriginPattern(rawUrl);
   if (!originPattern) {
-    return true;
+    return false;
   }
 
   if (await hasBroadHostAccess()) {
@@ -558,7 +562,7 @@ async function ensureBroadHostAccess() {
 async function ensureOriginAccess(rawUrl) {
   const originPattern = buildOriginPattern(rawUrl);
   if (!originPattern) {
-    return true;
+    return false;
   }
 
   if (await hasOriginAccess(rawUrl)) {
@@ -579,6 +583,14 @@ async function refreshHostAccessStatus() {
   if (!config.baseUrl) {
     hostAccessCheckingInFlight = false;
     setHostAccessStatus(t("baseUrlRequired"), false);
+    grantAccessButton.textContent = t("hostAccessButton");
+    grantAccessButton.dataset.granted = "false";
+    updateSettingsOperationControls();
+    return;
+  }
+  if (!isValidHttpUrl(config.baseUrl)) {
+    hostAccessCheckingInFlight = false;
+    setHostAccessStatus(t("baseUrlInvalid"), false);
     grantAccessButton.textContent = t("hostAccessButton");
     grantAccessButton.dataset.granted = "false";
     updateSettingsOperationControls();
@@ -1036,6 +1048,10 @@ async function saveConfig(event) {
     showSettingsIssue(t("baseUrlRequired"), "connection", "baseUrl");
     return;
   }
+  if (!isValidHttpUrl(config.baseUrl)) {
+    showSettingsIssue(t("baseUrlInvalid"), "connection", "baseUrl");
+    return;
+  }
 
   if (!config.model) {
     showSettingsIssue(t("modelRequired"), "connection", "model");
@@ -1105,6 +1121,10 @@ async function testApiConnection() {
 
   if (!config.baseUrl) {
     showApiTestIssue(t("baseUrlRequired"), "baseUrl");
+    return;
+  }
+  if (!isValidHttpUrl(config.baseUrl)) {
+    showApiTestIssue(t("baseUrlInvalid"), "baseUrl");
     return;
   }
 
@@ -1289,6 +1309,11 @@ async function requestHostAccess() {
   const config = collectFormData();
   if (!config.baseUrl) {
     showSettingsIssue(t("baseUrlRequired"), "connection", "baseUrl");
+    await refreshHostAccessStatus();
+    return;
+  }
+  if (!isValidHttpUrl(config.baseUrl)) {
+    showSettingsIssue(t("baseUrlInvalid"), "connection", "baseUrl");
     await refreshHostAccessStatus();
     return;
   }

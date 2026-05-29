@@ -81,10 +81,14 @@ function buildOriginPattern(rawUrl) {
   }
 }
 
+function isValidHttpUrl(rawUrl) {
+  return Boolean(buildOriginPattern(rawUrl));
+}
+
 async function hasOriginAccess(rawUrl) {
   const originPattern = buildOriginPattern(rawUrl);
   if (!originPattern) {
-    return true;
+    return false;
   }
 
   if (await hasBroadHostAccess()) {
@@ -113,7 +117,7 @@ async function ensureBroadHostAccess() {
 async function ensureOriginAccess(rawUrl) {
   const originPattern = buildOriginPattern(rawUrl);
   if (!originPattern) {
-    return true;
+    return false;
   }
 
   if (await hasOriginAccess(rawUrl)) {
@@ -185,6 +189,10 @@ function hasPreviewAttemptConfig(config) {
     return false;
   }
 
+  if (!isValidHttpUrl(config.baseUrl)) {
+    return false;
+  }
+
   return true;
 }
 
@@ -204,6 +212,10 @@ function getSetupProblem(config) {
 
   if (!config?.baseUrl) {
     return t("setupMissingBaseUrl");
+  }
+
+  if (!isValidHttpUrl(config.baseUrl)) {
+    return t("setupInvalidBaseUrl");
   }
 
   if (!config?.model) {

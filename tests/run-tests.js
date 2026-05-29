@@ -451,6 +451,8 @@ function testSpeedModeSurface() {
   const popupSource = fs.readFileSync(path.join(ROOT_DIR, "popup.js"), "utf8");
   assert.match(popupSource, /ensureOrganizeAccess/);
   assert.match(popupSource, /ensureOriginAccess/);
+  assert.match(popupSource, /isValidHttpUrl/);
+  assert.match(popupSource, /setupInvalidBaseUrl/);
   assert.match(popupSource, /LINK_CHECK_MODE_COMPLETE/);
 
   const localeDescription = JSON.parse(
@@ -592,8 +594,10 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /backupTitle: "备份管理"/);
   assert.match(i18nSource, /setupRequiredDesc: "预览前需要先选择服务商，并填写 Base URL 和模型名称。"/);
   assert.match(i18nSource, /setupMissingProvider: "请先选择服务商。"/);
+  assert.match(i18nSource, /setupInvalidBaseUrl: "Base URL 必须是有效的 http 或 https 地址。"/);
   assert.match(i18nSource, /setupMissingModel: "预览前需要填写模型名称。"/);
   assert.match(i18nSource, /setupMissingApiKey: "当前服务商需要 API Key。"/);
+  assert.match(i18nSource, /baseUrlInvalid: "Base URL 必须是有效的 http 或 https 地址。"/);
   assert.match(i18nSource, /modelRequired: "模型名称不能为空。"/);
   assert.match(i18nSource, /privacyStorageDesc: "API Key、服务商设置、模型名、白名单和备份快照都保存在你的浏览器本地存储与 IndexedDB 中。"/);
 
@@ -676,6 +680,7 @@ function testOptionsBackupInlineConfirmationSurface() {
 
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
   assert.match(optionsSource, /showSettingsIssue/);
+  assert.match(optionsSource, /isValidHttpUrl/);
   assert.match(optionsSource, /t\("whitelistRemoveDomain", \{ domain \}\)/);
   assert.match(optionsSource, /button\.setAttribute\("aria-pressed", String\(isSelected\)\)/);
   assert.match(optionsSource, /const isSelected = selectedSet\.has\(item\.domain\)/);
@@ -721,6 +726,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /batchSize: parseIntegerInput\(batchSizeInput\.value\)/);
   assert.match(optionsSource, /autoOrganizeIntervalHours: parseIntegerInput\(autoOrganizeIntervalInput\.value\)/);
   assert.match(optionsSource, /if \(!config\.baseUrl\) \{[\s\S]*setHostAccessStatus/);
+  assert.match(optionsSource, /setHostAccessStatus\(t\("baseUrlInvalid"\), false\)/);
   assert.match(optionsSource, /hostAccessRefreshVersion/);
   assert.match(optionsSource, /const refreshVersion = \+\+hostAccessRefreshVersion/);
   assert.match(optionsSource, /hostAccessCheckingInFlight = true/);
@@ -728,11 +734,13 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /hostAccessChecking/);
   assert.match(optionsSource, /refreshVersion !== hostAccessRefreshVersion/);
   assert.match(optionsSource, /showSettingsIssue\(t\("baseUrlRequired"\), "connection", "baseUrl"\)/);
+  assert.match(optionsSource, /showSettingsIssue\(t\("baseUrlInvalid"\), "connection", "baseUrl"\)/);
   assert.match(optionsSource, /showSettingsIssue\(t\("modelRequired"\), "connection", "model"\)/);
   assert.match(optionsSource, /showSettingsIssue\(t\("batchSizeValidation"\), "organize", "batchSize"\)/);
   assert.match(optionsSource, /showSettingsIssue\(t\("autoIntervalValidation"\), "automation", "autoOrganizeIntervalHours"\)/);
   assert.match(optionsSource, /showSettingsIssue\(t\("requiredApiKey", \{ provider: defaults\.label \}\), "connection", "apiKey"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("baseUrlRequired"\), "baseUrl"\)/);
+  assert.match(optionsSource, /showApiTestIssue\(t\("baseUrlInvalid"\), "baseUrl"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("modelRequired"\), "model"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("requiredApiKey", \{ provider: defaults\.label \}\), "apiKey"\)/);
   assert.match(optionsSource, /targetId === "baseUrl" \|\| targetId === "linkCheckMode"/);
@@ -742,6 +750,11 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /Failed to refresh host access status after config load failure/);
   assert.match(optionsSource, /Failed to refresh host access status after provider change/);
   assert.match(optionsSource, /providerSelect\.addEventListener\("change"[\s\S]*markPending\(\);[\s\S]*refreshHostAccessStatus/);
+
+  const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
+  assert.match(backgroundSource, /isValidHttpUrl/);
+  assert.match(backgroundSource, /Base URL must be a valid http or https URL/);
+
   assert.match(optionsSource, /pendingBackupAction/);
   assert.match(optionsSource, /backupActionInFlight/);
   assert.match(optionsSource, /getBackupRecordAccessibleName/);

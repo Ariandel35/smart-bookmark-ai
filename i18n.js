@@ -295,6 +295,7 @@ Hard rules:
         "Provider, Base URL, and model are required before preview.",
       setupMissingProvider: "Choose a provider first.",
       setupMissingBaseUrl: "Base URL is required before preview.",
+      setupInvalidBaseUrl: "Base URL must be a valid http or https URL.",
       setupMissingModel: "Model is required before preview.",
       setupMissingApiKey: "API key is required for this provider.",
       modelAccessRequiredForUncachedPreview:
@@ -343,6 +344,7 @@ Hard rules:
       autoOrganizePermission:
         "Auto organize requires access to the selected API endpoint. Complete link checks also require website access.",
       baseUrlRequired: "Base URL is required.",
+      baseUrlInvalid: "Base URL must be a valid http or https URL.",
       modelRequired: "Model Name is required.",
       currentApiAccessMissing: "No access to the current API origin.",
       hostAccessChecking: "Checking access…",
@@ -550,6 +552,7 @@ Hard rules:
       setupRequiredDesc: "预览前需要先选择服务商，并填写 Base URL 和模型名称。",
       setupMissingProvider: "请先选择服务商。",
       setupMissingBaseUrl: "预览前需要填写 Base URL。",
+      setupInvalidBaseUrl: "Base URL 必须是有效的 http 或 https 地址。",
       setupMissingModel: "预览前需要填写模型名称。",
       setupMissingApiKey: "当前服务商需要 API Key。",
       modelAccessRequiredForUncachedPreview:
@@ -595,6 +598,7 @@ Hard rules:
       requiredApiKey: "{provider} 通常需要 API Key，请先填写。",
       autoOrganizePermission: "自动整理需要访问当前模型接口；完整链接检查还需要网站访问权限。",
       baseUrlRequired: "Base URL 不能为空。",
+      baseUrlInvalid: "Base URL 必须是有效的 http 或 https 地址。",
       modelRequired: "模型名称不能为空。",
       currentApiAccessMissing: "未授权访问当前 API 地址。",
       hostAccessChecking: "正在检查访问权限…",
