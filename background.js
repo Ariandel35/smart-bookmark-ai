@@ -2614,7 +2614,7 @@ function validateConfig(config, options = {}) {
   }
 
   if (!config.model) {
-    throw new Error(ux("Model Name 不能为空。", "Model Name is required."));
+    throw new Error(ux("模型名称不能为空。", "Model Name is required."));
   }
 
   if (!Number.isInteger(config.batchSize) || config.batchSize < 5 || config.batchSize > 100) {

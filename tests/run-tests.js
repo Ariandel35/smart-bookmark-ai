@@ -276,6 +276,8 @@ function testPreviewApplySurface() {
   assert.match(backgroundSource, /rejectApplyPreviewPlan/);
   assert.match(backgroundSource, /Preview plans are tied to the provider/);
   assert.match(backgroundSource, /Marko detected that the bookmark set no longer matches the preview/);
+  assert.match(backgroundSource, /ux\("模型名称不能为空。", "Model Name is required\."\)/);
+  assert.doesNotMatch(backgroundSource, /ux\("Model Name 不能为空。"/);
   assert.match(backgroundSource, /getBookmarkById/);
   assert.match(backgroundSource, /Stale unprocessed record removed/);
   assert.match(backgroundSource, /existingBookmark\.id/);
