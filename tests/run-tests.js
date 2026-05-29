@@ -326,6 +326,9 @@ function testPreviewApplySurface() {
   assert.doesNotMatch(popupSource, /window\.confirm/);
 
   const popupHtml = fs.readFileSync(path.join(ROOT_DIR, "popup.html"), "utf8");
+  assert.match(popupHtml, /id="startButton"[\s\S]*aria-describedby="popupActionStatus"/);
+  assert.match(popupHtml, /id="backupButton"[\s\S]*aria-describedby="popupActionStatus"/);
+  assert.match(popupHtml, /id="cancelButton"[\s\S]*aria-describedby="popupActionStatus"/);
   assert.match(popupHtml, /id="phaseBadge"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*aria-atomic="true"/);
   assert.match(popupHtml, /id="popupActionStatus"/);
   assert.match(popupHtml, /role="status"/);

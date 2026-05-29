@@ -14,6 +14,7 @@
 - Popup actions now disable related controls immediately to avoid duplicate apply, preview, or backup requests
 - Popup preflight actions now stay locked through refreshes while checks, permission prompts, or cancellation requests are in progress
 - Popup preflight, backup, cancel, and unprocessed-item actions now show inline in-progress feedback while controls are locked
+- Popup primary, backup, and cancel buttons are now explicitly associated with the inline action status text
 - Cancellation requests now persist in job status so the popup keeps the cancel button locked after the request is accepted
 - Popup apply confirmation now moves focus to the inline confirmation and returns focus to the primary action when dismissed
 - Popup setup and permission errors now include an inline settings shortcut instead of only relying on the header button
