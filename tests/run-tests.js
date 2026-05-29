@@ -153,6 +153,19 @@ function testSpeedModeSurface() {
   assert.match(popupSource, /ensureOrganizeAccess/);
   assert.match(popupSource, /ensureOriginAccess/);
   assert.match(popupSource, /LINK_CHECK_MODE_COMPLETE/);
+
+  const localeDescription = JSON.parse(
+    fs.readFileSync(path.join(ROOT_DIR, "_locales/en/messages.json"), "utf8")
+  ).extDescription.message;
+  assert.match(localeDescription, /optional dead-link checks/);
+
+  const storeListing = fs.readFileSync(path.join(ROOT_DIR, "webstore/STORE_LISTING.md"), "utf8");
+  assert.match(storeListing, /Fast mode/);
+  assert.match(storeListing, /Complete mode/);
+
+  const privacyPolicy = fs.readFileSync(path.join(ROOT_DIR, "PRIVACY.md"), "utf8");
+  assert.match(privacyPolicy, /Fast mode skips dead-link checks/);
+  assert.match(privacyPolicy, /Complete link checks/);
 }
 
 function testI18nCoverage() {

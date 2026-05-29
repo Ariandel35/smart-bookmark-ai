@@ -8,9 +8,9 @@
   <text x="110" y="246" fill="#131713" font-family="Arial, sans-serif" font-size="38" font-weight="700">bookmark</text>
   <text x="110" y="296" fill="#131713" font-family="Arial, sans-serif" font-size="38" font-weight="700">libraries.</text>
 
-  <text x="110" y="350" fill="#667065" font-family="Arial, sans-serif" font-size="18">Backup first, detect dead links,</text>
-  <text x="110" y="378" fill="#667065" font-family="Arial, sans-serif" font-size="18">remove duplicates, then rebuild</text>
-  <text x="110" y="406" fill="#667065" font-family="Arial, sans-serif" font-size="18">a simpler structure at root.</text>
+  <text x="110" y="350" fill="#667065" font-family="Arial, sans-serif" font-size="18">Backup first, optionally check</text>
+  <text x="110" y="378" fill="#667065" font-family="Arial, sans-serif" font-size="18">links in Complete mode,</text>
+  <text x="110" y="406" fill="#667065" font-family="Arial, sans-serif" font-size="18">then rebuild at root.</text>
 
   <rect x="110" y="446" width="172" height="48" rx="24" fill="#1F6D53"/>
   <text x="149" y="477" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="20" font-weight="700">Chrome MV3</text>

@@ -14,8 +14,8 @@
   <text x="88" y="240" fill="#667065" font-family="Arial, sans-serif" font-size="15">before touching anything.</text>
 
   <text x="306" y="150" fill="#1F6D53" font-family="Arial, sans-serif" font-size="16" font-weight="700">02</text>
-  <text x="306" y="184" fill="#131713" font-family="Arial, sans-serif" font-size="24" font-weight="700">Scan</text>
-  <text x="306" y="216" fill="#667065" font-family="Arial, sans-serif" font-size="15">Check clearly dead links</text>
+  <text x="306" y="184" fill="#131713" font-family="Arial, sans-serif" font-size="24" font-weight="700">Check</text>
+  <text x="306" y="216" fill="#667065" font-family="Arial, sans-serif" font-size="15">Optionally scan dead links</text>
   <text x="306" y="240" fill="#667065" font-family="Arial, sans-serif" font-size="15">and flag uncertain items.</text>
 
   <text x="524" y="150" fill="#1F6D53" font-family="Arial, sans-serif" font-size="16" font-weight="700">03</text>

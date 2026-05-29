@@ -136,7 +136,7 @@ Core files:
 - Bookmark titles, URLs, current paths, prompts, API settings, caches, and backups stay in local browser storage unless you start an organize run.
 - During organize or auto organize, bookmark metadata is sent only to the model provider you configured.
 - API keys are stored locally and are never sent to this project or its developer.
-- Dead-link checks connect directly to bookmarked websites.
+- Complete link checks connect directly to bookmarked websites; Fast mode skips those checks.
 - Snapshot backups are local and can be restored or deleted from the settings page.
 
 Read the full policy in [PRIVACY.md](PRIVACY.md).

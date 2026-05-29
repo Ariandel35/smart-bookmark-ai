@@ -3,7 +3,7 @@
     "message": "Marko"
   },
   "extDescription": {
-    "message": "先预览并清理重复与失效链接，再用你自己的 AI 模型重建更清爽的书签结构。"
+    "message": "先预览，再用你自己的 AI 模型整理书签，支持备份、重复清理和可选失效链接检测。"
   },
   "actionTitle": {
     "message": "Marko"

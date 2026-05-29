@@ -3,7 +3,7 @@
     "message": "Marko"
   },
   "extDescription": {
-    "message": "Preview, clean duplicates and dead links, then rebuild a simpler bookmark structure with your own AI model."
+    "message": "Preview and organize Chrome bookmarks with your own AI model, backups, duplicate cleanup, and optional dead-link checks."
   },
   "actionTitle": {
     "message": "Marko"

@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- No unreleased changes yet
+- Added Fast and Complete speed modes so users can choose quicker, lower-permission organizing or full dead-link checks
+- Reduced popup and settings permission requests in Fast mode to the configured model API origin
+- Updated privacy, Chrome Web Store, README, locale, and visual materials to describe optional dead-link checks accurately
 
 ## 3.0.0 - 2026-05-08
 
