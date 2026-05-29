@@ -188,7 +188,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         console.error("Failed to apply preview plan:", error);
         sendResponse({
           ok: false,
-          error: toUserMessage(error, ux("应用预览方案失败。", "Failed to apply the preview plan."))
+          error: toUserMessage(error, ux("应用预览方案失败。", "Failed to apply the preview plan.")),
+          detail: error?.userDetail || ""
         });
       }
       return;
@@ -929,6 +930,10 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
       error: ux(
         "已经有一个后台整理任务在运行，请先等待完成或取消后再试。",
         "A background organize task is already running. Wait for it to finish or cancel it first."
+      ),
+      detail: ux(
+        "当前任务结束后，弹窗会自动刷新最新状态；如果任务卡住，可以先取消再重新预览。",
+        "The popup will refresh when the current task finishes. If it is stuck, cancel it first and generate a new preview."
       )
     };
   }
@@ -1860,37 +1865,46 @@ async function applyPreviewPlan() {
 
   const previewPlan = stored[STORAGE_KEYS.previewPlan];
   if (!isUsablePreviewPlan(previewPlan)) {
-    return {
-      ok: false,
-      error: ux(
+    return rejectApplyPreviewPlan(
+      ux(
         "没有可应用的预览方案，请先重新生成预览。",
         "There is no preview plan to apply. Generate a new preview first."
+      ),
+      ux(
+        "预览方案只保存在本地浏览器中；重新打开或清理扩展数据后，需要先点击预览整理。",
+        "Preview plans are stored locally in this browser. If extension data was cleared or no preview exists, run Preview first."
       )
-    };
+    );
   }
 
   const config = await readStoredConfig();
   const configSignature = buildPreviewConfigSignature(config);
   if (configSignature !== previewPlan.configSignature) {
-    return {
-      ok: false,
-      error: ux(
+    return rejectApplyPreviewPlan(
+      ux(
         "整理设置已变化，请重新生成预览后再应用。",
         "The organize settings changed. Generate a new preview before applying it."
+      ),
+      ux(
+        "预览方案只对生成时的模型、批大小、速度模式、规则和 Prompt 有效，避免用旧方案覆盖新设置。",
+        "Preview plans are tied to the provider, batch size, speed mode, rules, and prompt used when they were generated, so old plans are not applied over new settings."
       )
-    };
+    );
   }
 
   const bookmarkState = await collectBookmarkPlanningState(config);
   const sourceBookmarkSignature = buildBookmarkSetSignature(bookmarkState.bookmarks);
   if (sourceBookmarkSignature !== previewPlan.sourceBookmarkSignature) {
-    return {
-      ok: false,
-      error: ux(
+    return rejectApplyPreviewPlan(
+      ux(
         "书签内容已变化，请重新生成预览后再应用。",
         "Bookmarks changed since the preview was generated. Generate a new preview before applying it."
+      ),
+      ux(
+        "Marko 检测到当前待整理书签集合和预览时不同，为避免误删或错放，会要求重新生成方案。",
+        "Marko detected that the bookmark set no longer matches the preview. To avoid deleting or placing the wrong items, it requires a fresh plan."
       )
-    };
+    );
   }
 
   const snapshotInfo = await createCurrentSnapshotBackup(bookmarkState.bookmarkBarNode, "manual");
@@ -2029,9 +2043,30 @@ async function applyPreviewPlan() {
     await chrome.storage.local.remove(STORAGE_KEYS.job);
     return {
       ok: false,
-      error: toUserMessage(error, ux("应用预览方案失败。", "Failed to apply the preview plan."))
+      error: toUserMessage(error, ux("应用预览方案失败。", "Failed to apply the preview plan.")),
+      detail:
+        error?.userDetail ||
+        ux(
+          "任务已停止。预览方案仍保留，你可以修复问题后重试；如果书签已发生变化，请重新生成预览。",
+          "The task has stopped. The preview plan is still kept so you can retry after fixing the issue. If bookmarks changed, generate a new preview."
+        )
     };
   }
+}
+
+async function rejectApplyPreviewPlan(error, detail) {
+  await updateStatus({
+    phase: "error",
+    message: error,
+    detail,
+    finishedAt: new Date().toISOString()
+  });
+
+  return {
+    ok: false,
+    error,
+    detail
+  };
 }
 
 async function savePreviewPlan(job, previewFolders) {

@@ -208,11 +208,16 @@ function testPreviewApplySurface() {
   assert.match(backgroundSource, /savePreviewPlan/);
   assert.match(backgroundSource, /buildBookmarkSetSignature/);
   assert.match(backgroundSource, /does not call the model again/);
+  assert.match(backgroundSource, /rejectApplyPreviewPlan/);
+  assert.match(backgroundSource, /Preview plans are tied to the provider/);
+  assert.match(backgroundSource, /Marko detected that the bookmark set no longer matches the preview/);
 
   const popupSource = fs.readFileSync(path.join(ROOT_DIR, "popup.js"), "utf8");
   assert.match(popupSource, /APPLY_PREVIEW_PLAN/);
   assert.match(popupSource, /applyConfirmationVisible/);
   assert.match(popupSource, /createApplyConfirmationState/);
+  assert.match(popupSource, /renderResponseError/);
+  assert.match(popupSource, /detail: response\?\.detail \|\| ""/);
   assert.doesNotMatch(popupSource, /START_ORGANIZE/);
   assert.doesNotMatch(popupSource, /window\.confirm/);
 

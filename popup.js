@@ -644,6 +644,16 @@ function renderDetailPanelContent() {
   detailPanel.replaceChildren(renderMainDetail());
 }
 
+function renderResponseError(response, fallbackMessage) {
+  renderStatus({
+    ...(currentStatus || {}),
+    phase: "error",
+    message: response?.error || fallbackMessage,
+    detail: response?.detail || ""
+  });
+  renderDetailPanelContent();
+}
+
 async function refreshDetailPanel() {
   const requestVersion = ++detailRequestVersion;
 
@@ -680,12 +690,7 @@ async function startJob() {
 
   if (!response?.ok) {
     await refreshAll();
-    renderStatus({
-      ...(currentStatus || {}),
-      phase: "error",
-      message: response?.error || t("startJobFailed")
-    });
-    renderDetailPanelContent();
+    renderResponseError(response, t("startJobFailed"));
     return;
   }
 
@@ -698,13 +703,10 @@ async function startPreview() {
 
   if (!granted) {
     await refreshAll();
-    renderStatus({
-      ...(currentStatus || {}),
-      phase: "error",
-      message: t("hostPermissionRequiredTitle"),
-      detail: t("hostPermissionRequiredDetail")
-    });
-    renderDetailPanelContent();
+    renderResponseError(
+      { error: t("hostPermissionRequiredTitle"), detail: t("hostPermissionRequiredDetail") },
+      t("hostPermissionRequiredTitle")
+    );
     return;
   }
 
@@ -712,12 +714,7 @@ async function startPreview() {
 
   if (!response?.ok) {
     await refreshAll();
-    renderStatus({
-      ...(currentStatus || {}),
-      phase: "error",
-      message: response?.error || t("previewStartFailed")
-    });
-    renderDetailPanelContent();
+    renderResponseError(response, t("previewStartFailed"));
     return;
   }
 
@@ -745,12 +742,7 @@ async function createManualBackup() {
 
   if (!response?.ok) {
     await refreshAll();
-    renderStatus({
-      ...(currentStatus || {}),
-      phase: "error",
-      message: response?.error || t("createBackupFailed")
-    });
-    renderDetailPanelContent();
+    renderResponseError(response, t("createBackupFailed"));
     return;
   }
 
@@ -766,12 +758,7 @@ async function resolveUnprocessedEntry(entryId, action) {
 
   if (!response?.ok) {
     await refreshAll();
-    renderStatus({
-      ...(currentStatus || {}),
-      phase: "error",
-      message: response?.error || t("resolveUnprocessedFailed")
-    });
-    renderDetailPanelContent();
+    renderResponseError(response, t("resolveUnprocessedFailed"));
     return;
   }
 
