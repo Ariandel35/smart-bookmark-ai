@@ -171,6 +171,49 @@ function collectI18nKeysFromFiles() {
   return keys;
 }
 
+function collectHtmlAttributeValues(source, attributeName) {
+  const values = [];
+  const pattern = new RegExp(`\\s${attributeName}="([^"]+)"`, "g");
+  for (const match of source.matchAll(pattern)) {
+    values.push(match[1]);
+  }
+  return values;
+}
+
+function testHtmlRelationshipIntegrity() {
+  for (const file of ["popup.html", "options.html", "privacy.html"]) {
+    const source = fs.readFileSync(path.join(ROOT_DIR, file), "utf8");
+    const ids = new Set();
+
+    for (const id of collectHtmlAttributeValues(source, "id")) {
+      assert.equal(ids.has(id), false, `${file} has duplicate id "${id}"`);
+      ids.add(id);
+    }
+
+    for (const attributeName of ["aria-describedby", "aria-labelledby", "aria-controls"]) {
+      for (const value of collectHtmlAttributeValues(source, attributeName)) {
+        for (const referencedId of value.trim().split(/\s+/).filter(Boolean)) {
+          assert.equal(
+            ids.has(referencedId),
+            true,
+            `${file} ${attributeName} references missing id "${referencedId}"`
+          );
+        }
+      }
+    }
+
+    for (const attributeName of ["for", "form"]) {
+      for (const referencedId of collectHtmlAttributeValues(source, attributeName)) {
+        assert.equal(
+          ids.has(referencedId),
+          true,
+          `${file} ${attributeName} references missing id "${referencedId}"`
+        );
+      }
+    }
+  }
+}
+
 function testStaticExtensionAssets() {
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "manifest.json"), "utf8"));
   assert.equal(manifest.manifest_version, 3);
@@ -665,6 +708,7 @@ function main() {
   testProviderOutputTokenBudgets();
   testRules();
   testCacheUtils();
+  testHtmlRelationshipIntegrity();
   testStaticExtensionAssets();
   testSpeedModeSurface();
   testPreviewApplySurface();

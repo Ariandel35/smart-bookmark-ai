@@ -38,6 +38,7 @@
 - Webstore privacy policy now matches the Fast/Complete mode data-flow disclosures used in the README and review notes
 - Webstore provider lists now include MiniMax so store copy matches the actual provider registry and README
 - Background configuration errors now use the same Chinese model-name wording as the settings UI
+- Static UI checks now verify unique HTML IDs and valid label, form, and ARIA element references
 - Settings validation errors now move focus to the affected field and mark it for assistive technologies
 - Invalid settings fields now show a visible error border and soft error background
 - Invalid settings action buttons now show the same visible error treatment as invalid fields
