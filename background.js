@@ -2274,8 +2274,8 @@ async function applyPreviewPlan() {
         "The organize settings changed. Generate a new preview before applying it."
       ),
       ux(
-        "预览方案只对生成时的模型、批大小、速度模式、规则和 Prompt 有效，避免用旧方案覆盖新设置。",
-        "Preview plans are tied to the provider, batch size, speed mode, rules, and prompt used when they were generated, so old plans are not applied over new settings."
+        "预览方案只对生成时的服务商、模型、速度模式、规则和 Prompt 有效，避免用旧方案覆盖新设置。",
+        "Preview plans are tied to the provider, model, speed mode, rules, and prompt used when they were generated, so old plans are not applied over new settings."
       )
     );
   }
@@ -2308,7 +2308,7 @@ async function applyPreviewPlan() {
 
   const startedAt = new Date().toISOString();
   const total = Number.isFinite(previewPlan.total) ? previewPlan.total : bookmarkState.bookmarks.length;
-  const batchSize = normalizeBatchSize(previewPlan.batchSize, config.batchSize);
+  const batchSize = normalizePreviewPlanBatchSize(previewPlan.batchSize, config.batchSize);
   const totalBatches = Number.isFinite(previewPlan.totalBatches)
     ? previewPlan.totalBatches
     : Math.max(1, Math.ceil(total / batchSize));
@@ -4671,6 +4671,15 @@ function normalizeBatchSize(rawValue, fallback = DEFAULT_BATCH_SIZE) {
   }
 
   return Math.min(100, Math.max(MIN_BATCH_SIZE, parsed));
+}
+
+function normalizePreviewPlanBatchSize(rawValue, fallback = DEFAULT_BATCH_SIZE) {
+  const parsed = Number.parseInt(String(rawValue ?? ""), 10);
+  if (!Number.isFinite(parsed)) {
+    return normalizeBatchSize(fallback);
+  }
+
+  return Math.min(100, Math.max(MIN_AUTO_RETRY_BATCH_SIZE, parsed));
 }
 
 function normalizeLinkCheckMode(rawValue) {

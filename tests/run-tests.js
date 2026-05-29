@@ -482,7 +482,10 @@ function testPreviewApplySurface() {
   assert.match(backgroundSource, /onChildrenReordered\?\.addListener\(invalidatePreviewAfterBookmarkChange\)/);
   assert.match(backgroundSource, /rejectApplyPreviewPlan/);
   assert.match(backgroundSource, /Preview plans are tied to the provider/);
+  assert.doesNotMatch(backgroundSource, /Preview plans are tied to the provider, batch size/);
   assert.match(backgroundSource, /Marko detected that the bookmark set no longer matches the preview/);
+  assert.match(backgroundSource, /normalizePreviewPlanBatchSize/);
+  assert.match(backgroundSource, /const batchSize = normalizePreviewPlanBatchSize\(previewPlan\.batchSize, config\.batchSize\)/);
   assert.match(backgroundSource, /ux\("模型名称不能为空。", "Model Name is required\."\)/);
   assert.doesNotMatch(backgroundSource, /ux\("Model Name 不能为空。"/);
   assert.match(backgroundSource, /getBookmarkById/);

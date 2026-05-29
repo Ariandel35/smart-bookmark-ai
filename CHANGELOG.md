@@ -10,6 +10,7 @@
 - Popup summary details now stay visible for non-error status messages such as invalidated previews
 - DeepSeek runtime batch size is capped to five bookmarks per model request and uses shorter response timeouts before timeout retries shrink again
 - Slow-model timeout retries can now split the current run below the saved batch size down to one-bookmark mini-batches, and DeepSeek uses a tighter output budget to reduce response latency
+- Applying a preview generated after slow-model mini-batch retries now preserves the preview's runtime batch display instead of clamping it back to the saved setting
 - Model requests now use a compact built-in strategy prompt plus compact bookmark titles, URLs, paths, JSON payloads, and output budgets to reduce slow-provider latency
 - Replaced blocking browser alert/confirm flows in popup and settings with inline confirmations and status messages
 - Popup actions now disable related controls immediately to avoid duplicate apply, preview, or backup requests
