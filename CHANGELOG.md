@@ -25,6 +25,7 @@
 - Backup restore/delete confirmations now move focus into the inline confirmation and return it to the matching action when dismissed
 - Settings validation errors now move focus to the affected field and mark it for assistive technologies
 - Invalid settings fields now show a visible error border and soft error background
+- Settings buttons, speed-mode hints, and whitelist status text are now explicitly associated with their related controls
 - Fast mode now finishes locally when rules and the classification cache cover every bookmark, skipping model calls and batch scheduling
 - Preview now checks local rule/cache coverage before asking for API keys or model endpoint access
 - Preview startup now reuses the fresh local coverage check when possible instead of scanning bookmarks and cache twice

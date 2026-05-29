@@ -185,7 +185,12 @@
 
                   <div class="field field--inline-actions">
                     <div class="field__toolbar">
-                      <button class="button button--secondary button--compact" type="button" id="testApiButton">
+                      <button
+                        class="button button--secondary button--compact"
+                        type="button"
+                        id="testApiButton"
+                        aria-describedby="apiTestStatus"
+                      >
                         <span data-i18n="testApiButton">Test & Save</span>
                       </button>
                       <span class="status-text field__status" id="apiTestStatus" aria-live="polite" hidden></span>
@@ -194,7 +199,12 @@
 
                   <div class="field field--inline-actions">
                     <div class="field__toolbar">
-                      <button class="button button--ghost button--compact" type="button" id="grantAccessButton">
+                      <button
+                        class="button button--ghost button--compact"
+                        type="button"
+                        id="grantAccessButton"
+                        aria-describedby="hostAccessStatus"
+                      >
                         <span data-i18n="hostAccessButton">Grant Access</span>
                       </button>
                       <span class="status-text field__status" id="hostAccessStatus" aria-live="polite"></span>
@@ -236,11 +246,11 @@
 
                   <div class="field">
                     <label for="linkCheckMode" data-i18n="labelLinkCheckMode">Speed Mode</label>
-                    <select id="linkCheckMode" name="linkCheckMode">
+                    <select id="linkCheckMode" name="linkCheckMode" aria-describedby="linkCheckModeHint">
                       <option value="fast" data-i18n="linkCheckFast">Fast</option>
                       <option value="complete" data-i18n="linkCheckComplete">Complete</option>
                     </select>
-                    <p class="field__hint" data-i18n="hintLinkCheckMode">
+                    <p class="field__hint" id="linkCheckModeHint" data-i18n="hintLinkCheckMode">
                       Fast skips dead-link checks and the separate taxonomy plan. Complete checks links and plans the global taxonomy first.
                     </p>
                   </div>
@@ -248,12 +258,18 @@
                   <div class="field field--full">
                     <div class="field__toolbar">
                       <label for="whitelistSearch" data-i18n="labelWhitelistDomains">Whitelist Websites</label>
-                      <span class="field__status" id="whitelistSelectionStatus"></span>
+                      <span
+                        class="field__status"
+                        id="whitelistSelectionStatus"
+                        role="status"
+                        aria-live="polite"
+                      ></span>
                     </div>
                     <input
                       id="whitelistSearch"
                       name="whitelistSearch"
                       type="search"
+                      aria-describedby="whitelistSelectionStatus"
                       data-i18n-placeholder="placeholderWhitelistSearch"
                       placeholder="Search websites"
                     />

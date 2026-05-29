@@ -397,6 +397,12 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="backupActionStatus"/);
   assert.match(optionsHtml, /id="settingsActionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.match(optionsHtml, /id="backupActionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
+  assert.match(optionsHtml, /id="testApiButton"[\s\S]*aria-describedby="apiTestStatus"/);
+  assert.match(optionsHtml, /id="grantAccessButton"[\s\S]*aria-describedby="hostAccessStatus"/);
+  assert.match(optionsHtml, /id="linkCheckMode"[\s\S]*aria-describedby="linkCheckModeHint"/);
+  assert.match(optionsHtml, /id="linkCheckModeHint"[\s\S]*data-i18n="hintLinkCheckMode"/);
+  assert.match(optionsHtml, /id="whitelistSelectionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
+  assert.match(optionsHtml, /id="whitelistSearch"[\s\S]*aria-describedby="whitelistSelectionStatus"/);
   assert.match(optionsHtml, /id="saveButton"/);
 
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
