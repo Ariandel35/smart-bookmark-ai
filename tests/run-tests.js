@@ -273,10 +273,19 @@ function testOptionsBackupInlineConfirmationSurface() {
   const optionsHtml = fs.readFileSync(path.join(ROOT_DIR, "options.html"), "utf8");
   assert.match(optionsHtml, /id="settingsActionStatus"/);
   assert.match(optionsHtml, /id="backupActionStatus"/);
+  assert.match(optionsHtml, /id="saveButton"/);
 
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
   assert.match(optionsSource, /showSettingsIssue/);
   assert.match(optionsSource, /setSettingsActionStatus/);
+  assert.match(optionsSource, /settingsActionInFlight/);
+  assert.match(optionsSource, /setSettingsActionInFlight/);
+  assert.match(optionsSource, /settingsFields\.forEach/);
+  assert.match(optionsSource, /saveButton\.disabled = settingsActionInFlight/);
+  assert.match(optionsSource, /testApiButton\.disabled = settingsActionInFlight/);
+  assert.match(optionsSource, /resetButton\.disabled = settingsActionInFlight/);
+  assert.match(optionsSource, /grantAccessButton\.disabled = settingsActionInFlight \|\| granted/);
+  assert.match(optionsSource, /if \(settingsActionInFlight\) \{\n    return;\n  \}/);
   assert.match(optionsSource, /parseIntegerInput/);
   assert.match(optionsSource, /batchSize: parseIntegerInput\(batchSizeInput\.value\)/);
   assert.match(optionsSource, /autoOrganizeIntervalHours: parseIntegerInput\(autoOrganizeIntervalInput\.value\)/);

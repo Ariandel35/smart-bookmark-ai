@@ -11,6 +11,7 @@ const LINK_CHECK_MODE_FAST = "fast";
 const LINK_CHECK_MODE_COMPLETE = "complete";
 
 const form = document.getElementById("settingsForm");
+const settingsFields = Array.from(form.querySelectorAll("input, select, textarea"));
 const providerSelect = document.getElementById("provider");
 const baseUrlInput = document.getElementById("baseUrl");
 const apiKeyInput = document.getElementById("apiKey");
@@ -32,6 +33,7 @@ const apiTestStatus = document.getElementById("apiTestStatus");
 const hostAccessStatus = document.getElementById("hostAccessStatus");
 const settingsActionStatus = document.getElementById("settingsActionStatus");
 const saveBadge = document.getElementById("saveBadge");
+const saveButton = document.getElementById("saveButton");
 const testApiButton = document.getElementById("testApiButton");
 const grantAccessButton = document.getElementById("grantAccessButton");
 const resetButton = document.getElementById("resetButton");
@@ -50,6 +52,7 @@ let whitelistCatalogLoaded = false;
 let currentBackupRecords = [];
 let pendingBackupAction = null;
 let backupActionInFlight = false;
+let settingsActionInFlight = false;
 
 I18N.applyDocument(document);
 renderProviderOptions();
@@ -376,6 +379,22 @@ function clearApiTestStatus() {
   setApiTestStatus("");
 }
 
+function updateSettingsOperationControls() {
+  const granted = grantAccessButton.dataset.granted === "true";
+  settingsFields.forEach((field) => {
+    field.disabled = settingsActionInFlight;
+  });
+  saveButton.disabled = settingsActionInFlight;
+  testApiButton.disabled = settingsActionInFlight;
+  resetButton.disabled = settingsActionInFlight;
+  grantAccessButton.disabled = settingsActionInFlight || granted;
+}
+
+function setSettingsActionInFlight(isInFlight) {
+  settingsActionInFlight = Boolean(isInFlight);
+  updateSettingsOperationControls();
+}
+
 function setHostAccessStatus(message = "", isGranted = false) {
   hostAccessStatus.textContent = message;
   hostAccessStatus.hidden = !message;
@@ -481,7 +500,8 @@ async function refreshHostAccessStatus() {
   if (!config.baseUrl) {
     setHostAccessStatus(t("baseUrlRequired"), false);
     grantAccessButton.textContent = t("hostAccessButton");
-    grantAccessButton.disabled = false;
+    grantAccessButton.dataset.granted = "false";
+    updateSettingsOperationControls();
     return;
   }
 
@@ -494,7 +514,8 @@ async function refreshHostAccessStatus() {
     granted
   );
   grantAccessButton.textContent = granted ? t("hostAccessGrantedButton") : t("hostAccessButton");
-  grantAccessButton.disabled = granted;
+  grantAccessButton.dataset.granted = String(granted);
+  updateSettingsOperationControls();
 }
 
 function populateForm(config) {
@@ -797,6 +818,10 @@ function createBackupInlineConfirm(record, action) {
 
 async function saveConfig(event) {
   event.preventDefault();
+  if (settingsActionInFlight) {
+    return;
+  }
+
   const config = collectFormData();
   const defaults = getDefaults(config.provider);
 
@@ -829,18 +854,26 @@ async function saveConfig(event) {
     return;
   }
 
-  if (config.autoOrganizeEnabled) {
-    const granted = shouldRequireBroadHostAccess(config)
-      ? await ensureBroadHostAccess()
-      : await ensureOriginAccess(config.baseUrl);
-    await refreshHostAccessStatus();
-    if (!granted) {
-      showSettingsIssue(t("autoOrganizePermission"), "automation");
-      return;
+  setSettingsActionInFlight(true);
+  try {
+    if (config.autoOrganizeEnabled) {
+      const granted = shouldRequireBroadHostAccess(config)
+        ? await ensureBroadHostAccess()
+        : await ensureOriginAccess(config.baseUrl);
+      await refreshHostAccessStatus();
+      if (!granted) {
+        showSettingsIssue(t("autoOrganizePermission"), "automation");
+        return;
+      }
     }
-  }
 
-  await saveConfigData(config);
+    await saveConfigData(config);
+  } finally {
+    setSettingsActionInFlight(false);
+    await refreshHostAccessStatus().catch((error) => {
+      console.error("Failed to refresh host access status after saving settings:", error);
+    });
+  }
 }
 
 async function saveConfigData(config) {
@@ -850,6 +883,10 @@ async function saveConfigData(config) {
 }
 
 async function testApiConnection() {
+  if (settingsActionInFlight) {
+    return;
+  }
+
   const config = collectFormData();
   const defaults = getDefaults(config.provider);
 
@@ -871,18 +908,18 @@ async function testApiConnection() {
     return;
   }
 
-  const granted = await ensureOriginAccess(config.baseUrl);
-  await refreshHostAccessStatus();
-  if (!granted) {
-    setActiveSection("connection");
-    setApiTestStatus(t("currentApiAccessMissing"), true);
-    return;
-  }
-
-  testApiButton.disabled = true;
+  setSettingsActionInFlight(true);
   setApiTestStatus(t("apiTesting"));
 
   try {
+    const granted = await ensureOriginAccess(config.baseUrl);
+    await refreshHostAccessStatus();
+    if (!granted) {
+      setActiveSection("connection");
+      setApiTestStatus(t("currentApiAccessMissing"), true);
+      return;
+    }
+
     const response = await chrome.runtime.sendMessage({
       type: "TEST_API_CONNECTION",
       config
@@ -906,7 +943,10 @@ async function testApiConnection() {
     console.error("Failed to test API connection:", error);
     setApiTestStatus(t("apiTestException"), true);
   } finally {
-    testApiButton.disabled = false;
+    setSettingsActionInFlight(false);
+    await refreshHostAccessStatus().catch((error) => {
+      console.error("Failed to refresh host access status after testing API:", error);
+    });
   }
 }
 
@@ -1002,6 +1042,10 @@ async function deleteBackupEntry(backupId) {
 }
 
 function resetCurrentProviderDefaults() {
+  if (settingsActionInFlight) {
+    return;
+  }
+
   const provider = providerSelect.value;
   const config = buildDefaultConfig(provider);
   populateForm(config);
@@ -1012,6 +1056,10 @@ function resetCurrentProviderDefaults() {
 }
 
 async function requestHostAccess() {
+  if (settingsActionInFlight) {
+    return;
+  }
+
   const config = collectFormData();
   if (!config.baseUrl) {
     showSettingsIssue(t("baseUrlRequired"), "connection");
@@ -1019,12 +1067,20 @@ async function requestHostAccess() {
     return;
   }
 
-  const granted = shouldRequireBroadHostAccess(config)
-    ? await ensureBroadHostAccess()
-    : await ensureOriginAccess(config.baseUrl);
-  await refreshHostAccessStatus();
-  if (!granted) {
-    showSettingsIssue(t("hostAccessMissingAlert"), "connection");
+  setSettingsActionInFlight(true);
+  try {
+    const granted = shouldRequireBroadHostAccess(config)
+      ? await ensureBroadHostAccess()
+      : await ensureOriginAccess(config.baseUrl);
+    await refreshHostAccessStatus();
+    if (!granted) {
+      showSettingsIssue(t("hostAccessMissingAlert"), "connection");
+    }
+  } finally {
+    setSettingsActionInFlight(false);
+    await refreshHostAccessStatus().catch((error) => {
+      console.error("Failed to refresh host access status after requesting access:", error);
+    });
   }
 }
 
