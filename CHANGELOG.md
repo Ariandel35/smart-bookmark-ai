@@ -77,6 +77,7 @@
 - Settings now disables the access grant button while access checks are still in flight
 - Settings now debounces API access checks after Base URL or speed-mode edits so the displayed authorization state follows the current endpoint
 - Settings load now keeps the saved configuration visible when backup-list or access-status refreshes fail, and reports those secondary failures inline
+- Backup list refreshes now clear stale backup error text once the list loads successfully again
 - Resetting provider defaults and fallback settings now refresh access status immediately instead of leaving stale endpoint state visible
 - Saving auto-organize settings now marks the Save badge as failed when required access is denied
 - Debounced settings access checks now invalidate any older in-flight check immediately when endpoint fields change

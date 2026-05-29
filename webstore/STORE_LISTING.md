@@ -23,6 +23,7 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 应用预览遇到可恢复失败时，可修复后直接重试保存方案
 - 弹窗和设置页使用页面内确认与错误提示，避免浏览器原生弹窗打断流程
 - 设置页会把连接配置加载和备份/权限状态刷新分开处理，局部刷新失败不会覆盖已保存配置
+- 备份列表恢复加载后会清除过期错误提示，状态显示更一致
 - 支持中英文界面，可根据浏览器语言自动切换
 - 先预览，再确认执行，减少误整理风险
 - 可选扫描明显失效链接，分类前清理重复入口
@@ -64,6 +65,7 @@ Key features:
 - Recoverable apply failures keep the saved preview retry path available after the issue is fixed
 - Popup and settings actions use inline confirmations and validation feedback instead of browser dialogs
 - Settings load keeps saved connection fields visible even when backup or permission status refreshes fail
+- Recovered backup-list refreshes clear stale error text for more consistent status feedback
 - English and Simplified Chinese interface support
 - Preview-first organize flow to reduce mistakes
 - Optional dead-link cleanup and conservative duplicate removal before AI classification

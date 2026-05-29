@@ -16,6 +16,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 弹窗应用方案、备份恢复/删除和设置校验都改成页面内确认与状态提示，不再弹出浏览器原生对话框
 - 恢复备份前会先为当前书签创建新的本地快照，并在清理旧备份时保留正在恢复的备份记录
 - 设置页加载时，即使备份列表或权限状态刷新失败，也会保留已读取的连接配置并在对应区域提示错误
+- 备份列表重新加载成功后会清除之前的过期错误提示，避免成功列表和旧错误同时显示
 - 批大小和自动整理间隔会校验原始输入，避免非法数值被静默改写
 - 整理规则页默认只保留常用项，高级规则收起到 Advanced
 - 优化中英文标签、状态文案、间距、颜色和移动端表单表现
@@ -41,6 +42,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Popup apply, backup restore/delete, and settings validation now use inline confirmations and status messages instead of browser dialogs
 - Backup restore now creates a fresh local snapshot of the current bookmarks first and preserves the selected backup while retention cleanup runs
 - Settings load keeps the saved connection visible even if backup-list or access-status refreshes fail, then reports those secondary failures inline
+- Successful backup-list refreshes now clear stale backup error text instead of showing a recovered list beside an old error
 - Batch size and auto interval fields validate raw input instead of silently clamping invalid values
 - Everyday organization rules stay visible while advanced rules are collapsed
 - Refined bilingual labels, status copy, spacing, colors, and responsive form behavior

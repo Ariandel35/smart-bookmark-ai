@@ -840,6 +840,9 @@ function testOptionsBackupInlineConfirmationSurface() {
 
   assert.match(optionsSource, /pendingBackupAction/);
   assert.match(optionsSource, /backupActionInFlight/);
+  assert.match(optionsSource, /clearBackupErrorStatus/);
+  assert.match(optionsSource, /if \(backupActionStatus\.classList\.contains\("is-error"\)\) \{/);
+  assert.match(optionsSource, /setBackupActionStatus\(""\)/);
   assert.match(optionsSource, /function renderBackupLoadFailure\(message\)/);
   assert.match(optionsSource, /getBackupRecordAccessibleName/);
   assert.match(optionsSource, /restoreButton\.setAttribute\("aria-label", t\("backupRestoreRecordAria", \{ title: backupName \}\)\)/);
@@ -921,6 +924,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /raw numeric input/);
   assert.match(changelog, /fresh pre-restore snapshot/);
   assert.match(changelog, /keeps the saved configuration visible/);
+  assert.match(changelog, /clear stale backup error text/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run package:webstore/);
   assert.match(readme, /restoring creates a fresh local snapshot first/);
@@ -942,6 +946,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /inline confirmations and status messages/);
   assert.match(releaseNotes, /creates a fresh local snapshot/);
   assert.match(releaseNotes, /keeps the saved connection visible/);
+  assert.match(releaseNotes, /clear stale backup error text/);
   assert.match(releaseNotes, /silently clamping invalid values/);
 
   const historicalReleaseNotes = fs.readFileSync(
@@ -963,6 +968,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /inline confirmations and validation feedback/);
   assert.match(storeListing, /fresh pre-restore snapshot/);
   assert.match(storeListing, /keeps saved connection fields visible/);
+  assert.match(storeListing, /clear stale error text/);
   assert.match(storeListing, /Popup inline apply confirmation/);
   assert.match(storeListing, /Backup management with inline restore confirmation/);
 

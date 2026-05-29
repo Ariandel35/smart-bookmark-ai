@@ -863,6 +863,7 @@ async function refreshBackupStatus() {
 
   const records = Array.isArray(response.records) ? response.records : [];
   currentBackupRecords = records;
+  clearBackupErrorStatus();
   if (!records.length) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
@@ -874,6 +875,12 @@ async function refreshBackupStatus() {
 
   renderBackupRecords(records);
   setBackupBadge(t("backupRatio", { count: records.length }), "success");
+}
+
+function clearBackupErrorStatus() {
+  if (backupActionStatus.classList.contains("is-error")) {
+    setBackupActionStatus("");
+  }
 }
 
 function renderBackupLoadFailure(message) {
