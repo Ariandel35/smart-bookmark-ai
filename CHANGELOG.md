@@ -15,6 +15,7 @@
 - Preview now checks local rule/cache coverage before asking for API keys or model endpoint access
 - Preview startup now reuses the fresh local coverage check when possible instead of scanning bookmarks and cache twice
 - Unprocessed-item keep/delete actions now lock together immediately to avoid duplicate handling requests
+- Stale unprocessed records are now cleared cleanly when the underlying bookmark was already removed
 - Backup create, restore, and delete actions now lock related controls while an operation is in flight
 - Settings now validate raw numeric input instead of silently clamping invalid batch sizes or automation intervals
 - Updated privacy, Chrome Web Store, README, locale, and visual materials to describe optional dead-link checks accurately

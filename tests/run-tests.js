@@ -215,6 +215,9 @@ function testPreviewApplySurface() {
   assert.match(backgroundSource, /rejectApplyPreviewPlan/);
   assert.match(backgroundSource, /Preview plans are tied to the provider/);
   assert.match(backgroundSource, /Marko detected that the bookmark set no longer matches the preview/);
+  assert.match(backgroundSource, /getBookmarkById/);
+  assert.match(backgroundSource, /Stale unprocessed record removed/);
+  assert.match(backgroundSource, /existingBookmark\.id/);
 
   const popupSource = fs.readFileSync(path.join(ROOT_DIR, "popup.js"), "utf8");
   assert.match(popupSource, /APPLY_PREVIEW_PLAN/);

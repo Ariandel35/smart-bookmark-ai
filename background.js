@@ -1687,15 +1687,23 @@ async function resolveUnprocessedEntry(entryId, action) {
   let detail = "";
 
   if (targetEntry.bookmarkId) {
-    if (action === "delete") {
-      await removeBookmarkIfExists(targetEntry.bookmarkId);
+    const existingBookmark = await getBookmarkById(targetEntry.bookmarkId);
+
+    if (!existingBookmark) {
+      message = ux("已移除过期未处理记录。", "Stale unprocessed record removed.");
+      detail = ux(
+        `书签《${targetEntry.title || targetEntry.url}》已经不存在，已从未处理列表移除。`,
+        `"${targetEntry.title || targetEntry.url}" no longer exists, so it was removed from the unprocessed list.`
+      );
+    } else if (action === "delete") {
+      await removeBookmarkIfExists(existingBookmark.id);
       deletedItems = appendLimitedEntries(deletedItems, [
         buildLogEntry(
           "manual_deleted",
           {
-            id: targetEntry.bookmarkId,
-            title: targetEntry.title,
-            url: targetEntry.url
+            id: existingBookmark.id,
+            title: existingBookmark.title || targetEntry.title,
+            url: existingBookmark.url || targetEntry.url
           },
           ux("用户已在未处理列表中手动删除这条书签。", "This bookmark was manually deleted from the unprocessed list."),
           ux("如果之后仍然需要，可以手动重新添加。", "If you still need it later, you can add it again manually.")
@@ -1710,7 +1718,7 @@ async function resolveUnprocessedEntry(entryId, action) {
       const tree = await chrome.bookmarks.getTree();
       const bookmarkBarNode = findBookmarksBarNode(tree);
       const unresolvedFolderId = await ensureUnresolvedFolder(bookmarkBarNode.id);
-      await chrome.bookmarks.move(targetEntry.bookmarkId, { parentId: unresolvedFolderId });
+      await chrome.bookmarks.move(existingBookmark.id, { parentId: unresolvedFolderId });
       message = ux("已保留书签。", "Bookmark kept.");
       detail = ux(
         `书签《${targetEntry.title || targetEntry.url}》已移动到根目录的“${MANUAL_FOLDER_TITLE}”文件夹。`,
@@ -4367,6 +4375,19 @@ async function removeBookmarkIfExists(bookmarkId) {
     await chrome.bookmarks.remove(bookmarkId);
   } catch (error) {
     // Ignore if the bookmark has already been removed or moved.
+  }
+}
+
+async function getBookmarkById(bookmarkId) {
+  if (!bookmarkId) {
+    return null;
+  }
+
+  try {
+    const nodes = await chrome.bookmarks.get(bookmarkId);
+    return nodes?.[0] || null;
+  } catch (error) {
+    return null;
   }
 }
 
