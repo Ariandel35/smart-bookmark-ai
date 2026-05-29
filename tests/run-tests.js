@@ -470,10 +470,13 @@ function testSpeedModeSurface() {
   assert.match(privacyPolicy, /when you start organize or when enabled auto organize runs/);
   assert.match(privacyPolicy, /Fast mode skips dead-link checks and the separate taxonomy-planning model request/);
   assert.match(privacyPolicy, /Complete mode can send HEAD \/ GET requests directly to bookmarked websites/);
+  assert.match(privacyPolicy, /before restoring an older backup/);
+  assert.match(privacyPolicy, /pre-restore snapshots/);
 
   const privacyHtml = fs.readFileSync(path.join(ROOT_DIR, "privacy.html"), "utf8");
   assert.match(privacyHtml, /separate taxonomy-planning request/);
   assert.match(privacyHtml, /Fast mode skips both extras/);
+  assert.match(privacyHtml, /before restoring an older backup/);
 }
 
 function testPreviewApplySurface() {
@@ -629,6 +632,7 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /baseUrlInvalid: "Base URL 必须是有效的 http 或 https 地址。"/);
   assert.match(i18nSource, /modelRequired: "模型名称不能为空。"/);
   assert.match(i18nSource, /privacyStorageDesc: "API Key、服务商设置、模型名、白名单和备份快照都保存在你的浏览器本地存储与 IndexedDB 中。"/);
+  assert.match(i18nSource, /privacyBackupDesc: "整理前和恢复旧备份前都会先创建本地快照备份。你可以在设置页管理备份并恢复旧版本。"/);
 
   const backgroundSourceForCancel = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSourceForCancel, /cancelRequested: true/);
@@ -984,6 +988,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(webstorePrivacyPolicy, /完整模式还会在分类前生成全局目录方案/);
   assert.match(webstorePrivacyPolicy, /快速模式会跳过失效链接检测和单独目录规划请求/);
   assert.match(webstorePrivacyPolicy, /完整模式会直接访问书签对应的网站/);
+  assert.match(webstorePrivacyPolicy, /恢复旧备份前也会先为当前书签状态创建本地快照/);
 
   const publishChecklist = fs.readFileSync(
     path.join(ROOT_DIR, "webstore/PUBLISH_CHECKLIST.md"),

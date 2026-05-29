@@ -15,7 +15,7 @@ Marko only processes data needed to organize bookmarks.
 - To check whether bookmarked links are clearly dead when Complete link checks are enabled
 - To send bookmark context to the model provider you choose for classification
 - To generate preview plans and, in Complete mode, stable taxonomy suggestions before a full rebuild
-- To create a local snapshot backup before reorganizing bookmarks
+- To create local snapshot backups before reorganizing bookmarks and before restoring an older backup
 - To render progress, delete logs, and unprocessed items in the UI
 
 ## Where data is sent
@@ -27,7 +27,7 @@ Marko only processes data needed to organize bookmarks.
 ## Local storage
 
 - API keys and extension settings are stored in `chrome.storage.local`
-- Local snapshot backups are stored in IndexedDB
+- Local snapshot backups, including pre-restore snapshots, are stored in IndexedDB
 - Classification cache and dead-link cache are stored locally to speed up future runs
 - The extension developer does not operate a relay server for user data
 
@@ -37,7 +37,7 @@ Marko only processes data needed to organize bookmarks.
 - You can choose Fast mode for fewer requests, fewer permissions, and faster previews, or Complete mode for link checks and global planning before classification
 - You can turn off auto organize
 - You can whitelist domains
-- You can delete or restore backups
+- You can delete backups or restore older versions; restoring first creates a fresh local snapshot of the current bookmark state when there is anything to preserve
 - You can revoke API endpoint and website access permissions in Chrome at any time
 
 ## Contact

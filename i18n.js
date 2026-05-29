@@ -393,7 +393,7 @@ Hard rules:
         "Whitelisted domains are not reorganized automatically. Uncertain bookmarks are placed in the manual review folder.",
       privacyBackupTitle: "Backup and restore",
       privacyBackupDesc:
-        "A local snapshot backup is created before organizing. You can manage backups and restore older versions from the settings page.",
+        "A local snapshot backup is created before organizing and before restoring an older backup. You can manage backups and restore older versions from the settings page.",
       defaultPrompt: DEFAULT_PROMPT_EN,
       legacyDefaultPrompt: LEGACY_DEFAULT_PROMPT_ZH
     },
@@ -643,7 +643,7 @@ Hard rules:
       privacyWhitelistTitle: "白名单与待手动分类",
       privacyWhitelistDesc: "白名单域名不会被自动整理；状态不明确的书签会进入“待手动分类”。",
       privacyBackupTitle: "备份与恢复",
-      privacyBackupDesc: "整理前会先创建本地快照备份。你可以在设置页管理备份并恢复旧版本。",
+      privacyBackupDesc: "整理前和恢复旧备份前都会先创建本地快照备份。你可以在设置页管理备份并恢复旧版本。",
       defaultPrompt: DEFAULT_PROMPT_ZH,
       legacyDefaultPrompt: LEGACY_DEFAULT_PROMPT_ZH
     }
