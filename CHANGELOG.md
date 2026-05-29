@@ -46,6 +46,7 @@
 - Default webstore package output is now explicitly ignored so generated upload ZIPs are not accidentally committed
 - Test coverage now runs syntax checks across every JavaScript and MJS source file
 - Webstore package builder now fails clearly when `--out` is provided without an output path
+- Added standard `npm test` and `npm run package:webstore` entrypoints for release checks and upload package builds
 - Settings validation errors now move focus to the affected field and mark it for assistive technologies
 - Invalid settings fields now show a visible error border and soft error background
 - Invalid settings action buttons now show the same visible error treatment as invalid fields

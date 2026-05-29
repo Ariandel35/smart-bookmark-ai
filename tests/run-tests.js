@@ -241,8 +241,16 @@ function testHtmlRelationshipIntegrity() {
 
 function testStaticExtensionAssets() {
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "manifest.json"), "utf8"));
+  const packageJson = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "package.json"), "utf8"));
   assert.equal(manifest.manifest_version, 3);
   assert.equal(manifest.version, "3.0.0");
+  assert.equal(packageJson.name, "marko");
+  assert.equal(packageJson.version, manifest.version);
+  assert.equal(packageJson.private, true);
+  assert.equal(packageJson.scripts?.test, "node tests/run-tests.js");
+  assert.equal(packageJson.scripts?.["package:webstore"], "node webstore/build_extension_package.mjs");
+  assert.equal(packageJson.dependencies, undefined);
+  assert.equal(packageJson.devDependencies, undefined);
 
   assert.deepEqual(manifest.permissions, ["bookmarks", "storage", "alarms"]);
   assert.deepEqual(manifest.optional_host_permissions, ["https://*/*", "http://*/*"]);
@@ -797,10 +805,16 @@ function testResponsiveTextHardeningSurface() {
 
 function testReleaseMaterialsCurrent() {
   const changelog = fs.readFileSync(path.join(ROOT_DIR, "CHANGELOG.md"), "utf8");
+  const readme = fs.readFileSync(path.join(ROOT_DIR, "README.md"), "utf8");
+  const readmeZh = fs.readFileSync(path.join(ROOT_DIR, "README.zh-CN.md"), "utf8");
   assert.match(changelog, /without a second model request/);
   assert.match(changelog, /runtime batch size/);
   assert.match(changelog, /inline confirmations and status messages/);
   assert.match(changelog, /raw numeric input/);
+  assert.match(readme, /npm test/);
+  assert.match(readme, /npm run package:webstore/);
+  assert.match(readmeZh, /npm test/);
+  assert.match(readmeZh, /npm run package:webstore/);
 
   const releaseNotes = fs.readFileSync(
     path.join(ROOT_DIR, "webstore/RELEASE_NOTES_3.0.0.md"),

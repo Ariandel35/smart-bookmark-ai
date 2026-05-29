@@ -123,15 +123,13 @@ You can configure the provider, Base URL, API key, model name, prompt, batch siz
 Run the static checks and extension tests:
 
 ```bash
-node --check background.js
-node --check popup.js
-node --check options.js
-node --check providers.js
-node --check i18n.js
-node --check rules.js
-node --check cache-utils.js
-node --check json-utils.js
-node tests/run-tests.js
+npm test
+```
+
+Build the Chrome Web Store upload package:
+
+```bash
+npm run package:webstore
 ```
 
 Core files:

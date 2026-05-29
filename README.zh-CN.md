@@ -123,15 +123,13 @@ Marko 支持 OpenAI、DeepSeek、MiniMax、Anthropic、Gemini、OpenRouter、Gro
 运行静态检查和扩展测试：
 
 ```bash
-node --check background.js
-node --check popup.js
-node --check options.js
-node --check providers.js
-node --check i18n.js
-node --check rules.js
-node --check cache-utils.js
-node --check json-utils.js
-node tests/run-tests.js
+npm test
+```
+
+生成 Chrome Web Store 上传包：
+
+```bash
+npm run package:webstore
 ```
 
 主要文件：
