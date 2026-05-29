@@ -281,6 +281,9 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /settingsActionInFlight/);
   assert.match(optionsSource, /setSettingsActionInFlight/);
   assert.match(optionsSource, /settingsSavingStatus/);
+  assert.match(optionsSource, /settingsSaveException/);
+  assert.match(optionsSource, /console\.error\("Failed to save settings:"/);
+  assert.match(optionsSource, /setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)/);
   assert.match(optionsSource, /settingsAccessRequestingStatus/);
   assert.match(optionsSource, /settingsFields\.forEach/);
   assert.match(optionsSource, /saveButton\.disabled = settingsActionInFlight/);
@@ -308,6 +311,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
   assert.match(i18nSource, /settingsSavedStatus/);
   assert.match(i18nSource, /settingsSavingStatus/);
+  assert.match(i18nSource, /settingsSaveException/);
   assert.match(i18nSource, /settingsAccessRequestingStatus/);
   assert.match(i18nSource, /backupRestoreInlineConfirm/);
   assert.match(i18nSource, /backupDeleteInlineConfirm/);

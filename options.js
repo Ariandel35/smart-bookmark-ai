@@ -870,6 +870,10 @@ async function saveConfig(event) {
     }
 
     await saveConfigData(config);
+  } catch (error) {
+    console.error("Failed to save settings:", error);
+    setSaveBadge(t("saveBadgeFailed"), "danger");
+    setSettingsActionStatus(t("settingsSaveException"), true);
   } finally {
     setSettingsActionInFlight(false);
     await refreshHostAccessStatus().catch((error) => {
