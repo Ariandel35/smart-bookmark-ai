@@ -32,6 +32,7 @@
 - Backup list action buttons now include the specific backup name in their accessible labels
 - Backup restore/delete confirmations now move focus into the inline confirmation and return it to the matching action when dismissed
 - Chinese settings headings and model field labels now use natural localized wording instead of mixed English section text
+- Chinese setup, validation, and privacy copy now uses the same service-provider and model-name wording as the settings UI
 - Settings validation errors now move focus to the affected field and mark it for assistive technologies
 - Invalid settings fields now show a visible error border and soft error background
 - Invalid settings action buttons now show the same visible error treatment as invalid fields

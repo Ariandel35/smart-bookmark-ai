@@ -369,6 +369,12 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /labelModel: "模型名称"/);
   assert.match(i18nSource, /automationTitle: "自动整理"/);
   assert.match(i18nSource, /backupTitle: "备份管理"/);
+  assert.match(i18nSource, /setupRequiredDesc: "预览前需要先选择服务商，并填写 Base URL 和模型名称。"/);
+  assert.match(i18nSource, /setupMissingProvider: "请先选择服务商。"/);
+  assert.match(i18nSource, /setupMissingModel: "预览前需要填写模型名称。"/);
+  assert.match(i18nSource, /setupMissingApiKey: "当前服务商需要 API Key。"/);
+  assert.match(i18nSource, /modelRequired: "模型名称不能为空。"/);
+  assert.match(i18nSource, /privacyStorageDesc: "API Key、服务商设置、模型名、白名单和备份快照都保存在你的浏览器本地存储与 IndexedDB 中。"/);
 
   const backgroundSourceForCancel = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSourceForCancel, /cancelRequested: true/);
