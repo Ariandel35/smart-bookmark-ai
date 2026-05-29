@@ -198,6 +198,25 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /first-response-timeout\|request-timeout/);
 }
 
+function testOptionsBackupInlineConfirmationSurface() {
+  const optionsHtml = fs.readFileSync(path.join(ROOT_DIR, "options.html"), "utf8");
+  assert.match(optionsHtml, /id="backupActionStatus"/);
+
+  const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
+  assert.match(optionsSource, /pendingBackupAction/);
+  assert.match(optionsSource, /createBackupInlineConfirm/);
+  assert.doesNotMatch(optionsSource, /window\.confirm/);
+
+  const stylesSource = fs.readFileSync(path.join(ROOT_DIR, "styles.css"), "utf8");
+  assert.match(stylesSource, /\.backup-confirm/);
+
+  const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
+  assert.match(i18nSource, /backupRestoreInlineConfirm/);
+  assert.match(i18nSource, /backupDeleteInlineConfirm/);
+  assert.doesNotMatch(i18nSource, /backupRestoreConfirm/);
+  assert.doesNotMatch(i18nSource, /backupDeleteConfirm/);
+}
+
 function testI18nCoverage() {
   const keys = collectI18nKeysFromFiles();
   for (const language of ["en", "zh-CN"]) {
@@ -215,6 +234,7 @@ function main() {
   testSpeedModeSurface();
   testPreviewApplySurface();
   testSlowModelResilienceSurface();
+  testOptionsBackupInlineConfirmationSurface();
   testI18nCoverage();
   console.log("All tests passed.");
 }

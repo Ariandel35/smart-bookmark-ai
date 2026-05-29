@@ -1133,6 +1133,20 @@ textarea {
   gap: 8px;
 }
 
+.backup-confirm {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  max-width: 280px;
+}
+
+.backup-confirm__message {
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: right;
+}
+
 .empty-state {
   display: grid;
   gap: 8px;
@@ -1270,6 +1284,15 @@ textarea {
   .backup-row__actions {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .backup-confirm {
+    justify-items: start;
+    max-width: none;
+  }
+
+  .backup-confirm__message {
+    text-align: left;
   }
 
   .popup-body .summary-item__value {

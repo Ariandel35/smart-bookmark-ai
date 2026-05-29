@@ -37,6 +37,7 @@ const resetButton = document.getElementById("resetButton");
 const privacyButton = document.getElementById("privacyButton");
 const backupList = document.getElementById("backupList");
 const backupStatusBadge = document.getElementById("backupStatusBadge");
+const backupActionStatus = document.getElementById("backupActionStatus");
 const createBackupButton = document.getElementById("createBackupButton");
 const navButtons = Array.from(document.querySelectorAll("[data-section-target]"));
 const sectionPanels = Array.from(document.querySelectorAll("[data-section-panel]"));
@@ -45,6 +46,8 @@ let lastProvider = "openai";
 let whitelistSelection = [];
 let whitelistCatalog = [];
 let whitelistCatalogLoaded = false;
+let currentBackupRecords = [];
+let pendingBackupAction = null;
 
 I18N.applyDocument(document);
 renderProviderOptions();
@@ -351,6 +354,12 @@ function setBackupBadge(text, variant = "") {
   backupStatusBadge.className = variant ? `pill pill--${variant}` : "pill";
 }
 
+function setBackupActionStatus(message = "", isError = false) {
+  backupActionStatus.textContent = message;
+  backupActionStatus.hidden = !message;
+  backupActionStatus.classList.toggle("is-error", Boolean(message) && isError);
+}
+
 function clearApiTestStatus() {
   setApiTestStatus("");
 }
@@ -603,6 +612,7 @@ async function loadConfig() {
 
 async function refreshBackupStatus() {
   createBackupButton.disabled = false;
+  pendingBackupAction = null;
   backupList.replaceChildren();
 
   const response = await chrome.runtime.sendMessage({
@@ -610,6 +620,7 @@ async function refreshBackupStatus() {
   });
 
   if (!response?.ok) {
+    currentBackupRecords = [];
     const empty = document.createElement("div");
     empty.className = "empty-state";
     empty.textContent = response?.error || t("backupReadFailed");
@@ -619,6 +630,7 @@ async function refreshBackupStatus() {
   }
 
   const records = Array.isArray(response.records) ? response.records : [];
+  currentBackupRecords = records;
   if (!records.length) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
@@ -627,6 +639,13 @@ async function refreshBackupStatus() {
     setBackupBadge(t("backupRatio", { count: 0 }));
     return;
   }
+
+  renderBackupRecords(records);
+  setBackupBadge(t("backupRatio", { count: records.length }), "success");
+}
+
+function renderBackupRecords(records = currentBackupRecords) {
+  backupList.replaceChildren();
 
   records.forEach((record) => {
     const row = document.createElement("div");
@@ -653,36 +672,79 @@ async function refreshBackupStatus() {
     const actions = document.createElement("div");
     actions.className = "backup-row__actions";
 
-    const restoreButton = document.createElement("button");
-    restoreButton.type = "button";
-    restoreButton.className = "button button--ghost button--compact";
-    restoreButton.textContent = t("restoreButton");
-    restoreButton.addEventListener("click", () => {
-      restoreBackupEntry(record.id).catch((error) => {
-        console.error("Failed to restore backup entry:", error);
-        setBackupBadge(t("backupErrorBadge"), "danger");
-        window.alert(t("backupRestoreExceptionAlert"));
+    if (pendingBackupAction?.id === record.id) {
+      actions.appendChild(createBackupInlineConfirm(record, pendingBackupAction.action));
+    } else {
+      const restoreButton = document.createElement("button");
+      restoreButton.type = "button";
+      restoreButton.className = "button button--ghost button--compact";
+      restoreButton.textContent = t("restoreButton");
+      restoreButton.addEventListener("click", () => {
+        setPendingBackupAction(record.id, "restore");
       });
-    });
 
-    const deleteButton = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.className = "button button--danger button--compact";
-    deleteButton.textContent = t("deleteButton");
-    deleteButton.addEventListener("click", () => {
-      deleteBackupEntry(record.id).catch((error) => {
-        console.error("Failed to delete backup entry:", error);
-        setBackupBadge(t("backupErrorBadge"), "danger");
-        window.alert(t("backupDeleteExceptionAlert"));
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "button button--danger button--compact";
+      deleteButton.textContent = t("deleteButton");
+      deleteButton.addEventListener("click", () => {
+        setPendingBackupAction(record.id, "delete");
       });
-    });
 
-    actions.append(restoreButton, deleteButton);
+      actions.append(restoreButton, deleteButton);
+    }
+
     row.append(meta, actions);
     backupList.appendChild(row);
   });
+}
 
-  setBackupBadge(t("backupRatio", { count: records.length }), "success");
+function setPendingBackupAction(backupId, action) {
+  pendingBackupAction = { id: backupId, action };
+  setBackupActionStatus("");
+  renderBackupRecords();
+}
+
+function createBackupInlineConfirm(record, action) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "backup-confirm";
+
+  const message = document.createElement("div");
+  message.className = "backup-confirm__message";
+  message.textContent =
+    action === "restore" ? t("backupRestoreInlineConfirm") : t("backupDeleteInlineConfirm");
+
+  const confirmButton = document.createElement("button");
+  confirmButton.type = "button";
+  confirmButton.className =
+    action === "restore"
+      ? "button button--primary button--compact"
+      : "button button--danger button--compact";
+  confirmButton.textContent =
+    action === "restore" ? t("backupRestoreInlinePrimary") : t("backupDeleteInlinePrimary");
+  confirmButton.addEventListener("click", () => {
+    const task = action === "restore" ? restoreBackupEntry(record.id) : deleteBackupEntry(record.id);
+    task.catch((error) => {
+      console.error(`Failed to ${action} backup entry:`, error);
+      setBackupBadge(t("backupErrorBadge"), "danger");
+      setBackupActionStatus(
+        action === "restore" ? t("backupRestoreExceptionAlert") : t("backupDeleteExceptionAlert"),
+        true
+      );
+    });
+  });
+
+  const cancelButton = document.createElement("button");
+  cancelButton.type = "button";
+  cancelButton.className = "button button--secondary button--compact";
+  cancelButton.textContent = t("backupInlineCancel");
+  cancelButton.addEventListener("click", () => {
+    pendingBackupAction = null;
+    renderBackupRecords();
+  });
+
+  wrapper.append(message, confirmButton, cancelButton);
+  return wrapper;
 }
 
 async function saveConfig(event) {
@@ -801,6 +863,8 @@ async function testApiConnection() {
 
 async function createManualBackup() {
   createBackupButton.disabled = true;
+  pendingBackupAction = null;
+  setBackupActionStatus("");
   setBackupBadge(t("backupCreatingBadge"), "accent");
 
   try {
@@ -810,14 +874,15 @@ async function createManualBackup() {
 
     if (!response?.ok) {
       setBackupBadge(t("backupErrorBadge"), "danger");
-      window.alert(response?.error || t("backupCreateFailedAlert"));
+      setBackupActionStatus(response?.error || t("backupCreateFailedAlert"), true);
       return;
     }
 
+    setBackupActionStatus(t("backupCreateSuccess"));
   } catch (error) {
     console.error("Failed to create manual backup:", error);
     setBackupBadge(t("backupErrorBadge"), "danger");
-    window.alert(t("backupCreateExceptionAlert"));
+    setBackupActionStatus(t("backupCreateExceptionAlert"), true);
   } finally {
     createBackupButton.disabled = false;
     await refreshBackupStatus();
@@ -825,11 +890,8 @@ async function createManualBackup() {
 }
 
 async function restoreBackupEntry(backupId) {
-  if (!window.confirm(t("backupRestoreConfirm"))) {
-    return;
-  }
-
   createBackupButton.disabled = true;
+  setBackupActionStatus("");
   setBackupBadge(t("backupRestoringBadge"), "accent");
 
   try {
@@ -840,14 +902,15 @@ async function restoreBackupEntry(backupId) {
 
     if (!response?.ok) {
       setBackupBadge(t("backupErrorBadge"), "danger");
-      window.alert(response?.error || t("backupRestoreFailedAlert"));
+      setBackupActionStatus(response?.error || t("backupRestoreFailedAlert"), true);
       return;
     }
 
+    setBackupActionStatus(t("backupRestoreSuccess"));
   } catch (error) {
     console.error("Failed to restore backup entry:", error);
     setBackupBadge(t("backupErrorBadge"), "danger");
-    window.alert(t("backupRestoreExceptionAlert"));
+    setBackupActionStatus(t("backupRestoreExceptionAlert"), true);
   } finally {
     createBackupButton.disabled = false;
     await refreshBackupStatus();
@@ -855,11 +918,8 @@ async function restoreBackupEntry(backupId) {
 }
 
 async function deleteBackupEntry(backupId) {
-  if (!window.confirm(t("backupDeleteConfirm"))) {
-    return;
-  }
-
   createBackupButton.disabled = true;
+  setBackupActionStatus("");
   setBackupBadge(t("backupDeletingBadge"), "accent");
 
   try {
@@ -870,14 +930,15 @@ async function deleteBackupEntry(backupId) {
 
     if (!response?.ok) {
       setBackupBadge(t("backupErrorBadge"), "danger");
-      window.alert(response?.error || t("backupDeleteFailedAlert"));
+      setBackupActionStatus(response?.error || t("backupDeleteFailedAlert"), true);
       return;
     }
 
+    setBackupActionStatus(t("backupDeleteSuccess"));
   } catch (error) {
     console.error("Failed to delete backup entry:", error);
     setBackupBadge(t("backupErrorBadge"), "danger");
-    window.alert(t("backupDeleteExceptionAlert"));
+    setBackupActionStatus(t("backupDeleteExceptionAlert"), true);
   } finally {
     createBackupButton.disabled = false;
     await refreshBackupStatus();
