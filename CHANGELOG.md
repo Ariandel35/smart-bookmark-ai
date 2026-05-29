@@ -76,6 +76,7 @@
 - Settings load failures now show a clear inline fallback message when defaults are displayed
 - Settings save failures now show a clear inline error instead of leaving the page in a saving state
 - Test & Save now distinguishes a successful API test from a later settings-save failure
+- Test & Save now marks the Save badge as failed when validation, permission, API, or network checks fail
 - Settings and popup setup checks now reject invalid Base URLs before permission checks or model requests
 - Settings now distinguish load-failure and save-failure badges so failed saves are not mislabeled as load errors
 - Changing providers now clears the existing API key with an inline notice to avoid reusing one provider's secret with another provider

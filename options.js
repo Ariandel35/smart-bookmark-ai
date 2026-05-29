@@ -491,6 +491,7 @@ function showSettingsIssue(message, sectionId = "", fieldId = "") {
 function showApiTestIssue(message, fieldId = "") {
   setActiveSection("connection");
   markSettingsFieldIssue(fieldId, apiTestStatus);
+  setSaveBadge(t("saveBadgeFailed"), "danger");
   setApiTestStatus(message, true);
   focusSettingsField(fieldId);
 }
@@ -1149,6 +1150,7 @@ async function testApiConnection() {
   }
 
   setSettingsActionInFlight(true);
+  setSaveBadge(t("saveBadgeUnsaved"), "accent");
   setApiTestStatus(t("apiTesting"));
 
   try {
@@ -1156,6 +1158,7 @@ async function testApiConnection() {
     await refreshHostAccessStatus();
     if (!granted) {
       setActiveSection("connection");
+      setSaveBadge(t("saveBadgeFailed"), "danger");
       setApiTestStatus(t("currentApiAccessMissing"), true);
       return;
     }
@@ -1166,6 +1169,7 @@ async function testApiConnection() {
     });
 
     if (!response?.ok) {
+      setSaveBadge(t("saveBadgeFailed"), "danger");
       setApiTestStatus(
         [response?.error || t("apiTestFailed"), response?.detail].filter(Boolean).join(" "),
         true
@@ -1206,6 +1210,7 @@ async function testApiConnection() {
     );
   } catch (error) {
     console.error("Failed to test API connection:", error);
+    setSaveBadge(t("saveBadgeFailed"), "danger");
     setApiTestStatus(t("apiTestException"), true);
   } finally {
     setSettingsActionInFlight(false);

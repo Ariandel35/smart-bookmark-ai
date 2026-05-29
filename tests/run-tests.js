@@ -716,6 +716,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /focusSettingsField/);
   assert.match(optionsSource, /markSettingsFieldIssue/);
   assert.match(optionsSource, /showApiTestIssue/);
+  assert.match(optionsSource, /function showApiTestIssue\(message, fieldId = ""\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*setApiTestStatus\(message, true\)/);
   assert.match(optionsSource, /field\.setAttribute\("aria-invalid", "true"\)/);
   assert.match(optionsSource, /addDescribedByToken\(field, describedByElement\.id\)/);
   assert.match(optionsSource, /removeDescribedByTokens\(field, \[settingsActionStatus\.id, apiTestStatus\.id\]\)/);
@@ -770,6 +771,9 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /showApiTestIssue\(t\("baseUrlInvalid"\), "baseUrl"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("modelRequired"\), "model"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("requiredApiKey", \{ provider: defaults\.label \}\), "apiKey"\)/);
+  assert.match(optionsSource, /setSaveBadge\(t\("saveBadgeUnsaved"\), "accent"\);\n  setApiTestStatus\(t\("apiTesting"\)\)/);
+  assert.match(optionsSource, /if \(!granted\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*setApiTestStatus\(t\("currentApiAccessMissing"\), true\)/);
+  assert.match(optionsSource, /if \(!response\?\.ok\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*setApiTestStatus\(/);
   assert.match(optionsSource, /if \(!granted\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
   assert.match(optionsSource, /if \(config\.autoOrganizeEnabled\) \{[\s\S]*const autoAccessGranted = shouldRequireBroadHostAccess\(config\)[\s\S]*ensureBroadHostAccess\(\)[\s\S]*ensureOriginAccess\(config\.baseUrl\)/);
   assert.match(optionsSource, /showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
