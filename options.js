@@ -49,6 +49,7 @@ let whitelistCatalog = [];
 let whitelistCatalogLoaded = false;
 let currentBackupRecords = [];
 let pendingBackupAction = null;
+let backupActionInFlight = false;
 
 I18N.applyDocument(document);
 renderProviderOptions();
@@ -638,7 +639,7 @@ async function loadConfig() {
 }
 
 async function refreshBackupStatus() {
-  createBackupButton.disabled = false;
+  createBackupButton.disabled = backupActionInFlight;
   pendingBackupAction = null;
   backupList.replaceChildren();
 
@@ -706,6 +707,7 @@ function renderBackupRecords(records = currentBackupRecords) {
       restoreButton.type = "button";
       restoreButton.className = "button button--ghost button--compact";
       restoreButton.textContent = t("restoreButton");
+      restoreButton.disabled = backupActionInFlight;
       restoreButton.addEventListener("click", () => {
         setPendingBackupAction(record.id, "restore");
       });
@@ -714,6 +716,7 @@ function renderBackupRecords(records = currentBackupRecords) {
       deleteButton.type = "button";
       deleteButton.className = "button button--danger button--compact";
       deleteButton.textContent = t("deleteButton");
+      deleteButton.disabled = backupActionInFlight;
       deleteButton.addEventListener("click", () => {
         setPendingBackupAction(record.id, "delete");
       });
@@ -727,6 +730,10 @@ function renderBackupRecords(records = currentBackupRecords) {
 }
 
 function setPendingBackupAction(backupId, action) {
+  if (backupActionInFlight) {
+    return;
+  }
+
   pendingBackupAction = { id: backupId, action };
   setBackupActionStatus("");
   renderBackupRecords();
@@ -749,7 +756,16 @@ function createBackupInlineConfirm(record, action) {
       : "button button--danger button--compact";
   confirmButton.textContent =
     action === "restore" ? t("backupRestoreInlinePrimary") : t("backupDeleteInlinePrimary");
+  confirmButton.disabled = backupActionInFlight;
   confirmButton.addEventListener("click", () => {
+    if (backupActionInFlight) {
+      return;
+    }
+
+    backupActionInFlight = true;
+    confirmButton.disabled = true;
+    cancelButton.disabled = true;
+    renderBackupRecords();
     const task = action === "restore" ? restoreBackupEntry(record.id) : deleteBackupEntry(record.id);
     task.catch((error) => {
       console.error(`Failed to ${action} backup entry:`, error);
@@ -765,7 +781,12 @@ function createBackupInlineConfirm(record, action) {
   cancelButton.type = "button";
   cancelButton.className = "button button--secondary button--compact";
   cancelButton.textContent = t("backupInlineCancel");
+  cancelButton.disabled = backupActionInFlight;
   cancelButton.addEventListener("click", () => {
+    if (backupActionInFlight) {
+      return;
+    }
+
     pendingBackupAction = null;
     renderBackupRecords();
   });
@@ -891,9 +912,11 @@ async function testApiConnection() {
 
 async function createManualBackup() {
   createBackupButton.disabled = true;
+  backupActionInFlight = true;
   pendingBackupAction = null;
   setBackupActionStatus("");
   setBackupBadge(t("backupCreatingBadge"), "accent");
+  renderBackupRecords();
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -912,6 +935,7 @@ async function createManualBackup() {
     setBackupBadge(t("backupErrorBadge"), "danger");
     setBackupActionStatus(t("backupCreateExceptionAlert"), true);
   } finally {
+    backupActionInFlight = false;
     createBackupButton.disabled = false;
     await refreshBackupStatus();
   }
@@ -919,6 +943,7 @@ async function createManualBackup() {
 
 async function restoreBackupEntry(backupId) {
   createBackupButton.disabled = true;
+  backupActionInFlight = true;
   setBackupActionStatus("");
   setBackupBadge(t("backupRestoringBadge"), "accent");
 
@@ -940,6 +965,7 @@ async function restoreBackupEntry(backupId) {
     setBackupBadge(t("backupErrorBadge"), "danger");
     setBackupActionStatus(t("backupRestoreExceptionAlert"), true);
   } finally {
+    backupActionInFlight = false;
     createBackupButton.disabled = false;
     await refreshBackupStatus();
   }
@@ -947,6 +973,7 @@ async function restoreBackupEntry(backupId) {
 
 async function deleteBackupEntry(backupId) {
   createBackupButton.disabled = true;
+  backupActionInFlight = true;
   setBackupActionStatus("");
   setBackupBadge(t("backupDeletingBadge"), "accent");
 
@@ -968,6 +995,7 @@ async function deleteBackupEntry(backupId) {
     setBackupBadge(t("backupErrorBadge"), "danger");
     setBackupActionStatus(t("backupDeleteExceptionAlert"), true);
   } finally {
+    backupActionInFlight = false;
     createBackupButton.disabled = false;
     await refreshBackupStatus();
   }

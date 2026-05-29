@@ -8,6 +8,7 @@
 - Applying a stale preview now shows specific guidance when settings or bookmarks changed
 - DeepSeek runs are capped to a safer runtime batch size before the first model request, then timeout retries can shrink again
 - Replaced blocking browser alert/confirm flows in popup and settings with inline confirmations and status messages
+- Backup create, restore, and delete actions now lock related controls while an operation is in flight
 - Settings now validate raw numeric input instead of silently clamping invalid batch sizes or automation intervals
 - Updated privacy, Chrome Web Store, README, locale, and visual materials to describe optional dead-link checks accurately
 

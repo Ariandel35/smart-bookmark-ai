@@ -250,7 +250,11 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /autoOrganizeIntervalHours: parseIntegerInput\(autoOrganizeIntervalInput\.value\)/);
   assert.match(optionsSource, /if \(!config\.baseUrl\) \{\n    setHostAccessStatus/);
   assert.match(optionsSource, /pendingBackupAction/);
+  assert.match(optionsSource, /backupActionInFlight/);
   assert.match(optionsSource, /createBackupInlineConfirm/);
+  assert.match(optionsSource, /confirmButton\.disabled = backupActionInFlight/);
+  assert.match(optionsSource, /restoreButton\.disabled = backupActionInFlight/);
+  assert.match(optionsSource, /deleteButton\.disabled = backupActionInFlight/);
   assert.doesNotMatch(optionsSource, /window\.alert/);
   assert.doesNotMatch(optionsSource, /window\.confirm/);
 
