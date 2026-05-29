@@ -129,7 +129,50 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   void syncAutoOrganizeAlarm().catch((error) => {
     console.error("Failed to sync auto organize alarm after config change:", error);
   });
+  const oldSignature = buildPreviewConfigSignature(
+    mergeConfig(changes[STORAGE_KEYS.config].oldValue || {})
+  );
+  const nextSignature = buildPreviewConfigSignature(
+    mergeConfig(changes[STORAGE_KEYS.config].newValue || {})
+  );
+  if (oldSignature === nextSignature) {
+    return;
+  }
+
+  void invalidatePreviewPlan(
+    ux(
+      "整理设置已更新，请重新生成预览。",
+      "Organize settings changed. Generate a new preview."
+    ),
+    ux(
+      "旧预览已自动失效，避免用旧模型、规则或速度模式应用到新设置。",
+      "The old preview was invalidated automatically so an old model, rule, or speed-mode plan is not applied to new settings."
+    )
+  ).catch((error) => {
+    console.error("Failed to invalidate preview after config change:", error);
+  });
 });
+
+function invalidatePreviewAfterBookmarkChange() {
+  void invalidatePreviewPlan(
+    ux(
+      "书签内容已变化，请重新生成预览。",
+      "Bookmarks changed. Generate a new preview."
+    ),
+    ux(
+      "Marko 检测到书签树发生变化，已自动清除旧预览，避免应用到不同的书签集合。",
+      "Marko detected a bookmark tree change and cleared the old preview so it cannot be applied to a different bookmark set."
+    )
+  ).catch((error) => {
+    console.error("Failed to invalidate preview after bookmark change:", error);
+  });
+}
+
+chrome.bookmarks.onCreated?.addListener(invalidatePreviewAfterBookmarkChange);
+chrome.bookmarks.onRemoved?.addListener(invalidatePreviewAfterBookmarkChange);
+chrome.bookmarks.onChanged?.addListener(invalidatePreviewAfterBookmarkChange);
+chrome.bookmarks.onMoved?.addListener(invalidatePreviewAfterBookmarkChange);
+chrome.bookmarks.onChildrenReordered?.addListener(invalidatePreviewAfterBookmarkChange);
 
 chrome.permissions.onAdded?.addListener(() => {
   void syncAutoOrganizeAlarm().catch((error) => {
@@ -619,6 +662,34 @@ async function updateStatus(patch) {
   }
 
   return currentStatus;
+}
+
+async function invalidatePreviewPlan(message, detail) {
+  const stored = await chrome.storage.local.get([
+    STORAGE_KEYS.job,
+    STORAGE_KEYS.previewPlan,
+    STORAGE_KEYS.status
+  ]);
+
+  if (stored[STORAGE_KEYS.job]?.phase === "running" || !stored[STORAGE_KEYS.previewPlan]) {
+    return;
+  }
+
+  await chrome.storage.local.remove(STORAGE_KEYS.previewPlan);
+
+  const status = stored[STORAGE_KEYS.status] || currentStatus;
+  if (status?.phase !== "preview") {
+    return;
+  }
+
+  await updateStatus(
+    buildIdleStatus({
+      phase: "idle",
+      message,
+      detail,
+      finishedAt: new Date().toISOString()
+    })
+  );
 }
 
 function normalizeTopLevelFolderList(rawFolders) {

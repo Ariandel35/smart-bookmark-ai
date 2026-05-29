@@ -6,6 +6,7 @@
 - Reduced popup and settings permission requests in Fast mode to the configured model API origin
 - Applying a saved preview plan now reuses the stored plan and rebuilds locally without a second model request
 - Applying a stale preview now shows specific guidance when settings or bookmarks changed
+- Saved previews are now invalidated automatically when settings or bookmarks change
 - DeepSeek runs are capped to a safer runtime batch size before the first model request, then timeout retries can shrink again
 - Replaced blocking browser alert/confirm flows in popup and settings with inline confirmations and status messages
 - Backup create, restore, and delete actions now lock related controls while an operation is in flight

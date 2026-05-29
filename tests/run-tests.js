@@ -208,6 +208,10 @@ function testPreviewApplySurface() {
   assert.match(backgroundSource, /savePreviewPlan/);
   assert.match(backgroundSource, /buildBookmarkSetSignature/);
   assert.match(backgroundSource, /does not call the model again/);
+  assert.match(backgroundSource, /oldSignature === nextSignature/);
+  assert.match(backgroundSource, /invalidatePreviewPlan/);
+  assert.match(backgroundSource, /onCreated\?\.addListener\(invalidatePreviewAfterBookmarkChange\)/);
+  assert.match(backgroundSource, /onChildrenReordered\?\.addListener\(invalidatePreviewAfterBookmarkChange\)/);
   assert.match(backgroundSource, /rejectApplyPreviewPlan/);
   assert.match(backgroundSource, /Preview plans are tied to the provider/);
   assert.match(backgroundSource, /Marko detected that the bookmark set no longer matches the preview/);
