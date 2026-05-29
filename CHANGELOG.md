@@ -77,6 +77,7 @@
 - Settings can now save non-secret organization rules without an API key, while Test & Save and automatic silent organize still require one when the provider needs it
 - Test & Save now also verifies automatic-organize access requirements before saving auto-enabled settings
 - Popup setup checks now reject unknown provider IDs instead of treating any non-empty provider value as configured
+- Unknown stored provider IDs now fall back to defaults without carrying over an API key from the stale provider
 - Backup create, restore, and delete actions now lock related controls while an operation is in flight
 - Settings now validate raw numeric input instead of silently clamping invalid batch sizes or automation intervals
 - Updated privacy, Chrome Web Store, README, locale, and visual materials to describe optional dead-link checks accurately

@@ -628,7 +628,8 @@ function buildDefaultConfig(provider = "openai") {
 }
 
 function mergeConfig(raw = {}) {
-  const provider = raw.provider && Providers.hasProvider(raw.provider) ? raw.provider : "openai";
+  const providerKnown = Boolean(raw.provider && Providers.hasProvider(raw.provider));
+  const provider = providerKnown ? raw.provider : "openai";
   const defaults = buildDefaultConfig(provider);
   const promptValue =
     typeof raw.customPrompt === "string" && raw.customPrompt.trim()
@@ -638,7 +639,7 @@ function mergeConfig(raw = {}) {
   return {
     provider,
     baseUrl: typeof raw.baseUrl === "string" && raw.baseUrl.trim() ? raw.baseUrl.trim() : defaults.baseUrl,
-    apiKey: typeof raw.apiKey === "string" ? raw.apiKey.trim() : "",
+    apiKey: providerKnown && typeof raw.apiKey === "string" ? raw.apiKey.trim() : "",
     model: typeof raw.model === "string" && raw.model.trim() ? raw.model.trim() : defaults.model,
     batchSize: normalizeBatchSize(raw.batchSize, defaults.batchSize),
     linkCheckMode: normalizeLinkCheckMode(raw.linkCheckMode || defaults.linkCheckMode),

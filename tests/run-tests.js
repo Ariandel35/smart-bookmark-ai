@@ -685,6 +685,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
   assert.match(optionsSource, /showSettingsIssue/);
   assert.match(optionsSource, /isValidHttpUrl/);
+  assert.match(optionsSource, /const providerKnown = Boolean\(raw\.provider && Providers\.hasProvider\(raw\.provider\)\)/);
+  assert.match(optionsSource, /apiKey: providerKnown && typeof raw\.apiKey === "string" \? raw\.apiKey : ""/);
   assert.match(optionsSource, /t\("whitelistRemoveDomain", \{ domain \}\)/);
   assert.match(optionsSource, /button\.setAttribute\("aria-pressed", String\(isSelected\)\)/);
   assert.match(optionsSource, /const isSelected = selectedSet\.has\(item\.domain\)/);
@@ -766,6 +768,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSource, /isValidHttpUrl/);
   assert.match(backgroundSource, /Base URL must be a valid http or https URL/);
+  assert.match(backgroundSource, /const providerKnown = Boolean\(raw\.provider && Providers\.hasProvider\(raw\.provider\)\)/);
+  assert.match(backgroundSource, /apiKey: providerKnown && typeof raw\.apiKey === "string" \? raw\.apiKey\.trim\(\) : ""/);
 
   assert.match(optionsSource, /pendingBackupAction/);
   assert.match(optionsSource, /backupActionInFlight/);
