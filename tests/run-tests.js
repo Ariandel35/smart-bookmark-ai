@@ -179,7 +179,13 @@ function testPreviewApplySurface() {
 
   const popupSource = fs.readFileSync(path.join(ROOT_DIR, "popup.js"), "utf8");
   assert.match(popupSource, /APPLY_PREVIEW_PLAN/);
+  assert.match(popupSource, /applyConfirmationVisible/);
+  assert.match(popupSource, /createApplyConfirmationState/);
   assert.doesNotMatch(popupSource, /START_ORGANIZE/);
+  assert.doesNotMatch(popupSource, /window\.confirm/);
+
+  const stylesSource = fs.readFileSync(path.join(ROOT_DIR, "styles.css"), "utf8");
+  assert.match(stylesSource, /\.confirm-strip/);
 }
 
 function testSlowModelResilienceSurface() {

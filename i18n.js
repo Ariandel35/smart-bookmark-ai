@@ -276,8 +276,11 @@ Hard rules:
       setupMissingBaseUrl: "Base URL is required before preview.",
       setupMissingModel: "Model is required before preview.",
       setupMissingApiKey: "API key is required for this provider.",
-      previewReadyConfirm:
-        "Apply this preview plan now? Marko will back up and rebuild locally without running the model again.",
+      applyConfirmTitle: "Apply saved preview plan",
+      applyConfirmDesc:
+        "Marko will create a fresh backup, verify the preview is still current, then rebuild locally without calling the model again.",
+      applyConfirmPrimary: "Back up and apply",
+      applyConfirmSecondary: "Not now",
       hostPermissionRequiredTitle: "Access is required before organizing.",
       hostPermissionRequiredDetail:
         "Fast mode needs access to your configured model endpoint. Complete mode also needs website access for link checks.",
@@ -491,7 +494,10 @@ Hard rules:
       setupMissingBaseUrl: "预览前需要填写 Base URL。",
       setupMissingModel: "预览前需要填写 Model。",
       setupMissingApiKey: "当前 Provider 需要 API Key。",
-      previewReadyConfirm: "现在应用这个预览方案吗？Marko 会先备份，然后直接本地重建，不会再次请求模型。",
+      applyConfirmTitle: "应用已保存的预览方案",
+      applyConfirmDesc: "Marko 会先创建新备份，确认预览仍然有效，然后直接本地重建，不会再次请求模型。",
+      applyConfirmPrimary: "备份并应用",
+      applyConfirmSecondary: "暂不应用",
       hostPermissionRequiredTitle: "缺少访问授权，无法开始整理。",
       hostPermissionRequiredDetail:
         "快速模式需要访问你配置的模型接口；完整模式还需要网站访问权限来检测链接。",

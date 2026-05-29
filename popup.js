@@ -29,6 +29,7 @@ let currentConfig = null;
 let currentStatus = null;
 let currentFolderViews = [];
 let detailRequestVersion = 0;
+let applyConfirmationVisible = false;
 
 I18N.applyDocument(document);
 
@@ -208,6 +209,9 @@ function renderConfig(_config) {
 
 function renderStatus(status) {
   currentStatus = status || null;
+  if (!isPreviewReady()) {
+    applyConfirmationVisible = false;
+  }
 
   const phase = status?.phase || "idle";
   const total = Number(status?.total || 0);
@@ -284,6 +288,59 @@ function createSetupRequiredState() {
 
   empty.appendChild(action);
   return empty;
+}
+
+function createApplyConfirmationState() {
+  const wrapper = document.createElement("section");
+  wrapper.className = "confirm-strip";
+  wrapper.setAttribute("role", "group");
+  wrapper.setAttribute("aria-label", t("applyConfirmTitle"));
+
+  const copy = document.createElement("div");
+  copy.className = "confirm-strip__copy";
+
+  const title = document.createElement("strong");
+  title.className = "confirm-strip__title";
+  title.textContent = t("applyConfirmTitle");
+
+  const desc = document.createElement("div");
+  desc.className = "confirm-strip__desc";
+  desc.textContent = t("applyConfirmDesc");
+
+  copy.append(title, desc);
+
+  const actions = document.createElement("div");
+  actions.className = "confirm-strip__actions";
+
+  const applyButton = document.createElement("button");
+  applyButton.type = "button";
+  applyButton.className = "button button--primary button--compact";
+  applyButton.textContent = t("applyConfirmPrimary");
+  applyButton.addEventListener("click", () => {
+    applyConfirmationVisible = false;
+    startJob().catch((error) => {
+      console.error("Failed to apply preview plan:", error);
+      renderStatus({
+        ...(currentStatus || {}),
+        phase: "error",
+        message: t("startJobException")
+      });
+      renderDetailPanelContent();
+    });
+  });
+
+  const cancelButton = document.createElement("button");
+  cancelButton.type = "button";
+  cancelButton.className = "button button--secondary button--compact";
+  cancelButton.textContent = t("applyConfirmSecondary");
+  cancelButton.addEventListener("click", () => {
+    applyConfirmationVisible = false;
+    renderDetailPanelContent();
+  });
+
+  actions.append(applyButton, cancelButton);
+  wrapper.append(copy, actions);
+  return wrapper;
 }
 
 function countBookmarks(node) {
@@ -524,6 +581,10 @@ function renderMainDetail() {
   const wrapper = document.createElement("div");
   wrapper.className = "detail-stack";
 
+  if (applyConfirmationVisible) {
+    wrapper.appendChild(createApplyConfirmationState());
+  }
+
   const summary = document.createElement("article");
   summary.className = "record-item";
 
@@ -614,6 +675,7 @@ async function refreshAll() {
 
 async function startJob() {
   startButton.disabled = true;
+  backupButton.disabled = true;
   const response = await chrome.runtime.sendMessage({ type: "APPLY_PREVIEW_PLAN" });
 
   if (!response?.ok) {
@@ -669,11 +731,8 @@ async function handlePrimaryAction() {
   }
 
   if (isPreviewReady()) {
-    if (!window.confirm(t("previewReadyConfirm"))) {
-      return;
-    }
-
-    await startJob();
+    applyConfirmationVisible = true;
+    renderDetailPanelContent();
     return;
   }
 

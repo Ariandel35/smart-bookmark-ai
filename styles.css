@@ -1144,6 +1144,35 @@ textarea {
   margin-top: 2px;
 }
 
+.confirm-strip {
+  display: grid;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.confirm-strip__copy {
+  display: grid;
+  gap: 6px;
+}
+
+.confirm-strip__title {
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.confirm-strip__desc {
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.confirm-strip__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .hidden {
   display: none !important;
 }
