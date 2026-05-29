@@ -78,8 +78,8 @@ Privacy summary:
 
 ## Visual Assets Checklist
 - At least 5 screenshots:
-  1. Popup home
-  2. Settings - Connection
-  3. Settings - Organization rules with Speed mode
-  4. Settings - Backup management
-  5. Rebuilt bookmark root result
+  1. Popup preview
+  2. Popup inline apply confirmation
+  3. Settings - Connection
+  4. Settings - Organization rules with Speed mode
+  5. Settings - Backup management with inline restore confirmation

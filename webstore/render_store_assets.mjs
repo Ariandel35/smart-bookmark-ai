@@ -34,7 +34,8 @@ const sampleData = {
       baseUrl: "https://api.deepseek.com",
       apiKey: "sk-marko-demo",
       model: "deepseek-chat",
-      batchSize: 24,
+      batchSize: 20,
+      linkCheckMode: "fast",
       autoOrganizeEnabled: true,
       autoOrganizeIntervalHours: 24,
       whitelistDomains: "mail.google.com\ngithub.com\nyoutube.com",
@@ -50,14 +51,14 @@ const sampleData = {
       moved: 182,
       deleted: 24,
       warningCount: 10,
-      currentBatch: 5,
-      totalBatches: 5,
-      batchSize: 24,
+      currentBatch: 11,
+      totalBatches: 11,
+      batchSize: 20,
       updatedAt: "2026-04-19T08:40:00.000Z",
       provider: "deepseek",
       model: "deepseek-chat",
-      message: "已生成整理预览。",
-      detail: "将先清理确认失效或重复的书签，再按新的根目录结构一次性重建。",
+      message: "整理预览已生成，共分析 216 条书签。",
+      detail: "确认后会先创建本地备份，再复用已保存方案本地重建，不会再次请求模型。",
       reused: 94,
       aiClassified: 122,
       protectedRootCount: 2,
@@ -323,13 +324,13 @@ function screenshotVariant({ popupSrc, optionsConnectionSrc }) {
     body: `
       <div class="brand" style="left: 48px; top: 54px; width: 310px;">
         <div class="badge-row">
-          <div class="badge badge--accent">SMART BOOKMARK AI</div>
+          <div class="badge badge--accent">MARKO</div>
         </div>
         <h1 class="brand__title" style="font-size: 48px;">先预览，<br />再整理</h1>
-        <p class="brand__sub">先清理失效与重复，再一次性重建根目录。</p>
+        <p class="brand__sub">确认方案后本地应用，不重复跑模型。</p>
         <div class="badge-row">
-          <div class="badge badge--soft">根目录优先</div>
-          <div class="badge">最多两级目录</div>
+          <div class="badge badge--soft">快速模式</div>
+          <div class="badge">内联确认</div>
           <div class="badge">本地备份恢复</div>
         </div>
       </div>
@@ -347,7 +348,7 @@ function screenshotVariant({ popupSrc, optionsConnectionSrc }) {
 
       <div class="caption" style="left: 48px; bottom: 42px;">
         <span class="dot" style="color: ${palette.accent};"></span>
-        整理、备份、恢复、白名单，都在一个极简流程里
+        预览、应用、备份、恢复，都在一个极简流程里
       </div>
     `
   });
@@ -359,11 +360,11 @@ function smallPromoVariant({ popupSrc }) {
     height: 280,
     body: `
       <div class="brand" style="left: 22px; top: 24px; width: 186px; gap: 14px;">
-        <div class="brand__eyebrow">SMART BOOKMARK AI</div>
+        <div class="brand__eyebrow">MARKO</div>
         <h1 class="brand__title" style="font-size: 30px;">更少<br />文件夹</h1>
         <div class="badge-row">
           <div class="badge badge--soft" style="font-size: 12px;">预览后执行</div>
-          <div class="badge" style="font-size: 12px;">自动备份</div>
+          <div class="badge" style="font-size: 12px;">本地应用</div>
         </div>
       </div>
 
@@ -384,13 +385,13 @@ function marqueeVariant({ popupSrc, optionsBackupSrc }) {
     height: 560,
     body: `
       <div class="brand" style="left: 52px; top: 58px; width: 388px;">
-        <div class="brand__eyebrow">SMART BOOKMARK AI</div>
+        <div class="brand__eyebrow">MARKO</div>
         <h1 class="brand__title" style="font-size: 56px;">书签整理，<br />不该更乱</h1>
-        <p class="brand__sub">先预览，再重建。备份和恢复都留在设置里。</p>
+        <p class="brand__sub">先预览，再确认。本地备份和恢复都留在设置里。</p>
         <div class="badge-row">
-          <div class="badge badge--soft">失效链接清理</div>
+          <div class="badge badge--soft">快速 / 完整模式</div>
           <div class="badge">重复删除</div>
-          <div class="badge">手动备份</div>
+          <div class="badge">行内确认</div>
         </div>
       </div>
 
@@ -563,6 +564,7 @@ function createChromeMockInitScript(data) {
               };
             case "START_ORGANIZE":
             case "START_PREVIEW":
+            case "APPLY_PREVIEW_PLAN":
             case "CREATE_MANUAL_BACKUP":
             case "RESTORE_BACKUP_ENTRY":
             case "DELETE_BACKUP_ENTRY":
@@ -635,7 +637,9 @@ async function renderSourceScreenshots(browser) {
   await fs.mkdir(screenshotDir, { recursive: true });
 
   const popupPath = path.join(screenshotDir, "popup-store.png");
+  const popupApplyPath = path.join(screenshotDir, "popup-apply-store.png");
   const optionsConnectionPath = path.join(screenshotDir, "options-connection-store.png");
+  const optionsOrganizationPath = path.join(screenshotDir, "options-organization-store.png");
   const optionsBackupPath = path.join(screenshotDir, "options-backup-store.png");
 
   await capturePageScreenshot(browser, {
@@ -644,6 +648,17 @@ async function renderSourceScreenshots(browser) {
     viewport: { width: 400, height: 720 },
     prepare: async (page) => {
       await page.waitForSelector(".result-table tbody tr");
+    }
+  });
+
+  await capturePageScreenshot(browser, {
+    filePath: path.join(rootDir, "popup.html"),
+    outputPath: popupApplyPath,
+    viewport: { width: 400, height: 720 },
+    prepare: async (page) => {
+      await page.waitForSelector(".result-table tbody tr");
+      await page.getByRole("button", { name: "应用方案" }).click();
+      await page.waitForSelector(".confirm-strip");
     }
   });
 
@@ -666,17 +681,31 @@ async function renderSourceScreenshots(browser) {
 
   await capturePageScreenshot(browser, {
     filePath: path.join(rootDir, "options.html"),
+    outputPath: optionsOrganizationPath,
+    viewport: { width: 1280, height: 860 },
+    hash: "#organize",
+    prepare: async (page) => {
+      await page.waitForSelector("#linkCheckMode");
+    }
+  });
+
+  await capturePageScreenshot(browser, {
+    filePath: path.join(rootDir, "options.html"),
     outputPath: optionsBackupPath,
     viewport: { width: 1280, height: 860 },
     hash: "#backup",
     prepare: async (page) => {
       await page.waitForSelector(".backup-row");
+      await page.locator(".backup-row").first().getByRole("button", { name: "恢复" }).click();
+      await page.waitForSelector(".backup-confirm");
     }
   });
 
   return {
     popupPath,
+    popupApplyPath,
     optionsConnectionPath,
+    optionsOrganizationPath,
     optionsBackupPath
   };
 }

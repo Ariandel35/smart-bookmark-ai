@@ -62,6 +62,21 @@ Marko 用来把拥挤的 Chrome 书签栏整理成更少、更清楚、更容易
   </tr>
 </table>
 
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/popup-apply-store.png" alt="Marko 行内应用确认" width="100%" />
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/options-organization-store.png" alt="Marko 整理规则和速度模式" width="100%" />
+    </td>
+  </tr>
+  <tr>
+    <td><strong>应用</strong><br />在弹窗内确认已保存的预览方案，先备份，再本地重建，不会再次跑模型。</td>
+    <td><strong>规则</strong><br />速度模式、批大小、白名单网站和高级规则集中管理，不挤占连接配置。</td>
+  </tr>
+</table>
+
 ## 安全整理流程
 
 <p align="center">

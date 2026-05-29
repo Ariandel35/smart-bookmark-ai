@@ -62,6 +62,21 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
   </tr>
 </table>
 
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/popup-apply-store.png" alt="Marko inline apply confirmation" width="100%" />
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/options-organization-store.png" alt="Marko organization rules and speed mode" width="100%" />
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Apply</strong><br />Confirm the saved preview inline, then back up and rebuild locally without a second model run.</td>
+    <td><strong>Rules</strong><br />Tune speed mode, batch size, whitelist websites, and advanced rules without crowding setup.</td>
+  </tr>
+</table>
+
 ## Safe Organizing Flow
 
 <p align="center">

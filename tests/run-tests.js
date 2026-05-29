@@ -8,6 +8,15 @@ const CacheUtils = require("../cache-utils.js");
 
 const ROOT_DIR = path.resolve(__dirname, "..");
 
+function readPngDimensions(filePath) {
+  const buffer = fs.readFileSync(filePath);
+  assert.equal(buffer.toString("ascii", 1, 4), "PNG", `${filePath} is not a PNG`);
+  return {
+    width: buffer.readUInt32BE(16),
+    height: buffer.readUInt32BE(20)
+  };
+}
+
 function testJsonUtils() {
   assert.deepEqual(JsonUtils.extractJsonArray('```json\n["A", "B"]\n```'), ["A", "B"]);
   assert.deepEqual(
@@ -121,6 +130,29 @@ function testStaticExtensionAssets() {
 
   for (const localePath of ["_locales/en/messages.json", "_locales/zh_CN/messages.json"]) {
     JSON.parse(fs.readFileSync(path.join(ROOT_DIR, localePath), "utf8"));
+  }
+
+  const screenshotPaths = [
+    "docs/screenshots/popup-store.png",
+    "docs/screenshots/popup-apply-store.png",
+    "docs/screenshots/options-connection-store.png",
+    "docs/screenshots/options-organization-store.png",
+    "docs/screenshots/options-backup-store.png"
+  ];
+  for (const screenshotPath of screenshotPaths) {
+    const dimensions = readPngDimensions(path.join(ROOT_DIR, screenshotPath));
+    assert.ok(dimensions.width >= 800, `${screenshotPath} is too narrow`);
+    assert.ok(dimensions.height >= 600, `${screenshotPath} is too short`);
+  }
+
+  const exactAssetDimensions = {
+    "webstore/assets/chrome-web-store-screenshot-1280x800.png": [1280, 800],
+    "webstore/assets/chrome-web-store-small-promo-440x280.png": [440, 280],
+    "webstore/assets/chrome-web-store-marquee-1400x560.png": [1400, 560]
+  };
+  for (const [assetPath, [width, height]] of Object.entries(exactAssetDimensions)) {
+    const dimensions = readPngDimensions(path.join(ROOT_DIR, assetPath));
+    assert.deepEqual(dimensions, { width, height }, `${assetPath} has the wrong size`);
   }
 
   for (const file of ["popup.html", "options.html", "privacy.html"]) {
@@ -247,6 +279,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /without calling the model again/);
   assert.match(storeListing, /safer runtime batch size/);
   assert.match(storeListing, /inline confirmations and validation feedback/);
+  assert.match(storeListing, /Popup inline apply confirmation/);
+  assert.match(storeListing, /Backup management with inline restore confirmation/);
 
   const reviewNotes = fs.readFileSync(path.join(ROOT_DIR, "webstore/REVIEW_NOTES.md"), "utf8");
   assert.match(reviewNotes, /复用已保存方案/);
