@@ -631,6 +631,13 @@ textarea {
   transform: none;
 }
 
+.button[aria-invalid="true"] {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+  color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(179, 58, 50, 0.08);
+}
+
 .button--primary {
   background: var(--accent);
   border-color: var(--accent);

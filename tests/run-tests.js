@@ -497,6 +497,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(stylesSource, /\.field input\[aria-invalid="true"\]/);
   assert.match(stylesSource, /\.field select\[aria-invalid="true"\]/);
   assert.match(stylesSource, /\.field textarea\[aria-invalid="true"\]/);
+  assert.match(stylesSource, /\.button\[aria-invalid="true"\]/);
   assert.match(stylesSource, /border-color: var\(--danger\)/);
 
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
