@@ -185,7 +185,7 @@ function getSetupProblem(config) {
 }
 
 function isPreviewReady() {
-  return currentStatus?.phase === "preview";
+  return currentStatus?.phase === "preview" && Number(currentStatus?.total || 0) > 0;
 }
 
 function syncActionButtons() {
@@ -614,21 +614,7 @@ async function refreshAll() {
 
 async function startJob() {
   startButton.disabled = true;
-  const granted = await ensureOrganizeAccess(currentConfig);
-
-  if (!granted) {
-    await refreshAll();
-    renderStatus({
-      ...(currentStatus || {}),
-      phase: "error",
-      message: t("hostPermissionRequiredTitle"),
-      detail: t("hostPermissionRequiredDetail")
-    });
-    renderDetailPanelContent();
-    return;
-  }
-
-  const response = await chrome.runtime.sendMessage({ type: "START_ORGANIZE" });
+  const response = await chrome.runtime.sendMessage({ type: "APPLY_PREVIEW_PLAN" });
 
   if (!response?.ok) {
     await refreshAll();

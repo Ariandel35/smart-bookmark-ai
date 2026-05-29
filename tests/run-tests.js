@@ -168,6 +168,20 @@ function testSpeedModeSurface() {
   assert.match(privacyPolicy, /Complete link checks/);
 }
 
+function testPreviewApplySurface() {
+  const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
+  assert.match(backgroundSource, /smartBookmarkPreviewPlan/);
+  assert.match(backgroundSource, /APPLY_PREVIEW_PLAN/);
+  assert.match(backgroundSource, /applyPreviewPlan/);
+  assert.match(backgroundSource, /savePreviewPlan/);
+  assert.match(backgroundSource, /buildBookmarkSetSignature/);
+  assert.match(backgroundSource, /does not call the model again/);
+
+  const popupSource = fs.readFileSync(path.join(ROOT_DIR, "popup.js"), "utf8");
+  assert.match(popupSource, /APPLY_PREVIEW_PLAN/);
+  assert.doesNotMatch(popupSource, /START_ORGANIZE/);
+}
+
 function testI18nCoverage() {
   const keys = collectI18nKeysFromFiles();
   for (const language of ["en", "zh-CN"]) {
@@ -183,6 +197,7 @@ function main() {
   testCacheUtils();
   testStaticExtensionAssets();
   testSpeedModeSurface();
+  testPreviewApplySurface();
   testI18nCoverage();
   console.log("All tests passed.");
 }

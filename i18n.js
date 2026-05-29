@@ -277,7 +277,7 @@ Hard rules:
       setupMissingModel: "Model is required before preview.",
       setupMissingApiKey: "API key is required for this provider.",
       previewReadyConfirm:
-        "Apply this preview plan now? The extension will back up and rebuild the bookmark bar.",
+        "Apply this preview plan now? Marko will back up and rebuild locally without running the model again.",
       hostPermissionRequiredTitle: "Access is required before organizing.",
       hostPermissionRequiredDetail:
         "Fast mode needs access to your configured model endpoint. Complete mode also needs website access for link checks.",
@@ -491,7 +491,7 @@ Hard rules:
       setupMissingBaseUrl: "预览前需要填写 Base URL。",
       setupMissingModel: "预览前需要填写 Model。",
       setupMissingApiKey: "当前 Provider 需要 API Key。",
-      previewReadyConfirm: "现在应用这个预览方案吗？插件会先备份，再重建书签栏。",
+      previewReadyConfirm: "现在应用这个预览方案吗？Marko 会先备份，然后直接本地重建，不会再次请求模型。",
       hostPermissionRequiredTitle: "缺少访问授权，无法开始整理。",
       hostPermissionRequiredDetail:
         "快速模式需要访问你配置的模型接口；完整模式还需要网站访问权限来检测链接。",

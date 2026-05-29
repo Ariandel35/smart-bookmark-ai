@@ -83,6 +83,7 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 | Setup | Missing provider, Base URL, model, or API key routes the user to settings. |
 | API settings | `Test & Save` validates the connection and stores the working configuration. |
 | Slow models | Timeout retries automatically shrink the current batch size before giving up. |
+| Apply speed | Applying a ready preview reuses the saved plan and rebuilds locally without a second model run. |
 | Speed mode | Fast mode skips dead-link checks for quicker previews; Complete mode checks links before classification. |
 | DeepSeek | New and reset configurations start with a smaller default batch size. |
 | Advanced rules | Protected folders, domain rules, and prompt fields stay available but quieter. |

@@ -4,6 +4,7 @@ const STORAGE_KEYS = {
   config: "smartBookmarkConfig",
   status: "smartBookmarkJobStatus",
   job: "smartBookmarkActiveJob",
+  previewPlan: "smartBookmarkPreviewPlan",
   rootFolderId: "smartBookmarkRootFolderId",
   managedFolderIds: "smartBookmarkManagedFolderIds",
   managedRootBookmarkIds: "smartBookmarkManagedRootBookmarkIds",
@@ -163,6 +164,20 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         sendResponse({
           ok: false,
           error: toUserMessage(error, ux("启动整理预览失败。", "Failed to start the preview."))
+        });
+      }
+      return;
+    }
+
+    if (message?.type === "APPLY_PREVIEW_PLAN") {
+      try {
+        const result = await applyPreviewPlan();
+        sendResponse(result);
+      } catch (error) {
+        console.error("Failed to apply preview plan:", error);
+        sendResponse({
+          ok: false,
+          error: toUserMessage(error, ux("应用预览方案失败。", "Failed to apply the preview plan."))
         });
       }
       return;
@@ -742,6 +757,41 @@ function collectProtectedRootFolderIds(bookmarkBarNode, rawProtectedFolders = ""
     .map((node) => node.id);
 }
 
+async function collectBookmarkPlanningState(config) {
+  const tree = await chrome.bookmarks.getTree();
+  const bookmarkBarNode = findBookmarksBarNode(tree);
+  const unresolvedFolderId = await findExistingUnresolvedFolderId(bookmarkBarNode.id);
+  const protectedRootFolderIds = collectProtectedRootFolderIds(
+    bookmarkBarNode,
+    config.protectedRootFolders
+  );
+  const whitelistMatcher = buildWhitelistMatcher(config.whitelistDomains);
+  const skipNodeIds = new Set([
+    unresolvedFolderId,
+    ...protectedRootFolderIds
+  ].filter(Boolean));
+  const collectedBookmarks = collectBookmarks(tree, {
+    skipNodeIds
+  });
+  const preservedBookmarks = collectedBookmarks
+    .filter((bookmark) => whitelistMatcher(bookmark.url))
+    .map((bookmark) => ({
+      title: bookmark.title || t("untitledBookmark"),
+      url: bookmark.url,
+      folderPath: normalizePreservedFolderPath(bookmark.currentPath)
+    }));
+
+  return {
+    tree,
+    bookmarkBarNode,
+    unresolvedFolderId,
+    protectedRootFolderIds,
+    collectedBookmarks,
+    preservedBookmarks,
+    bookmarks: collectedBookmarks.filter((bookmark) => !whitelistMatcher(bookmark.url))
+  };
+}
+
 function buildForcedPlans(bookmarks, domainFolderRules = []) {
   const plans = [];
   const remaining = [];
@@ -844,32 +894,18 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
   await assertOrganizeHostAccess(runContext.trigger, config);
   await assertApiOriginAccess(config.baseUrl);
 
-  const tree = await chrome.bookmarks.getTree();
-  const bookmarkBarNode = findBookmarksBarNode(tree);
-  const unresolvedFolderId = await findExistingUnresolvedFolderId(bookmarkBarNode.id);
-  const protectedRootFolderIds = collectProtectedRootFolderIds(
+  const bookmarkState = await collectBookmarkPlanningState(config);
+  const {
     bookmarkBarNode,
-    config.protectedRootFolders
-  );
-  const whitelistMatcher = buildWhitelistMatcher(config.whitelistDomains);
-  const skipNodeIds = new Set([
     unresolvedFolderId,
-    ...protectedRootFolderIds
-  ].filter(Boolean));
-  const collectedBookmarks = collectBookmarks(tree, {
-    skipNodeIds
-  });
-  const preservedBookmarks = collectedBookmarks
-    .filter((bookmark) => whitelistMatcher(bookmark.url))
-    .map((bookmark) => ({
-      title: bookmark.title || t("untitledBookmark"),
-      url: bookmark.url,
-      folderPath: normalizePreservedFolderPath(bookmark.currentPath)
-    }));
-  const bookmarks = collectedBookmarks.filter((bookmark) => !whitelistMatcher(bookmark.url));
+    protectedRootFolderIds,
+    collectedBookmarks,
+    preservedBookmarks,
+    bookmarks
+  } = bookmarkState;
 
   if (!bookmarks.length) {
-    await chrome.storage.local.remove(STORAGE_KEYS.job);
+    await chrome.storage.local.remove([STORAGE_KEYS.job, STORAGE_KEYS.previewPlan]);
     await updateStatus(
       buildIdleStatus({
         phase: jobMode === "preview" ? "preview" : "completed",
@@ -883,6 +919,8 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
 
     return { ok: true };
   }
+
+  await chrome.storage.local.remove(STORAGE_KEYS.previewPlan);
 
   const snapshotInfo =
     jobMode === "organize"
@@ -1186,6 +1224,7 @@ async function restoreBackupEntry(backupId) {
     [STORAGE_KEYS.rootFolderId]: "",
     [STORAGE_KEYS.unresolvedFolderId]: await findExistingUnresolvedFolderId(bookmarkBarNode.id)
   });
+  await chrome.storage.local.remove(STORAGE_KEYS.previewPlan);
 
   const records = await syncBackupRecords();
   const restoredRecord = records.find((record) => record.id === backupId);
@@ -1533,6 +1572,7 @@ async function processNextBatch() {
           job.pendingWarnings
         );
         job.previewFolders = previewFolders;
+        await savePreviewPlan(job, previewFolders);
         await finishJob(
           "preview",
           ux(
@@ -1735,6 +1775,291 @@ function buildOrganizeCompletedMessage(job, rebuildResult) {
     `书签整理完成，已重建 ${rebuildResult.createdCount} 条书签，并删除 ${job.deleted} 条重复书签。快速模式未检查失效链接。`,
     `Bookmark organizing completed. Rebuilt ${rebuildResult.createdCount} bookmarks and removed ${job.deleted} duplicate entries. Fast mode did not check dead links.`
   );
+}
+
+async function applyPreviewPlan() {
+  const stored = await chrome.storage.local.get([STORAGE_KEYS.job, STORAGE_KEYS.previewPlan]);
+  const existingJob = stored[STORAGE_KEYS.job];
+
+  if (existingJob?.phase === "running") {
+    return {
+      ok: false,
+      error: ux(
+        "已经有一个后台整理任务在运行，请先等待完成或取消后再试。",
+        "A background organize task is already running. Wait for it to finish or cancel it first."
+      )
+    };
+  }
+
+  const previewPlan = stored[STORAGE_KEYS.previewPlan];
+  if (!isUsablePreviewPlan(previewPlan)) {
+    return {
+      ok: false,
+      error: ux(
+        "没有可应用的预览方案，请先重新生成预览。",
+        "There is no preview plan to apply. Generate a new preview first."
+      )
+    };
+  }
+
+  const config = await readStoredConfig();
+  const configSignature = buildPreviewConfigSignature(config);
+  if (configSignature !== previewPlan.configSignature) {
+    return {
+      ok: false,
+      error: ux(
+        "整理设置已变化，请重新生成预览后再应用。",
+        "The organize settings changed. Generate a new preview before applying it."
+      )
+    };
+  }
+
+  const bookmarkState = await collectBookmarkPlanningState(config);
+  const sourceBookmarkSignature = buildBookmarkSetSignature(bookmarkState.bookmarks);
+  if (sourceBookmarkSignature !== previewPlan.sourceBookmarkSignature) {
+    return {
+      ok: false,
+      error: ux(
+        "书签内容已变化，请重新生成预览后再应用。",
+        "Bookmarks changed since the preview was generated. Generate a new preview before applying it."
+      )
+    };
+  }
+
+  const snapshotInfo = await createCurrentSnapshotBackup(bookmarkState.bookmarkBarNode, "manual");
+  if (bookmarkState.collectedBookmarks.length && !snapshotInfo.created) {
+    throw buildUserFacingError(
+      ux("应用预览前备份失败，任务已停止。", "Backup before applying the preview failed, so the task was stopped."),
+      ux(
+        "为避免直接改乱现有书签，扩展要求先成功创建快照备份后才会继续应用预览方案。",
+        "To avoid corrupting your current bookmarks, the extension requires a successful snapshot backup before applying the preview plan."
+      )
+    );
+  }
+
+  const startedAt = new Date().toISOString();
+  const total = Number.isFinite(previewPlan.total) ? previewPlan.total : bookmarkState.bookmarks.length;
+  const batchSize = normalizeBatchSize(previewPlan.batchSize, config.batchSize);
+  const totalBatches = Number.isFinite(previewPlan.totalBatches)
+    ? previewPlan.totalBatches
+    : Math.max(1, Math.ceil(total / batchSize));
+  const job = {
+    runId: crypto.randomUUID(),
+    jobType: "organize",
+    jobMode: "organize",
+    phase: "running",
+    cancelRequested: false,
+    trigger: "manual",
+    config,
+    rootFolderId: bookmarkState.bookmarkBarNode.id,
+    rootFolderName: bookmarkState.bookmarkBarNode.title || "BOOKMARK_BAR",
+    batchSize,
+    total,
+    totalBatches,
+    processed: total,
+    moved: Number.isFinite(previewPlan.moved) ? previewPlan.moved : 0,
+    deleted: Number.isFinite(previewPlan.deleted) ? previewPlan.deleted : 0,
+    reused: Number.isFinite(previewPlan.reused) ? previewPlan.reused : 0,
+    aiClassified: Number.isFinite(previewPlan.aiClassified) ? previewPlan.aiClassified : 0,
+    warningCount: Number.isFinite(previewPlan.warningCount) ? previewPlan.warningCount : 0,
+    lastWarning: previewPlan.lastWarning || "",
+    warnings: Array.isArray(previewPlan.warnings) ? previewPlan.warnings : [],
+    deletedItems: Array.isArray(previewPlan.deletedItems) ? previewPlan.deletedItems : [],
+    previewFolders: Array.isArray(previewPlan.previewFolders) ? previewPlan.previewFolders : [],
+    bookmarks: bookmarkState.bookmarks,
+    preservedBookmarks: Array.isArray(previewPlan.preservedBookmarks)
+      ? previewPlan.preservedBookmarks
+      : bookmarkState.preservedBookmarks,
+    plannedBookmarks: Array.isArray(previewPlan.plannedBookmarks) ? previewPlan.plannedBookmarks : [],
+    pendingWarnings: Array.isArray(previewPlan.pendingWarnings) ? previewPlan.pendingWarnings : [],
+    exactDuplicateSeenByUrl: {},
+    taxonomyLocks: {},
+    taxonomyTopFolders: Array.isArray(previewPlan.taxonomyTopFolders)
+      ? previewPlan.taxonomyTopFolders
+      : buildTaxonomyFallbackTopFolders(),
+    classificationSignature: previewPlan.classificationSignature || Rules.buildClassificationSignature(config, MANUAL_FOLDER_TITLE),
+    domainFolderRules: Rules.parseDomainFolderRules(config.domainFolderRules, MANUAL_FOLDER_TITLE),
+    protectedRootFolderIds: bookmarkState.protectedRootFolderIds,
+    managedFolderIds: [],
+    managedRootBookmarkIds: [],
+    snapshotBackupId: snapshotInfo.folderId || "",
+    snapshotBackupTitle: snapshotInfo.folderTitle || "",
+    unresolvedFolderId: bookmarkState.unresolvedFolderId,
+    startedAt
+  };
+
+  await chrome.alarms.clear(ALARM_NAME);
+  await chrome.storage.local.set({
+    [STORAGE_KEYS.job]: job
+  });
+  await updateStatus(
+    buildIdleStatus({
+      phase: "running",
+      message: ux(
+        "正在应用预览方案，已跳过模型分类。",
+        "Applying the preview plan. Model classification is skipped."
+      ),
+      provider: getProviderLabel(config.provider),
+      model: config.model,
+      total,
+      processed: total,
+      moved: job.moved,
+      deleted: job.deleted,
+      reused: job.reused,
+      aiClassified: job.aiClassified,
+      batchSize,
+      warningCount: job.warningCount,
+      warnings: job.warnings,
+      deletedItems: job.deletedItems,
+      previewFolders: job.previewFolders,
+      protectedRootCount: bookmarkState.protectedRootFolderIds.length,
+      currentBatch: totalBatches,
+      totalBatches,
+      startedAt,
+      finishedAt: "",
+      detail: ux(
+        `本次直接使用已确认的预览方案重建书签结构，不会再次请求模型。${snapshotInfo.detail}`,
+        `This run rebuilds bookmarks from the confirmed preview plan and does not call the model again. ${snapshotInfo.detail}`
+      )
+    })
+  );
+
+  try {
+    const rebuildResult = await rebuildOrganizedBookmarks(job);
+    job.managedFolderIds = rebuildResult.managedFolderIds;
+    job.managedRootBookmarkIds = rebuildResult.managedRootBookmarkIds;
+    job.warnings = rebuildResult.warningEntries;
+    job.warningCount = rebuildResult.warningEntries.length;
+    job.lastWarning = rebuildResult.warningEntries.at(-1)?.reason || "";
+
+    await finishJob(
+      "completed",
+      buildOrganizeCompletedMessage(job, rebuildResult),
+      job,
+      {
+        detail: ux(
+          `已直接应用预览方案，未再次调用模型。共重建 ${rebuildResult.createdCount} 条书签，白名单保留 ${rebuildResult.preservedCount} 条，受保护根目录保留 ${job.protectedRootFolderIds.length} 个，${MANUAL_FOLDER_TITLE} ${rebuildResult.warningEntries.length} 条。`,
+          `Applied the preview plan without calling the model again. Rebuilt ${rebuildResult.createdCount} bookmarks, preserved ${rebuildResult.preservedCount} whitelisted bookmarks, kept ${job.protectedRootFolderIds.length} protected root folders untouched, and left ${rebuildResult.warningEntries.length} items in "${MANUAL_FOLDER_TITLE}".`
+        )
+      }
+    );
+    await chrome.storage.local.remove(STORAGE_KEYS.previewPlan);
+    return { ok: true };
+  } catch (error) {
+    await updateStatus({
+      phase: "error",
+      message:
+        error?.userMessage ||
+        toUserMessage(error, ux("应用预览方案时出错。", "An error occurred while applying the preview plan.")),
+      detail:
+        error?.userDetail ||
+        ux(
+          "任务已停止。预览方案仍保留，你可以修复问题后重试；如果书签已发生变化，请重新生成预览。",
+          "The task has stopped. The preview plan is still kept so you can retry after fixing the issue. If bookmarks changed, generate a new preview."
+        ),
+      finishedAt: new Date().toISOString()
+    });
+    await chrome.storage.local.remove(STORAGE_KEYS.job);
+    return {
+      ok: false,
+      error: toUserMessage(error, ux("应用预览方案失败。", "Failed to apply the preview plan."))
+    };
+  }
+}
+
+async function savePreviewPlan(job, previewFolders) {
+  await chrome.storage.local.set({
+    [STORAGE_KEYS.previewPlan]: {
+      version: 1,
+      runId: job.runId || "",
+      createdAt: new Date().toISOString(),
+      configSignature: buildPreviewConfigSignature(job.config || {}),
+      sourceBookmarkSignature: buildBookmarkSetSignature(job.bookmarks),
+      classificationSignature: job.classificationSignature || "",
+      linkCheckMode: normalizeLinkCheckMode(job.config?.linkCheckMode),
+      batchSize: job.batchSize,
+      total: job.total,
+      totalBatches: job.totalBatches,
+      moved: job.moved,
+      deleted: job.deleted,
+      reused: job.reused,
+      aiClassified: job.aiClassified,
+      warningCount: job.warningCount,
+      lastWarning: job.lastWarning || "",
+      warnings: sanitizePreviewLogEntries(job.warnings),
+      deletedItems: sanitizePreviewLogEntries(job.deletedItems),
+      previewFolders: Array.isArray(previewFolders) ? previewFolders : [],
+      preservedBookmarks: sanitizePreviewPlanEntries(job.preservedBookmarks),
+      plannedBookmarks: sanitizePreviewPlanEntries(job.plannedBookmarks),
+      pendingWarnings: sanitizePreviewPlanEntries(job.pendingWarnings),
+      taxonomyTopFolders: Array.isArray(job.taxonomyTopFolders) ? job.taxonomyTopFolders : []
+    }
+  });
+}
+
+function isUsablePreviewPlan(previewPlan) {
+  return Boolean(
+    previewPlan &&
+      previewPlan.version === 1 &&
+      typeof previewPlan.configSignature === "string" &&
+      typeof previewPlan.sourceBookmarkSignature === "string" &&
+      Array.isArray(previewPlan.plannedBookmarks)
+  );
+}
+
+function buildPreviewConfigSignature(config = {}) {
+  const normalized = mergeConfig(config);
+  return JSON.stringify({
+    classification: Rules.buildClassificationSignature(normalized, MANUAL_FOLDER_TITLE),
+    linkCheckMode: normalizeLinkCheckMode(normalized.linkCheckMode),
+    whitelistDomains: parseWhitelistDomains(normalized.whitelistDomains)
+  });
+}
+
+function buildBookmarkSetSignature(bookmarks = []) {
+  const rows = (Array.isArray(bookmarks) ? bookmarks : [])
+    .map((bookmark) => [
+      String(bookmark?.id || ""),
+      String(bookmark?.title || "").trim(),
+      String(bookmark?.url || "").trim(),
+      ...(Array.isArray(bookmark?.currentPath)
+        ? bookmark.currentPath.map((segment) => String(segment || "").trim())
+        : [])
+    ])
+    .sort((a, b) => a.join("\u001f").localeCompare(b.join("\u001f")));
+
+  return JSON.stringify(rows);
+}
+
+function sanitizePreviewPlanEntries(entries = []) {
+  return (Array.isArray(entries) ? entries : [])
+    .map((entry) => {
+      if (!entry?.url) {
+        return null;
+      }
+
+      return {
+        title: entry.title || t("untitledBookmark"),
+        url: entry.url,
+        folderPath: normalizeFolderPath(entry.folderPath),
+        kind: typeof entry.kind === "string" ? entry.kind : "",
+        reason: typeof entry.reason === "string" ? entry.reason : "",
+        suggestion: typeof entry.suggestion === "string" ? entry.suggestion : ""
+      };
+    })
+    .filter(Boolean);
+}
+
+function sanitizePreviewLogEntries(entries = []) {
+  return (Array.isArray(entries) ? entries : [])
+    .map((entry) => ({
+      kind: typeof entry?.kind === "string" ? entry.kind : "",
+      title: typeof entry?.title === "string" ? entry.title : "",
+      url: typeof entry?.url === "string" ? entry.url : "",
+      reason: typeof entry?.reason === "string" ? entry.reason : "",
+      suggestion: typeof entry?.suggestion === "string" ? entry.suggestion : ""
+    }))
+    .filter((entry) => entry.title || entry.url || entry.reason || entry.suggestion);
 }
 
 async function finishJob(phase, message, job, overrides = {}) {
