@@ -29,6 +29,7 @@ const isZh = I18N.locale === "zh_CN";
 const ux = (zh, en) => (isZh ? zh : en);
 const DEFAULT_BATCH_SIZE = 50;
 const MIN_BATCH_SIZE = 5;
+const MIN_AUTO_RETRY_BATCH_SIZE = 1;
 const MAX_AUTO_RETRY_BATCH_SIZE = 20;
 const RUNTIME_BATCH_SIZE_CAPS = {
   deepseek: 5
@@ -104,6 +105,13 @@ const TAXONOMY_OUTPUT_TOKEN_BUDGET = 384;
 const CLASSIFICATION_OUTPUT_TOKEN_BASE = 256;
 const CLASSIFICATION_OUTPUT_TOKENS_PER_BOOKMARK = 80;
 const CLASSIFICATION_OUTPUT_TOKEN_MAX = 4096;
+const CLASSIFICATION_OUTPUT_BUDGET_PROFILES = {
+  deepseek: {
+    base: 160,
+    perBookmark: 48,
+    max: 768
+  }
+};
 const LOCAL_REQUIREMENT_CHECK_TTL_MS = 15_000;
 const MAX_BACKUP_RECORDS = 10;
 const MAX_CLASSIFICATION_SIGNATURES = 6;
@@ -506,11 +514,20 @@ function getTaxonomyPlanningTimeoutMs(config = {}) {
   return TAXONOMY_TIMEOUT_CAPS_MS[config.provider] || DEFAULT_TAXONOMY_TIMEOUT_MS;
 }
 
-function getClassificationOutputTokenBudget(batchLength) {
+function getClassificationOutputBudgetProfile(provider) {
+  return CLASSIFICATION_OUTPUT_BUDGET_PROFILES[provider] || {
+    base: CLASSIFICATION_OUTPUT_TOKEN_BASE,
+    perBookmark: CLASSIFICATION_OUTPUT_TOKENS_PER_BOOKMARK,
+    max: CLASSIFICATION_OUTPUT_TOKEN_MAX
+  };
+}
+
+function getClassificationOutputTokenBudget(batchLength, provider = "") {
   const safeBatchLength = Math.max(1, Number.parseInt(String(batchLength || 1), 10) || 1);
+  const profile = getClassificationOutputBudgetProfile(provider);
   return Math.min(
-    CLASSIFICATION_OUTPUT_TOKEN_MAX,
-    CLASSIFICATION_OUTPUT_TOKEN_BASE + safeBatchLength * CLASSIFICATION_OUTPUT_TOKENS_PER_BOOKMARK
+    profile.max,
+    profile.base + safeBatchLength * profile.perBookmark
   );
 }
 
@@ -3884,7 +3901,7 @@ async function classifyBatchWithModel(
     taxonomyLocks,
     taxonomyTopFolders
   );
-  const outputTokenBudget = getClassificationOutputTokenBudget(batch.length);
+  const outputTokenBudget = getClassificationOutputTokenBudget(batch.length, config.provider);
   const requestSpec = Providers.buildRequest(config, messages, {
     mode: "organize",
     outputTokenBudget
@@ -4565,12 +4582,21 @@ function isModelTimeoutError(error) {
   return /first-response-timeout|request-timeout|15 秒|25 秒|45 秒|90 秒|within 15 seconds|within 25 seconds|within 45 seconds|within 90 seconds/i.test(text);
 }
 
+function normalizeRetryBatchSize(rawValue, fallback = MIN_BATCH_SIZE) {
+  const parsed = Number.parseInt(String(rawValue ?? ""), 10);
+  if (!Number.isInteger(parsed)) {
+    return fallback;
+  }
+
+  return Math.max(MIN_AUTO_RETRY_BATCH_SIZE, parsed);
+}
+
 async function retryCurrentBatchWithSmallerBatch(job, error) {
   if (!job || job.phase !== "running" || job.jobType !== "organize") {
     return false;
   }
 
-  const oldBatchSize = normalizeBatchSize(job.batchSize);
+  const oldBatchSize = normalizeRetryBatchSize(job.batchSize);
   const remaining = Math.max(0, Number(job.total || 0) - Number(job.processed || 0));
   const attemptedBatchLength = Math.max(
     0,
@@ -4578,12 +4604,12 @@ async function retryCurrentBatchWithSmallerBatch(job, error) {
   );
   const retryBasis = Math.min(oldBatchSize, attemptedBatchLength || oldBatchSize);
 
-  if (retryBasis <= MIN_BATCH_SIZE || oldBatchSize <= MIN_BATCH_SIZE) {
+  if (retryBasis <= MIN_AUTO_RETRY_BATCH_SIZE || oldBatchSize <= MIN_AUTO_RETRY_BATCH_SIZE) {
     return false;
   }
 
   const nextBatchSize = Math.max(
-    MIN_BATCH_SIZE,
+    MIN_AUTO_RETRY_BATCH_SIZE,
     Math.min(MAX_AUTO_RETRY_BATCH_SIZE, Math.floor(retryBasis / 2))
   );
 
@@ -4613,8 +4639,8 @@ async function retryCurrentBatchWithSmallerBatch(job, error) {
       `${getProviderLabel(nextJob.config.provider)} was too slow, so the batch size was automatically reduced from ${oldBatchSize} to ${nextBatchSize} and the current batch will retry.`
     ),
     detail: ux(
-      "这次重试不会丢失已经完成的批次，也不会改动原书签结构。如果最小批大小仍然超时，任务才会停止并提示你更换模型或稍后重试。",
-      "Completed batches are kept and the original bookmark tree is still unchanged. If the minimum batch size still times out, the task will stop and suggest switching models or trying again later."
+      "这次重试不会丢失已经完成的批次，也不会改动原书签结构；如果 2 条仍然慢，会继续拆成 1 条的临时小批次后再停止。",
+      "Completed batches are kept and the original bookmark tree is still unchanged. If two items are still slow, the extension can retry as a one-bookmark mini-batch before stopping."
     )
   });
 

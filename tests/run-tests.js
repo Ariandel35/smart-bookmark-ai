@@ -604,6 +604,8 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /RUNTIME_BATCH_SIZE_CAPS/);
   assert.match(backgroundSource, /deepseek: 5/);
   assert.match(backgroundSource, /getRuntimeBatchSize/);
+  assert.match(backgroundSource, /MIN_AUTO_RETRY_BATCH_SIZE = 1/);
+  assert.match(backgroundSource, /normalizeRetryBatchSize/);
   assert.match(backgroundSource, /FIRST_RESPONSE_TIMEOUT_CAPS_MS/);
   assert.match(backgroundSource, /REQUEST_TIMEOUT_CAPS_MS/);
   assert.match(backgroundSource, /getFirstResponseTimeoutMs/);
@@ -614,7 +616,10 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /I18N\.isBuiltInPromptValue/);
   assert.match(backgroundSource, /MODEL_INPUT_URL_MAX_LENGTH/);
   assert.match(backgroundSource, /CLASSIFICATION_OUTPUT_TOKENS_PER_BOOKMARK/);
+  assert.match(backgroundSource, /CLASSIFICATION_OUTPUT_BUDGET_PROFILES/);
+  assert.match(backgroundSource, /getClassificationOutputBudgetProfile/);
   assert.match(backgroundSource, /getClassificationOutputTokenBudget/);
+  assert.match(backgroundSource, /getClassificationOutputTokenBudget\(batch\.length, config\.provider\)/);
   assert.match(backgroundSource, /buildModelBookmarkInputPayload/);
   assert.match(backgroundSource, /compactModelUrl/);
   assert.match(backgroundSource, /outputTokenBudget/);
@@ -635,6 +640,7 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /validateConfig\(config, \{ requireModelAccess: false \}\)/);
   assert.match(backgroundSource, /validateConfig\(config, \{ requireModelAccess: true \}\)/);
   assert.match(backgroundSource, /!shouldCheckDeadLinks\(runtimeConfig\) && !startupAiCandidateCount/);
+  assert.match(backgroundSource, /one-bookmark mini-batch/);
   assert.match(backgroundSource, /first-response-timeout\|request-timeout/);
 }
 
