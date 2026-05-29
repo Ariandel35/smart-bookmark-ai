@@ -400,6 +400,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="backupActionStatus"/);
   assert.match(optionsHtml, /id="settingsActionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.match(optionsHtml, /id="backupActionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
+  assert.match(optionsHtml, /id="createBackupButton"[\s\S]*aria-describedby="backupActionStatus"/);
   assert.match(optionsHtml, /id="testApiButton"[\s\S]*aria-describedby="apiTestStatus"/);
   assert.match(optionsHtml, /id="grantAccessButton"[\s\S]*aria-describedby="hostAccessStatus"/);
   assert.match(optionsHtml, /id="linkCheckMode"[\s\S]*aria-describedby="linkCheckModeHint"/);
@@ -479,6 +480,9 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /providerSelect\.addEventListener\("change"[\s\S]*markPending\(\);[\s\S]*refreshHostAccessStatus/);
   assert.match(optionsSource, /pendingBackupAction/);
   assert.match(optionsSource, /backupActionInFlight/);
+  assert.match(optionsSource, /restoreButton\.setAttribute\("aria-describedby", backupActionStatus\.id\)/);
+  assert.match(optionsSource, /deleteButton\.setAttribute\("aria-describedby", backupActionStatus\.id\)/);
+  assert.match(optionsSource, /confirmButton\.setAttribute\("aria-describedby", backupActionStatus\.id\)/);
   assert.match(optionsSource, /restoreButton\.dataset\.backupActionButton = "restore"/);
   assert.match(optionsSource, /deleteButton\.dataset\.backupActionButton = "delete"/);
   assert.match(optionsSource, /focusBackupConfirmationPrimary/);

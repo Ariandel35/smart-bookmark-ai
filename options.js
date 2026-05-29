@@ -880,6 +880,7 @@ function renderBackupRecords(records = currentBackupRecords) {
       restoreButton.type = "button";
       restoreButton.className = "button button--ghost button--compact";
       restoreButton.textContent = t("restoreButton");
+      restoreButton.setAttribute("aria-describedby", backupActionStatus.id);
       restoreButton.dataset.backupId = String(record.id || "");
       restoreButton.dataset.backupActionButton = "restore";
       restoreButton.disabled = backupActionInFlight;
@@ -891,6 +892,7 @@ function renderBackupRecords(records = currentBackupRecords) {
       deleteButton.type = "button";
       deleteButton.className = "button button--danger button--compact";
       deleteButton.textContent = t("deleteButton");
+      deleteButton.setAttribute("aria-describedby", backupActionStatus.id);
       deleteButton.dataset.backupId = String(record.id || "");
       deleteButton.dataset.backupActionButton = "delete";
       deleteButton.disabled = backupActionInFlight;
@@ -961,6 +963,7 @@ function createBackupInlineConfirm(record, action) {
       : "button button--danger button--compact";
   confirmButton.textContent =
     action === "restore" ? t("backupRestoreInlinePrimary") : t("backupDeleteInlinePrimary");
+  confirmButton.setAttribute("aria-describedby", backupActionStatus.id);
   confirmButton.dataset.backupId = String(record.id || "");
   confirmButton.dataset.backupConfirmPrimary = "true";
   confirmButton.disabled = backupActionInFlight;
