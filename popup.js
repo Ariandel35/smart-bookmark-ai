@@ -546,7 +546,19 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
       keepButton.type = "button";
       keepButton.className = "button button--secondary button--compact";
       keepButton.textContent = t("keepButton");
+
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "button button--danger button--compact";
+      deleteButton.textContent = t("deleteButton");
+
+      const lockEntryActions = () => {
+        keepButton.disabled = true;
+        deleteButton.disabled = true;
+      };
+
       keepButton.addEventListener("click", () => {
+        lockEntryActions();
         resolveUnprocessedEntry(entry.id, "keep").catch((error) => {
           console.error("Failed to keep unprocessed bookmark:", error);
           renderStatus({
@@ -558,11 +570,8 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
         });
       });
 
-      const deleteButton = document.createElement("button");
-      deleteButton.type = "button";
-      deleteButton.className = "button button--danger button--compact";
-      deleteButton.textContent = t("deleteButton");
       deleteButton.addEventListener("click", () => {
+        lockEntryActions();
         resolveUnprocessedEntry(entry.id, "delete").catch((error) => {
           console.error("Failed to delete unprocessed bookmark:", error);
           renderStatus({

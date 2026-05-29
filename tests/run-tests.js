@@ -232,6 +232,9 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /requirement\.needsModel \|\| requirement\.requiresBroadHostAccess/);
   assert.match(popupSource, /modelAccessRequiredForUncachedPreview/);
   assert.match(popupSource, /async function createManualBackup\(\) \{\n  startButton\.disabled = true;/);
+  assert.match(popupSource, /const lockEntryActions = \(\) => \{\n        keepButton\.disabled = true;\n        deleteButton\.disabled = true;/);
+  assert.match(popupSource, /keepButton\.addEventListener\("click", \(\) => \{\n        lockEntryActions\(\);/);
+  assert.match(popupSource, /deleteButton\.addEventListener\("click", \(\) => \{\n        lockEntryActions\(\);/);
   assert.doesNotMatch(popupSource, /START_ORGANIZE/);
   assert.doesNotMatch(popupSource, /window\.confirm/);
 
