@@ -298,6 +298,13 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /cancelButton\.disabled = popupActionInFlight \|\| !isRunning \|\| isCancelling/);
   assert.match(popupSource, /cancelButton\.textContent = isCancelling \? t\("cancelRequestedButton"\) : t\("cancelButton"\)/);
   assert.match(popupSource, /createApplyConfirmationState/);
+  assert.match(popupSource, /wrapper\.id = "applyConfirmation"/);
+  assert.match(popupSource, /wrapper\.setAttribute\("aria-labelledby", "applyConfirmTitle"\)/);
+  assert.match(popupSource, /wrapper\.setAttribute\("aria-describedby", "applyConfirmDesc"\)/);
+  assert.match(popupSource, /applyButton\.dataset\.applyConfirmationPrimary = "true"/);
+  assert.match(popupSource, /function focusApplyConfirmationPrimary/);
+  assert.match(popupSource, /focusApplyConfirmationPrimary\(\)/);
+  assert.match(popupSource, /startButton\.focus\(\)/);
   assert.match(popupSource, /renderResponseError/);
   assert.match(popupSource, /detail: response\?\.detail \|\| ""/);
   assert.match(popupSource, /progressTrack\.setAttribute\("aria-valuenow", String\(progress\)\)/);

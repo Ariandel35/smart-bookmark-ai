@@ -365,18 +365,22 @@ function shouldShowSettingsShortcut() {
 
 function createApplyConfirmationState() {
   const wrapper = document.createElement("section");
+  wrapper.id = "applyConfirmation";
   wrapper.className = "confirm-strip";
   wrapper.setAttribute("role", "group");
-  wrapper.setAttribute("aria-label", t("applyConfirmTitle"));
+  wrapper.setAttribute("aria-labelledby", "applyConfirmTitle");
+  wrapper.setAttribute("aria-describedby", "applyConfirmDesc");
 
   const copy = document.createElement("div");
   copy.className = "confirm-strip__copy";
 
   const title = document.createElement("strong");
+  title.id = "applyConfirmTitle";
   title.className = "confirm-strip__title";
   title.textContent = t("applyConfirmTitle");
 
   const desc = document.createElement("div");
+  desc.id = "applyConfirmDesc";
   desc.className = "confirm-strip__desc";
   desc.textContent = t("applyConfirmDesc");
 
@@ -388,6 +392,7 @@ function createApplyConfirmationState() {
   const applyButton = document.createElement("button");
   applyButton.type = "button";
   applyButton.className = "button button--primary button--compact";
+  applyButton.dataset.applyConfirmationPrimary = "true";
   applyButton.textContent = t("applyConfirmPrimary");
   applyButton.addEventListener("click", () => {
     applyButton.disabled = true;
@@ -405,18 +410,23 @@ function createApplyConfirmationState() {
     });
   });
 
-  const cancelButton = document.createElement("button");
-  cancelButton.type = "button";
-  cancelButton.className = "button button--secondary button--compact";
-  cancelButton.textContent = t("applyConfirmSecondary");
-  cancelButton.addEventListener("click", () => {
+  const confirmationCancelButton = document.createElement("button");
+  confirmationCancelButton.type = "button";
+  confirmationCancelButton.className = "button button--secondary button--compact";
+  confirmationCancelButton.textContent = t("applyConfirmSecondary");
+  confirmationCancelButton.addEventListener("click", () => {
     applyConfirmationVisible = false;
     renderDetailPanelContent();
+    startButton.focus();
   });
 
-  actions.append(applyButton, cancelButton);
+  actions.append(applyButton, confirmationCancelButton);
   wrapper.append(copy, actions);
   return wrapper;
+}
+
+function focusApplyConfirmationPrimary() {
+  detailPanel.querySelector("[data-apply-confirmation-primary]")?.focus();
 }
 
 function countBookmarks(node) {
@@ -861,6 +871,7 @@ async function handlePrimaryAction() {
   if (isPreviewReady()) {
     applyConfirmationVisible = true;
     renderDetailPanelContent();
+    focusApplyConfirmationPrimary();
     return;
   }
 

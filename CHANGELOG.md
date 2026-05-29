@@ -15,6 +15,7 @@
 - Popup preflight actions now stay locked through refreshes while checks, permission prompts, or cancellation requests are in progress
 - Popup preflight, backup, cancel, and unprocessed-item actions now show inline in-progress feedback while controls are locked
 - Cancellation requests now persist in job status so the popup keeps the cancel button locked after the request is accepted
+- Popup apply confirmation now moves focus to the inline confirmation and returns focus to the primary action when dismissed
 - Popup setup and permission errors now include an inline settings shortcut instead of only relying on the header button
 - Popup settings shortcuts now deep-link directly to the connection section when setup fixes are needed
 - Popup progress now exposes standard progressbar state for assistive technologies
