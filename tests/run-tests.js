@@ -400,6 +400,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="backupActionStatus"/);
   assert.match(optionsHtml, /id="settingsActionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.match(optionsHtml, /id="backupActionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
+  assert.match(optionsHtml, /id="saveButton"[\s\S]*aria-describedby="settingsActionStatus"/);
+  assert.match(optionsHtml, /id="resetButton"[\s\S]*aria-describedby="settingsActionStatus"/);
   assert.match(optionsHtml, /id="createBackupButton"[\s\S]*aria-describedby="backupActionStatus"/);
   assert.match(optionsHtml, /id="testApiButton"[\s\S]*aria-describedby="apiTestStatus"/);
   assert.match(optionsHtml, /id="grantAccessButton"[\s\S]*aria-describedby="hostAccessStatus"/);
