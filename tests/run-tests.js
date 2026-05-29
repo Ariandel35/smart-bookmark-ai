@@ -277,6 +277,10 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /popupActionInFlight/);
   assert.match(popupSource, /setPopupActionInFlight/);
   assert.match(popupSource, /setPopupActionStatus/);
+  assert.match(popupSource, /getOptionsSectionUrl/);
+  assert.match(popupSource, /options\.html#\$\{safeSection\}/);
+  assert.match(popupSource, /chrome\.tabs\?\.create/);
+  assert.match(popupSource, /openOptionsSection\("connection"\)/);
   assert.match(popupSource, /createSettingsShortcutButton/);
   assert.match(popupSource, /shouldShowSettingsShortcut/);
   assert.match(popupSource, /settingsShortcutButton/);

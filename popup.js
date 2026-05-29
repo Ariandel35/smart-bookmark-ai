@@ -38,6 +38,28 @@ I18N.applyDocument(document);
 
 const DEFAULT_STATUS_DETAIL = t("defaultStatusDetail");
 
+function getOptionsSectionUrl(sectionId = "connection") {
+  const safeSection = ["connection", "organize", "automation", "backup"].includes(sectionId)
+    ? sectionId
+    : "connection";
+  return chrome.runtime.getURL(`options.html#${safeSection}`);
+}
+
+async function openOptionsSection(sectionId = "connection") {
+  const url = getOptionsSectionUrl(sectionId);
+
+  try {
+    if (chrome.tabs?.create) {
+      await chrome.tabs.create({ url });
+      return;
+    }
+  } catch (error) {
+    // Fall back to Chrome's options opener if tab creation is unavailable.
+  }
+
+  chrome.runtime.openOptionsPage();
+}
+
 async function hasBroadHostAccess() {
   try {
     return await chrome.permissions.contains({ origins: HOST_ACCESS_ORIGINS });
@@ -318,7 +340,7 @@ function createSettingsShortcutButton() {
   action.className = "button button--primary button--compact";
   action.textContent = t("settingsShortcutButton");
   action.addEventListener("click", () => {
-    chrome.runtime.openOptionsPage();
+    void openOptionsSection("connection");
   });
 
   return action;
@@ -828,7 +850,7 @@ async function startPreview() {
 
 async function handlePrimaryAction() {
   if (!hasPreviewAttemptConfig(currentConfig)) {
-    chrome.runtime.openOptionsPage();
+    await openOptionsSection("connection");
     return;
   }
 
@@ -907,7 +929,7 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 optionsButton.addEventListener("click", () => {
-  chrome.runtime.openOptionsPage();
+  void openOptionsSection("connection");
 });
 
 startButton.addEventListener("click", () => {
