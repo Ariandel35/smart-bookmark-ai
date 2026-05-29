@@ -3,7 +3,7 @@
     "message": "Marko"
   },
   "extDescription": {
-    "message": "先预览，再用你自己的 AI 模型整理书签，支持备份、重复清理和可选失效链接检测。"
+    "message": "先预览再整理 Chrome 书签，使用你自己的 AI 模型，支持备份、重复清理和可选失效链接检测。"
   },
   "actionTitle": {
     "message": "Marko"

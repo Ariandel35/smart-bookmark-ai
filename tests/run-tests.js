@@ -180,8 +180,16 @@ function testStaticExtensionAssets() {
     assert.equal(fs.existsSync(path.join(ROOT_DIR, iconPath)), true, `Missing icon ${iconPath}`);
   }
 
+  const localeMessages = {};
   for (const localePath of ["_locales/en/messages.json", "_locales/zh_CN/messages.json"]) {
-    JSON.parse(fs.readFileSync(path.join(ROOT_DIR, localePath), "utf8"));
+    localeMessages[localePath] = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, localePath), "utf8"));
+  }
+  assert.equal(localeMessages["_locales/en/messages.json"].extName.message, "Marko");
+  assert.equal(localeMessages["_locales/zh_CN/messages.json"].extName.message, "Marko");
+  assert.match(localeMessages["_locales/en/messages.json"].extDescription.message, /Preview first/);
+  assert.match(localeMessages["_locales/zh_CN/messages.json"].extDescription.message, /先预览再整理/);
+  for (const [localePath, messages] of Object.entries(localeMessages)) {
+    assert.ok(messages.extDescription.message.length <= 132, `${localePath} description is too long`);
   }
 
   const screenshotPaths = [
@@ -241,6 +249,7 @@ function testSpeedModeSurface() {
   const localeDescription = JSON.parse(
     fs.readFileSync(path.join(ROOT_DIR, "_locales/en/messages.json"), "utf8")
   ).extDescription.message;
+  assert.match(localeDescription, /Preview first/);
   assert.match(localeDescription, /optional dead-link checks/);
 
   const storeListing = fs.readFileSync(path.join(ROOT_DIR, "webstore/STORE_LISTING.md"), "utf8");
