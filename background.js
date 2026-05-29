@@ -91,6 +91,129 @@ const ROOT_DIRECT_FOLDER_ALIASES = [
   "top sites",
   "start page"
 ];
+const FAST_LOCAL_FOLDER_RULES = [
+  {
+    folderPath: [ux("AI/技术", "AI & Tech")],
+    domains: [
+      "github.com",
+      "gitlab.com",
+      "bitbucket.org",
+      "stackoverflow.com",
+      "stackexchange.com",
+      "developer.mozilla.org",
+      "npmjs.com",
+      "pypi.org",
+      "docker.com",
+      "kubernetes.io",
+      "k8s.io",
+      "nodejs.org",
+      "react.dev",
+      "vuejs.org",
+      "angular.dev",
+      "vitejs.dev",
+      "nextjs.org",
+      "typescriptlang.org",
+      "rust-lang.org",
+      "go.dev",
+      "python.org",
+      "vercel.com",
+      "netlify.com",
+      "cloudflare.com",
+      "tailwindcss.com",
+      "w3.org",
+      "caniuse.com"
+    ]
+  },
+  {
+    folderPath: [ux("学习/教程", "Learning & Tutorials")],
+    domains: [
+      "coursera.org",
+      "edx.org",
+      "udemy.com",
+      "khanacademy.org",
+      "freecodecamp.org",
+      "codecademy.com",
+      "w3schools.com"
+    ]
+  },
+  {
+    folderPath: [ux("工具/效率", "Tools & Productivity")],
+    domains: [
+      "notion.so",
+      "trello.com",
+      "asana.com",
+      "airtable.com",
+      "slack.com",
+      "zoom.us",
+      "calendly.com",
+      "docs.google.com",
+      "drive.google.com",
+      "dropbox.com",
+      "1password.com"
+    ]
+  },
+  {
+    folderPath: [ux("产品/设计", "Product & Design")],
+    domains: [
+      "figma.com",
+      "dribbble.com",
+      "behance.net",
+      "canva.com",
+      "producthunt.com",
+      "uxdesign.cc"
+    ]
+  },
+  {
+    folderPath: [ux("资讯/社区", "News & Communities")],
+    domains: [
+      "news.ycombinator.com",
+      "reddit.com",
+      "x.com",
+      "twitter.com",
+      "medium.com",
+      "substack.com",
+      "zhihu.com",
+      "juejin.cn",
+      "v2ex.com"
+    ]
+  },
+  {
+    folderPath: [ux("购物/服务", "Shopping & Services")],
+    domains: [
+      "amazon.com",
+      "ebay.com",
+      "etsy.com",
+      "taobao.com",
+      "jd.com",
+      "tmall.com",
+      "aliexpress.com",
+      "paypal.com"
+    ]
+  },
+  {
+    folderPath: [ux("娱乐/内容", "Entertainment & Content")],
+    domains: [
+      "netflix.com",
+      "spotify.com",
+      "twitch.tv",
+      "imdb.com",
+      "douban.com",
+      "disneyplus.com"
+    ]
+  },
+  {
+    folderPath: [ux("生活/资源", "Life & Resources")],
+    domains: [
+      "airbnb.com",
+      "booking.com",
+      "tripadvisor.com",
+      "expedia.com",
+      "mayoclinic.org",
+      "healthline.com",
+      "webmd.com"
+    ]
+  }
+];
 const DEAD_LINK_CHECK_TIMEOUT_MS = 10_000;
 const DEAD_LINK_SCAN_CONCURRENCY = 6;
 const DEAD_LINK_DELETE_STATUS_CODES = new Set([404, 410, 451]);
@@ -1097,6 +1220,56 @@ function buildForcedPlans(bookmarks, domainFolderRules = []) {
   };
 }
 
+function buildBuiltInFastFolderPlans(bookmarks) {
+  const plans = [];
+  const remaining = [];
+
+  for (const bookmark of Array.isArray(bookmarks) ? bookmarks : []) {
+    const folderPath = matchBuiltInFastFolderPath(bookmark);
+    if (!folderPath) {
+      remaining.push(bookmark);
+      continue;
+    }
+
+    plans.push({
+      id: bookmark.id,
+      action: "keep",
+      folderPath,
+      duplicateOf: ""
+    });
+  }
+
+  return {
+    plans,
+    remaining
+  };
+}
+
+function matchBuiltInFastFolderPath(bookmark) {
+  const hostname = extractHostname(bookmark?.url || "");
+  if (!hostname) {
+    return null;
+  }
+
+  const normalizedHost = hostname.replace(/^www\./i, "").toLowerCase();
+  const matchedRule = FAST_LOCAL_FOLDER_RULES.find((rule) =>
+    rule.domains.some((domain) => domainMatchesHost(normalizedHost, domain))
+  );
+
+  return matchedRule ? matchedRule.folderPath : null;
+}
+
+function domainMatchesHost(hostname, domain) {
+  const safeHost = String(hostname || "").trim().toLowerCase();
+  const safeDomain = String(domain || "").trim().toLowerCase();
+
+  if (!safeHost || !safeDomain) {
+    return false;
+  }
+
+  return safeHost === safeDomain || safeHost.endsWith(`.${safeDomain}`);
+}
+
 function buildCachedPlans(bookmarks, cacheBucket = {}) {
   const plans = [];
   const remaining = [];
@@ -1124,7 +1297,12 @@ function buildCachedPlans(bookmarks, cacheBucket = {}) {
   };
 }
 
-function buildFastLocalClassificationPlan(bookmarks, domainFolderRules = [], cacheBucket = {}) {
+function buildFastLocalClassificationPlan(
+  bookmarks,
+  domainFolderRules = [],
+  cacheBucket = {},
+  options = {}
+) {
   const scanResult = buildSkippedDeadLinkScanResult(bookmarks);
   const duplicateState = markHealthyExactDuplicates(scanResult.healthyBookmarks, {});
   const aliveBookmarks = duplicateState.bookmarks;
@@ -1132,17 +1310,22 @@ function buildFastLocalClassificationPlan(bookmarks, domainFolderRules = [], cac
   const nonDuplicateBookmarks = aliveBookmarks.filter((bookmark) => !bookmark.exactDuplicateOf);
   const forcedPlans = buildForcedPlans(nonDuplicateBookmarks, domainFolderRules);
   const cachedPlans = buildCachedPlans(forcedPlans.remaining, cacheBucket);
+  const builtInFastPlans = options.useBuiltInFastRules === false
+    ? { plans: [], remaining: cachedPlans.remaining }
+    : buildBuiltInFastFolderPlans(cachedPlans.remaining);
   const planResult = buildBatchClassificationPlan(aliveBookmarks, [
     ...forcedPlans.plans,
     ...cachedPlans.plans,
+    ...builtInFastPlans.plans,
     ...exactDuplicatePlans
   ]);
 
   return {
-    aiCandidates: cachedPlans.remaining,
+    aiCandidates: builtInFastPlans.remaining,
     scanResult,
     planResult,
     reusedCount: cachedPlans.plans.length,
+    fastRuleCount: builtInFastPlans.plans.length,
     forcedCount: forcedPlans.plans.length,
     exactDuplicateSeenByUrl: duplicateState.seenByUrl
   };
@@ -1191,8 +1374,8 @@ async function finishFastLocalJob(job, localPlan) {
       job,
       {
         detail: ux(
-          `快速模式下本地规则和分类缓存已覆盖全部书签，本次没有调用模型。预计归类 ${job.moved} 条，复用缓存 ${job.reused} 条，删除 ${job.deleted} 条，${MANUAL_FOLDER_TITLE} ${job.pendingWarnings.length} 条。确认无误后点击“应用方案”正式重建。`,
-          `Fast mode covered every bookmark with local rules and the classification cache, so this preview did not call the model. It would categorize ${job.moved}, reuse ${job.reused} cached results, delete ${job.deleted}, and leave ${job.pendingWarnings.length} items in "${MANUAL_FOLDER_TITLE}". If it looks good, click Apply Plan to rebuild.`
+        `快速模式下自定义规则、分类缓存和内置快速规则已覆盖全部书签，本次没有调用模型。预计归类 ${job.moved} 条，其中复用缓存 ${job.reused} 条、内置快速规则 ${localPlan.fastRuleCount || 0} 条；删除 ${job.deleted} 条，${MANUAL_FOLDER_TITLE} ${job.pendingWarnings.length} 条。确认无误后点击“应用方案”正式重建。`,
+        `Fast mode covered every bookmark with custom rules, the classification cache, and built-in fast rules, so this preview did not call the model. It would categorize ${job.moved}, including ${job.reused} reused cached results and ${localPlan.fastRuleCount || 0} from built-in fast rules, delete ${job.deleted}, and leave ${job.pendingWarnings.length} items in "${MANUAL_FOLDER_TITLE}". If it looks good, click Apply Plan to rebuild.`
         ),
         previewFolders
       }
@@ -1202,8 +1385,8 @@ async function finishFastLocalJob(job, localPlan) {
 
   await updateBatchStatus(job, job.totalBatches, {
     message: ux(
-      "本地规则和分类缓存已覆盖全部书签，正在直接重建书签结构。",
-      "Local rules and the classification cache covered every bookmark. Rebuilding directly."
+      "自定义规则、分类缓存和内置快速规则已覆盖全部书签，正在直接重建书签结构。",
+      "Custom rules, the classification cache, and built-in fast rules covered every bookmark. Rebuilding directly."
     ),
     detail: ux(
       "快速模式无需等待模型返回；备份已经提前完成，接下来会按本地方案一次性重建。",
@@ -1224,8 +1407,8 @@ async function finishFastLocalJob(job, localPlan) {
     job,
     {
       detail: ux(
-        `本次快速模式完全复用本地规则和分类缓存，没有调用模型。共归类 ${job.moved} 条，白名单保留 ${rebuildResult.preservedCount} 条，受保护根目录保留 ${job.protectedRootFolderIds.length} 个，${MANUAL_FOLDER_TITLE} ${rebuildResult.warningEntries.length} 条。`,
-        `This fast-mode run reused only local rules and the classification cache without calling the model. It categorized ${job.moved} bookmarks, preserved ${rebuildResult.preservedCount} whitelisted bookmarks, kept ${job.protectedRootFolderIds.length} protected root folders untouched, and left ${rebuildResult.warningEntries.length} items in "${MANUAL_FOLDER_TITLE}".`
+        `本次快速模式完全复用自定义规则、分类缓存和内置快速规则，没有调用模型。共归类 ${job.moved} 条，其中复用缓存 ${job.reused} 条、内置快速规则 ${localPlan.fastRuleCount || 0} 条；白名单保留 ${rebuildResult.preservedCount} 条，受保护根目录保留 ${job.protectedRootFolderIds.length} 个，${MANUAL_FOLDER_TITLE} ${rebuildResult.warningEntries.length} 条。`,
+        `This fast-mode run reused only custom rules, the classification cache, and built-in fast rules without calling the model. It categorized ${job.moved} bookmarks, including ${job.reused} reused cached results and ${localPlan.fastRuleCount || 0} from built-in fast rules, preserved ${rebuildResult.preservedCount} whitelisted bookmarks, kept ${job.protectedRootFolderIds.length} protected root folders untouched, and left ${rebuildResult.warningEntries.length} items in "${MANUAL_FOLDER_TITLE}".`
       )
     }
   );
@@ -1254,7 +1437,8 @@ async function buildLocalRequirementCheck(config) {
   const localPlan = buildFastLocalClassificationPlan(
     bookmarkState.bookmarks,
     domainFolderRules,
-    classificationCacheBucket
+    classificationCacheBucket,
+    { useBuiltInFastRules: !shouldCheckDeadLinks(runtimeConfig) }
   );
   const aiCandidateCount = localPlan.aiCandidates.length;
 
@@ -1440,7 +1624,8 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
     startupLocalPlan = buildFastLocalClassificationPlan(
       bookmarks,
       domainFolderRules,
-      startupClassificationCacheBucket
+      startupClassificationCacheBucket,
+      { useBuiltInFastRules: !shouldCheckDeadLinks(runtimeConfig) }
     );
   }
   const startupAiCandidateCount = startupLocalPlan.aiCandidates.length;
@@ -1491,8 +1676,8 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
         "Complete mode checks dead links before classification and keeps the extra global taxonomy planning step."
       )
     : ux(
-        "快速模式会跳过失效链接检测和单独目录规划，只做去重、规则、缓存和模型分类。",
-        "Fast mode skips dead-link checks and the separate taxonomy-planning request, then runs duplicate cleanup, rules, cache reuse, and model classification."
+        "快速模式会跳过失效链接检测和单独目录规划，先做去重、自定义规则、缓存复用和内置快速规则，剩余书签才进入模型分类。",
+        "Fast mode skips dead-link checks and the separate taxonomy-planning request, then runs duplicate cleanup, custom rules, cache reuse, built-in fast rules, and model classification only for the remaining bookmarks."
       );
 
   const totalBatches = Math.ceil(bookmarks.length / runtimeBatchSize);
@@ -2014,10 +2199,10 @@ async function processNextBatch() {
       detail: ux(
         checkDeadLinks
           ? `本批 ${batch.length} 条。会先识别确认失效的链接，把状态不明确的链接留到“${MANUAL_FOLDER_TITLE}”，再对剩余书签做 AI 分类。提交前不会改动现有书签树。`
-          : `本批 ${batch.length} 条。快速模式会跳过链接可用性探测和单独目录规划，直接进入去重、规则、缓存和 AI 分类。提交前不会改动现有书签树。`,
+          : `本批 ${batch.length} 条。快速模式会跳过链接可用性探测和单独目录规划，先做去重、自定义规则、缓存复用和内置快速规则，剩余部分才进入 AI 分类。提交前不会改动现有书签树。`,
         checkDeadLinks
           ? `${batch.length} items in this batch. Confirmed dead links are removed first, uncertain links are kept in "${MANUAL_FOLDER_TITLE}", and only the remaining bookmarks are sent to AI. The bookmark tree is not changed before the final rebuild.`
-          : `${batch.length} items in this batch. Fast mode skips link availability checks and the separate taxonomy plan, then goes straight to duplicate cleanup, rules, cache reuse, and AI classification. The bookmark tree is not changed before the final rebuild.`
+          : `${batch.length} items in this batch. Fast mode skips link availability checks and the separate taxonomy plan, then uses duplicate cleanup, custom rules, cache reuse, built-in fast rules, and AI only for anything left. The bookmark tree is not changed before the final rebuild.`
       )
     });
 
@@ -2047,8 +2232,12 @@ async function processNextBatch() {
       classificationCacheStore[job.classificationSignature]?.items || {}
     );
     const cachedPlans = buildCachedPlans(forcedPlans.remaining, classificationCacheBucket);
-    const bookmarksToClassify = cachedPlans.remaining;
-    const classifications = bookmarksToClassify.length
+    const builtInFastPlans = checkDeadLinks
+      ? { plans: [], remaining: cachedPlans.remaining }
+      : buildBuiltInFastFolderPlans(cachedPlans.remaining);
+    const bookmarksToClassify = builtInFastPlans.remaining;
+    const needsModelClassification = bookmarksToClassify.length > 0;
+    const classifications = needsModelClassification
       ? await withKeepAlive(
           () =>
             classifyBatchWithModel(
@@ -2085,13 +2274,21 @@ async function processNextBatch() {
 
     await updateBatchStatus(job, currentBatch, {
       message: ux(
-        `第 ${currentBatch}/${job.totalBatches} 批模型结果已返回，正在写入最终整理方案。`,
-        `Model output for batch ${currentBatch}/${job.totalBatches} received. Writing it into the final organize plan.`
+        needsModelClassification
+          ? `第 ${currentBatch}/${job.totalBatches} 批模型结果已返回，正在写入最终整理方案。`
+          : `第 ${currentBatch}/${job.totalBatches} 批已由本地规则覆盖，正在写入最终整理方案。`,
+        needsModelClassification
+          ? `Model output for batch ${currentBatch}/${job.totalBatches} received. Writing it into the final organize plan.`
+          : `Batch ${currentBatch}/${job.totalBatches} was covered by local rules. Writing it into the final organize plan.`
       ),
       detail: aliveBatch.length
         ? ux(
-            "正在把本批结果加入最终重建方案，原有书签结构暂时不会变化。",
-            "This batch is being added to the final rebuild plan. The current bookmark structure is still unchanged."
+            needsModelClassification
+              ? "正在把本批结果加入最终重建方案，原有书签结构暂时不会变化。"
+              : "本批没有等待模型，直接把本地结果加入最终重建方案；原有书签结构暂时不会变化。",
+            needsModelClassification
+              ? "This batch is being added to the final rebuild plan. The current bookmark structure is still unchanged."
+              : "This batch did not wait for the model. Local results are being added to the final rebuild plan, and the current bookmark structure is still unchanged."
           )
         : ux(
             "本批没有可进入 AI 分类的有效书签，正在记录删除和未处理结果。",
@@ -2101,7 +2298,13 @@ async function processNextBatch() {
 
     const planResult = buildBatchClassificationPlan(
       aliveBatch,
-      [...forcedPlans.plans, ...cachedPlans.plans, ...normalized.results, ...exactDuplicatePlans]
+      [
+        ...forcedPlans.plans,
+        ...cachedPlans.plans,
+        ...builtInFastPlans.plans,
+        ...normalized.results,
+        ...exactDuplicatePlans
+      ]
     );
 
     job.processed += batch.length;
@@ -2133,8 +2336,8 @@ async function processNextBatch() {
         `Batch ${currentBatch}/${job.totalBatches} finished. Processed ${job.processed}/${job.total} so far.`
       ),
       detail: ux(
-        `本批已写入 ${planResult.keepCount} 条整理结果，其中缓存复用 ${cachedPlans.plans.length} 条、规则命中 ${forcedPlans.plans.length} 条、AI 新分类 ${normalized.results.length} 条；标记删除 ${scanResult.deletedCount + planResult.deletedCount} 条，未处理 ${scanResult.warningCount + planResult.warningCount} 条。旧书签结构尚未改动。`,
-        `This batch added ${planResult.keepCount} organize results, including ${cachedPlans.plans.length} reused from cache, ${forcedPlans.plans.length} matched by rules, and ${normalized.results.length} newly classified by AI. It also marked ${scanResult.deletedCount + planResult.deletedCount} deletions and left ${scanResult.warningCount + planResult.warningCount} unresolved items. The original bookmark tree is still unchanged.`
+        `本批已写入 ${planResult.keepCount} 条整理结果，其中自定义规则命中 ${forcedPlans.plans.length} 条、缓存复用 ${cachedPlans.plans.length} 条、内置快速规则命中 ${builtInFastPlans.plans.length} 条、AI 新分类 ${normalized.results.length} 条；标记删除 ${scanResult.deletedCount + planResult.deletedCount} 条，未处理 ${scanResult.warningCount + planResult.warningCount} 条。旧书签结构尚未改动。`,
+        `This batch added ${planResult.keepCount} organize results, including ${forcedPlans.plans.length} matched by custom rules, ${cachedPlans.plans.length} reused from cache, ${builtInFastPlans.plans.length} matched by built-in fast rules, and ${normalized.results.length} newly classified by AI. It also marked ${scanResult.deletedCount + planResult.deletedCount} deletions and left ${scanResult.warningCount + planResult.warningCount} unresolved items. The original bookmark tree is still unchanged.`
       ),
       warnings: job.warnings,
       deletedItems: job.deletedItems
@@ -2426,15 +2629,20 @@ async function applyPreviewPlan() {
     );
   }
 
-  const snapshotInfo = await createCurrentSnapshotBackup(bookmarkState.bookmarkBarNode, "manual");
-  if (bookmarkState.collectedBookmarks.length && !snapshotInfo.created) {
-    throw buildUserFacingError(
-      ux("应用预览前备份失败，任务已停止。", "Backup before applying the preview failed, so the task was stopped."),
-      ux(
-        "为避免直接改乱现有书签，扩展要求先成功创建快照备份后才会继续应用预览方案。",
-        "To avoid corrupting your current bookmarks, the extension requires a successful snapshot backup before applying the preview plan."
-      )
-    );
+  let snapshotInfo;
+  try {
+    snapshotInfo = await createCurrentSnapshotBackup(bookmarkState.bookmarkBarNode, "manual");
+    if (bookmarkState.collectedBookmarks.length && !snapshotInfo.created) {
+      throw buildUserFacingError(
+        ux("应用预览前备份失败，任务已停止。", "Backup before applying the preview failed, so the task was stopped."),
+        ux(
+          "为避免直接改乱现有书签，扩展要求先成功创建快照备份后才会继续应用预览方案。",
+          "To avoid corrupting your current bookmarks, the extension requires a successful snapshot backup before applying the preview plan."
+        )
+      );
+    }
+  } catch (error) {
+    return await keepPreviewApplyRetryAvailable(error);
   }
 
   const startedAt = new Date().toISOString();
@@ -2546,32 +2754,34 @@ async function applyPreviewPlan() {
     await chrome.storage.local.remove(STORAGE_KEYS.previewPlan);
     return { ok: true };
   } catch (error) {
-    await updateStatus({
-      phase: "error",
-      message:
-        error?.userMessage ||
-        toUserMessage(error, ux("应用预览方案时出错。", "An error occurred while applying the preview plan.")),
-      detail:
-        error?.userDetail ||
-        ux(
-          "任务已停止。预览方案仍保留，你可以修复问题后重试；如果书签已发生变化，请重新生成预览。",
-          "The task has stopped. The preview plan is still kept so you can retry after fixing the issue. If bookmarks changed, generate a new preview."
-        ),
-      previewApplyRetryAvailable: true,
-      finishedAt: new Date().toISOString()
-    });
-    await chrome.storage.local.remove(STORAGE_KEYS.job);
-    return {
-      ok: false,
-      error: toUserMessage(error, ux("应用预览方案失败。", "Failed to apply the preview plan.")),
-      detail:
-        error?.userDetail ||
-        ux(
-          "任务已停止。预览方案仍保留，你可以修复问题后重试；如果书签已发生变化，请重新生成预览。",
-          "The task has stopped. The preview plan is still kept so you can retry after fixing the issue. If bookmarks changed, generate a new preview."
-        )
-    };
+    return await keepPreviewApplyRetryAvailable(error);
   }
+}
+
+async function keepPreviewApplyRetryAvailable(error) {
+  const detail =
+    error?.userDetail ||
+    ux(
+      "任务已停止。预览方案仍保留，你可以修复问题后重试；如果书签已发生变化，请重新生成预览。",
+      "The task has stopped. The preview plan is still kept so you can retry after fixing the issue. If bookmarks changed, generate a new preview."
+    );
+
+  await updateStatus({
+    phase: "error",
+    message:
+      error?.userMessage ||
+      toUserMessage(error, ux("应用预览方案时出错。", "An error occurred while applying the preview plan.")),
+    detail,
+    previewApplyRetryAvailable: true,
+    finishedAt: new Date().toISOString()
+  });
+  await chrome.storage.local.remove(STORAGE_KEYS.job);
+
+  return {
+    ok: false,
+    error: toUserMessage(error, ux("应用预览方案失败。", "Failed to apply the preview plan.")),
+    detail
+  };
 }
 
 async function rejectApplyPreviewPlan(error, detail) {

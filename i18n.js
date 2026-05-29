@@ -214,7 +214,7 @@ Hard rules:
       linkCheckFast: "Fast",
       linkCheckComplete: "Complete",
       hintLinkCheckMode:
-        "Fast skips dead-link checks and the separate taxonomy plan. Complete checks links and plans the global taxonomy first.",
+        "Fast skips dead-link checks and the separate taxonomy plan, then uses local rules before AI. Complete checks links and plans the global taxonomy first.",
       labelWhitelistDomains: "Whitelist Websites",
       labelProtectedRootFolders: "Protected Root Folders",
       labelDomainFolderRules: "Domain Folder Rules",
@@ -300,7 +300,7 @@ Hard rules:
       setupMissingModel: "Model is required before preview.",
       setupMissingApiKey: "API key is required for this provider.",
       modelAccessRequiredForUncachedPreview:
-        "Some bookmarks are not covered by local rules or cached classifications, so Marko needs model access before it can preview them.",
+        "Some bookmarks are not covered by local rules, built-in domain rules, or cached classifications, so Marko needs model access before it can preview them.",
       applyConfirmTitle: "Apply saved preview plan",
       applyConfirmDesc:
         "Marko will create a fresh backup, verify the preview is still current, then rebuild locally without calling the model again.",
@@ -478,7 +478,7 @@ Hard rules:
       labelLinkCheckMode: "速度模式",
       linkCheckFast: "快速",
       linkCheckComplete: "完整",
-      hintLinkCheckMode: "快速模式会跳过失效链接检测和单独目录规划；完整模式会先检查链接并规划全局目录。",
+      hintLinkCheckMode: "快速模式会跳过失效链接检测和单独目录规划，先走本地规则再调用 AI；完整模式会先检查链接并规划全局目录。",
       labelWhitelistDomains: "白名单网站",
       labelProtectedRootFolders: "受保护根目录",
       labelDomainFolderRules: "域名目录规则",
@@ -560,7 +560,7 @@ Hard rules:
       setupMissingModel: "预览前需要填写模型名称。",
       setupMissingApiKey: "当前服务商需要 API Key。",
       modelAccessRequiredForUncachedPreview:
-        "部分书签没有命中本地规则或分类缓存，Marko 需要先访问模型才能生成预览。",
+        "部分书签没有命中本地规则、内置域名规则或分类缓存，Marko 需要先访问模型才能生成预览。",
       applyConfirmTitle: "应用已保存的预览方案",
       applyConfirmDesc: "Marko 会先创建新备份，确认预览仍然有效，然后直接本地重建，不会再次请求模型。",
       applyConfirmPrimary: "备份并应用",

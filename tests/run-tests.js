@@ -487,6 +487,8 @@ function testPreviewApplySurface() {
   assert.match(backgroundSource, /previewApplyRetryAvailable: false/);
   assert.match(backgroundSource, /const statusPatch = \{\n    previewApplyRetryAvailable: false,/);
   assert.match(backgroundSource, /previewApplyRetryAvailable: true/);
+  assert.match(backgroundSource, /keepPreviewApplyRetryAvailable/);
+  assert.match(backgroundSource, /return await keepPreviewApplyRetryAvailable\(error\)/);
   assert.match(backgroundSource, /savePreviewPlan/);
   assert.match(backgroundSource, /buildBookmarkSetSignature/);
   assert.match(backgroundSource, /does not call the model again/);
@@ -698,6 +700,11 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /getTaxonomyPlanningTimeoutMs/);
   assert.match(backgroundSource, /shouldPlanGlobalTaxonomy/);
   assert.match(backgroundSource, /Fast mode skipped the separate taxonomy-planning request/);
+  assert.match(backgroundSource, /FAST_LOCAL_FOLDER_RULES/);
+  assert.match(backgroundSource, /buildBuiltInFastFolderPlans/);
+  assert.match(backgroundSource, /matchBuiltInFastFolderPath/);
+  assert.match(backgroundSource, /useBuiltInFastRules: !shouldCheckDeadLinks\(runtimeConfig\)/);
+  assert.match(backgroundSource, /built-in fast rules/);
   assert.match(backgroundSource, /buildFastLocalClassificationPlan/);
   assert.match(backgroundSource, /finishFastLocalJob/);
   assert.match(backgroundSource, /CHECK_LOCAL_MODEL_REQUIREMENT/);
@@ -945,6 +952,8 @@ function testReleaseMaterialsCurrent() {
   const readme = fs.readFileSync(path.join(ROOT_DIR, "README.md"), "utf8");
   const readmeZh = fs.readFileSync(path.join(ROOT_DIR, "README.zh-CN.md"), "utf8");
   assert.match(changelog, /without a second model request/);
+  assert.match(changelog, /built-in domain rules/);
+  assert.match(changelog, /Backup failures before applying a saved preview/);
   assert.match(changelog, /only for explicit preview-apply failures/);
   assert.match(changelog, /runtime batches are capped to ten bookmarks/);
   assert.match(changelog, /five-bookmark model requests/);
@@ -960,10 +969,12 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Backup actions now preserve the completed action message/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run package:webstore/);
+  assert.match(readme, /built-in domain rules/);
   assert.match(readme, /restoring creates a fresh local snapshot first/);
   assert.match(readmeZh, /请求前再次拆分/);
   assert.match(readmeZh, /npm test/);
   assert.match(readmeZh, /npm run package:webstore/);
+  assert.match(readmeZh, /内置域名规则/);
   assert.match(readmeZh, /恢复前会先创建新的本地快照/);
 
   const releaseNotes = fs.readFileSync(
@@ -971,6 +982,8 @@ function testReleaseMaterialsCurrent() {
     "utf8"
   );
   assert.match(releaseNotes, /without another model request/);
+  assert.match(releaseNotes, /built-in domain rules/);
+  assert.match(releaseNotes, /Backup failures before applying a saved preview/);
   assert.match(releaseNotes, /only for preview-apply failures/);
   assert.match(releaseNotes, /re-split large batches before each request/);
   assert.match(releaseNotes, /cap runtime batches at 10 bookmarks/);
@@ -996,6 +1009,8 @@ function testReleaseMaterialsCurrent() {
 
   const storeListing = fs.readFileSync(path.join(ROOT_DIR, "webstore/STORE_LISTING.md"), "utf8");
   assert.match(storeListing, /without calling the model again/);
+  assert.match(storeListing, /built-in domain rules/);
+  assert.match(storeListing, /Backup failures before applying a saved preview/);
   assert.match(storeListing, /only after a preview-apply failure/);
   assert.match(storeListing, /re-split large batches before each request/);
   assert.match(storeListing, /cap runtime batches at 10 bookmarks/);

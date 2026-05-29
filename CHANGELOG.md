@@ -3,9 +3,11 @@
 ## Unreleased
 
 - Added Fast and Complete speed modes so users can choose quicker organizing that skips extra checks and taxonomy planning, or full dead-link checks with global planning
+- Fast mode now applies conservative built-in domain rules for common developer, learning, productivity, design, community, shopping, media, and life sites after custom rules and cache reuse, before calling the model
 - Reduced popup and settings permission requests in Fast mode to the configured model API origin
 - Applying a saved preview plan now reuses the stored plan and rebuilds locally without a second model request
 - If applying a saved preview hits a recoverable failure, the popup now keeps the Apply Plan path available so users can retry without generating the model plan again
+- Backup failures before applying a saved preview now also keep the saved preview retry path available
 - Apply Plan retry is now shown only for explicit preview-apply failures instead of any generic error that happens while a saved preview exists
 - Applying a stale preview now shows specific guidance when settings or bookmarks changed
 - Saved previews are now invalidated automatically when settings or bookmarks change
@@ -68,7 +70,7 @@
 - Settings buttons, speed-mode hints, and whitelist status text are now explicitly associated with their related controls
 - Batch size and automation interval fields now include persistent range hints that are preserved alongside validation errors
 - Whitelist domain toggle buttons now expose selected state, and selected chips announce their remove action
-- Fast mode now finishes locally when rules and the classification cache cover every bookmark, skipping model calls and batch scheduling
+- Fast mode now finishes locally when custom rules, the classification cache, and built-in fast rules cover every bookmark, skipping model calls and batch scheduling
 - Preview now checks local rule/cache coverage before asking for API keys or model endpoint access
 - Preview startup now reuses the fresh local coverage check when possible instead of scanning bookmarks and cache twice
 - Unprocessed-item keep/delete actions now lock together immediately to avoid duplicate handling requests
