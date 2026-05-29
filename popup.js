@@ -392,6 +392,7 @@ function createApplyConfirmationState() {
   const applyButton = document.createElement("button");
   applyButton.type = "button";
   applyButton.className = "button button--primary button--compact";
+  applyButton.setAttribute("aria-describedby", popupActionStatus.id);
   applyButton.dataset.applyConfirmationPrimary = "true";
   applyButton.textContent = t("applyConfirmPrimary");
   applyButton.addEventListener("click", () => {

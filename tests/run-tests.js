@@ -301,6 +301,7 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /wrapper\.id = "applyConfirmation"/);
   assert.match(popupSource, /wrapper\.setAttribute\("aria-labelledby", "applyConfirmTitle"\)/);
   assert.match(popupSource, /wrapper\.setAttribute\("aria-describedby", "applyConfirmDesc"\)/);
+  assert.match(popupSource, /applyButton\.setAttribute\("aria-describedby", popupActionStatus\.id\)/);
   assert.match(popupSource, /applyButton\.dataset\.applyConfirmationPrimary = "true"/);
   assert.match(popupSource, /function focusApplyConfirmationPrimary/);
   assert.match(popupSource, /focusApplyConfirmationPrimary\(\)/);
