@@ -15,7 +15,6 @@ const progressPercent = document.getElementById("progressPercent");
 const progressSummary = document.getElementById("progressSummary");
 const progressMeta = document.getElementById("progressMeta");
 const totalValue = document.getElementById("totalValue");
-const processedValue = document.getElementById("processedValue");
 const movedValue = document.getElementById("movedValue");
 const deletedValue = document.getElementById("deletedValue");
 const warningValue = document.getElementById("warningValue");
@@ -320,7 +319,6 @@ function renderStatus(status) {
   progressMeta.textContent = metaParts.join(" · ") || t("progressWaiting");
 
   totalValue.textContent = String(total);
-  processedValue.textContent = String(processed);
   movedValue.textContent = String(moved);
   deletedValue.textContent = String(deleted);
   warningValue.textContent = String(warnings);

@@ -567,8 +567,10 @@ function testPreviewApplySurface() {
   assert.match(popupHtml, /aria-describedby="progressSummary progressMeta"/);
   assert.match(popupHtml, /data-i18n-aria-label="progressAriaLabel"/);
   assert.match(popupHtml, /id="detailPanel"[\s\S]*role="region"[\s\S]*data-i18n-aria-label="detailPanelAriaLabel"/);
+  assert.doesNotMatch(popupHtml, /id="processedValue"/);
   assert.match(popupSource, /if \(phaseBadge\.textContent !== phaseLabel\)/);
   assert.match(popupSource, /progressTrack\.setAttribute\("aria-valuetext", `\$\{progress\}%, \$\{progressSummaryText\}`\)/);
+  assert.doesNotMatch(popupSource, /processedValue/);
   assert.match(popupSource, /title\.id = "folderSummaryTitle"/);
   assert.match(popupSource, /table\.setAttribute\("aria-labelledby", title\.id\)/);
   assert.match(popupSource, /folderHeader\.scope = "col"/);
@@ -577,6 +579,8 @@ function testPreviewApplySurface() {
   const stylesSource = fs.readFileSync(path.join(ROOT_DIR, "styles.css"), "utf8");
   assert.match(stylesSource, /\.confirm-strip/);
   assert.match(stylesSource, /\.popup-action-status/);
+  assert.doesNotMatch(stylesSource, /\.result-nav/);
+  assert.doesNotMatch(stylesSource, /\.results-workspace/);
 
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
   assert.match(i18nSource, /cancelRequestedButton/);
