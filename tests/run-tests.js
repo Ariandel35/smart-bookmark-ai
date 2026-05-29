@@ -398,6 +398,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /batchSize: parseIntegerInput\(batchSizeInput\.value\)/);
   assert.match(optionsSource, /autoOrganizeIntervalHours: parseIntegerInput\(autoOrganizeIntervalInput\.value\)/);
   assert.match(optionsSource, /if \(!config\.baseUrl\) \{\n    setHostAccessStatus/);
+  assert.match(optionsSource, /Failed to refresh host access status after provider change/);
+  assert.match(optionsSource, /providerSelect\.addEventListener\("change"[\s\S]*markPending\(\);[\s\S]*refreshHostAccessStatus/);
   assert.match(optionsSource, /pendingBackupAction/);
   assert.match(optionsSource, /backupActionInFlight/);
   assert.match(optionsSource, /createBackupInlineConfirm/);

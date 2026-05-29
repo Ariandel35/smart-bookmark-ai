@@ -1148,7 +1148,10 @@ providerSelect.addEventListener("change", () => {
   updateProviderHints(nextProvider);
   lastProvider = nextProvider;
   clearApiTestStatus();
-  setSaveBadge(t("saveBadgeUnsaved"), "warm");
+  markPending();
+  void refreshHostAccessStatus().catch((error) => {
+    console.error("Failed to refresh host access status after provider change:", error);
+  });
 });
 
 form.addEventListener("submit", saveConfig);

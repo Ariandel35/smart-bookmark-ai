@@ -25,6 +25,7 @@
 - Stale unprocessed records are now cleared cleanly when the underlying bookmark was already removed
 - Settings save, API test, access grant, and reset controls now lock together while a settings operation is in flight
 - Settings now shows explicit in-progress feedback while saving or waiting for access approval
+- Settings now refreshes API access status immediately after changing providers and generated defaults
 - Settings load failures now show a clear inline fallback message when defaults are displayed
 - Settings save failures now show a clear inline error instead of leaving the page in a saving state
 - Test & Save now distinguishes a successful API test from a later settings-save failure
