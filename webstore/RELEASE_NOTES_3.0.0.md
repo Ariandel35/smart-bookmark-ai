@@ -14,6 +14,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 预览会先检查本地规则和缓存覆盖情况，只有未缓存书签需要模型时才要求 API Key 或模型接口授权
 - API 检测成功后自动保存当前连接配置
 - 弹窗应用方案、备份恢复/删除和设置校验都改成页面内确认与状态提示，不再弹出浏览器原生对话框
+- 预览阶段的未处理项保持只读，不会在点击“应用方案”前显示保留/删除操作
 - 恢复备份前会先为当前书签创建新的本地快照，并在清理旧备份时保留正在恢复的备份记录
 - 设置页加载时，即使备份列表或权限状态刷新失败，也会保留已读取的连接配置并在对应区域提示错误
 - 权限状态刷新失败时会恢复按钮并显示页面内错误，避免访问检查一直卡住
@@ -42,6 +43,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Preview checks local rule/cache coverage first, then asks for an API key or model endpoint access only when uncached bookmarks need the model
 - Successful API tests now save the verified connection settings
 - Popup apply, backup restore/delete, and settings validation now use inline confirmations and status messages instead of browser dialogs
+- Unprocessed items stay read-only during preview, so keep/delete actions are not shown before Apply Plan
 - Backup restore now creates a fresh local snapshot of the current bookmarks first and preserves the selected backup while retention cleanup runs
 - Settings load keeps the saved connection visible even if backup-list or access-status refreshes fail, then reports those secondary failures inline
 - Access-status refresh failures now restore controls and show an inline permission-state error instead of leaving checks stuck

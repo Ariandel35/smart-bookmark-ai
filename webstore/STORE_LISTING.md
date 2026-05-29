@@ -21,6 +21,7 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - DeepSeek 等慢模型会在请求前再次拆分大批量，运行批次最多 10 条、单个模型请求最多 5 条，并使用受控小并发、更短的请求超时、更短的内置请求提示和更紧的输出预算；单个小请求超时后会保留已完成结果，只把失败小块继续拆到 1 条重试
 - 应用已生成预览时复用保存的方案，本地重建，不会再次请求模型
 - 应用预览遇到可恢复失败时，可修复后直接重试保存方案
+- 预览阶段的未处理项保持只读，应用方案前不会出现保留/删除操作
 - 弹窗和设置页使用页面内确认与错误提示，避免浏览器原生弹窗打断流程
 - 设置页会把连接配置加载和备份/权限状态刷新分开处理，局部刷新失败不会覆盖已保存配置
 - 权限状态刷新失败时会恢复控件并给出页面内提示
@@ -65,6 +66,7 @@ Key features:
 - Slow providers such as DeepSeek re-split large batches before each request, cap runtime batches at 10 bookmarks, cap each model request at 5 bookmarks, use limited mini-request concurrency, shorter request timeouts, shorter built-in prompts, and tighter output budgets; when one mini request times out, completed mini results are kept and only the failed block shrinks down to one-bookmark retries
 - Applying a generated preview reuses the saved plan and rebuilds locally without another model request
 - Recoverable apply failures keep the saved preview retry path available after the issue is fixed
+- Unprocessed items stay read-only during preview, with keep/delete actions shown only after a real apply creates actionable items
 - Popup and settings actions use inline confirmations and validation feedback instead of browser dialogs
 - Settings load keeps saved connection fields visible even when backup or permission status refreshes fail
 - Access-status refresh failures restore controls and show inline feedback

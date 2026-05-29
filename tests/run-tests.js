@@ -527,6 +527,9 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /openOptionsSection\("connection"\)/);
   assert.match(popupSource, /createSettingsShortcutButton/);
   assert.match(popupSource, /shouldShowSettingsShortcut/);
+  assert.match(popupSource, /function canResolveUnprocessedEntries\(\) \{/);
+  assert.match(popupSource, /return !\["preview", "running"\]\.includes\(currentStatus\?\.phase \|\| ""\)/);
+  assert.match(popupSource, /\{ allowActions: canResolveUnprocessedEntries\(\) \}/);
   assert.match(popupSource, /settingsShortcutButton/);
   assert.match(popupSource, /summaryActions\.appendChild\(createSettingsShortcutButton\(\)\)/);
   assert.match(popupSource, /popupCheckingCoverageStatus/);
@@ -941,6 +944,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /mini-request timeouts now keep completed mini results/);
   assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
   assert.match(changelog, /inline confirmations and status messages/);
+  assert.match(changelog, /preview remains read-only until Apply Plan/);
   assert.match(changelog, /raw numeric input/);
   assert.match(changelog, /fresh pre-restore snapshot/);
   assert.match(changelog, /keeps the saved configuration visible/);
@@ -967,6 +971,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /completed mini results are kept/);
   assert.match(releaseNotes, /shorter built-in/);
   assert.match(releaseNotes, /inline confirmations and status messages/);
+  assert.match(releaseNotes, /read-only during preview/);
   assert.match(releaseNotes, /creates a fresh local snapshot/);
   assert.match(releaseNotes, /keeps the saved connection visible/);
   assert.match(releaseNotes, /Access-status refresh failures now restore controls/);
@@ -992,6 +997,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /OpenAI、DeepSeek、MiniMax、Anthropic/);
   assert.match(storeListing, /OpenAI, DeepSeek, MiniMax, Anthropic/);
   assert.match(storeListing, /inline confirmations and validation feedback/);
+  assert.match(storeListing, /read-only during preview/);
   assert.match(storeListing, /fresh pre-restore snapshot/);
   assert.match(storeListing, /keeps saved connection fields visible/);
   assert.match(storeListing, /Access-status refresh failures restore controls/);

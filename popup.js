@@ -389,6 +389,10 @@ function shouldShowSettingsShortcut() {
   return message === t("hostPermissionRequiredTitle") || message === t("setupMissingApiKey");
 }
 
+function canResolveUnprocessedEntries() {
+  return !["preview", "running"].includes(currentStatus?.phase || "");
+}
+
 function createApplyConfirmationState() {
   const wrapper = document.createElement("section");
   wrapper.id = "applyConfirmation";
@@ -766,7 +770,7 @@ function renderMainDetail() {
         currentStatus.warnings,
         t("noWarningsTitle"),
         t("noWarningsDesc"),
-        { allowActions: true }
+        { allowActions: canResolveUnprocessedEntries() }
       )
     );
     wrapper.appendChild(warningsSection);
