@@ -10,6 +10,19 @@ const Rules = require("../rules.js");
 const CacheUtils = require("../cache-utils.js");
 
 const ROOT_DIR = path.resolve(__dirname, "..");
+const JAVASCRIPT_SYNTAX_FILES = [
+  "background.js",
+  "cache-utils.js",
+  "i18n.js",
+  "json-utils.js",
+  "options.js",
+  "popup.js",
+  "providers.js",
+  "rules.js",
+  "tests/run-tests.js",
+  "webstore/build_extension_package.mjs",
+  "webstore/render_store_assets.mjs"
+];
 
 function readPngDimensions(filePath) {
   const buffer = fs.readFileSync(filePath);
@@ -18,6 +31,16 @@ function readPngDimensions(filePath) {
     width: buffer.readUInt32BE(16),
     height: buffer.readUInt32BE(20)
   };
+}
+
+function testJavaScriptSyntax() {
+  for (const file of JAVASCRIPT_SYNTAX_FILES) {
+    assert.equal(fs.existsSync(path.join(ROOT_DIR, file)), true, `Missing JavaScript file ${file}`);
+    execFileSync(process.execPath, ["--check", file], {
+      cwd: ROOT_DIR,
+      stdio: "pipe"
+    });
+  }
 }
 
 function testJsonUtils() {
@@ -830,6 +853,7 @@ function testI18nCoverage() {
 }
 
 function main() {
+  testJavaScriptSyntax();
   testJsonUtils();
   testProviderOutputTokenBudgets();
   testRules();
