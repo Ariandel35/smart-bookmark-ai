@@ -396,6 +396,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /hostAccessRefreshTimer/);
   assert.match(optionsSource, /clearScheduledHostAccessStatusRefresh/);
   assert.match(optionsSource, /scheduleHostAccessStatusRefresh/);
+  assert.match(optionsSource, /hostAccessRefreshVersion \+= 1/);
+  assert.match(optionsSource, /scheduleHostAccessStatusRefresh[\s\S]*setHostAccessStatus\(t\("hostAccessChecking"\), true\)/);
   assert.match(optionsSource, /grantAccessButton\.disabled = settingsActionInFlight \|\| granted \|\| hostAccessCheckingInFlight/);
   assert.match(optionsSource, /if \(settingsActionInFlight\) \{\n    return;\n  \}/);
   assert.match(optionsSource, /parseIntegerInput/);

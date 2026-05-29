@@ -547,6 +547,12 @@ function clearScheduledHostAccessStatusRefresh() {
 
 function scheduleHostAccessStatusRefresh(reason) {
   clearScheduledHostAccessStatusRefresh();
+  hostAccessRefreshVersion += 1;
+  hostAccessCheckingInFlight = true;
+  setHostAccessStatus(t("hostAccessChecking"), true);
+  grantAccessButton.textContent = t("hostAccessButton");
+  grantAccessButton.dataset.granted = "false";
+  updateSettingsOperationControls();
 
   hostAccessRefreshTimer = setTimeout(() => {
     hostAccessRefreshTimer = null;
