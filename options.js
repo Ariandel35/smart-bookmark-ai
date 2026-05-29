@@ -499,6 +499,7 @@ async function ensureOriginAccess(rawUrl) {
 }
 
 async function refreshHostAccessStatus() {
+  clearScheduledHostAccessStatusRefresh();
   const refreshVersion = ++hostAccessRefreshVersion;
   const config = collectFormData();
   if (!config.baseUrl) {
@@ -535,10 +536,17 @@ async function refreshHostAccessStatus() {
   updateSettingsOperationControls();
 }
 
-function scheduleHostAccessStatusRefresh(reason) {
-  if (hostAccessRefreshTimer) {
-    clearTimeout(hostAccessRefreshTimer);
+function clearScheduledHostAccessStatusRefresh() {
+  if (!hostAccessRefreshTimer) {
+    return;
   }
+
+  clearTimeout(hostAccessRefreshTimer);
+  hostAccessRefreshTimer = null;
+}
+
+function scheduleHostAccessStatusRefresh(reason) {
+  clearScheduledHostAccessStatusRefresh();
 
   hostAccessRefreshTimer = setTimeout(() => {
     hostAccessRefreshTimer = null;
@@ -1102,6 +1110,9 @@ function resetCurrentProviderDefaults() {
   clearApiTestStatus();
   clearSettingsActionStatus();
   setSaveBadge(t("saveBadgeUnsaved"), "warm");
+  void refreshHostAccessStatus().catch((error) => {
+    console.error("Failed to refresh host access status after reset:", error);
+  });
 }
 
 async function requestHostAccess() {
@@ -1223,6 +1234,9 @@ loadConfig().catch((error) => {
   console.error("Failed to load config:", error);
   const fallback = buildDefaultConfig("openai");
   populateForm(fallback);
+  void refreshHostAccessStatus().catch((hostAccessError) => {
+    console.error("Failed to refresh host access status after config load failure:", hostAccessError);
+  });
   void refreshBackupStatus().catch((backupError) => {
     console.error("Failed to refresh backup status:", backupError);
   });
