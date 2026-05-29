@@ -30,7 +30,18 @@ const ux = (zh, en) => (isZh ? zh : en);
 const DEFAULT_BATCH_SIZE = 50;
 const MIN_BATCH_SIZE = 5;
 const MAX_AUTO_RETRY_BATCH_SIZE = 20;
+const RUNTIME_BATCH_SIZE_CAPS = {
+  deepseek: 20
+};
 const DEFAULT_DEAD_SCAN_BATCH_SIZE = 20;
+const DEFAULT_TAXONOMY_SAMPLE_SIZE = 160;
+const TAXONOMY_SAMPLE_SIZE_CAPS = {
+  deepseek: 80
+};
+const DEFAULT_TAXONOMY_TIMEOUT_MS = 30_000;
+const TAXONOMY_TIMEOUT_CAPS_MS = {
+  deepseek: 15_000
+};
 const LINK_CHECK_MODE_FAST = "fast";
 const LINK_CHECK_MODE_COMPLETE = "complete";
 const DEFAULT_ROOT_FOLDER = "Marko";
@@ -362,6 +373,32 @@ function getDefaultBatchSize(provider) {
   return provider === "deepseek" ? 20 : DEFAULT_BATCH_SIZE;
 }
 
+function getRuntimeBatchSize(config = {}) {
+  const configuredBatchSize = normalizeBatchSize(config.batchSize);
+  const cap = RUNTIME_BATCH_SIZE_CAPS[config.provider] || 0;
+  return cap ? Math.min(configuredBatchSize, cap) : configuredBatchSize;
+}
+
+function buildRuntimeBatchAdjustmentNote(config = {}, runtimeBatchSize) {
+  const configuredBatchSize = normalizeBatchSize(config.batchSize);
+  if (runtimeBatchSize >= configuredBatchSize) {
+    return "";
+  }
+
+  return ux(
+    `${getProviderLabel(config.provider)} 本次运行已自动把批大小从 ${configuredBatchSize} 压到 ${runtimeBatchSize}，避免慢模型先撞 90 秒超时。`,
+    `${getProviderLabel(config.provider)} automatically capped this run from batch size ${configuredBatchSize} to ${runtimeBatchSize} to avoid hitting the 90-second timeout first.`
+  );
+}
+
+function getTaxonomyPlanningSampleSize(config = {}) {
+  return TAXONOMY_SAMPLE_SIZE_CAPS[config.provider] || DEFAULT_TAXONOMY_SAMPLE_SIZE;
+}
+
+function getTaxonomyPlanningTimeoutMs(config = {}) {
+  return TAXONOMY_TIMEOUT_CAPS_MS[config.provider] || DEFAULT_TAXONOMY_TIMEOUT_MS;
+}
+
 async function initializeDefaults() {
   const stored = await chrome.storage.local.get([STORAGE_KEYS.config, STORAGE_KEYS.status]);
 
@@ -597,7 +634,7 @@ function normalizeTopLevelFolderList(rawFolders) {
   return list.slice(0, 9);
 }
 
-function buildTaxonomyPlanningSample(bookmarks, maxItems = 160) {
+function buildTaxonomyPlanningSample(bookmarks, maxItems = DEFAULT_TAXONOMY_SAMPLE_SIZE) {
   const selected = [];
   const seenHosts = new Set();
 
@@ -625,8 +662,8 @@ function buildTaxonomyPlanningSample(bookmarks, maxItems = 160) {
   return selected;
 }
 
-function buildTaxonomyPlanningMessages(bookmarks, customPrompt) {
-  const sample = buildTaxonomyPlanningSample(bookmarks);
+function buildTaxonomyPlanningMessages(bookmarks, customPrompt, sampleSize = DEFAULT_TAXONOMY_SAMPLE_SIZE) {
+  const sample = buildTaxonomyPlanningSample(bookmarks, sampleSize);
   const strategyPrompt = (customPrompt || DEFAULT_PROMPT).trim();
   const fixedFolders = buildTaxonomyFallbackTopFolders();
 
@@ -687,10 +724,17 @@ async function planGlobalTaxonomy(bookmarks, config) {
     return buildTaxonomyFallbackTopFolders();
   }
 
-  const messages = buildTaxonomyPlanningMessages(bookmarks, config.customPrompt);
+  const messages = buildTaxonomyPlanningMessages(
+    bookmarks,
+    config.customPrompt,
+    getTaxonomyPlanningSampleSize(config)
+  );
   const requestSpec = Providers.buildRequest(config, messages, { mode: "organize" });
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort("taxonomy-timeout"), 30_000);
+  const timer = setTimeout(
+    () => controller.abort("taxonomy-timeout"),
+    getTaxonomyPlanningTimeoutMs(config)
+  );
   let response;
   let rawBody = "";
 
@@ -893,6 +937,12 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
   validateConfig(config);
   await assertOrganizeHostAccess(runContext.trigger, config);
   await assertApiOriginAccess(config.baseUrl);
+  const runtimeBatchSize = getRuntimeBatchSize(config);
+  const runtimeConfig = {
+    ...config,
+    batchSize: runtimeBatchSize
+  };
+  const runtimeBatchAdjustmentNote = buildRuntimeBatchAdjustmentNote(config, runtimeBatchSize);
 
   const bookmarkState = await collectBookmarkPlanningState(config);
   const {
@@ -945,9 +995,9 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
     );
   }
 
-  const classificationSignature = Rules.buildClassificationSignature(config, MANUAL_FOLDER_TITLE);
+  const classificationSignature = Rules.buildClassificationSignature(runtimeConfig, MANUAL_FOLDER_TITLE);
   const domainFolderRules = Rules.parseDomainFolderRules(
-    config.domainFolderRules,
+    runtimeConfig.domainFolderRules,
     MANUAL_FOLDER_TITLE
   );
   const startupClassificationCacheStore = await loadClassificationCacheStore();
@@ -965,7 +1015,7 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
 
   if (startupAiCandidateCount) {
     try {
-      taxonomyTopFolders = await withKeepAlive(() => planGlobalTaxonomy(bookmarks, config));
+      taxonomyTopFolders = await withKeepAlive(() => planGlobalTaxonomy(bookmarks, runtimeConfig));
     } catch (error) {
       console.warn("Failed to plan global taxonomy, falling back to defaults:", error);
       taxonomyPlanningNote = ux(
@@ -985,7 +1035,7 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
         "当前书签已命中本地规则或分类缓存，跳过模型目录规划。",
         "Local rules or the classification cache cover the current bookmarks, so model taxonomy planning is skipped."
       );
-  const linkCheckDetail = shouldCheckDeadLinks(config)
+  const linkCheckDetail = shouldCheckDeadLinks(runtimeConfig)
     ? ux(
         "完整检查模式会在分类前检测失效链接。",
         "Complete mode checks dead links before classification."
@@ -995,7 +1045,7 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
         "Fast mode skips dead-link checks and only runs duplicate cleanup, rules, cache reuse, and model classification."
       );
 
-  const totalBatches = Math.ceil(bookmarks.length / config.batchSize);
+  const totalBatches = Math.ceil(bookmarks.length / runtimeBatchSize);
   const runId = crypto.randomUUID();
   const startedAt = new Date().toISOString();
 
@@ -1006,10 +1056,10 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
     phase: "running",
     cancelRequested: false,
     trigger: runContext.trigger || "manual",
-    config,
+    config: runtimeConfig,
     rootFolderId: bookmarkBarNode.id,
     rootFolderName: bookmarkBarNode.title || "BOOKMARK_BAR",
-    batchSize: config.batchSize,
+    batchSize: runtimeBatchSize,
     total: bookmarks.length,
     totalBatches,
     processed: 0,
@@ -1059,7 +1109,7 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
       deleted: 0,
       reused: 0,
       aiClassified: 0,
-      batchSize: config.batchSize,
+      batchSize: runtimeBatchSize,
       warningCount: 0,
       warnings: [],
       deletedItems: [],
@@ -1070,8 +1120,8 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
       startedAt,
       finishedAt: "",
       detail: ux(
-        `${runContext.trigger === "auto" ? "这是一次自动静默整理。" : jobMode === "preview" ? "这是一次手动预览。" : "这是一次手动整理。"} 批大小 ${config.batchSize}。${linkCheckDetail} ${snapshotInfo.detail} ${taxonomyFlowDetail}${taxonomyPlanningNote ? ` ${taxonomyPlanningNote}` : ""}${jobMode === "preview" ? " 预览不会落地改动。" : " 最终会一次性重建书签结构，中途不会边跑边改。"} 受保护根目录 ${protectedRootFolderIds.length} 个，目录规则 ${domainFolderRules.length} 条。`.trim(),
-        `${runContext.trigger === "auto" ? "This is an automatic silent run." : jobMode === "preview" ? "This is a manual preview." : "This is a manual organize run."} Batch size ${config.batchSize}. ${linkCheckDetail} ${snapshotInfo.detail} ${taxonomyFlowDetail}${taxonomyPlanningNote ? ` ${taxonomyPlanningNote}` : ""}${jobMode === "preview" ? " The preview does not apply any changes." : " The final rebuild happens in one pass instead of mutating bookmarks mid-run."} Protected root folders: ${protectedRootFolderIds.length}. Domain rules: ${domainFolderRules.length}.`.trim()
+        `${runContext.trigger === "auto" ? "这是一次自动静默整理。" : jobMode === "preview" ? "这是一次手动预览。" : "这是一次手动整理。"} 批大小 ${runtimeBatchSize}。${runtimeBatchAdjustmentNote ? `${runtimeBatchAdjustmentNote} ` : ""}${linkCheckDetail} ${snapshotInfo.detail} ${taxonomyFlowDetail}${taxonomyPlanningNote ? ` ${taxonomyPlanningNote}` : ""}${jobMode === "preview" ? " 预览不会落地改动。" : " 最终会一次性重建书签结构，中途不会边跑边改。"} 受保护根目录 ${protectedRootFolderIds.length} 个，目录规则 ${domainFolderRules.length} 条。`.trim(),
+        `${runContext.trigger === "auto" ? "This is an automatic silent run." : jobMode === "preview" ? "This is a manual preview." : "This is a manual organize run."} Batch size ${runtimeBatchSize}. ${runtimeBatchAdjustmentNote ? `${runtimeBatchAdjustmentNote} ` : ""}${linkCheckDetail} ${snapshotInfo.detail} ${taxonomyFlowDetail}${taxonomyPlanningNote ? ` ${taxonomyPlanningNote}` : ""}${jobMode === "preview" ? " The preview does not apply any changes." : " The final rebuild happens in one pass instead of mutating bookmarks mid-run."} Protected root folders: ${protectedRootFolderIds.length}. Domain rules: ${domainFolderRules.length}.`.trim()
       )
     })
   );
@@ -4012,7 +4062,14 @@ function isAbortError(error) {
 }
 
 function isModelTimeoutError(error) {
-  return ["first-response-timeout", "request-timeout"].includes(error?.abortReason);
+  if (["first-response-timeout", "request-timeout"].includes(error?.abortReason)) {
+    return true;
+  }
+
+  const text = [error?.message, error?.userMessage, error?.userDetail]
+    .filter(Boolean)
+    .join(" ");
+  return /first-response-timeout|request-timeout|25 秒|90 秒|within 25 seconds|within 90 seconds/i.test(text);
 }
 
 async function retryCurrentBatchWithSmallerBatch(job, error) {

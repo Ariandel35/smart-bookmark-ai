@@ -182,6 +182,16 @@ function testPreviewApplySurface() {
   assert.doesNotMatch(popupSource, /START_ORGANIZE/);
 }
 
+function testSlowModelResilienceSurface() {
+  const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
+  assert.match(backgroundSource, /RUNTIME_BATCH_SIZE_CAPS/);
+  assert.match(backgroundSource, /deepseek: 20/);
+  assert.match(backgroundSource, /getRuntimeBatchSize/);
+  assert.match(backgroundSource, /TAXONOMY_SAMPLE_SIZE_CAPS/);
+  assert.match(backgroundSource, /getTaxonomyPlanningTimeoutMs/);
+  assert.match(backgroundSource, /first-response-timeout\|request-timeout/);
+}
+
 function testI18nCoverage() {
   const keys = collectI18nKeysFromFiles();
   for (const language of ["en", "zh-CN"]) {
@@ -198,6 +208,7 @@ function main() {
   testStaticExtensionAssets();
   testSpeedModeSurface();
   testPreviewApplySurface();
+  testSlowModelResilienceSurface();
   testI18nCoverage();
   console.log("All tests passed.");
 }

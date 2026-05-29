@@ -82,10 +82,10 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 | Main action | `Preview` is the first step. `Apply Plan` appears only when a plan is ready. |
 | Setup | Missing provider, Base URL, model, or API key routes the user to settings. |
 | API settings | `Test & Save` validates the connection and stores the working configuration. |
-| Slow models | Timeout retries automatically shrink the current batch size before giving up. |
+| Slow models | DeepSeek runs are capped to a safer runtime batch size before the first request, then timeout retries shrink again if needed. |
 | Apply speed | Applying a ready preview reuses the saved plan and rebuilds locally without a second model run. |
 | Speed mode | Fast mode skips dead-link checks for quicker previews; Complete mode checks links before classification. |
-| DeepSeek | New and reset configurations start with a smaller default batch size. |
+| DeepSeek | New/reset configurations start smaller, and older large-batch settings are capped per run to reduce 90-second stalls. |
 | Advanced rules | Protected folders, domain rules, and prompt fields stay available but quieter. |
 | Language | English and Simplified Chinese are both supported in the extension UI. |
 
