@@ -4,6 +4,10 @@
 
 - Added Fast and Complete speed modes so users can choose quicker, lower-permission organizing or full dead-link checks
 - Reduced popup and settings permission requests in Fast mode to the configured model API origin
+- Applying a saved preview plan now reuses the stored plan and rebuilds locally without a second model request
+- DeepSeek runs are capped to a safer runtime batch size before the first model request, then timeout retries can shrink again
+- Replaced blocking browser alert/confirm flows in popup and settings with inline confirmations and status messages
+- Settings now validate raw numeric input instead of silently clamping invalid batch sizes or automation intervals
 - Updated privacy, Chrome Web Store, README, locale, and visual materials to describe optional dead-link checks accurately
 
 ## 3.0.0 - 2026-05-08

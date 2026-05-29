@@ -227,6 +227,38 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.doesNotMatch(i18nSource, /backupDeleteConfirm/);
 }
 
+function testReleaseMaterialsCurrent() {
+  const changelog = fs.readFileSync(path.join(ROOT_DIR, "CHANGELOG.md"), "utf8");
+  assert.match(changelog, /without a second model request/);
+  assert.match(changelog, /runtime batch size/);
+  assert.match(changelog, /inline confirmations and status messages/);
+  assert.match(changelog, /raw numeric input/);
+
+  const releaseNotes = fs.readFileSync(
+    path.join(ROOT_DIR, "webstore/RELEASE_NOTES_3.0.0.md"),
+    "utf8"
+  );
+  assert.match(releaseNotes, /without another model request/);
+  assert.match(releaseNotes, /safer runtime batch size/);
+  assert.match(releaseNotes, /inline confirmations and status messages/);
+  assert.match(releaseNotes, /silently clamping invalid values/);
+
+  const storeListing = fs.readFileSync(path.join(ROOT_DIR, "webstore/STORE_LISTING.md"), "utf8");
+  assert.match(storeListing, /without calling the model again/);
+  assert.match(storeListing, /safer runtime batch size/);
+  assert.match(storeListing, /inline confirmations and validation feedback/);
+
+  const reviewNotes = fs.readFileSync(path.join(ROOT_DIR, "webstore/REVIEW_NOTES.md"), "utf8");
+  assert.match(reviewNotes, /复用已保存方案/);
+
+  const publishChecklist = fs.readFileSync(
+    path.join(ROOT_DIR, "webstore/PUBLISH_CHECKLIST.md"),
+    "utf8"
+  );
+  assert.match(publishChecklist, /不会再次请求模型/);
+  assert.match(publishChecklist, /页面内确认/);
+}
+
 function testI18nCoverage() {
   const keys = collectI18nKeysFromFiles();
   for (const language of ["en", "zh-CN"]) {
@@ -245,6 +277,7 @@ function main() {
   testPreviewApplySurface();
   testSlowModelResilienceSurface();
   testOptionsBackupInlineConfirmationSurface();
+  testReleaseMaterialsCurrent();
   testI18nCoverage();
   console.log("All tests passed.");
 }
