@@ -23,6 +23,7 @@
 - Popup settings shortcuts now deep-link directly to the connection section when setup fixes are needed
 - Popup progress now exposes standard progressbar state for assistive technologies
 - Popup phase, progress, and detail regions now expose clearer assistive-technology semantics without repeating unchanged phase text
+- Popup folder summary tables now expose linked titles and scoped column headers
 - Settings save and reset buttons are now explicitly associated with the inline settings action status text
 - Settings save and backup inline status messages now expose live status semantics for assistive technologies
 - Settings navigation now uses linked tab and panel semantics with arrow-key navigation

@@ -510,14 +510,24 @@ function renderCompactFolderSummary(folderViews) {
   section.className = "detail-group";
 
   const title = document.createElement("h3");
+  title.id = "folderSummaryTitle";
   title.className = "detail-group__title";
   title.textContent = t("navFolders");
 
   const table = document.createElement("table");
   table.className = "result-table";
+  table.setAttribute("aria-labelledby", title.id);
 
   const thead = document.createElement("thead");
-  thead.innerHTML = `<tr><th>${t("tableFolder")}</th><th>${t("tableCount")}</th></tr>`;
+  const headerRow = document.createElement("tr");
+  const folderHeader = document.createElement("th");
+  folderHeader.scope = "col";
+  folderHeader.textContent = t("tableFolder");
+  const countHeader = document.createElement("th");
+  countHeader.scope = "col";
+  countHeader.textContent = t("tableCount");
+  headerRow.append(folderHeader, countHeader);
+  thead.appendChild(headerRow);
 
   const tbody = document.createElement("tbody");
   [...folderViews]

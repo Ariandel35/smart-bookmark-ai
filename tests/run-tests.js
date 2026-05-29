@@ -342,6 +342,10 @@ function testPreviewApplySurface() {
   assert.match(popupHtml, /id="detailPanel"[\s\S]*role="region"[\s\S]*data-i18n-aria-label="detailPanelAriaLabel"/);
   assert.match(popupSource, /if \(phaseBadge\.textContent !== phaseLabel\)/);
   assert.match(popupSource, /progressTrack\.setAttribute\("aria-valuetext", `\$\{progress\}%, \$\{progressSummaryText\}`\)/);
+  assert.match(popupSource, /title\.id = "folderSummaryTitle"/);
+  assert.match(popupSource, /table\.setAttribute\("aria-labelledby", title\.id\)/);
+  assert.match(popupSource, /folderHeader\.scope = "col"/);
+  assert.match(popupSource, /countHeader\.scope = "col"/);
 
   const stylesSource = fs.readFileSync(path.join(ROOT_DIR, "styles.css"), "utf8");
   assert.match(stylesSource, /\.confirm-strip/);
