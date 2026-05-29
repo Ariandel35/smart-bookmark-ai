@@ -360,6 +360,15 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /detailPanelAriaLabel/);
   assert.match(i18nSource, /keepBookmarkAria/);
   assert.match(i18nSource, /deleteBookmarkAria/);
+  assert.match(i18nSource, /optionsMeta: "Marko \/ Options"/);
+  assert.match(i18nSource, /navEyebrow: "Navigation"/);
+  assert.match(i18nSource, /optionsMeta: "Marko \/ 设置"/);
+  assert.match(i18nSource, /navEyebrow: "导航"/);
+  assert.match(i18nSource, /connectionTitle: "模型连接"/);
+  assert.match(i18nSource, /labelProvider: "服务商"/);
+  assert.match(i18nSource, /labelModel: "模型名称"/);
+  assert.match(i18nSource, /automationTitle: "自动整理"/);
+  assert.match(i18nSource, /backupTitle: "备份管理"/);
 
   const backgroundSourceForCancel = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSourceForCancel, /cancelRequested: true/);
