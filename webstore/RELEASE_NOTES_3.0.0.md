@@ -7,7 +7,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 弹窗改为“预览整理 -> 应用方案”的主流程，避免默认按钮含义不清
 - 应用已生成的预览方案时会复用保存的方案，本地重建，不会再次请求模型
 - 配置不完整时，弹窗主按钮会直接进入设置页
-- DeepSeek 等慢响应模型会在第一次请求前使用更安全的运行批大小，超时后还会继续降批重试
+- DeepSeek 等慢响应模型会在第一次请求前使用更小的运行批大小和更短的内置请求提示，超时后还会继续降批重试
 - 新增快速/完整速度模式：快速模式跳过失效链接检测和额外目录规划请求，完整模式保留链接检查和全局规划
 - 快速模式在规则和分类缓存覆盖全部书签时会直接本地完成，不再调模型或等待批次调度
 - 预览会先检查本地规则和缓存覆盖情况，只有未缓存书签需要模型时才要求 API Key 或模型接口授权
@@ -20,7 +20,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 
 适合商店后台的简短版本：
 
-3.0.0 优化了核心使用路径：先预览，再应用方案。应用预览不会再次跑模型；快速模式默认更快且权限更少，并少一次单独目录规划请求，规则和缓存覆盖全部书签时还会直接本地完成，未命中缓存时才要求模型访问；设置页使用内联确认和校验提示，API 检测成功后会保存连接配置，DeepSeek 等慢模型会先使用更安全批量并在超时后自动降批重试。
+3.0.0 优化了核心使用路径：先预览，再应用方案。应用预览不会再次跑模型；快速模式默认更快且权限更少，并少一次单独目录规划请求，规则和缓存覆盖全部书签时还会直接本地完成，未命中缓存时才要求模型访问；设置页使用内联确认和校验提示，API 检测成功后会保存连接配置，DeepSeek 等慢模型会先使用更小批量和更短内置提示，并在超时后自动降批重试。
 
 ## English
 
@@ -29,7 +29,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - The popup now uses a clear `Preview` -> `Apply Plan` primary flow
 - Applying a ready preview reuses the saved plan and rebuilds locally without another model request
 - Incomplete setup routes directly from the popup to settings
-- Slow providers such as DeepSeek start with a safer runtime batch size and still retry with smaller batches after timeouts
+- Slow providers such as DeepSeek start with a smaller runtime batch size and shorter built-in request prompt, then still retry with smaller batches after timeouts
 - Added Fast and Complete speed modes: Fast skips dead-link checks and the extra taxonomy-planning request, while Complete keeps link checks and global planning
 - Fast mode now finishes locally when rules and cached classifications cover every bookmark, skipping model calls and batch scheduling
 - Preview checks local rule/cache coverage first, then asks for an API key or model endpoint access only when uncached bookmarks need the model
@@ -42,4 +42,4 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 
 Short version for store release notes:
 
-3.0.0 streamlines the core workflow: preview first, then apply the plan without a second model run. Fast mode skips dead-link checks and the extra taxonomy-planning request, finishes locally when rules and cached classifications cover every bookmark, and asks for model access only when uncached bookmarks need it. Settings use inline confirmations and validation feedback, successful API tests save the connection, and slow providers such as DeepSeek start with safer runtime batches before timeout retries shrink again.
+3.0.0 streamlines the core workflow: preview first, then apply the plan without a second model run. Fast mode skips dead-link checks and the extra taxonomy-planning request, finishes locally when rules and cached classifications cover every bookmark, and asks for model access only when uncached bookmarks need it. Settings use inline confirmations and validation feedback, successful API tests save the connection, and slow providers such as DeepSeek start with smaller runtime batches and shorter built-in prompts before timeout retries shrink again.

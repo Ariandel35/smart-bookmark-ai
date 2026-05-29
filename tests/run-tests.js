@@ -341,8 +341,11 @@ function testPreviewApplySurface() {
 function testSlowModelResilienceSurface() {
   const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSource, /RUNTIME_BATCH_SIZE_CAPS/);
-  assert.match(backgroundSource, /deepseek: 12/);
+  assert.match(backgroundSource, /deepseek: 8/);
   assert.match(backgroundSource, /getRuntimeBatchSize/);
+  assert.match(backgroundSource, /COMPACT_DEFAULT_PROMPT/);
+  assert.match(backgroundSource, /buildModelStrategyPrompt/);
+  assert.match(backgroundSource, /I18N\.isBuiltInPromptValue/);
   assert.match(backgroundSource, /MODEL_INPUT_URL_MAX_LENGTH/);
   assert.match(backgroundSource, /CLASSIFICATION_OUTPUT_TOKENS_PER_BOOKMARK/);
   assert.match(backgroundSource, /getClassificationOutputTokenBudget/);
@@ -469,13 +472,15 @@ function testReleaseMaterialsCurrent() {
     "utf8"
   );
   assert.match(releaseNotes, /without another model request/);
-  assert.match(releaseNotes, /safer runtime batch size/);
+  assert.match(releaseNotes, /smaller runtime batch size/);
+  assert.match(releaseNotes, /shorter built-in/);
   assert.match(releaseNotes, /inline confirmations and status messages/);
   assert.match(releaseNotes, /silently clamping invalid values/);
 
   const storeListing = fs.readFileSync(path.join(ROOT_DIR, "webstore/STORE_LISTING.md"), "utf8");
   assert.match(storeListing, /without calling the model again/);
-  assert.match(storeListing, /safer runtime batch size/);
+  assert.match(storeListing, /smaller runtime batch size/);
+  assert.match(storeListing, /shorter built-in/);
   assert.match(storeListing, /inline confirmations and validation feedback/);
   assert.match(storeListing, /Popup inline apply confirmation/);
   assert.match(storeListing, /Backup management with inline restore confirmation/);

@@ -31,7 +31,7 @@ const DEFAULT_BATCH_SIZE = 50;
 const MIN_BATCH_SIZE = 5;
 const MAX_AUTO_RETRY_BATCH_SIZE = 20;
 const RUNTIME_BATCH_SIZE_CAPS = {
-  deepseek: 12
+  deepseek: 8
 };
 const DEFAULT_DEAD_SCAN_BATCH_SIZE = 20;
 const DEFAULT_TAXONOMY_SAMPLE_SIZE = 160;
@@ -105,6 +105,8 @@ const MAX_CLASSIFICATION_CACHE_ITEMS = 5000;
 
 const LEGACY_DEFAULT_PROMPT = I18N.getLegacyDefaultPrompt();
 const DEFAULT_PROMPT = I18N.getDefaultPrompt();
+const COMPACT_DEFAULT_PROMPT_ZH = `目标：把书签整理成少量稳定、长期好找的目录。一级目录尽量 6 到 8 个，最多 9 个；每条最多 2 级；优先复用给定全局目录；二级目录只在确实有用时添加；宁可合并，不要细分；信息不足放入“${MANUAL_FOLDER_TITLE}”；只删除明确重复项，无法确认就保留。`;
+const COMPACT_DEFAULT_PROMPT_EN = `Goal: organize bookmarks into a small, stable, easy-to-find folder structure. Aim for 6 to 8 top-level folders and never more than 9; use at most 2 levels per bookmark; prefer the provided top-level folders; add a second level only when useful; merge rather than split; put unclear items in "${MANUAL_FOLDER_TITLE}"; delete only clear duplicates.`;
 
 let currentStatus = buildIdleStatus();
 let batchLock = false;
@@ -455,7 +457,7 @@ function getProviderLabel(provider) {
 }
 
 function getDefaultBatchSize(provider) {
-  return provider === "deepseek" ? 12 : DEFAULT_BATCH_SIZE;
+  return provider === "deepseek" ? 8 : DEFAULT_BATCH_SIZE;
 }
 
 function getRuntimeBatchSize(config = {}) {
@@ -490,6 +492,19 @@ function getClassificationOutputTokenBudget(batchLength) {
     CLASSIFICATION_OUTPUT_TOKEN_MAX,
     CLASSIFICATION_OUTPUT_TOKEN_BASE + safeBatchLength * CLASSIFICATION_OUTPUT_TOKENS_PER_BOOKMARK
   );
+}
+
+function buildModelStrategyPrompt(customPrompt) {
+  const promptValue = typeof customPrompt === "string" ? customPrompt.trim() : "";
+  if (
+    !promptValue ||
+    I18N.isBuiltInPromptValue(promptValue) ||
+    promptValue === LEGACY_DEFAULT_PROMPT.trim()
+  ) {
+    return isZh ? COMPACT_DEFAULT_PROMPT_ZH : COMPACT_DEFAULT_PROMPT_EN;
+  }
+
+  return promptValue;
 }
 
 async function initializeDefaults() {
@@ -785,7 +800,7 @@ function buildTaxonomyPlanningSample(bookmarks, maxItems = DEFAULT_TAXONOMY_SAMP
 
 function buildTaxonomyPlanningMessages(bookmarks, customPrompt, sampleSize = DEFAULT_TAXONOMY_SAMPLE_SIZE) {
   const sample = buildTaxonomyPlanningSample(bookmarks, sampleSize);
-  const strategyPrompt = (customPrompt || DEFAULT_PROMPT).trim();
+  const strategyPrompt = buildModelStrategyPrompt(customPrompt || DEFAULT_PROMPT);
   const fixedFolders = buildTaxonomyFallbackTopFolders();
 
   return [
@@ -4052,7 +4067,7 @@ function buildClassificationMessages(
   taxonomyLocks = {},
   taxonomyTopFolders = []
 ) {
-  const strategyPrompt = (customPrompt || DEFAULT_PROMPT).trim();
+  const strategyPrompt = buildModelStrategyPrompt(customPrompt || DEFAULT_PROMPT);
   const isZh = I18N.locale === "zh_CN";
   const allowedTopFolders = normalizeTopLevelFolderList(
     Array.isArray(taxonomyTopFolders) && taxonomyTopFolders.length

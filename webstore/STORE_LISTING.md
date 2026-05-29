@@ -18,7 +18,7 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 支持自定义 Base URL、API Key、模型名和 Prompt
 - API 检测成功后自动保存当前连接配置
 - 快速模式只需要访问你配置的模型接口，并跳过额外目录规划；完整模式才会检测书签链接和规划全局目录
-- DeepSeek 等慢模型会先使用更安全的运行批大小；响应过慢时还会自动降低当前批大小并重试
+- DeepSeek 等慢模型会先使用更小的运行批大小和更短的内置请求提示；响应过慢时还会自动降低当前批大小并重试
 - 应用已生成预览时复用保存的方案，本地重建，不会再次请求模型
 - 弹窗和设置页使用页面内确认与错误提示，避免浏览器原生弹窗打断流程
 - 支持中英文界面，可根据浏览器语言自动切换
@@ -57,7 +57,7 @@ Key features:
 - Successful API tests save the current connection settings
 - Fast mode asks for model endpoint access only when uncached bookmarks need the model; Complete mode adds link checks and global planning
 - Fast local reruns can finish from rules and cached classifications without model calls or batch scheduling
-- Slow providers such as DeepSeek start with a safer runtime batch size, then retry with smaller batches if needed
+- Slow providers such as DeepSeek start with a smaller runtime batch size and shorter built-in prompts, then retry with smaller batches if needed
 - Applying a generated preview reuses the saved plan and rebuilds locally without another model request
 - Popup and settings actions use inline confirmations and validation feedback instead of browser dialogs
 - English and Simplified Chinese interface support
