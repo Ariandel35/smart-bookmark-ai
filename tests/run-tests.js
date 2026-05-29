@@ -763,6 +763,12 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /settingsLoadException/);
   assert.match(optionsSource, /settingsSaveException/);
   assert.match(optionsSource, /setSaveBadge\(t\("saveBadgeLoadFailed"\), "danger"\)/);
+  assert.match(optionsSource, /refreshBackupStatus\(\)\.catch\(\(error\) => \{/);
+  assert.match(optionsSource, /Failed to refresh backup status after config load/);
+  assert.match(optionsSource, /renderBackupLoadFailure\(t\("backupReadFailed"\)\)/);
+  assert.match(optionsSource, /refreshHostAccessStatus\(\)\.catch\(\(error\) => \{/);
+  assert.match(optionsSource, /Failed to refresh host access status after config load/);
+  assert.match(optionsSource, /hostAccessCheckingInFlight = false/);
   assert.match(optionsSource, /console\.error\("Failed to save settings:"/);
   assert.match(optionsSource, /console\.error\("Failed to save settings after API test:"/);
   assert.match(optionsSource, /apiTestSaveFailed/);
@@ -834,6 +840,7 @@ function testOptionsBackupInlineConfirmationSurface() {
 
   assert.match(optionsSource, /pendingBackupAction/);
   assert.match(optionsSource, /backupActionInFlight/);
+  assert.match(optionsSource, /function renderBackupLoadFailure\(message\)/);
   assert.match(optionsSource, /getBackupRecordAccessibleName/);
   assert.match(optionsSource, /restoreButton\.setAttribute\("aria-label", t\("backupRestoreRecordAria", \{ title: backupName \}\)\)/);
   assert.match(optionsSource, /deleteButton\.setAttribute\("aria-label", t\("backupDeleteRecordAria", \{ title: backupName \}\)\)/);
@@ -913,6 +920,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /inline confirmations and status messages/);
   assert.match(changelog, /raw numeric input/);
   assert.match(changelog, /fresh pre-restore snapshot/);
+  assert.match(changelog, /keeps the saved configuration visible/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run package:webstore/);
   assert.match(readme, /restoring creates a fresh local snapshot first/);
@@ -933,6 +941,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /shorter built-in/);
   assert.match(releaseNotes, /inline confirmations and status messages/);
   assert.match(releaseNotes, /creates a fresh local snapshot/);
+  assert.match(releaseNotes, /keeps the saved connection visible/);
   assert.match(releaseNotes, /silently clamping invalid values/);
 
   const historicalReleaseNotes = fs.readFileSync(
@@ -953,6 +962,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /OpenAI, DeepSeek, MiniMax, Anthropic/);
   assert.match(storeListing, /inline confirmations and validation feedback/);
   assert.match(storeListing, /fresh pre-restore snapshot/);
+  assert.match(storeListing, /keeps saved connection fields visible/);
   assert.match(storeListing, /Popup inline apply confirmation/);
   assert.match(storeListing, /Backup management with inline restore confirmation/);
 

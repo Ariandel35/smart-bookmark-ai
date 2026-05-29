@@ -829,10 +829,22 @@ async function loadConfig() {
   const stored = await chrome.storage.local.get(STORAGE_KEY);
   const config = mergeConfig(stored[STORAGE_KEY]);
   populateForm(config);
-  await refreshBackupStatus();
-  await refreshHostAccessStatus();
   clearApiTestStatus();
   setSaveBadge(t("saveBadgeSynced"), "success");
+  clearSettingsActionStatus();
+
+  await refreshBackupStatus().catch((error) => {
+    console.error("Failed to refresh backup status after config load:", error);
+    renderBackupLoadFailure(t("backupReadFailed"));
+  });
+  await refreshHostAccessStatus().catch((error) => {
+    console.error("Failed to refresh host access status after config load:", error);
+    hostAccessCheckingInFlight = false;
+    setHostAccessStatus(t("currentApiAccessMissing"), false);
+    grantAccessButton.textContent = t("hostAccessButton");
+    grantAccessButton.dataset.granted = "false";
+    updateSettingsOperationControls();
+  });
 }
 
 async function refreshBackupStatus() {
@@ -845,12 +857,7 @@ async function refreshBackupStatus() {
   });
 
   if (!response?.ok) {
-    currentBackupRecords = [];
-    const empty = document.createElement("div");
-    empty.className = "empty-state";
-    empty.textContent = response?.error || t("backupReadFailed");
-    backupList.appendChild(empty);
-    setBackupBadge(t("backupErrorBadge"), "danger");
+    renderBackupLoadFailure(response?.error || t("backupReadFailed"));
     return;
   }
 
@@ -867,6 +874,19 @@ async function refreshBackupStatus() {
 
   renderBackupRecords(records);
   setBackupBadge(t("backupRatio", { count: records.length }), "success");
+}
+
+function renderBackupLoadFailure(message) {
+  currentBackupRecords = [];
+  pendingBackupAction = null;
+  backupList.replaceChildren();
+
+  const empty = document.createElement("div");
+  empty.className = "empty-state";
+  empty.textContent = message || t("backupReadFailed");
+  backupList.appendChild(empty);
+  setBackupBadge(t("backupErrorBadge"), "danger");
+  setBackupActionStatus(message || t("backupReadFailed"), true);
 }
 
 function renderBackupRecords(records = currentBackupRecords) {
