@@ -622,6 +622,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /without calling the model again/);
   assert.match(storeListing, /smaller runtime batch size/);
   assert.match(storeListing, /shorter built-in/);
+  assert.match(storeListing, /OpenAI、DeepSeek、MiniMax、Anthropic/);
+  assert.match(storeListing, /OpenAI, DeepSeek, MiniMax, Anthropic/);
   assert.match(storeListing, /inline confirmations and validation feedback/);
   assert.match(storeListing, /Popup inline apply confirmation/);
   assert.match(storeListing, /Backup management with inline restore confirmation/);

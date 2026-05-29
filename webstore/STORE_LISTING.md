@@ -14,7 +14,7 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 点击预览后，扩展会先生成整理方案，而不是直接改动现有书签。确认应用时会复用已保存的预览方案，先创建本地快照备份，再直接在本地重建书签，不会再次请求模型。默认快速模式会跳过失效链接检测和单独目录规划请求，让预览更快、权限更少；如果选择完整模式，预览阶段还会扫描明显失效的链接，并先生成全局目录方案。整理过程会清理明显重复项，结合你自己配置的模型服务分批分类，最后一次性把结果重建到书签根目录。
 
 核心能力：
-- 支持 OpenAI、DeepSeek、Anthropic、Gemini、OpenRouter、Groq、xAI、Moonshot AI、Ollama，以及兼容 OpenAI 的自定义接口
+- 支持 OpenAI、DeepSeek、MiniMax、Anthropic、Gemini、OpenRouter、Groq、xAI、Moonshot AI、Ollama，以及兼容 OpenAI 的自定义接口
 - 支持自定义 Base URL、API Key、模型名和 Prompt
 - API 检测成功后自动保存当前连接配置
 - 快速模式只需要访问你配置的模型接口，并跳过额外目录规划；完整模式才会检测书签链接和规划全局目录
@@ -52,7 +52,7 @@ Marko is a bookmark cleanup tool for people with large, messy bookmark libraries
 When you click Preview, the extension generates a plan before changing anything. When you apply that plan, Marko reuses the saved preview, creates a local snapshot backup, and rebuilds locally without calling the model again. Fast mode skips dead-link checks and the separate taxonomy-planning request for quicker previews and fewer permissions; if rules and cached classifications cover every bookmark, it finishes locally without model calls, batch scheduling, or model endpoint access. If you choose Complete mode, the preview also checks clearly dead links and asks the model for a global folder plan first when uncached bookmarks need classification. Marko removes obvious duplicates, uses your chosen model provider to classify bookmarks in batches only when needed, and rebuilds the final result directly at the bookmark root in one pass.
 
 Key features:
-- Works with OpenAI, DeepSeek, Anthropic, Gemini, OpenRouter, Groq, xAI, Moonshot AI, Ollama, and generic OpenAI-compatible endpoints
+- Works with OpenAI, DeepSeek, MiniMax, Anthropic, Gemini, OpenRouter, Groq, xAI, Moonshot AI, Ollama, and generic OpenAI-compatible endpoints
 - Custom Base URL, API key, model name, and prompt
 - Successful API tests save the current connection settings
 - Fast mode asks for model endpoint access only when uncached bookmarks need the model; Complete mode adds link checks and global planning
