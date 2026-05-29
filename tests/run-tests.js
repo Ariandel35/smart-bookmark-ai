@@ -611,6 +611,13 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /inline confirmations and status messages/);
   assert.match(releaseNotes, /silently clamping invalid values/);
 
+  const historicalReleaseNotes = fs.readFileSync(
+    path.join(ROOT_DIR, "webstore/RELEASE_NOTES_1.3.0.md"),
+    "utf8"
+  );
+  assert.match(historicalReleaseNotes, /Marko 1\.3\.0 Release Notes/);
+  assert.doesNotMatch(historicalReleaseNotes, /Smart Bookmark AI/);
+
   const storeListing = fs.readFileSync(path.join(ROOT_DIR, "webstore/STORE_LISTING.md"), "utf8");
   assert.match(storeListing, /without calling the model again/);
   assert.match(storeListing, /smaller runtime batch size/);
