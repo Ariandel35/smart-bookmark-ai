@@ -43,6 +43,7 @@
 - Historical webstore release notes now use the Marko brand consistently instead of the old extension name
 - Webstore privacy policy now matches the Fast/Complete mode data-flow disclosures used in the README and review notes
 - Privacy page fallback copy now matches the Fast and Complete speed-mode data-access behavior even before localization applies
+- GitHub privacy policy now explicitly covers auto organize runs and the current Complete-mode data flow
 - Webstore provider lists now include MiniMax so store copy matches the actual provider registry and README
 - Background configuration errors now use the same Chinese model-name wording as the settings UI
 - Static UI checks now verify unique HTML IDs and valid label, form, and ARIA element references

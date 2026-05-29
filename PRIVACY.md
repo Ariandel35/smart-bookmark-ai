@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Last updated: 2026-05-29
+Last updated: 2026-05-30
 
 Marko only processes data needed to organize bookmarks.
 
@@ -20,9 +20,9 @@ Marko only processes data needed to organize bookmarks.
 
 ## Where data is sent
 
-- Bookmark title, URL, current path, and custom prompt are only sent to the model provider you configure
+- Bookmark title, URL, current path, and custom prompt are only sent to the model provider you configure when you start organize or when enabled auto organize runs
 - Fast mode skips dead-link checks and the separate taxonomy-planning model request during organize runs
-- Complete link checks send HEAD / GET requests directly to bookmarked websites
+- Complete mode can send HEAD / GET requests directly to bookmarked websites and adds the separate taxonomy-planning model request when uncached bookmarks need classification
 
 ## Local storage
 

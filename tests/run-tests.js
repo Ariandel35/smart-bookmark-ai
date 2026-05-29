@@ -466,8 +466,10 @@ function testSpeedModeSurface() {
   assert.match(storeListing, /Complete mode/);
 
   const privacyPolicy = fs.readFileSync(path.join(ROOT_DIR, "PRIVACY.md"), "utf8");
+  assert.match(privacyPolicy, /Last updated: 2026-05-30/);
+  assert.match(privacyPolicy, /when you start organize or when enabled auto organize runs/);
   assert.match(privacyPolicy, /Fast mode skips dead-link checks and the separate taxonomy-planning model request/);
-  assert.match(privacyPolicy, /Complete link checks/);
+  assert.match(privacyPolicy, /Complete mode can send HEAD \/ GET requests directly to bookmarked websites/);
 
   const privacyHtml = fs.readFileSync(path.join(ROOT_DIR, "privacy.html"), "utf8");
   assert.match(privacyHtml, /separate taxonomy-planning request/);
