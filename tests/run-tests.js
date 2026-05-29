@@ -280,6 +280,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /setSettingsActionStatus/);
   assert.match(optionsSource, /settingsActionInFlight/);
   assert.match(optionsSource, /setSettingsActionInFlight/);
+  assert.match(optionsSource, /settingsSavingStatus/);
+  assert.match(optionsSource, /settingsAccessRequestingStatus/);
   assert.match(optionsSource, /settingsFields\.forEach/);
   assert.match(optionsSource, /saveButton\.disabled = settingsActionInFlight/);
   assert.match(optionsSource, /testApiButton\.disabled = settingsActionInFlight/);
@@ -305,6 +307,8 @@ function testOptionsBackupInlineConfirmationSurface() {
 
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
   assert.match(i18nSource, /settingsSavedStatus/);
+  assert.match(i18nSource, /settingsSavingStatus/);
+  assert.match(i18nSource, /settingsAccessRequestingStatus/);
   assert.match(i18nSource, /backupRestoreInlineConfirm/);
   assert.match(i18nSource, /backupDeleteInlineConfirm/);
   assert.doesNotMatch(i18nSource, /backupRestoreConfirm/);

@@ -855,6 +855,8 @@ async function saveConfig(event) {
   }
 
   setSettingsActionInFlight(true);
+  setSaveBadge(t("saveBadgeUnsaved"), "accent");
+  setSettingsActionStatus(t("settingsSavingStatus"));
   try {
     if (config.autoOrganizeEnabled) {
       const granted = shouldRequireBroadHostAccess(config)
@@ -1068,6 +1070,7 @@ async function requestHostAccess() {
   }
 
   setSettingsActionInFlight(true);
+  setSettingsActionStatus(t("settingsAccessRequestingStatus"));
   try {
     const granted = shouldRequireBroadHostAccess(config)
       ? await ensureBroadHostAccess()
