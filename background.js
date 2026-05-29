@@ -1854,6 +1854,16 @@ async function resolveUnprocessedEntry(entryId, action) {
     };
   }
 
+  if (currentStatus?.phase !== "completed") {
+    return {
+      ok: false,
+      error: ux(
+        "请先应用并完成整理方案，再处理未处理项。",
+        "Apply and finish the organize plan before handling unprocessed items."
+      )
+    };
+  }
+
   const warnings = Array.isArray(currentStatus.warnings) ? [...currentStatus.warnings] : [];
   const targetEntry = warnings.find((entry) => entry.id === entryId);
 

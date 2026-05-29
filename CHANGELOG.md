@@ -25,7 +25,7 @@
 - Popup primary, backup, and cancel buttons are now explicitly associated with the inline action status text
 - Popup unprocessed-item keep/delete buttons are now explicitly associated with the inline action status text
 - Popup unprocessed-item keep/delete buttons now include the bookmark title in their accessible labels
-- Popup unprocessed-item actions are now hidden during preview and running states so preview remains read-only until Apply Plan
+- Popup and background unprocessed-item actions are now blocked until an organize/apply run has completed, so preview and error states cannot mutate bookmarks
 - Popup apply-confirmation primary action is now explicitly associated with the inline action status text
 - Cancellation requests now persist in job status so the popup keeps the cancel button locked after the request is accepted
 - Popup apply confirmation now moves focus to the inline confirmation and returns focus to the primary action when dismissed

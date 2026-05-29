@@ -502,6 +502,8 @@ function testPreviewApplySurface() {
   assert.doesNotMatch(backgroundSource, /ux\("Model Name 不能为空。"/);
   assert.match(backgroundSource, /getBookmarkById/);
   assert.match(backgroundSource, /Stale unprocessed record removed/);
+  assert.match(backgroundSource, /currentStatus\?\.phase !== "completed"/);
+  assert.match(backgroundSource, /Apply and finish the organize plan before handling unprocessed items/);
   assert.match(backgroundSource, /existingBookmark\.id/);
   assert.match(backgroundSource, /Pre-restore backup failed/);
   assert.match(backgroundSource, /createCurrentSnapshotBackup\(bookmarkBarNode, "manual", \{ preserveIds: \[backupId\] \}\)/);
@@ -528,7 +530,7 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /createSettingsShortcutButton/);
   assert.match(popupSource, /shouldShowSettingsShortcut/);
   assert.match(popupSource, /function canResolveUnprocessedEntries\(\) \{/);
-  assert.match(popupSource, /return !\["preview", "running"\]\.includes\(currentStatus\?\.phase \|\| ""\)/);
+  assert.match(popupSource, /return currentStatus\?\.phase === "completed"/);
   assert.match(popupSource, /\{ allowActions: canResolveUnprocessedEntries\(\) \}/);
   assert.match(popupSource, /settingsShortcutButton/);
   assert.match(popupSource, /summaryActions\.appendChild\(createSettingsShortcutButton\(\)\)/);
@@ -944,7 +946,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /mini-request timeouts now keep completed mini results/);
   assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
   assert.match(changelog, /inline confirmations and status messages/);
-  assert.match(changelog, /preview remains read-only until Apply Plan/);
+  assert.match(changelog, /preview and error states cannot mutate bookmarks/);
   assert.match(changelog, /raw numeric input/);
   assert.match(changelog, /fresh pre-restore snapshot/);
   assert.match(changelog, /keeps the saved configuration visible/);
@@ -971,7 +973,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /completed mini results are kept/);
   assert.match(releaseNotes, /shorter built-in/);
   assert.match(releaseNotes, /inline confirmations and status messages/);
-  assert.match(releaseNotes, /read-only during preview/);
+  assert.match(releaseNotes, /preview and error states cannot mutate bookmarks/);
   assert.match(releaseNotes, /creates a fresh local snapshot/);
   assert.match(releaseNotes, /keeps the saved connection visible/);
   assert.match(releaseNotes, /Access-status refresh failures now restore controls/);
@@ -997,7 +999,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /OpenAI、DeepSeek、MiniMax、Anthropic/);
   assert.match(storeListing, /OpenAI, DeepSeek, MiniMax, Anthropic/);
   assert.match(storeListing, /inline confirmations and validation feedback/);
-  assert.match(storeListing, /read-only during preview/);
+  assert.match(storeListing, /read-only until an organize\/apply run completes/);
   assert.match(storeListing, /fresh pre-restore snapshot/);
   assert.match(storeListing, /keeps saved connection fields visible/);
   assert.match(storeListing, /Access-status refresh failures restore controls/);

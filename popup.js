@@ -390,7 +390,7 @@ function shouldShowSettingsShortcut() {
 }
 
 function canResolveUnprocessedEntries() {
-  return !["preview", "running"].includes(currentStatus?.phase || "");
+  return currentStatus?.phase === "completed";
 }
 
 function createApplyConfirmationState() {

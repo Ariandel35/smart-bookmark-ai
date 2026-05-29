@@ -43,7 +43,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Preview checks local rule/cache coverage first, then asks for an API key or model endpoint access only when uncached bookmarks need the model
 - Successful API tests now save the verified connection settings
 - Popup apply, backup restore/delete, and settings validation now use inline confirmations and status messages instead of browser dialogs
-- Unprocessed items stay read-only during preview, so keep/delete actions are not shown before Apply Plan
+- Unprocessed items stay read-only until an organize/apply run completes, so preview and error states cannot mutate bookmarks
 - Backup restore now creates a fresh local snapshot of the current bookmarks first and preserves the selected backup while retention cleanup runs
 - Settings load keeps the saved connection visible even if backup-list or access-status refreshes fail, then reports those secondary failures inline
 - Access-status refresh failures now restore controls and show an inline permission-state error instead of leaving checks stuck
