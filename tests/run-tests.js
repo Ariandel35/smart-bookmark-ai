@@ -447,7 +447,15 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /providerSelect\.addEventListener\("change"[\s\S]*markPending\(\);[\s\S]*refreshHostAccessStatus/);
   assert.match(optionsSource, /pendingBackupAction/);
   assert.match(optionsSource, /backupActionInFlight/);
+  assert.match(optionsSource, /restoreButton\.dataset\.backupActionButton = "restore"/);
+  assert.match(optionsSource, /deleteButton\.dataset\.backupActionButton = "delete"/);
+  assert.match(optionsSource, /focusBackupConfirmationPrimary/);
+  assert.match(optionsSource, /findBackupActionButton\(record\.id, action\)\?\.focus\(\)/);
+  assert.match(optionsSource, /getBackupConfirmMessageId/);
   assert.match(optionsSource, /createBackupInlineConfirm/);
+  assert.match(optionsSource, /wrapper\.setAttribute\("role", "group"\)/);
+  assert.match(optionsSource, /wrapper\.setAttribute\("aria-labelledby", messageId\)/);
+  assert.match(optionsSource, /confirmButton\.dataset\.backupConfirmPrimary = "true"/);
   assert.match(optionsSource, /confirmButton\.disabled = backupActionInFlight/);
   assert.match(optionsSource, /restoreButton\.disabled = backupActionInFlight/);
   assert.match(optionsSource, /deleteButton\.disabled = backupActionInFlight/);

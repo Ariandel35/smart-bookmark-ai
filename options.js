@@ -808,6 +808,8 @@ function renderBackupRecords(records = currentBackupRecords) {
       restoreButton.type = "button";
       restoreButton.className = "button button--ghost button--compact";
       restoreButton.textContent = t("restoreButton");
+      restoreButton.dataset.backupId = String(record.id || "");
+      restoreButton.dataset.backupActionButton = "restore";
       restoreButton.disabled = backupActionInFlight;
       restoreButton.addEventListener("click", () => {
         setPendingBackupAction(record.id, "restore");
@@ -817,6 +819,8 @@ function renderBackupRecords(records = currentBackupRecords) {
       deleteButton.type = "button";
       deleteButton.className = "button button--danger button--compact";
       deleteButton.textContent = t("deleteButton");
+      deleteButton.dataset.backupId = String(record.id || "");
+      deleteButton.dataset.backupActionButton = "delete";
       deleteButton.disabled = backupActionInFlight;
       deleteButton.addEventListener("click", () => {
         setPendingBackupAction(record.id, "delete");
@@ -838,13 +842,41 @@ function setPendingBackupAction(backupId, action) {
   pendingBackupAction = { id: backupId, action };
   setBackupActionStatus("");
   renderBackupRecords();
+  focusBackupConfirmationPrimary(backupId);
+}
+
+function findBackupActionButton(backupId, action) {
+  return (
+    Array.from(backupList.querySelectorAll("[data-backup-action-button]")).find(
+      (button) =>
+        button.dataset.backupId === String(backupId || "") &&
+        button.dataset.backupActionButton === action
+    ) || null
+  );
+}
+
+function focusBackupConfirmationPrimary(backupId) {
+  Array.from(backupList.querySelectorAll("[data-backup-confirm-primary]"))
+    .find((button) => button.dataset.backupId === String(backupId || ""))
+    ?.focus();
+}
+
+function getBackupConfirmMessageId(backupId) {
+  const safeId = String(backupId || "")
+    .replace(/[^a-zA-Z0-9_-]/g, "-")
+    .slice(0, 80);
+  return `backupConfirmMessage-${safeId || "record"}`;
 }
 
 function createBackupInlineConfirm(record, action) {
+  const messageId = getBackupConfirmMessageId(record.id);
   const wrapper = document.createElement("div");
   wrapper.className = "backup-confirm";
+  wrapper.setAttribute("role", "group");
+  wrapper.setAttribute("aria-labelledby", messageId);
 
   const message = document.createElement("div");
+  message.id = messageId;
   message.className = "backup-confirm__message";
   message.textContent =
     action === "restore" ? t("backupRestoreInlineConfirm") : t("backupDeleteInlineConfirm");
@@ -857,6 +889,8 @@ function createBackupInlineConfirm(record, action) {
       : "button button--danger button--compact";
   confirmButton.textContent =
     action === "restore" ? t("backupRestoreInlinePrimary") : t("backupDeleteInlinePrimary");
+  confirmButton.dataset.backupId = String(record.id || "");
+  confirmButton.dataset.backupConfirmPrimary = "true";
   confirmButton.disabled = backupActionInFlight;
   confirmButton.addEventListener("click", () => {
     if (backupActionInFlight) {
@@ -890,6 +924,7 @@ function createBackupInlineConfirm(record, action) {
 
     pendingBackupAction = null;
     renderBackupRecords();
+    findBackupActionButton(record.id, action)?.focus();
   });
 
   wrapper.append(message, confirmButton, cancelButton);
