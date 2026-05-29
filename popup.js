@@ -3,6 +3,7 @@ const STATUS_KEY = "smartBookmarkJobStatus";
 const MANAGED_FOLDER_IDS_KEY = "smartBookmarkManagedFolderIds";
 const MANAGED_ROOT_BOOKMARK_IDS_KEY = "smartBookmarkManagedRootBookmarkIds";
 const HOST_ACCESS_ORIGINS = ["https://*/*", "http://*/*"];
+const LINK_CHECK_MODE_COMPLETE = "complete";
 const I18N = globalThis.SmartBookmarkI18n;
 const Providers = globalThis.SmartBookmarkProviders;
 const t = (key, params) => I18N.t(key, params);
@@ -41,6 +42,36 @@ async function hasBroadHostAccess() {
   }
 }
 
+function buildOriginPattern(rawUrl) {
+  try {
+    const url = new URL(rawUrl);
+    if (!/^https?:$/i.test(url.protocol)) {
+      return "";
+    }
+
+    return `${url.origin}/*`;
+  } catch (error) {
+    return "";
+  }
+}
+
+async function hasOriginAccess(rawUrl) {
+  const originPattern = buildOriginPattern(rawUrl);
+  if (!originPattern) {
+    return true;
+  }
+
+  if (await hasBroadHostAccess()) {
+    return true;
+  }
+
+  try {
+    return await chrome.permissions.contains({ origins: [originPattern] });
+  } catch (error) {
+    return false;
+  }
+}
+
 async function ensureBroadHostAccess() {
   if (await hasBroadHostAccess()) {
     return true;
@@ -51,6 +82,33 @@ async function ensureBroadHostAccess() {
   } catch (error) {
     return false;
   }
+}
+
+async function ensureOriginAccess(rawUrl) {
+  const originPattern = buildOriginPattern(rawUrl);
+  if (!originPattern) {
+    return true;
+  }
+
+  if (await hasOriginAccess(rawUrl)) {
+    return true;
+  }
+
+  try {
+    return await chrome.permissions.request({ origins: [originPattern] });
+  } catch (error) {
+    return false;
+  }
+}
+
+function shouldRequireBroadHostAccess(config) {
+  return config?.linkCheckMode === LINK_CHECK_MODE_COMPLETE;
+}
+
+async function ensureOrganizeAccess(config) {
+  return shouldRequireBroadHostAccess(config)
+    ? await ensureBroadHostAccess()
+    : await ensureOriginAccess(config?.baseUrl);
 }
 
 function titleCasePhase(phase) {
@@ -556,7 +614,7 @@ async function refreshAll() {
 
 async function startJob() {
   startButton.disabled = true;
-  const granted = await ensureBroadHostAccess();
+  const granted = await ensureOrganizeAccess(currentConfig);
 
   if (!granted) {
     await refreshAll();
@@ -588,7 +646,7 @@ async function startJob() {
 
 async function startPreview() {
   startButton.disabled = true;
-  const granted = await ensureBroadHostAccess();
+  const granted = await ensureOrganizeAccess(currentConfig);
 
   if (!granted) {
     await refreshAll();

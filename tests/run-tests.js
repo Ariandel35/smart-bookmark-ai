@@ -148,6 +148,11 @@ function testSpeedModeSurface() {
   const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSource, /shouldCheckDeadLinks/);
   assert.match(backgroundSource, /buildSkippedDeadLinkScanResult/);
+
+  const popupSource = fs.readFileSync(path.join(ROOT_DIR, "popup.js"), "utf8");
+  assert.match(popupSource, /ensureOrganizeAccess/);
+  assert.match(popupSource, /ensureOriginAccess/);
+  assert.match(popupSource, /LINK_CHECK_MODE_COMPLETE/);
 }
 
 function testI18nCoverage() {
