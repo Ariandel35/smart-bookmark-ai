@@ -573,6 +573,7 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
   [...logEntries].reverse().forEach((entry) => {
     const item = document.createElement("article");
     item.className = "record-item";
+    const recordTitle = entry.title || t("untitledBookmark");
 
     const topRow = document.createElement("div");
     topRow.className = "record-item__row";
@@ -581,7 +582,7 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
 
     const titleEl = document.createElement("div");
     titleEl.className = "record-item__title";
-    titleEl.textContent = entry.title || t("untitledBookmark");
+    titleEl.textContent = recordTitle;
 
     const metaEl = document.createElement("div");
     metaEl.className = "record-item__meta";
@@ -632,6 +633,7 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
       keepButton.type = "button";
       keepButton.className = "button button--secondary button--compact";
       keepButton.textContent = t("keepButton");
+      keepButton.setAttribute("aria-label", t("keepBookmarkAria", { title: recordTitle }));
       keepButton.setAttribute("aria-describedby", popupActionStatus.id);
       keepButton.disabled = popupActionInFlight;
 
@@ -639,6 +641,7 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
       deleteButton.type = "button";
       deleteButton.className = "button button--danger button--compact";
       deleteButton.textContent = t("deleteButton");
+      deleteButton.setAttribute("aria-label", t("deleteBookmarkAria", { title: recordTitle }));
       deleteButton.setAttribute("aria-describedby", popupActionStatus.id);
       deleteButton.disabled = popupActionInFlight;
 

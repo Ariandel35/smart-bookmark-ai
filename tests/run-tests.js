@@ -320,6 +320,9 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /modelAccessRequiredForUncachedPreview/);
   assert.match(popupSource, /async function createManualBackup\(\) \{\n  setPopupActionInFlight\(true, t\("popupCreatingBackupStatus"\)\);/);
   assert.match(popupSource, /async function cancelJob\(\) \{\n  setPopupActionInFlight\(true, t\("popupCancellingStatus"\)\);/);
+  assert.match(popupSource, /const recordTitle = entry\.title \|\| t\("untitledBookmark"\)/);
+  assert.match(popupSource, /keepButton\.setAttribute\("aria-label", t\("keepBookmarkAria", \{ title: recordTitle \}\)\)/);
+  assert.match(popupSource, /deleteButton\.setAttribute\("aria-label", t\("deleteBookmarkAria", \{ title: recordTitle \}\)\)/);
   assert.match(popupSource, /keepButton\.setAttribute\("aria-describedby", popupActionStatus\.id\)/);
   assert.match(popupSource, /deleteButton\.setAttribute\("aria-describedby", popupActionStatus\.id\)/);
   assert.match(popupSource, /const lockEntryActions = \(\) => \{\n        keepButton\.disabled = true;\n        deleteButton\.disabled = true;/);
@@ -355,6 +358,8 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /cancelRequestedButton/);
   assert.match(i18nSource, /settingsShortcutButton/);
   assert.match(i18nSource, /detailPanelAriaLabel/);
+  assert.match(i18nSource, /keepBookmarkAria/);
+  assert.match(i18nSource, /deleteBookmarkAria/);
 
   const backgroundSourceForCancel = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSourceForCancel, /cancelRequested: true/);

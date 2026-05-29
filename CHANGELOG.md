@@ -16,6 +16,7 @@
 - Popup preflight, backup, cancel, and unprocessed-item actions now show inline in-progress feedback while controls are locked
 - Popup primary, backup, and cancel buttons are now explicitly associated with the inline action status text
 - Popup unprocessed-item keep/delete buttons are now explicitly associated with the inline action status text
+- Popup unprocessed-item keep/delete buttons now include the bookmark title in their accessible labels
 - Popup apply-confirmation primary action is now explicitly associated with the inline action status text
 - Cancellation requests now persist in job status so the popup keeps the cancel button locked after the request is accepted
 - Popup apply confirmation now moves focus to the inline confirmation and returns focus to the primary action when dismissed
