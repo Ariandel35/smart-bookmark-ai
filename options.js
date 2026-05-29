@@ -64,7 +64,7 @@ function getDefaults(provider) {
 }
 
 function getDefaultBatchSize(provider) {
-  return provider === "deepseek" ? 20 : DEFAULT_BATCH_SIZE;
+  return provider === "deepseek" ? 12 : DEFAULT_BATCH_SIZE;
 }
 
 function buildDefaultConfig(provider = "openai") {
@@ -1197,4 +1197,5 @@ loadConfig().catch((error) => {
   });
   clearApiTestStatus();
   setSaveBadge(t("saveBadgeFailed"), "danger");
+  setSettingsActionStatus(t("settingsLoadException"), true);
 });

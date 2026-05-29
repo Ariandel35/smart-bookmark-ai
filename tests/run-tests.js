@@ -248,8 +248,12 @@ function testPreviewApplySurface() {
 function testSlowModelResilienceSurface() {
   const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSource, /RUNTIME_BATCH_SIZE_CAPS/);
-  assert.match(backgroundSource, /deepseek: 20/);
+  assert.match(backgroundSource, /deepseek: 12/);
   assert.match(backgroundSource, /getRuntimeBatchSize/);
+  assert.match(backgroundSource, /MODEL_INPUT_URL_MAX_LENGTH/);
+  assert.match(backgroundSource, /buildModelBookmarkInputPayload/);
+  assert.match(backgroundSource, /compactModelUrl/);
+  assert.match(backgroundSource, /JSON\.stringify\(inputPayload\)/);
   assert.match(backgroundSource, /TAXONOMY_SAMPLE_SIZE_CAPS/);
   assert.match(backgroundSource, /getTaxonomyPlanningTimeoutMs/);
   assert.match(backgroundSource, /shouldPlanGlobalTaxonomy/);
@@ -281,6 +285,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /settingsActionInFlight/);
   assert.match(optionsSource, /setSettingsActionInFlight/);
   assert.match(optionsSource, /settingsSavingStatus/);
+  assert.match(optionsSource, /settingsLoadException/);
   assert.match(optionsSource, /settingsSaveException/);
   assert.match(optionsSource, /console\.error\("Failed to save settings:"/);
   assert.match(optionsSource, /console\.error\("Failed to save settings after API test:"/);
@@ -313,6 +318,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
   assert.match(i18nSource, /settingsSavedStatus/);
   assert.match(i18nSource, /settingsSavingStatus/);
+  assert.match(i18nSource, /settingsLoadException/);
   assert.match(i18nSource, /settingsSaveException/);
   assert.match(i18nSource, /apiTestSaveFailed/);
   assert.match(i18nSource, /settingsAccessRequestingStatus/);

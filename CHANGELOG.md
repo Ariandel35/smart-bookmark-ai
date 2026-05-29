@@ -9,6 +9,7 @@
 - Saved previews are now invalidated automatically when settings or bookmarks change
 - Popup summary details now stay visible for non-error status messages such as invalidated previews
 - DeepSeek runs are capped to a safer runtime batch size before the first model request, then timeout retries can shrink again
+- Model classification prompts now compact bookmark titles, URLs, paths, and JSON payloads to reduce slow-provider latency
 - Replaced blocking browser alert/confirm flows in popup and settings with inline confirmations and status messages
 - Popup actions now disable related controls immediately to avoid duplicate apply, preview, or backup requests
 - Fast mode now finishes locally when rules and the classification cache cover every bookmark, skipping model calls and batch scheduling
@@ -18,6 +19,7 @@
 - Stale unprocessed records are now cleared cleanly when the underlying bookmark was already removed
 - Settings save, API test, access grant, and reset controls now lock together while a settings operation is in flight
 - Settings now shows explicit in-progress feedback while saving or waiting for access approval
+- Settings load failures now show a clear inline fallback message when defaults are displayed
 - Settings save failures now show a clear inline error instead of leaving the page in a saving state
 - Test & Save now distinguishes a successful API test from a later settings-save failure
 - Backup create, restore, and delete actions now lock related controls while an operation is in flight

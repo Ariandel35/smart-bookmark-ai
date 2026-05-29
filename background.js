@@ -31,7 +31,7 @@ const DEFAULT_BATCH_SIZE = 50;
 const MIN_BATCH_SIZE = 5;
 const MAX_AUTO_RETRY_BATCH_SIZE = 20;
 const RUNTIME_BATCH_SIZE_CAPS = {
-  deepseek: 20
+  deepseek: 12
 };
 const DEFAULT_DEAD_SCAN_BATCH_SIZE = 20;
 const DEFAULT_TAXONOMY_SAMPLE_SIZE = 160;
@@ -91,6 +91,9 @@ const KEEP_ALIVE_INTERVAL_MS = 25_000;
 const FIRST_RESPONSE_TIMEOUT_MS = 25_000;
 const REQUEST_TIMEOUT_MS = 90_000;
 const NEXT_BATCH_DELAY_MS = 150;
+const MODEL_INPUT_TITLE_MAX_LENGTH = 120;
+const MODEL_INPUT_URL_MAX_LENGTH = 260;
+const MODEL_INPUT_PATH_MAX_LENGTH = 140;
 const LOCAL_REQUIREMENT_CHECK_TTL_MS = 15_000;
 const MAX_BACKUP_RECORDS = 10;
 const MAX_CLASSIFICATION_SIGNATURES = 6;
@@ -447,7 +450,7 @@ function getProviderLabel(provider) {
 }
 
 function getDefaultBatchSize(provider) {
-  return provider === "deepseek" ? 20 : DEFAULT_BATCH_SIZE;
+  return provider === "deepseek" ? 12 : DEFAULT_BATCH_SIZE;
 }
 
 function getRuntimeBatchSize(config = {}) {
@@ -3969,6 +3972,58 @@ async function classifyBatchWithModel(
   }
 }
 
+function buildModelBookmarkInputPayload(batch) {
+  return (Array.isArray(batch) ? batch : []).map((item) => ({
+    id: String(item?.id || ""),
+    title: compactModelText(item?.title || t("untitledBookmark"), MODEL_INPUT_TITLE_MAX_LENGTH),
+    url: compactModelUrl(item?.url || ""),
+    currentPath: compactModelText(
+      Array.isArray(item?.currentPath) ? item.currentPath.join(" / ") : item?.currentPath || ROOT_DIRECT_FOLDER_TITLE,
+      MODEL_INPUT_PATH_MAX_LENGTH
+    )
+  }));
+}
+
+function compactModelText(value, maxLength) {
+  return truncate(
+    String(value || "")
+      .replace(/\s+/g, " ")
+      .trim(),
+    maxLength
+  );
+}
+
+function compactModelUrl(rawUrl) {
+  if (typeof rawUrl !== "string" || !rawUrl.trim()) {
+    return "";
+  }
+
+  try {
+    const url = new URL(rawUrl.trim());
+    url.hash = "";
+    url.hostname = url.hostname.toLowerCase();
+
+    const keptParams = [];
+    for (const [key, value] of url.searchParams.entries()) {
+      if (/^utm_/i.test(key) || /^(fbclid|gclid|msclkid|yclid|spm|si|ref|ref_src|igshid)$/i.test(key)) {
+        continue;
+      }
+
+      keptParams.push([key, compactModelText(value, 80)]);
+    }
+
+    keptParams.sort(([a], [b]) => a.localeCompare(b));
+    url.search = "";
+    for (const [key, value] of keptParams.slice(0, 6)) {
+      url.searchParams.append(key, value);
+    }
+
+    return truncate(url.toString(), MODEL_INPUT_URL_MAX_LENGTH);
+  } catch (error) {
+    return compactModelText(rawUrl, MODEL_INPUT_URL_MAX_LENGTH);
+  }
+}
+
 function buildClassificationMessages(
   batch,
   customPrompt,
@@ -3982,12 +4037,7 @@ function buildClassificationMessages(
       ? taxonomyTopFolders
       : buildTaxonomyFallbackTopFolders()
   );
-  const inputPayload = batch.map((item) => ({
-    id: item.id,
-    title: item.title,
-    url: item.url,
-    currentPath: item.currentPath
-  }));
+  const inputPayload = buildModelBookmarkInputPayload(batch);
   const lockLines = Object.entries(taxonomyLocks)
     .sort(([a], [b]) => a.localeCompare(b, "zh-CN"))
     .slice(0, 80)
@@ -4028,12 +4078,13 @@ function buildClassificationMessages(
 9. 一级目录必须只从这个全局目录方案中选择：${allowedTopFolders.join("、")}。
 10. 如果同一个二级目录名已经被固定归属到某个一级目录，你必须复用该归属，不能换父目录。
 11. 信息不足时统一归入 ["${MANUAL_FOLDER_TITLE}"]。
+12. 输入中的 url 和 currentPath 已经压缩过，用它们判断主题即可，不要在输出中复写 URL。
 
 已有固定归属：
 ${lockLines || "- 当前还没有已锁定的二级目录归属"}
 
 以下是待整理书签：
-${JSON.stringify(inputPayload, null, 2)}`
+${JSON.stringify(inputPayload)}`
         : `${strategyPrompt}
 
 Follow these output rules exactly:
@@ -4056,12 +4107,13 @@ Follow these output rules exactly:
 9. The top-level folder must be chosen only from this global taxonomy: ${allowedTopFolders.join(", ")}.
 10. If a second-level folder has already been locked under a top-level folder, you must reuse that parent and not move it elsewhere.
 11. If information is insufficient, place the bookmark in ["${MANUAL_FOLDER_TITLE}"].
+12. The input url and currentPath fields are compacted for speed. Use them to infer the topic, but do not copy URLs into the output.
 
 Locked mappings:
 ${lockLines || "- No locked second-level mappings yet"}
 
 Bookmarks to organize:
-${JSON.stringify(inputPayload, null, 2)}`
+${JSON.stringify(inputPayload)}`
     }
   ];
 }
