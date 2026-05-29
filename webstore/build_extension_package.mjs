@@ -17,7 +17,11 @@ function parseArgs(argv) {
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--out") {
-      options.outputPath = argv[index + 1] || "";
+      const outputPath = argv[index + 1] || "";
+      if (!outputPath || outputPath.startsWith("--")) {
+        throw new Error("--out requires an output path.");
+      }
+      options.outputPath = outputPath;
       index += 1;
     } else if (arg === "--help" || arg === "-h") {
       options.help = true;

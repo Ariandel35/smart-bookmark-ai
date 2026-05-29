@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { execFileSync } = require("node:child_process");
+const { execFileSync, spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -416,6 +416,13 @@ function testExtensionPackageFileList() {
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
+
+  const missingOutPath = spawnSync(process.execPath, ["webstore/build_extension_package.mjs", "--out"], {
+    cwd: ROOT_DIR,
+    encoding: "utf8"
+  });
+  assert.notEqual(missingOutPath.status, 0, "Package builder should fail when --out has no path");
+  assert.match(missingOutPath.stderr, /--out requires an output path\./);
 }
 
 function testSpeedModeSurface() {
