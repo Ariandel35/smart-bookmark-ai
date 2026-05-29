@@ -18,11 +18,12 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 支持自定义 Base URL、API Key、模型名和 Prompt
 - API 检测成功后自动保存当前连接配置
 - 快速模式只需要访问你配置的模型接口，并跳过额外目录规划；完整模式才会检测书签链接和规划全局目录
-- DeepSeek 等慢模型会在请求前再次拆分大批量，运行批次最多 10 条、单个模型请求最多 5 条，并使用受控小并发、更短的请求超时、更短的内置请求提示和更紧的输出预算；响应过慢时还会自动拆到 1 条小批次重试
+- DeepSeek 等慢模型会在请求前再次拆分大批量，运行批次最多 10 条、单个模型请求最多 5 条，并使用受控小并发、更短的请求超时、更短的内置请求提示和更紧的输出预算；单个小请求超时后会保留已完成结果，只把失败小块继续拆到 1 条重试
 - 应用已生成预览时复用保存的方案，本地重建，不会再次请求模型
 - 应用预览遇到可恢复失败时，可修复后直接重试保存方案
 - 弹窗和设置页使用页面内确认与错误提示，避免浏览器原生弹窗打断流程
 - 设置页会把连接配置加载和备份/权限状态刷新分开处理，局部刷新失败不会覆盖已保存配置
+- 权限状态刷新失败时会恢复控件并给出页面内提示
 - 备份列表恢复加载后会清除过期错误提示，状态显示更一致
 - 支持中英文界面，可根据浏览器语言自动切换
 - 先预览，再确认执行，减少误整理风险
@@ -60,11 +61,12 @@ Key features:
 - Successful API tests save the current connection settings
 - Fast mode asks for model endpoint access only when uncached bookmarks need the model; Complete mode adds link checks and global planning
 - Fast local reruns can finish from rules and cached classifications without model calls or batch scheduling
-- Slow providers such as DeepSeek re-split large batches before each request, cap runtime batches at 10 bookmarks, cap each model request at 5 bookmarks, use limited mini-request concurrency, shorter request timeouts, shorter built-in prompts, and tighter output budgets, then retry down to one-bookmark mini-batches if needed
+- Slow providers such as DeepSeek re-split large batches before each request, cap runtime batches at 10 bookmarks, cap each model request at 5 bookmarks, use limited mini-request concurrency, shorter request timeouts, shorter built-in prompts, and tighter output budgets; when one mini request times out, completed mini results are kept and only the failed block shrinks down to one-bookmark retries
 - Applying a generated preview reuses the saved plan and rebuilds locally without another model request
 - Recoverable apply failures keep the saved preview retry path available after the issue is fixed
 - Popup and settings actions use inline confirmations and validation feedback instead of browser dialogs
 - Settings load keeps saved connection fields visible even when backup or permission status refreshes fail
+- Access-status refresh failures restore controls and show inline feedback
 - Recovered backup-list refreshes clear stale error text for more consistent status feedback
 - English and Simplified Chinese interface support
 - Preview-first organize flow to reduce mistakes

@@ -631,6 +631,7 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /setupMissingApiKey: "当前服务商需要 API Key。"/);
   assert.match(i18nSource, /baseUrlInvalid: "Base URL 必须是有效的 http 或 https 地址。"/);
   assert.match(i18nSource, /modelRequired: "模型名称不能为空。"/);
+  assert.match(i18nSource, /hostAccessRefreshFailed: "访问状态刷新失败。请检查 Chrome 扩展权限后重试。"/);
   assert.match(i18nSource, /privacyStorageDesc: "API Key、服务商设置、模型名、白名单和备份快照都保存在你的浏览器本地存储与 IndexedDB 中。"/);
   assert.match(i18nSource, /privacyBackupDesc: "整理前和恢复旧备份前都会先创建本地快照备份。你可以在设置页管理备份并恢复旧版本。"/);
 
@@ -653,11 +654,16 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /getRuntimeBatchSize/);
   assert.match(backgroundSource, /getModelRequestBatchSizeCap/);
   assert.match(backgroundSource, /splitIntoModelRequestBatches/);
+  assert.match(backgroundSource, /splitIntoFixedSizeChunks/);
+  assert.match(backgroundSource, /getAdaptiveRetryBatchSize/);
   assert.match(backgroundSource, /classifySplitModelRequestBatches/);
+  assert.match(backgroundSource, /classifyAdaptiveModelRequestBatch/);
   assert.match(backgroundSource, /Promise\.allSettled\(workers\)/);
   assert.match(backgroundSource, /activeModelAbortControllers/);
   assert.match(backgroundSource, /abortActiveModelRequests/);
   assert.match(backgroundSource, /Splitting slow-model request/);
+  assert.match(backgroundSource, /Completed mini-request results are kept/);
+  assert.match(backgroundSource, /only the failed \$\{requestBatch\.length\} bookmarks are being split and retried/);
   assert.match(backgroundSource, /assertNoStoredCancellationBeforeModelRequest/);
   assert.match(backgroundSource, /MIN_AUTO_RETRY_BATCH_SIZE = 1/);
   assert.match(backgroundSource, /normalizeRetryBatchSize/);
@@ -773,6 +779,9 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /refreshHostAccessStatus\(\)\.catch\(\(error\) => \{/);
   assert.match(optionsSource, /Failed to refresh host access status after config load/);
   assert.match(optionsSource, /hostAccessCheckingInFlight = false/);
+  assert.match(optionsSource, /function renderHostAccessRefreshFailure\(message = t\("hostAccessRefreshFailed"\)\)/);
+  assert.match(optionsSource, /setHostAccessStatus\(message, false\)/);
+  assert.match(optionsSource, /renderHostAccessRefreshFailure\(\)/);
   assert.match(optionsSource, /console\.error\("Failed to save settings:"/);
   assert.match(optionsSource, /console\.error\("Failed to save settings after API test:"/);
   assert.match(optionsSource, /apiTestSaveFailed/);
@@ -800,6 +809,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /hostAccessCheckingInFlight = true/);
   assert.match(optionsSource, /hostAccessCheckingInFlight = false/);
   assert.match(optionsSource, /hostAccessChecking/);
+  assert.match(optionsSource, /hostAccessRefreshFailed/);
   assert.match(optionsSource, /refreshVersion !== hostAccessRefreshVersion/);
   assert.match(optionsSource, /showSettingsIssue\(t\("baseUrlRequired"\), "connection", "baseUrl"\)/);
   assert.match(optionsSource, /showSettingsIssue\(t\("baseUrlInvalid"\), "connection", "baseUrl"\)/);
@@ -923,11 +933,13 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /without a second model request/);
   assert.match(changelog, /runtime batches are capped to ten bookmarks/);
   assert.match(changelog, /five-bookmark model requests/);
+  assert.match(changelog, /mini-request timeouts now keep completed mini results/);
   assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
   assert.match(changelog, /inline confirmations and status messages/);
   assert.match(changelog, /raw numeric input/);
   assert.match(changelog, /fresh pre-restore snapshot/);
   assert.match(changelog, /keeps the saved configuration visible/);
+  assert.match(changelog, /access-status refresh failures now restore controls/);
   assert.match(changelog, /clear stale backup error text/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run package:webstore/);
@@ -946,10 +958,12 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /cap runtime batches at 10 bookmarks/);
   assert.match(releaseNotes, /cap each model request at 5 bookmarks/);
   assert.match(releaseNotes, /limited mini-request concurrency/);
+  assert.match(releaseNotes, /completed mini results are kept/);
   assert.match(releaseNotes, /shorter built-in/);
   assert.match(releaseNotes, /inline confirmations and status messages/);
   assert.match(releaseNotes, /creates a fresh local snapshot/);
   assert.match(releaseNotes, /keeps the saved connection visible/);
+  assert.match(releaseNotes, /Access-status refresh failures now restore controls/);
   assert.match(releaseNotes, /clear stale backup error text/);
   assert.match(releaseNotes, /silently clamping invalid values/);
 
@@ -966,12 +980,14 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /cap runtime batches at 10 bookmarks/);
   assert.match(storeListing, /cap each model request at 5 bookmarks/);
   assert.match(storeListing, /limited mini-request concurrency/);
+  assert.match(storeListing, /completed mini results are kept/);
   assert.match(storeListing, /shorter built-in/);
   assert.match(storeListing, /OpenAI、DeepSeek、MiniMax、Anthropic/);
   assert.match(storeListing, /OpenAI, DeepSeek, MiniMax, Anthropic/);
   assert.match(storeListing, /inline confirmations and validation feedback/);
   assert.match(storeListing, /fresh pre-restore snapshot/);
   assert.match(storeListing, /keeps saved connection fields visible/);
+  assert.match(storeListing, /Access-status refresh failures restore controls/);
   assert.match(storeListing, /clear stale error text/);
   assert.match(storeListing, /Popup inline apply confirmation/);
   assert.match(storeListing, /Backup management with inline restore confirmation/);

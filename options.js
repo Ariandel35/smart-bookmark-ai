@@ -455,6 +455,14 @@ function setHostAccessStatus(message = "", isGranted = false) {
   hostAccessStatus.classList.toggle("is-error", Boolean(message) && !isGranted);
 }
 
+function renderHostAccessRefreshFailure(message = t("hostAccessRefreshFailed")) {
+  hostAccessCheckingInFlight = false;
+  setHostAccessStatus(message, false);
+  grantAccessButton.textContent = t("hostAccessButton");
+  grantAccessButton.dataset.granted = "false";
+  updateSettingsOperationControls();
+}
+
 function focusSettingsField(fieldId) {
   const field = fieldId ? document.getElementById(fieldId) : null;
   if (!field) {
@@ -614,9 +622,17 @@ async function refreshHostAccessStatus() {
   grantAccessButton.dataset.granted = "false";
   updateSettingsOperationControls();
 
-  const granted = requiresBroadAccess
-    ? await hasBroadHostAccess()
-    : await hasOriginAccess(config.baseUrl);
+  let granted;
+  try {
+    granted = requiresBroadAccess
+      ? await hasBroadHostAccess()
+      : await hasOriginAccess(config.baseUrl);
+  } catch (error) {
+    if (refreshVersion === hostAccessRefreshVersion) {
+      renderHostAccessRefreshFailure();
+    }
+    throw error;
+  }
 
   if (refreshVersion !== hostAccessRefreshVersion) {
     return;
@@ -654,6 +670,7 @@ function scheduleHostAccessStatusRefresh(reason) {
     hostAccessRefreshTimer = null;
     void refreshHostAccessStatus().catch((error) => {
       console.error(`Failed to refresh host access status after ${reason}:`, error);
+      renderHostAccessRefreshFailure();
     });
   }, 250);
 }
@@ -839,11 +856,7 @@ async function loadConfig() {
   });
   await refreshHostAccessStatus().catch((error) => {
     console.error("Failed to refresh host access status after config load:", error);
-    hostAccessCheckingInFlight = false;
-    setHostAccessStatus(t("currentApiAccessMissing"), false);
-    grantAccessButton.textContent = t("hostAccessButton");
-    grantAccessButton.dataset.granted = "false";
-    updateSettingsOperationControls();
+    renderHostAccessRefreshFailure();
   });
 }
 
@@ -1139,6 +1152,7 @@ async function saveConfig(event) {
     setSettingsActionInFlight(false);
     await refreshHostAccessStatus().catch((error) => {
       console.error("Failed to refresh host access status after saving settings:", error);
+      renderHostAccessRefreshFailure();
     });
   }
 }
@@ -1243,6 +1257,7 @@ async function testApiConnection() {
     setSettingsActionInFlight(false);
     await refreshHostAccessStatus().catch((error) => {
       console.error("Failed to refresh host access status after testing API:", error);
+      renderHostAccessRefreshFailure();
     });
   }
 }
@@ -1352,6 +1367,7 @@ function resetCurrentProviderDefaults() {
   setSaveBadge(t("saveBadgeUnsaved"), "warm");
   void refreshHostAccessStatus().catch((error) => {
     console.error("Failed to refresh host access status after reset:", error);
+    renderHostAccessRefreshFailure();
   });
 }
 
@@ -1386,6 +1402,7 @@ async function requestHostAccess() {
     setSettingsActionInFlight(false);
     await refreshHostAccessStatus().catch((error) => {
       console.error("Failed to refresh host access status after requesting access:", error);
+      renderHostAccessRefreshFailure();
     });
   }
 }
@@ -1445,6 +1462,7 @@ providerSelect.addEventListener("change", () => {
   markPending();
   void refreshHostAccessStatus().catch((error) => {
     console.error("Failed to refresh host access status after provider change:", error);
+    renderHostAccessRefreshFailure();
   });
 });
 
@@ -1473,12 +1491,14 @@ privacyButton.addEventListener("click", () => {
 globalThis.chrome?.permissions?.onAdded?.addListener(() => {
   void refreshHostAccessStatus().catch((error) => {
     console.error("Failed to refresh host access status after permission add:", error);
+    renderHostAccessRefreshFailure();
   });
 });
 
 globalThis.chrome?.permissions?.onRemoved?.addListener(() => {
   void refreshHostAccessStatus().catch((error) => {
     console.error("Failed to refresh host access status after permission removal:", error);
+    renderHostAccessRefreshFailure();
   });
 });
 
@@ -1491,6 +1511,7 @@ loadConfig().catch((error) => {
   populateForm(fallback);
   void refreshHostAccessStatus().catch((hostAccessError) => {
     console.error("Failed to refresh host access status after config load failure:", hostAccessError);
+    renderHostAccessRefreshFailure();
   });
   void refreshBackupStatus().catch((backupError) => {
     console.error("Failed to refresh backup status:", backupError);

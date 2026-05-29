@@ -504,11 +504,22 @@ function splitIntoModelRequestBatches(batch, config = {}) {
     return [safeBatch];
   }
 
+  return splitIntoFixedSizeChunks(safeBatch, cap);
+}
+
+function splitIntoFixedSizeChunks(items, chunkSize) {
+  const safeItems = Array.isArray(items) ? items : [];
+  const safeChunkSize = Math.max(1, Number.parseInt(String(chunkSize || 1), 10) || 1);
   const chunks = [];
-  for (let index = 0; index < safeBatch.length; index += cap) {
-    chunks.push(safeBatch.slice(index, index + cap));
+  for (let index = 0; index < safeItems.length; index += safeChunkSize) {
+    chunks.push(safeItems.slice(index, index + safeChunkSize));
   }
   return chunks;
+}
+
+function getAdaptiveRetryBatchSize(batchLength) {
+  const safeBatchLength = Math.max(1, Number.parseInt(String(batchLength || 1), 10) || 1);
+  return Math.max(MIN_AUTO_RETRY_BATCH_SIZE, Math.floor(safeBatchLength / 2));
 }
 
 function buildRuntimeBatchAdjustmentNote(config = {}, runtimeBatchSize) {
@@ -4097,12 +4108,9 @@ async function classifySplitModelRequestBatches(
                 )
         });
         await assertNoStoredCancellationBeforeModelRequest(config, requestBatch.length);
-        resultsByIndex[index] = await classifySingleModelRequest(
+        resultsByIndex[index] = await classifyAdaptiveModelRequestBatch(
           requestBatch,
-          {
-            ...config,
-            batchSize: requestBatch.length
-          },
+          config,
           reportStage,
           taxonomyLocks,
           taxonomyTopFolders
@@ -4122,6 +4130,80 @@ async function classifySplitModelRequestBatches(
   }
 
   return resultsByIndex.flatMap((results) => results || []);
+}
+
+async function classifyAdaptiveModelRequestBatch(
+  requestBatch,
+  config,
+  reportStage = () => {},
+  taxonomyLocks = {},
+  taxonomyTopFolders = []
+) {
+  await assertNoStoredCancellationBeforeModelRequest(config, requestBatch.length);
+
+  try {
+    return await classifySingleModelRequest(
+      requestBatch,
+      {
+        ...config,
+        batchSize: requestBatch.length
+      },
+      reportStage,
+      taxonomyLocks,
+      taxonomyTopFolders
+    );
+  } catch (error) {
+    if (
+      error?.abortReason === "cancelled-by-user" ||
+      !isModelTimeoutError(error) ||
+      requestBatch.length <= MIN_AUTO_RETRY_BATCH_SIZE
+    ) {
+      throw error;
+    }
+
+    const nextBatchSize = getAdaptiveRetryBatchSize(requestBatch.length);
+    if (nextBatchSize >= requestBatch.length) {
+      throw error;
+    }
+
+    const retryBatches = splitIntoFixedSizeChunks(requestBatch, nextBatchSize);
+    await reportStage({
+      message: ux(
+        `${getProviderLabel(config.provider)} 小请求仍然过慢，正在只拆分重试失败的 ${requestBatch.length} 条。`,
+        `${getProviderLabel(config.provider)} mini request is still slow, so only the failed ${requestBatch.length} bookmarks are being split and retried.`
+      ),
+      detail: ux(
+        `已完成的小请求结果会保留；这次把慢块拆成 ${retryBatches.length} 个更小请求，每个最多 ${nextBatchSize} 条。`,
+        `Completed mini-request results are kept. This slow block is split into ${retryBatches.length} smaller retries with up to ${nextBatchSize} bookmarks each.`
+      )
+    });
+
+    const retryResults = [];
+    for (let index = 0; index < retryBatches.length; index += 1) {
+      const retryBatch = retryBatches[index];
+      await assertNoStoredCancellationBeforeModelRequest(config, retryBatch.length);
+      await reportStage({
+        message: ux(
+          `正在重试慢模型小块 ${index + 1}/${retryBatches.length}。`,
+          `Retrying slow-model mini block ${index + 1}/${retryBatches.length}.`
+        ),
+        detail: ux(
+          `本次重试 ${retryBatch.length} 条；如果仍然超时，会继续拆到 1 条后再停止。`,
+          `${retryBatch.length} bookmarks in this retry. If it still times out, it will keep shrinking down to one bookmark before stopping.`
+        )
+      });
+      const results = await classifyAdaptiveModelRequestBatch(
+        retryBatch,
+        config,
+        reportStage,
+        taxonomyLocks,
+        taxonomyTopFolders
+      );
+      retryResults.push(...results);
+    }
+
+    return retryResults;
+  }
 }
 
 async function classifySingleModelRequest(

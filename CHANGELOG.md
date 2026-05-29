@@ -13,6 +13,7 @@
 - DeepSeek runtime batches are capped to ten bookmarks, then split into five-bookmark model requests with shorter response timeouts before timeout retries shrink again
 - Slow-provider model calls are now split again right before the request is sent, so stale large batches cannot submit one oversized request
 - Slow-provider split requests now run with a small provider-specific concurrency cap, so DeepSeek can process two mini requests at a time instead of waiting on one long serial queue
+- Slow-provider mini-request timeouts now keep completed mini results and only split/retry the failed block, avoiding whole-batch restarts after one stalled request
 - Cancellation requests are now checked before each split slow-provider model request and preserved before batch results are written back
 - Slow-model timeout retries can now split the current run below the saved batch size down to one-bookmark mini-batches, and DeepSeek uses a tighter output budget to reduce response latency
 - Applying a preview generated after slow-model mini-batch retries now preserves the preview's runtime batch display instead of clamping it back to the saved setting
@@ -77,6 +78,7 @@
 - Settings now disables the access grant button while access checks are still in flight
 - Settings now debounces API access checks after Base URL or speed-mode edits so the displayed authorization state follows the current endpoint
 - Settings load now keeps the saved configuration visible when backup-list or access-status refreshes fail, and reports those secondary failures inline
+- Settings access-status refresh failures now restore controls and show an inline permission-state error instead of leaving access checks stuck
 - Backup list refreshes now clear stale backup error text once the list loads successfully again
 - Resetting provider defaults and fallback settings now refresh access status immediately instead of leaving stale endpoint state visible
 - Saving auto-organize settings now marks the Save badge as failed when required access is denied
