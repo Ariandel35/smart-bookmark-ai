@@ -960,6 +960,113 @@ function buildCachedPlans(bookmarks, cacheBucket = {}) {
   };
 }
 
+function buildFastLocalClassificationPlan(bookmarks, domainFolderRules = [], cacheBucket = {}) {
+  const scanResult = buildSkippedDeadLinkScanResult(bookmarks);
+  const duplicateState = markHealthyExactDuplicates(scanResult.healthyBookmarks, {});
+  const aliveBookmarks = duplicateState.bookmarks;
+  const exactDuplicatePlans = buildExactDuplicatePlans(aliveBookmarks);
+  const nonDuplicateBookmarks = aliveBookmarks.filter((bookmark) => !bookmark.exactDuplicateOf);
+  const forcedPlans = buildForcedPlans(nonDuplicateBookmarks, domainFolderRules);
+  const cachedPlans = buildCachedPlans(forcedPlans.remaining, cacheBucket);
+  const planResult = buildBatchClassificationPlan(aliveBookmarks, [
+    ...forcedPlans.plans,
+    ...cachedPlans.plans,
+    ...exactDuplicatePlans
+  ]);
+
+  return {
+    aiCandidates: cachedPlans.remaining,
+    scanResult,
+    planResult,
+    reusedCount: cachedPlans.plans.length,
+    forcedCount: forcedPlans.plans.length,
+    exactDuplicateSeenByUrl: duplicateState.seenByUrl
+  };
+}
+
+async function finishFastLocalJob(job, localPlan) {
+  const scanResult = localPlan.scanResult;
+  const planResult = localPlan.planResult;
+
+  job.exactDuplicateSeenByUrl = localPlan.exactDuplicateSeenByUrl || {};
+  job.processed = job.total;
+  job.moved = planResult.keepCount;
+  job.deleted = scanResult.deletedCount + planResult.deletedCount;
+  job.reused = localPlan.reusedCount;
+  job.aiClassified = 0;
+  job.warningCount = scanResult.warningCount + planResult.warningCount;
+  job.lastWarning = planResult.lastWarning || scanResult.lastWarning || job.lastWarning || "";
+  job.warnings = appendLimitedEntries(job.warnings, [
+    ...(scanResult.warningEntries || []),
+    ...(planResult.warningEntries || [])
+  ]);
+  job.deletedItems = appendLimitedEntries(job.deletedItems, [
+    ...(scanResult.deletedEntries || []),
+    ...(planResult.deletedEntries || [])
+  ]);
+  job.plannedBookmarks = appendPlanEntries(job.plannedBookmarks, planResult.keepEntries);
+  job.pendingWarnings = appendPlanEntries(job.pendingWarnings, scanResult.pendingWarnings);
+
+  await chrome.storage.local.set({
+    [STORAGE_KEYS.job]: job
+  });
+
+  if (job.jobMode === "preview") {
+    const previewFolders = buildPreviewFolderSummary(
+      [...(job.preservedBookmarks || []), ...(job.plannedBookmarks || [])],
+      job.pendingWarnings
+    );
+    job.previewFolders = previewFolders;
+    await savePreviewPlan(job, previewFolders);
+    await finishJob(
+      "preview",
+      ux(
+        `整理预览已生成，共分析 ${job.total} 条书签。`,
+        `Preview is ready. Analyzed ${job.total} bookmarks.`
+      ),
+      job,
+      {
+        detail: ux(
+          `快速模式下本地规则和分类缓存已覆盖全部书签，本次没有调用模型。预计归类 ${job.moved} 条，复用缓存 ${job.reused} 条，删除 ${job.deleted} 条，${MANUAL_FOLDER_TITLE} ${job.pendingWarnings.length} 条。确认无误后点击“应用方案”正式重建。`,
+          `Fast mode covered every bookmark with local rules and the classification cache, so this preview did not call the model. It would categorize ${job.moved}, reuse ${job.reused} cached results, delete ${job.deleted}, and leave ${job.pendingWarnings.length} items in "${MANUAL_FOLDER_TITLE}". If it looks good, click Apply Plan to rebuild.`
+        ),
+        previewFolders
+      }
+    );
+    return;
+  }
+
+  await updateBatchStatus(job, job.totalBatches, {
+    message: ux(
+      "本地规则和分类缓存已覆盖全部书签，正在直接重建书签结构。",
+      "Local rules and the classification cache covered every bookmark. Rebuilding directly."
+    ),
+    detail: ux(
+      "快速模式无需等待模型返回；备份已经提前完成，接下来会按本地方案一次性重建。",
+      "Fast mode does not need to wait for the model. A backup has already been created, and the local plan will be rebuilt in one pass."
+    )
+  });
+
+  const rebuildResult = await rebuildOrganizedBookmarks(job);
+  job.managedFolderIds = rebuildResult.managedFolderIds;
+  job.managedRootBookmarkIds = rebuildResult.managedRootBookmarkIds;
+  job.warnings = rebuildResult.warningEntries;
+  job.warningCount = rebuildResult.warningEntries.length;
+  job.lastWarning = rebuildResult.warningEntries.at(-1)?.reason || "";
+
+  await finishJob(
+    "completed",
+    buildOrganizeCompletedMessage(job, rebuildResult),
+    job,
+    {
+      detail: ux(
+        `本次快速模式完全复用本地规则和分类缓存，没有调用模型。共归类 ${job.moved} 条，白名单保留 ${rebuildResult.preservedCount} 条，受保护根目录保留 ${job.protectedRootFolderIds.length} 个，${MANUAL_FOLDER_TITLE} ${rebuildResult.warningEntries.length} 条。`,
+        `This fast-mode run reused only local rules and the classification cache without calling the model. It categorized ${job.moved} bookmarks, preserved ${rebuildResult.preservedCount} whitelisted bookmarks, kept ${job.protectedRootFolderIds.length} protected root folders untouched, and left ${rebuildResult.warningEntries.length} items in "${MANUAL_FOLDER_TITLE}".`
+      )
+    }
+  );
+}
+
 function updateClassificationCacheBucket(cacheBucket, bookmarks, normalizedResults) {
   const nextBucket = {
     ...(cacheBucket && typeof cacheBucket === "object" ? cacheBucket : {})
@@ -1080,12 +1187,12 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
   const startupClassificationCacheBucket = normalizeClassificationCacheBucket(
     startupClassificationCacheStore[classificationSignature]?.items || {}
   );
-  const startupForcedPlans = buildForcedPlans(bookmarks, domainFolderRules);
-  const startupCachedPlans = buildCachedPlans(
-    startupForcedPlans.remaining,
+  const startupLocalPlan = buildFastLocalClassificationPlan(
+    bookmarks,
+    domainFolderRules,
     startupClassificationCacheBucket
   );
-  const startupAiCandidateCount = startupCachedPlans.remaining.length;
+  const startupAiCandidateCount = startupLocalPlan.aiCandidates.length;
   let taxonomyTopFolders = buildTaxonomyFallbackTopFolders();
   let taxonomyPlanningNote = "";
 
@@ -1212,6 +1319,11 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
       )
     })
   );
+
+  if (!shouldCheckDeadLinks(runtimeConfig) && !startupAiCandidateCount) {
+    await finishFastLocalJob(job, startupLocalPlan);
+    return { ok: true };
+  }
 
   await scheduleNextBatch();
   return { ok: true };

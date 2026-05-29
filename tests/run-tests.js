@@ -243,6 +243,9 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /getTaxonomyPlanningTimeoutMs/);
   assert.match(backgroundSource, /shouldPlanGlobalTaxonomy/);
   assert.match(backgroundSource, /Fast mode skipped the separate taxonomy-planning request/);
+  assert.match(backgroundSource, /buildFastLocalClassificationPlan/);
+  assert.match(backgroundSource, /finishFastLocalJob/);
+  assert.match(backgroundSource, /!shouldCheckDeadLinks\(runtimeConfig\) && !startupAiCandidateCount/);
   assert.match(backgroundSource, /first-response-timeout\|request-timeout/);
 }
 
