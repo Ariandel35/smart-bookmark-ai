@@ -19,6 +19,7 @@
 - Settings save, API test, access grant, and reset controls now lock together while a settings operation is in flight
 - Settings now shows explicit in-progress feedback while saving or waiting for access approval
 - Settings save failures now show a clear inline error instead of leaving the page in a saving state
+- Test & Save now distinguishes a successful API test from a later settings-save failure
 - Backup create, restore, and delete actions now lock related controls while an operation is in flight
 - Settings now validate raw numeric input instead of silently clamping invalid batch sizes or automation intervals
 - Updated privacy, Chrome Web Store, README, locale, and visual materials to describe optional dead-link checks accurately

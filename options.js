@@ -939,7 +939,20 @@ async function testApiConnection() {
       return;
     }
 
-    await saveConfigData(config);
+    try {
+      await saveConfigData(config);
+    } catch (saveError) {
+      console.error("Failed to save settings after API test:", saveError);
+      setSaveBadge(t("saveBadgeFailed"), "danger");
+      setApiTestStatus(
+        [response.message || t("apiTestSucceeded"), response.detail, t("apiTestSaveFailed")]
+          .filter(Boolean)
+          .join(" "),
+        true
+      );
+      return;
+    }
+
     setApiTestStatus(
       [response.message || t("apiTestSucceeded"), response.detail, t("apiTestSaved")]
         .filter(Boolean)

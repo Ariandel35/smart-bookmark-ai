@@ -283,6 +283,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /settingsSavingStatus/);
   assert.match(optionsSource, /settingsSaveException/);
   assert.match(optionsSource, /console\.error\("Failed to save settings:"/);
+  assert.match(optionsSource, /console\.error\("Failed to save settings after API test:"/);
+  assert.match(optionsSource, /apiTestSaveFailed/);
   assert.match(optionsSource, /setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)/);
   assert.match(optionsSource, /settingsAccessRequestingStatus/);
   assert.match(optionsSource, /settingsFields\.forEach/);
@@ -312,6 +314,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(i18nSource, /settingsSavedStatus/);
   assert.match(i18nSource, /settingsSavingStatus/);
   assert.match(i18nSource, /settingsSaveException/);
+  assert.match(i18nSource, /apiTestSaveFailed/);
   assert.match(i18nSource, /settingsAccessRequestingStatus/);
   assert.match(i18nSource, /backupRestoreInlineConfirm/);
   assert.match(i18nSource, /backupDeleteInlineConfirm/);
