@@ -201,7 +201,7 @@ function renderWhitelistSelection() {
     button.type = "button";
     button.className = "chip chip--interactive is-active";
     button.title = domain;
-    button.setAttribute("aria-label", domain);
+    button.setAttribute("aria-label", t("whitelistRemoveDomain", { domain }));
 
     const label = document.createElement("span");
     label.textContent = domain;
@@ -264,10 +264,12 @@ function renderWhitelistDomainList() {
   }
 
   filtered.slice(0, keyword ? 120 : 80).forEach((item) => {
+    const isSelected = selectedSet.has(item.domain);
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `whitelist-option${selectedSet.has(item.domain) ? " is-selected" : ""}`;
+    button.className = `whitelist-option${isSelected ? " is-selected" : ""}`;
     button.title = item.domain;
+    button.setAttribute("aria-pressed", String(isSelected));
 
     const domain = document.createElement("span");
     domain.className = "whitelist-option__domain";

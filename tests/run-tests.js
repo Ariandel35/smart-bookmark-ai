@@ -424,6 +424,9 @@ function testOptionsBackupInlineConfirmationSurface() {
 
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
   assert.match(optionsSource, /showSettingsIssue/);
+  assert.match(optionsSource, /t\("whitelistRemoveDomain", \{ domain \}\)/);
+  assert.match(optionsSource, /button\.setAttribute\("aria-pressed", String\(isSelected\)\)/);
+  assert.match(optionsSource, /const isSelected = selectedSet\.has\(item\.domain\)/);
   assert.match(optionsSource, /clearSettingsFieldIssues/);
   assert.match(optionsSource, /getDescribedByTokens/);
   assert.match(optionsSource, /addDescribedByToken/);
@@ -517,6 +520,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(stylesSource, /border-color: var\(--danger\)/);
 
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
+  assert.match(i18nSource, /whitelistRemoveDomain/);
   assert.match(i18nSource, /hintBatchSize/);
   assert.match(i18nSource, /hintAutoOrganizeInterval/);
   assert.match(i18nSource, /settingsSavedStatus/);
