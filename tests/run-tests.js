@@ -228,6 +228,7 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /hasPreviewAttemptConfig/);
   assert.match(popupSource, /hasModelAccessConfig/);
   assert.match(popupSource, /CHECK_LOCAL_MODEL_REQUIREMENT/);
+  assert.match(popupSource, /localRequirementCheckId: requirement\.checkId \|\| ""/);
   assert.match(popupSource, /requirement\.needsModel \|\| requirement\.requiresBroadHostAccess/);
   assert.match(popupSource, /modelAccessRequiredForUncachedPreview/);
   assert.match(popupSource, /async function createManualBackup\(\) \{\n  startButton\.disabled = true;/);
@@ -251,6 +252,11 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /finishFastLocalJob/);
   assert.match(backgroundSource, /CHECK_LOCAL_MODEL_REQUIREMENT/);
   assert.match(backgroundSource, /checkLocalModelRequirement/);
+  assert.match(backgroundSource, /LOCAL_REQUIREMENT_CHECK_TTL_MS/);
+  assert.match(backgroundSource, /lastLocalRequirementCheck/);
+  assert.match(backgroundSource, /takeReusableLocalRequirementCheck/);
+  assert.match(backgroundSource, /localRequirementCheckId: message\.localRequirementCheckId \|\| ""/);
+  assert.match(backgroundSource, /reusableLocalCheck\?\.bookmarkState \|\| await collectBookmarkPlanningState/);
   assert.match(backgroundSource, /validateConfig\(config, \{ requireModelAccess: false \}\)/);
   assert.match(backgroundSource, /validateConfig\(config, \{ requireModelAccess: true \}\)/);
   assert.match(backgroundSource, /!shouldCheckDeadLinks\(runtimeConfig\) && !startupAiCandidateCount/);

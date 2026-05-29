@@ -91,6 +91,7 @@ const KEEP_ALIVE_INTERVAL_MS = 25_000;
 const FIRST_RESPONSE_TIMEOUT_MS = 25_000;
 const REQUEST_TIMEOUT_MS = 90_000;
 const NEXT_BATCH_DELAY_MS = 150;
+const LOCAL_REQUIREMENT_CHECK_TTL_MS = 15_000;
 const MAX_BACKUP_RECORDS = 10;
 const MAX_CLASSIFICATION_SIGNATURES = 6;
 const MAX_CLASSIFICATION_CACHE_ITEMS = 5000;
@@ -101,6 +102,7 @@ const DEFAULT_PROMPT = I18N.getDefaultPrompt();
 let currentStatus = buildIdleStatus();
 let batchLock = false;
 let activeAbortController = null;
+let lastLocalRequirementCheck = null;
 const activeDeadScanControllers = new Set();
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -122,7 +124,15 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName !== "local" || !changes[STORAGE_KEYS.config]) {
+  if (areaName !== "local") {
+    return;
+  }
+
+  if (changes[STORAGE_KEYS.config] || changes[STORAGE_KEYS.classificationCache]) {
+    clearLocalRequirementCheck();
+  }
+
+  if (!changes[STORAGE_KEYS.config]) {
     return;
   }
 
@@ -154,6 +164,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 });
 
 function invalidatePreviewAfterBookmarkChange() {
+  clearLocalRequirementCheck();
   void invalidatePreviewPlan(
     ux(
       "书签内容已变化，请重新生成预览。",
@@ -229,7 +240,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
     if (message?.type === "START_PREVIEW") {
       try {
-        const result = await startOrganizeJob({ trigger: "manual", mode: "preview" });
+        const result = await startOrganizeJob({
+          trigger: "manual",
+          mode: "preview",
+          localRequirementCheckId: message.localRequirementCheckId || ""
+        });
         sendResponse(result);
       } catch (error) {
         console.error("Failed to start preview job:", error);
@@ -1085,10 +1100,11 @@ async function finishFastLocalJob(job, localPlan) {
   );
 }
 
-async function checkLocalModelRequirement() {
-  const config = await readStoredConfig();
-  validateConfig(config, { requireModelAccess: false });
+function clearLocalRequirementCheck() {
+  lastLocalRequirementCheck = null;
+}
 
+async function buildLocalRequirementCheck(config) {
   const runtimeBatchSize = getRuntimeBatchSize(config);
   const runtimeConfig = {
     ...config,
@@ -1112,13 +1128,58 @@ async function checkLocalModelRequirement() {
   const aiCandidateCount = localPlan.aiCandidates.length;
 
   return {
-    ok: true,
-    needsModel: aiCandidateCount > 0,
-    canFinishWithoutModel: aiCandidateCount === 0,
-    requiresBroadHostAccess: shouldCheckDeadLinks(runtimeConfig),
-    total: bookmarkState.bookmarks.length,
+    checkId: crypto.randomUUID(),
+    createdAtMs: Date.now(),
+    configSignature: buildPreviewConfigSignature(runtimeConfig),
+    bookmarkState,
+    domainFolderRules,
+    classificationSignature,
+    localPlan,
     aiCandidateCount,
-    protectedRootCount: bookmarkState.protectedRootFolderIds.length
+    requiresBroadHostAccess: shouldCheckDeadLinks(runtimeConfig)
+  };
+}
+
+function takeReusableLocalRequirementCheck(config, runContext = {}) {
+  if (!runContext.localRequirementCheckId || !lastLocalRequirementCheck) {
+    return null;
+  }
+
+  const check = lastLocalRequirementCheck;
+  if (check.checkId !== runContext.localRequirementCheckId) {
+    return null;
+  }
+
+  if (Date.now() - check.createdAtMs > LOCAL_REQUIREMENT_CHECK_TTL_MS) {
+    clearLocalRequirementCheck();
+    return null;
+  }
+
+  if (check.configSignature !== buildPreviewConfigSignature(config)) {
+    clearLocalRequirementCheck();
+    return null;
+  }
+
+  clearLocalRequirementCheck();
+  return check;
+}
+
+async function checkLocalModelRequirement() {
+  const config = await readStoredConfig();
+  validateConfig(config, { requireModelAccess: false });
+
+  const check = await buildLocalRequirementCheck(config);
+  lastLocalRequirementCheck = check;
+
+  return {
+    ok: true,
+    checkId: check.checkId,
+    needsModel: check.aiCandidateCount > 0,
+    canFinishWithoutModel: check.aiCandidateCount === 0,
+    requiresBroadHostAccess: check.requiresBroadHostAccess,
+    total: check.bookmarkState.bookmarks.length,
+    aiCandidateCount: check.aiCandidateCount,
+    protectedRootCount: check.bookmarkState.protectedRootFolderIds.length
   };
 }
 
@@ -1180,8 +1241,9 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
     batchSize: runtimeBatchSize
   };
   const runtimeBatchAdjustmentNote = buildRuntimeBatchAdjustmentNote(config, runtimeBatchSize);
+  const reusableLocalCheck = takeReusableLocalRequirementCheck(config, runContext);
 
-  const bookmarkState = await collectBookmarkPlanningState(config);
+  const bookmarkState = reusableLocalCheck?.bookmarkState || await collectBookmarkPlanningState(config);
   const {
     bookmarkBarNode,
     unresolvedFolderId,
@@ -1232,20 +1294,24 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
     );
   }
 
-  const classificationSignature = Rules.buildClassificationSignature(runtimeConfig, MANUAL_FOLDER_TITLE);
-  const domainFolderRules = Rules.parseDomainFolderRules(
-    runtimeConfig.domainFolderRules,
-    MANUAL_FOLDER_TITLE
-  );
-  const startupClassificationCacheStore = await loadClassificationCacheStore();
-  const startupClassificationCacheBucket = normalizeClassificationCacheBucket(
-    startupClassificationCacheStore[classificationSignature]?.items || {}
-  );
-  const startupLocalPlan = buildFastLocalClassificationPlan(
-    bookmarks,
-    domainFolderRules,
-    startupClassificationCacheBucket
-  );
+  const classificationSignature =
+    reusableLocalCheck?.classificationSignature ||
+    Rules.buildClassificationSignature(runtimeConfig, MANUAL_FOLDER_TITLE);
+  const domainFolderRules =
+    reusableLocalCheck?.domainFolderRules ||
+    Rules.parseDomainFolderRules(runtimeConfig.domainFolderRules, MANUAL_FOLDER_TITLE);
+  let startupLocalPlan = reusableLocalCheck?.localPlan || null;
+  if (!startupLocalPlan) {
+    const startupClassificationCacheStore = await loadClassificationCacheStore();
+    const startupClassificationCacheBucket = normalizeClassificationCacheBucket(
+      startupClassificationCacheStore[classificationSignature]?.items || {}
+    );
+    startupLocalPlan = buildFastLocalClassificationPlan(
+      bookmarks,
+      domainFolderRules,
+      startupClassificationCacheBucket
+    );
+  }
   const startupAiCandidateCount = startupLocalPlan.aiCandidates.length;
   let taxonomyTopFolders = buildTaxonomyFallbackTopFolders();
   let taxonomyPlanningNote = "";

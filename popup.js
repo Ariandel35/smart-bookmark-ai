@@ -744,7 +744,10 @@ async function startPreview() {
     return;
   }
 
-  const response = await chrome.runtime.sendMessage({ type: "START_PREVIEW" });
+  const response = await chrome.runtime.sendMessage({
+    type: "START_PREVIEW",
+    localRequirementCheckId: requirement.checkId || ""
+  });
 
   if (!response?.ok) {
     await refreshAll();
