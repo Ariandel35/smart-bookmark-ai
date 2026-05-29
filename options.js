@@ -1163,6 +1163,18 @@ async function testApiConnection() {
       return;
     }
 
+    if (config.autoOrganizeEnabled) {
+      const autoAccessGranted = shouldRequireBroadHostAccess(config)
+        ? await ensureBroadHostAccess()
+        : await ensureOriginAccess(config.baseUrl);
+      await refreshHostAccessStatus();
+      if (!autoAccessGranted) {
+        setSaveBadge(t("saveBadgeFailed"), "danger");
+        showSettingsIssue(t("autoOrganizePermission"), "automation", "autoOrganizeEnabled");
+        return;
+      }
+    }
+
     try {
       await saveConfigData(config);
     } catch (saveError) {

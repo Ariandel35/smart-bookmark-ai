@@ -748,6 +748,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /showApiTestIssue\(t\("baseUrlInvalid"\), "baseUrl"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("modelRequired"\), "model"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("requiredApiKey", \{ provider: defaults\.label \}\), "apiKey"\)/);
+  assert.match(optionsSource, /if \(config\.autoOrganizeEnabled\) \{[\s\S]*const autoAccessGranted = shouldRequireBroadHostAccess\(config\)[\s\S]*ensureBroadHostAccess\(\)[\s\S]*ensureOriginAccess\(config\.baseUrl\)/);
+  assert.match(optionsSource, /showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
   assert.match(optionsSource, /targetId === "baseUrl" \|\| targetId === "linkCheckMode"/);
   assert.match(optionsSource, /Base URL change/);
   assert.match(optionsSource, /speed mode change/);

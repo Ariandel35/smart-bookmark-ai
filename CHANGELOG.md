@@ -75,6 +75,7 @@
 - Settings now distinguish load-failure and save-failure badges so failed saves are not mislabeled as load errors
 - Changing providers now clears the existing API key with an inline notice to avoid reusing one provider's secret with another provider
 - Settings can now save non-secret organization rules without an API key, while Test & Save and automatic silent organize still require one when the provider needs it
+- Test & Save now also verifies automatic-organize access requirements before saving auto-enabled settings
 - Backup create, restore, and delete actions now lock related controls while an operation is in flight
 - Settings now validate raw numeric input instead of silently clamping invalid batch sizes or automation intervals
 - Updated privacy, Chrome Web Store, README, locale, and visual materials to describe optional dead-link checks accurately
