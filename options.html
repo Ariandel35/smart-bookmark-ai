@@ -55,36 +55,58 @@
                 </div>
               </div>
 
-            <nav class="nav-list" data-i18n-aria-label="navTitle" aria-label="Settings Navigation">
+            <nav
+              class="nav-list"
+              role="tablist"
+              aria-orientation="vertical"
+              data-i18n-aria-label="navTitle"
+              aria-label="Settings Navigation"
+            >
               <button
+                id="settings-tab-connection"
                 class="nav-button is-active"
                 type="button"
+                role="tab"
                 data-section-target="connection"
+                aria-controls="settings-panel-connection"
                 aria-selected="true"
+                tabindex="0"
               >
                 <span class="nav-button__title" data-i18n="navConnection">Connection</span>
               </button>
               <button
+                id="settings-tab-organize"
                 class="nav-button"
                 type="button"
+                role="tab"
                 data-section-target="organize"
+                aria-controls="settings-panel-organize"
                 aria-selected="false"
+                tabindex="-1"
               >
                 <span class="nav-button__title" data-i18n="navOrganize">Organization</span>
               </button>
               <button
+                id="settings-tab-automation"
                 class="nav-button"
                 type="button"
+                role="tab"
                 data-section-target="automation"
+                aria-controls="settings-panel-automation"
                 aria-selected="false"
+                tabindex="-1"
               >
                 <span class="nav-button__title" data-i18n="navAutomation">Automation</span>
               </button>
               <button
+                id="settings-tab-backup"
                 class="nav-button"
                 type="button"
+                role="tab"
                 data-section-target="backup"
+                aria-controls="settings-panel-backup"
                 aria-selected="false"
+                tabindex="-1"
               >
                 <span class="nav-button__title" data-i18n="navBackup">Backups</span>
               </button>
@@ -103,7 +125,10 @@
             ></div>
 
             <section
+              id="settings-panel-connection"
               class="panel settings-section is-active"
+              role="tabpanel"
+              aria-labelledby="settings-tab-connection"
               data-section-panel="connection"
             >
               <div class="panel__inner">
@@ -179,7 +204,14 @@
               </div>
             </section>
 
-            <section class="panel settings-section" data-section-panel="organize" hidden>
+            <section
+              id="settings-panel-organize"
+              class="panel settings-section"
+              role="tabpanel"
+              aria-labelledby="settings-tab-organize"
+              data-section-panel="organize"
+              hidden
+            >
               <div class="panel__inner">
                 <div class="panel__heading">
                   <div>
@@ -280,7 +312,14 @@
               </div>
             </section>
 
-            <section class="panel settings-section" data-section-panel="automation" hidden>
+            <section
+              id="settings-panel-automation"
+              class="panel settings-section"
+              role="tabpanel"
+              aria-labelledby="settings-tab-automation"
+              data-section-panel="automation"
+              hidden
+            >
               <div class="panel__inner">
                 <div class="panel__heading">
                   <div>
@@ -314,7 +353,14 @@
               </div>
             </section>
 
-            <section class="panel settings-section" data-section-panel="backup" hidden>
+            <section
+              id="settings-panel-backup"
+              class="panel settings-section"
+              role="tabpanel"
+              aria-labelledby="settings-tab-backup"
+              data-section-panel="backup"
+              hidden
+            >
               <div class="panel__inner">
                 <div class="panel__heading">
                   <div>

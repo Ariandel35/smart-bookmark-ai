@@ -656,6 +656,7 @@ function setActiveSection(sectionId, updateHash = true) {
     const isActive = button.dataset.sectionTarget === activeSection;
     button.classList.toggle("is-active", isActive);
     button.setAttribute("aria-selected", String(isActive));
+    button.tabIndex = isActive ? 0 : -1;
   });
 
   sectionPanels.forEach((panel) => {
@@ -672,6 +673,40 @@ function setActiveSection(sectionId, updateHash = true) {
   }
 }
 
+function focusNavigationTarget(currentButton, key) {
+  const currentIndex = navButtons.indexOf(currentButton);
+  if (currentIndex < 0) {
+    return;
+  }
+
+  const lastIndex = navButtons.length - 1;
+  const nextIndexByKey = {
+    ArrowDown: currentIndex >= lastIndex ? 0 : currentIndex + 1,
+    ArrowRight: currentIndex >= lastIndex ? 0 : currentIndex + 1,
+    ArrowUp: currentIndex <= 0 ? lastIndex : currentIndex - 1,
+    ArrowLeft: currentIndex <= 0 ? lastIndex : currentIndex - 1,
+    Home: 0,
+    End: lastIndex
+  };
+  const nextIndex = nextIndexByKey[key];
+  if (typeof nextIndex !== "number") {
+    return;
+  }
+
+  const nextButton = navButtons[nextIndex];
+  setActiveSection(nextButton.dataset.sectionTarget);
+  nextButton.focus();
+}
+
+function handleNavigationKeydown(event) {
+  if (!["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft", "Home", "End"].includes(event.key)) {
+    return;
+  }
+
+  event.preventDefault();
+  focusNavigationTarget(event.currentTarget, event.key);
+}
+
 function markPending() {
   setSaveBadge(t("saveBadgeUnsaved"), "warm");
   clearSettingsActionStatus();
@@ -682,6 +717,7 @@ function initializeNavigation() {
     button.addEventListener("click", () => {
       setActiveSection(button.dataset.sectionTarget);
     });
+    button.addEventListener("keydown", handleNavigationKeydown);
   });
 
   window.addEventListener("hashchange", () => {

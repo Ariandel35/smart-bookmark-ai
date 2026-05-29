@@ -374,6 +374,12 @@ function testSlowModelResilienceSurface() {
 
 function testOptionsBackupInlineConfirmationSurface() {
   const optionsHtml = fs.readFileSync(path.join(ROOT_DIR, "options.html"), "utf8");
+  assert.match(optionsHtml, /role="tablist"/);
+  assert.match(optionsHtml, /aria-orientation="vertical"/);
+  assert.match(optionsHtml, /id="settings-tab-connection"[\s\S]*role="tab"[\s\S]*aria-controls="settings-panel-connection"/);
+  assert.match(optionsHtml, /id="settings-tab-organize"[\s\S]*role="tab"[\s\S]*aria-controls="settings-panel-organize"/);
+  assert.match(optionsHtml, /id="settings-panel-connection"[\s\S]*role="tabpanel"[\s\S]*aria-labelledby="settings-tab-connection"/);
+  assert.match(optionsHtml, /id="settings-panel-backup"[\s\S]*role="tabpanel"[\s\S]*aria-labelledby="settings-tab-backup"/);
   assert.match(optionsHtml, /id="settingsActionStatus"/);
   assert.match(optionsHtml, /id="backupActionStatus"/);
   assert.match(optionsHtml, /id="settingsActionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
@@ -382,6 +388,10 @@ function testOptionsBackupInlineConfirmationSurface() {
 
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
   assert.match(optionsSource, /showSettingsIssue/);
+  assert.match(optionsSource, /button\.tabIndex = isActive \? 0 : -1/);
+  assert.match(optionsSource, /handleNavigationKeydown/);
+  assert.match(optionsSource, /ArrowDown/);
+  assert.match(optionsSource, /Home/);
   assert.match(optionsSource, /setSettingsActionStatus/);
   assert.match(optionsSource, /settingsActionInFlight/);
   assert.match(optionsSource, /setSettingsActionInFlight/);

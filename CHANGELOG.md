@@ -19,6 +19,7 @@
 - Popup settings shortcuts now deep-link directly to the connection section when setup fixes are needed
 - Popup progress now exposes standard progressbar state for assistive technologies
 - Settings save and backup inline status messages now expose live status semantics for assistive technologies
+- Settings navigation now uses linked tab and panel semantics with arrow-key navigation
 - Fast mode now finishes locally when rules and the classification cache cover every bookmark, skipping model calls and batch scheduling
 - Preview now checks local rule/cache coverage before asking for API keys or model endpoint access
 - Preview startup now reuses the fresh local coverage check when possible instead of scanning bookmarks and cache twice
