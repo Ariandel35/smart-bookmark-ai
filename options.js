@@ -53,6 +53,7 @@ let currentBackupRecords = [];
 let pendingBackupAction = null;
 let backupActionInFlight = false;
 let settingsActionInFlight = false;
+let hostAccessRefreshVersion = 0;
 
 I18N.applyDocument(document);
 renderProviderOptions();
@@ -496,6 +497,7 @@ async function ensureOriginAccess(rawUrl) {
 }
 
 async function refreshHostAccessStatus() {
+  const refreshVersion = ++hostAccessRefreshVersion;
   const config = collectFormData();
   if (!config.baseUrl) {
     setHostAccessStatus(t("baseUrlRequired"), false);
@@ -506,9 +508,19 @@ async function refreshHostAccessStatus() {
   }
 
   const requiresBroadAccess = shouldRequireBroadHostAccess(config);
+  setHostAccessStatus(t("hostAccessChecking"), true);
+  grantAccessButton.textContent = t("hostAccessButton");
+  grantAccessButton.dataset.granted = "false";
+  updateSettingsOperationControls();
+
   const granted = requiresBroadAccess
     ? await hasBroadHostAccess()
     : await hasOriginAccess(config.baseUrl);
+
+  if (refreshVersion !== hostAccessRefreshVersion) {
+    return;
+  }
+
   setHostAccessStatus(
     granted ? "" : requiresBroadAccess ? t("hostAccessMissing") : t("currentApiAccessMissing"),
     granted

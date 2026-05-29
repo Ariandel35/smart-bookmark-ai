@@ -398,6 +398,10 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /batchSize: parseIntegerInput\(batchSizeInput\.value\)/);
   assert.match(optionsSource, /autoOrganizeIntervalHours: parseIntegerInput\(autoOrganizeIntervalInput\.value\)/);
   assert.match(optionsSource, /if \(!config\.baseUrl\) \{\n    setHostAccessStatus/);
+  assert.match(optionsSource, /hostAccessRefreshVersion/);
+  assert.match(optionsSource, /const refreshVersion = \+\+hostAccessRefreshVersion/);
+  assert.match(optionsSource, /hostAccessChecking/);
+  assert.match(optionsSource, /refreshVersion !== hostAccessRefreshVersion/);
   assert.match(optionsSource, /Failed to refresh host access status after provider change/);
   assert.match(optionsSource, /providerSelect\.addEventListener\("change"[\s\S]*markPending\(\);[\s\S]*refreshHostAccessStatus/);
   assert.match(optionsSource, /pendingBackupAction/);
@@ -420,6 +424,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(i18nSource, /settingsSaveException/);
   assert.match(i18nSource, /apiTestSaveFailed/);
   assert.match(i18nSource, /settingsAccessRequestingStatus/);
+  assert.match(i18nSource, /hostAccessChecking/);
   assert.match(i18nSource, /backupRestoreInlineConfirm/);
   assert.match(i18nSource, /backupDeleteInlineConfirm/);
   assert.doesNotMatch(i18nSource, /backupRestoreConfirm/);
