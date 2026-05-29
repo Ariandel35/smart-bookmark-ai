@@ -1595,6 +1595,32 @@ async function requestCancellation() {
   });
 }
 
+async function isStoredCancellationRequested() {
+  const stored = await chrome.storage.local.get(STORAGE_KEYS.job);
+  return Boolean(stored[STORAGE_KEYS.job]?.phase === "running" && stored[STORAGE_KEYS.job]?.cancelRequested);
+}
+
+async function mergeStoredCancellationFlag(job) {
+  if (!job) {
+    return false;
+  }
+
+  const stored = await chrome.storage.local.get(STORAGE_KEYS.job);
+  const storedJob = stored[STORAGE_KEYS.job];
+  const sameJob = storedJob && (!job.runId || storedJob.runId === job.runId);
+  if (sameJob && storedJob.cancelRequested) {
+    job.cancelRequested = true;
+  }
+
+  return Boolean(job.cancelRequested);
+}
+
+async function assertNoStoredCancellationBeforeModelRequest(config, batchLength) {
+  if (await isStoredCancellationRequested()) {
+    throw buildRequestAbortError("cancelled-by-user", config, batchLength);
+  }
+}
+
 async function createManualBackup() {
   const stored = await chrome.storage.local.get(STORAGE_KEYS.job);
 
@@ -2024,6 +2050,7 @@ async function processNextBatch() {
     job.plannedBookmarks = appendPlanEntries(job.plannedBookmarks, planResult.keepEntries);
     job.pendingWarnings = appendPlanEntries(job.pendingWarnings, scanResult.pendingWarnings);
 
+    await mergeStoredCancellationFlag(job);
     await chrome.storage.local.set({
       [STORAGE_KEYS.job]: job
     });
@@ -2213,6 +2240,7 @@ async function processNextDeadScanBatch(job) {
   job.warnings = appendLimitedEntries(job.warnings, scanResult.warningEntries);
   job.deletedItems = appendLimitedEntries(job.deletedItems, scanResult.deletedEntries);
 
+  await mergeStoredCancellationFlag(job);
   await chrome.storage.local.set({
     [STORAGE_KEYS.job]: job
   });
@@ -3952,6 +3980,7 @@ async function classifyBatchWithModel(
     const results = [];
     for (let index = 0; index < requestBatches.length; index += 1) {
       const requestBatch = requestBatches[index];
+      await assertNoStoredCancellationBeforeModelRequest(config, requestBatch.length);
       await reportStage({
         message: ux(
           `正在拆分慢模型请求 ${index + 1}/${requestBatches.length}。`,
@@ -3962,6 +3991,7 @@ async function classifyBatchWithModel(
           `Only ${requestBatch.length} bookmarks are sent this time to avoid one large request stalling.`
         )
       });
+      await assertNoStoredCancellationBeforeModelRequest(config, requestBatch.length);
       results.push(
         ...(await classifyBatchWithModel(
           requestBatch,

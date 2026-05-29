@@ -608,6 +608,8 @@ function testPreviewApplySurface() {
   const backgroundSourceForCancel = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSourceForCancel, /cancelRequested: true/);
   assert.match(backgroundSourceForCancel, /cancelRequested: Boolean\(job\.cancelRequested\)/);
+  assert.match(backgroundSourceForCancel, /mergeStoredCancellationFlag/);
+  assert.match(backgroundSourceForCancel, /storedJob\.cancelRequested/);
 }
 
 function testSlowModelResilienceSurface() {
@@ -618,6 +620,7 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /getModelRequestBatchSizeCap/);
   assert.match(backgroundSource, /splitIntoModelRequestBatches/);
   assert.match(backgroundSource, /Splitting slow-model request/);
+  assert.match(backgroundSource, /assertNoStoredCancellationBeforeModelRequest/);
   assert.match(backgroundSource, /MIN_AUTO_RETRY_BATCH_SIZE = 1/);
   assert.match(backgroundSource, /normalizeRetryBatchSize/);
   assert.match(backgroundSource, /FIRST_RESPONSE_TIMEOUT_CAPS_MS/);
@@ -863,10 +866,12 @@ function testReleaseMaterialsCurrent() {
   const readmeZh = fs.readFileSync(path.join(ROOT_DIR, "README.zh-CN.md"), "utf8");
   assert.match(changelog, /without a second model request/);
   assert.match(changelog, /runtime batch size/);
+  assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
   assert.match(changelog, /inline confirmations and status messages/);
   assert.match(changelog, /raw numeric input/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run package:webstore/);
+  assert.match(readmeZh, /请求前再次拆分/);
   assert.match(readmeZh, /npm test/);
   assert.match(readmeZh, /npm run package:webstore/);
 
@@ -875,6 +880,7 @@ function testReleaseMaterialsCurrent() {
     "utf8"
   );
   assert.match(releaseNotes, /without another model request/);
+  assert.match(releaseNotes, /re-split large batches before each request/);
   assert.match(releaseNotes, /smaller runtime batch size/);
   assert.match(releaseNotes, /shorter built-in/);
   assert.match(releaseNotes, /inline confirmations and status messages/);
@@ -889,6 +895,7 @@ function testReleaseMaterialsCurrent() {
 
   const storeListing = fs.readFileSync(path.join(ROOT_DIR, "webstore/STORE_LISTING.md"), "utf8");
   assert.match(storeListing, /without calling the model again/);
+  assert.match(storeListing, /re-split large batches before each request/);
   assert.match(storeListing, /smaller runtime batch size/);
   assert.match(storeListing, /shorter built-in/);
   assert.match(storeListing, /OpenAI、DeepSeek、MiniMax、Anthropic/);
