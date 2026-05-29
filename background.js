@@ -32,7 +32,13 @@ const MIN_BATCH_SIZE = 5;
 const MIN_AUTO_RETRY_BATCH_SIZE = 1;
 const MAX_AUTO_RETRY_BATCH_SIZE = 20;
 const RUNTIME_BATCH_SIZE_CAPS = {
+  deepseek: 10
+};
+const MODEL_REQUEST_BATCH_SIZE_CAPS = {
   deepseek: 5
+};
+const MODEL_REQUEST_CONCURRENCY_CAPS = {
+  deepseek: 2
 };
 const DEFAULT_DEAD_SCAN_BATCH_SIZE = 20;
 const DEFAULT_TAXONOMY_SAMPLE_SIZE = 160;
@@ -125,6 +131,7 @@ const COMPACT_DEFAULT_PROMPT_EN = `Goal: organize bookmarks into a small, stable
 let currentStatus = buildIdleStatus();
 let batchLock = false;
 let activeAbortController = null;
+const activeModelAbortControllers = new Set();
 let lastLocalRequirementCheck = null;
 const activeDeadScanControllers = new Set();
 
@@ -471,7 +478,7 @@ function getProviderLabel(provider) {
 }
 
 function getDefaultBatchSize(provider) {
-  return provider === "deepseek" ? 5 : DEFAULT_BATCH_SIZE;
+  return provider === "deepseek" ? 10 : DEFAULT_BATCH_SIZE;
 }
 
 function getRuntimeBatchSize(config = {}) {
@@ -481,7 +488,13 @@ function getRuntimeBatchSize(config = {}) {
 }
 
 function getModelRequestBatchSizeCap(config = {}) {
-  return RUNTIME_BATCH_SIZE_CAPS[config.provider] || 0;
+  return MODEL_REQUEST_BATCH_SIZE_CAPS[config.provider] || 0;
+}
+
+function getModelRequestConcurrency(config = {}) {
+  const rawConcurrency = MODEL_REQUEST_CONCURRENCY_CAPS[config.provider] || 1;
+  const parsedConcurrency = Number.parseInt(String(rawConcurrency), 10);
+  return Math.max(1, Number.isInteger(parsedConcurrency) ? parsedConcurrency : 1);
 }
 
 function splitIntoModelRequestBatches(batch, config = {}) {
@@ -1576,9 +1589,7 @@ async function requestCancellation() {
     [STORAGE_KEYS.job]: job
   });
 
-  if (activeAbortController) {
-    activeAbortController.abort("cancelled-by-user");
-  }
+  abortActiveModelRequests("cancelled-by-user");
 
   for (const controller of activeDeadScanControllers) {
     controller.abort("cancelled-by-user");
@@ -1618,6 +1629,18 @@ async function mergeStoredCancellationFlag(job) {
 async function assertNoStoredCancellationBeforeModelRequest(config, batchLength) {
   if (await isStoredCancellationRequested()) {
     throw buildRequestAbortError("cancelled-by-user", config, batchLength);
+  }
+}
+
+function abortActiveModelRequests(reason = "model-request-aborted") {
+  if (activeAbortController && !activeAbortController.signal.aborted) {
+    activeAbortController.abort(reason);
+  }
+
+  for (const controller of activeModelAbortControllers) {
+    if (!controller.signal.aborted) {
+      controller.abort(reason);
+    }
   }
 }
 
@@ -3977,23 +4000,66 @@ async function classifyBatchWithModel(
 ) {
   const requestBatches = splitIntoModelRequestBatches(batch, config);
   if (requestBatches.length > 1) {
-    const results = [];
-    for (let index = 0; index < requestBatches.length; index += 1) {
+    return classifySplitModelRequestBatches(
+      requestBatches,
+      config,
+      reportStage,
+      taxonomyLocks,
+      taxonomyTopFolders
+    );
+  }
+
+  return classifySingleModelRequest(
+    batch,
+    config,
+    reportStage,
+    taxonomyLocks,
+    taxonomyTopFolders
+  );
+}
+
+async function classifySplitModelRequestBatches(
+  requestBatches,
+  config,
+  reportStage = () => {},
+  taxonomyLocks = {},
+  taxonomyTopFolders = []
+) {
+  const concurrency = Math.min(getModelRequestConcurrency(config), requestBatches.length);
+  const resultsByIndex = new Array(requestBatches.length);
+  let nextIndex = 0;
+  let firstError = null;
+
+  const workers = Array.from({ length: concurrency }, async () => {
+    while (!firstError) {
+      const index = nextIndex;
+      nextIndex += 1;
+
+      if (index >= requestBatches.length) {
+        return;
+      }
+
       const requestBatch = requestBatches[index];
-      await assertNoStoredCancellationBeforeModelRequest(config, requestBatch.length);
-      await reportStage({
-        message: ux(
-          `正在拆分慢模型请求 ${index + 1}/${requestBatches.length}。`,
-          `Splitting slow-model request ${index + 1}/${requestBatches.length}.`
-        ),
-        detail: ux(
-          `本次只发送 ${requestBatch.length} 条，避免单个大批量请求长时间卡住。`,
-          `Only ${requestBatch.length} bookmarks are sent this time to avoid one large request stalling.`
-        )
-      });
-      await assertNoStoredCancellationBeforeModelRequest(config, requestBatch.length);
-      results.push(
-        ...(await classifyBatchWithModel(
+      try {
+        await assertNoStoredCancellationBeforeModelRequest(config, requestBatch.length);
+        await reportStage({
+          message: ux(
+            `正在拆分慢模型请求 ${index + 1}/${requestBatches.length}。`,
+            `Splitting slow-model request ${index + 1}/${requestBatches.length}.`
+          ),
+          detail:
+            concurrency > 1
+              ? ux(
+                  `本次最多同时发送 ${concurrency} 个小请求，每个最多 ${requestBatch.length} 条，减少排队和单个大请求卡住。`,
+                  `Up to ${concurrency} small requests run at once, with no more than ${requestBatch.length} bookmarks each, to reduce queueing and one large request stalling.`
+                )
+              : ux(
+                  `本次只发送 ${requestBatch.length} 条，避免单个大批量请求长时间卡住。`,
+                  `Only ${requestBatch.length} bookmarks are sent this time to avoid one large request stalling.`
+                )
+        });
+        await assertNoStoredCancellationBeforeModelRequest(config, requestBatch.length);
+        resultsByIndex[index] = await classifySingleModelRequest(
           requestBatch,
           {
             ...config,
@@ -4002,12 +4068,31 @@ async function classifyBatchWithModel(
           reportStage,
           taxonomyLocks,
           taxonomyTopFolders
-        ))
-      );
+        );
+      } catch (error) {
+        firstError = firstError || error;
+        abortActiveModelRequests(error?.abortReason || "split-model-request-failed");
+        return;
+      }
     }
-    return results;
+  });
+
+  await Promise.allSettled(workers);
+
+  if (firstError) {
+    throw firstError;
   }
 
+  return resultsByIndex.flatMap((results) => results || []);
+}
+
+async function classifySingleModelRequest(
+  batch,
+  config,
+  reportStage = () => {},
+  taxonomyLocks = {},
+  taxonomyTopFolders = []
+) {
   const messages = buildClassificationMessages(
     batch,
     config.customPrompt,
@@ -4022,12 +4107,14 @@ async function classifyBatchWithModel(
   const firstResponseTimeoutMs = getFirstResponseTimeoutMs(config);
   const requestTimeoutMs = getRequestTimeoutMs(config);
 
-  activeAbortController = new AbortController();
+  const requestAbortController = new AbortController();
+  activeAbortController = requestAbortController;
+  activeModelAbortControllers.add(requestAbortController);
   let abortReason = "";
   const abortWithReason = (reason) => {
     abortReason = reason;
-    if (activeAbortController && !activeAbortController.signal.aborted) {
-      activeAbortController.abort(reason);
+    if (!requestAbortController.signal.aborted) {
+      requestAbortController.abort(reason);
     }
   };
   const firstResponseTimer = setTimeout(() => {
@@ -4055,12 +4142,12 @@ async function classifyBatchWithModel(
         method: "POST",
         headers: requestSpec.headers,
         body: JSON.stringify(requestSpec.body),
-        signal: activeAbortController.signal
+        signal: requestAbortController.signal
       });
     } catch (error) {
-      if (activeAbortController?.signal?.aborted) {
+      if (requestAbortController.signal.aborted) {
         throw buildRequestAbortError(
-          abortReason || `${activeAbortController.signal.reason || ""}`,
+          abortReason || `${requestAbortController.signal.reason || ""}`,
           config,
           batch.length
         );
@@ -4086,9 +4173,9 @@ async function classifyBatchWithModel(
     try {
       rawBody = await response.text();
     } catch (error) {
-      if (activeAbortController?.signal?.aborted) {
+      if (requestAbortController.signal.aborted) {
         throw buildRequestAbortError(
-          abortReason || `${activeAbortController.signal.reason || ""}`,
+          abortReason || `${requestAbortController.signal.reason || ""}`,
           config,
           batch.length
         );
@@ -4158,6 +4245,10 @@ async function classifyBatchWithModel(
   } finally {
     clearTimeout(firstResponseTimer);
     clearTimeout(totalTimeoutTimer);
+    activeModelAbortControllers.delete(requestAbortController);
+    if (activeAbortController === requestAbortController) {
+      activeAbortController = null;
+    }
   }
 }
 

@@ -18,7 +18,7 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 支持自定义 Base URL、API Key、模型名和 Prompt
 - API 检测成功后自动保存当前连接配置
 - 快速模式只需要访问你配置的模型接口，并跳过额外目录规划；完整模式才会检测书签链接和规划全局目录
-- DeepSeek 等慢模型会在请求前再次拆分大批量，并使用更小的运行批大小、更短的请求超时、更短的内置请求提示和更紧的输出预算；响应过慢时还会自动拆到 1 条小批次重试
+- DeepSeek 等慢模型会在请求前再次拆分大批量，运行批次最多 10 条、单个模型请求最多 5 条，并使用受控小并发、更短的请求超时、更短的内置请求提示和更紧的输出预算；响应过慢时还会自动拆到 1 条小批次重试
 - 应用已生成预览时复用保存的方案，本地重建，不会再次请求模型
 - 弹窗和设置页使用页面内确认与错误提示，避免浏览器原生弹窗打断流程
 - 支持中英文界面，可根据浏览器语言自动切换
@@ -57,7 +57,7 @@ Key features:
 - Successful API tests save the current connection settings
 - Fast mode asks for model endpoint access only when uncached bookmarks need the model; Complete mode adds link checks and global planning
 - Fast local reruns can finish from rules and cached classifications without model calls or batch scheduling
-- Slow providers such as DeepSeek re-split large batches before each request, use a smaller runtime batch size, shorter request timeouts, shorter built-in prompts, and tighter output budgets, then retry down to one-bookmark mini-batches if needed
+- Slow providers such as DeepSeek re-split large batches before each request, cap runtime batches at 10 bookmarks, cap each model request at 5 bookmarks, use limited mini-request concurrency, shorter request timeouts, shorter built-in prompts, and tighter output budgets, then retry down to one-bookmark mini-batches if needed
 - Applying a generated preview reuses the saved plan and rebuilds locally without another model request
 - Popup and settings actions use inline confirmations and validation feedback instead of browser dialogs
 - English and Simplified Chinese interface support

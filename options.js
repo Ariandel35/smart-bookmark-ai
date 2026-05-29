@@ -67,7 +67,7 @@ function getDefaults(provider) {
 }
 
 function getDefaultBatchSize(provider) {
-  return provider === "deepseek" ? 5 : DEFAULT_BATCH_SIZE;
+  return provider === "deepseek" ? 10 : DEFAULT_BATCH_SIZE;
 }
 
 function buildDefaultConfig(provider = "openai") {
