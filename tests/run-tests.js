@@ -480,6 +480,10 @@ function testOptionsBackupInlineConfirmationSurface() {
   const stylesSource = fs.readFileSync(path.join(ROOT_DIR, "styles.css"), "utf8");
   assert.match(stylesSource, /\.settings-action-status/);
   assert.match(stylesSource, /\.backup-confirm/);
+  assert.match(stylesSource, /\.field input\[aria-invalid="true"\]/);
+  assert.match(stylesSource, /\.field select\[aria-invalid="true"\]/);
+  assert.match(stylesSource, /\.field textarea\[aria-invalid="true"\]/);
+  assert.match(stylesSource, /border-color: var\(--danger\)/);
 
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
   assert.match(i18nSource, /settingsSavedStatus/);
