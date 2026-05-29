@@ -63,7 +63,17 @@
           <div class="progress-head__meta" id="progressMeta" data-i18n="progressWaiting">Waiting to start</div>
         </div>
 
-        <div class="progress" aria-hidden="true">
+        <div
+          class="progress"
+          id="progressTrack"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+          aria-valuetext="0%"
+          data-i18n-aria-label="progressAriaLabel"
+          aria-label="Organize progress"
+        >
           <div class="progress__bar" id="progressBar"></div>
         </div>
 

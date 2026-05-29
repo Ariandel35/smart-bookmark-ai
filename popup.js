@@ -9,6 +9,7 @@ const Providers = globalThis.SmartBookmarkProviders;
 const t = (key, params) => I18N.t(key, params);
 
 const phaseBadge = document.getElementById("phaseBadge");
+const progressTrack = document.getElementById("progressTrack");
 const progressBar = document.getElementById("progressBar");
 const progressPercent = document.getElementById("progressPercent");
 const progressSummary = document.getElementById("progressSummary");
@@ -30,6 +31,7 @@ let currentStatus = null;
 let currentFolderViews = [];
 let detailRequestVersion = 0;
 let applyConfirmationVisible = false;
+let popupActionInFlight = false;
 
 I18N.applyDocument(document);
 
@@ -200,15 +202,23 @@ function isPreviewReady() {
 function syncActionButtons() {
   const isRunning = currentStatus?.phase === "running";
   const isConfigured = hasPreviewAttemptConfig(currentConfig);
-  startButton.disabled = isRunning;
-  backupButton.disabled = isRunning;
-  cancelButton.disabled = !isRunning;
+  startButton.disabled = popupActionInFlight || isRunning;
+  backupButton.disabled = popupActionInFlight || isRunning;
+  cancelButton.disabled = popupActionInFlight || !isRunning;
   cancelButton.hidden = !isRunning;
+  startButton.setAttribute("aria-busy", String(popupActionInFlight));
+  backupButton.setAttribute("aria-busy", String(popupActionInFlight));
+  cancelButton.setAttribute("aria-busy", String(popupActionInFlight));
   startButton.textContent = !isConfigured
     ? t("setupButton")
     : isPreviewReady()
       ? t("confirmOrganizeButton")
       : t("previewButton");
+}
+
+function setPopupActionInFlight(inFlight) {
+  popupActionInFlight = Boolean(inFlight);
+  syncActionButtons();
 }
 
 function renderConfig(_config) {
@@ -244,6 +254,8 @@ function renderStatus(status) {
   }
 
   progressBar.style.width = `${progress}%`;
+  progressTrack.setAttribute("aria-valuenow", String(progress));
+  progressTrack.setAttribute("aria-valuetext", `${progress}%`);
   progressPercent.textContent = `${progress}%`;
   progressSummary.textContent = total > 0 ? `${processed} / ${total}` : "0 / 0";
 
@@ -546,11 +558,13 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
       keepButton.type = "button";
       keepButton.className = "button button--secondary button--compact";
       keepButton.textContent = t("keepButton");
+      keepButton.disabled = popupActionInFlight;
 
       const deleteButton = document.createElement("button");
       deleteButton.type = "button";
       deleteButton.className = "button button--danger button--compact";
       deleteButton.textContent = t("deleteButton");
+      deleteButton.disabled = popupActionInFlight;
 
       const lockEntryActions = () => {
         keepButton.disabled = true;
@@ -705,66 +719,74 @@ async function refreshAll() {
 }
 
 async function startJob() {
-  startButton.disabled = true;
-  backupButton.disabled = true;
-  const response = await chrome.runtime.sendMessage({ type: "APPLY_PREVIEW_PLAN" });
+  setPopupActionInFlight(true);
 
-  if (!response?.ok) {
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "APPLY_PREVIEW_PLAN" });
+
+    if (!response?.ok) {
+      await refreshAll();
+      renderResponseError(response, t("startJobFailed"));
+      return;
+    }
+
     await refreshAll();
-    renderResponseError(response, t("startJobFailed"));
-    return;
+  } finally {
+    setPopupActionInFlight(false);
   }
-
-  await refreshAll();
 }
 
 async function startPreview() {
-  startButton.disabled = true;
-  backupButton.disabled = true;
-  const requirement = await chrome.runtime.sendMessage({ type: "CHECK_LOCAL_MODEL_REQUIREMENT" });
+  setPopupActionInFlight(true);
 
-  if (!requirement?.ok) {
+  try {
+    const requirement = await chrome.runtime.sendMessage({ type: "CHECK_LOCAL_MODEL_REQUIREMENT" });
+
+    if (!requirement?.ok) {
+      await refreshAll();
+      renderResponseError(requirement, t("previewStartFailed"));
+      return;
+    }
+
+    if (requirement.needsModel && !hasModelAccessConfig(currentConfig)) {
+      await refreshAll();
+      renderResponseError(
+        {
+          error: t("setupMissingApiKey"),
+          detail: t("modelAccessRequiredForUncachedPreview")
+        },
+        t("setupMissingApiKey")
+      );
+      return;
+    }
+
+    const shouldRequestAccess = requirement.needsModel || requirement.requiresBroadHostAccess;
+    const granted = shouldRequestAccess ? await ensureOrganizeAccess(currentConfig) : true;
+
+    if (!granted) {
+      await refreshAll();
+      renderResponseError(
+        { error: t("hostPermissionRequiredTitle"), detail: t("hostPermissionRequiredDetail") },
+        t("hostPermissionRequiredTitle")
+      );
+      return;
+    }
+
+    const response = await chrome.runtime.sendMessage({
+      type: "START_PREVIEW",
+      localRequirementCheckId: requirement.checkId || ""
+    });
+
+    if (!response?.ok) {
+      await refreshAll();
+      renderResponseError(response, t("previewStartFailed"));
+      return;
+    }
+
     await refreshAll();
-    renderResponseError(requirement, t("previewStartFailed"));
-    return;
+  } finally {
+    setPopupActionInFlight(false);
   }
-
-  if (requirement.needsModel && !hasModelAccessConfig(currentConfig)) {
-    await refreshAll();
-    renderResponseError(
-      {
-        error: t("setupMissingApiKey"),
-        detail: t("modelAccessRequiredForUncachedPreview")
-      },
-      t("setupMissingApiKey")
-    );
-    return;
-  }
-
-  const shouldRequestAccess = requirement.needsModel || requirement.requiresBroadHostAccess;
-  const granted = shouldRequestAccess ? await ensureOrganizeAccess(currentConfig) : true;
-
-  if (!granted) {
-    await refreshAll();
-    renderResponseError(
-      { error: t("hostPermissionRequiredTitle"), detail: t("hostPermissionRequiredDetail") },
-      t("hostPermissionRequiredTitle")
-    );
-    return;
-  }
-
-  const response = await chrome.runtime.sendMessage({
-    type: "START_PREVIEW",
-    localRequirementCheckId: requirement.checkId || ""
-  });
-
-  if (!response?.ok) {
-    await refreshAll();
-    renderResponseError(response, t("previewStartFailed"));
-    return;
-  }
-
-  await refreshAll();
 }
 
 async function handlePrimaryAction() {
@@ -783,39 +805,61 @@ async function handlePrimaryAction() {
 }
 
 async function createManualBackup() {
-  startButton.disabled = true;
-  backupButton.disabled = true;
-  const response = await chrome.runtime.sendMessage({ type: "CREATE_MANUAL_BACKUP" });
+  setPopupActionInFlight(true);
 
-  if (!response?.ok) {
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "CREATE_MANUAL_BACKUP" });
+
+    if (!response?.ok) {
+      await refreshAll();
+      renderResponseError(response, t("createBackupFailed"));
+      return;
+    }
+
     await refreshAll();
-    renderResponseError(response, t("createBackupFailed"));
-    return;
+  } finally {
+    setPopupActionInFlight(false);
   }
-
-  await refreshAll();
 }
 
 async function resolveUnprocessedEntry(entryId, action) {
-  const response = await chrome.runtime.sendMessage({
-    type: "RESOLVE_UNPROCESSED_ENTRY",
-    entryId,
-    action
-  });
+  setPopupActionInFlight(true);
 
-  if (!response?.ok) {
+  try {
+    const response = await chrome.runtime.sendMessage({
+      type: "RESOLVE_UNPROCESSED_ENTRY",
+      entryId,
+      action
+    });
+
+    if (!response?.ok) {
+      await refreshAll();
+      renderResponseError(response, t("resolveUnprocessedFailed"));
+      return;
+    }
+
     await refreshAll();
-    renderResponseError(response, t("resolveUnprocessedFailed"));
-    return;
+  } finally {
+    setPopupActionInFlight(false);
   }
-
-  await refreshAll();
 }
 
 async function cancelJob() {
-  cancelButton.disabled = true;
-  await chrome.runtime.sendMessage({ type: "CANCEL_JOB" });
-  await refreshAll();
+  setPopupActionInFlight(true);
+
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "CANCEL_JOB" });
+
+    if (!response?.ok) {
+      await refreshAll();
+      renderResponseError(response, t("cancelJobFailed"));
+      return;
+    }
+
+    await refreshAll();
+  } finally {
+    setPopupActionInFlight(false);
+  }
 }
 
 chrome.runtime.onMessage.addListener((message) => {
