@@ -536,6 +536,7 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /applyButton\.disabled = true/);
   assert.match(popupSource, /cancelButton\.disabled = true/);
   assert.match(popupSource, /hasPreviewAttemptConfig/);
+  assert.match(popupSource, /Providers\?\.hasProvider\?\.\(config\.provider\)/);
   assert.match(popupSource, /hasModelAccessConfig/);
   assert.match(popupSource, /CHECK_LOCAL_MODEL_REQUIREMENT/);
   assert.match(popupSource, /localRequirementCheckId: requirement\.checkId \|\| ""/);

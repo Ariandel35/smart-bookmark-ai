@@ -185,7 +185,7 @@ function getLogKindLabel(kind) {
 }
 
 function hasPreviewAttemptConfig(config) {
-  if (!config?.provider || !config?.baseUrl || !config?.model) {
+  if (!config?.provider || !Providers?.hasProvider?.(config.provider) || !config?.baseUrl || !config?.model) {
     return false;
   }
 
@@ -206,7 +206,7 @@ function hasModelAccessConfig(config) {
 }
 
 function getSetupProblem(config) {
-  if (!config?.provider) {
+  if (!config?.provider || !Providers?.hasProvider?.(config.provider)) {
     return t("setupMissingProvider");
   }
 
