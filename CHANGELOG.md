@@ -15,6 +15,7 @@
 - Popup preflight actions now stay locked through refreshes while checks, permission prompts, or cancellation requests are in progress
 - Popup preflight, backup, cancel, and unprocessed-item actions now show inline in-progress feedback while controls are locked
 - Cancellation requests now persist in job status so the popup keeps the cancel button locked after the request is accepted
+- Popup setup and permission errors now include an inline settings shortcut instead of only relying on the header button
 - Popup progress now exposes standard progressbar state for assistive technologies
 - Fast mode now finishes locally when rules and the classification cache cover every bookmark, skipping model calls and batch scheduling
 - Preview now checks local rule/cache coverage before asking for API keys or model endpoint access

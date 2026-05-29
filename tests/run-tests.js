@@ -277,6 +277,10 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /popupActionInFlight/);
   assert.match(popupSource, /setPopupActionInFlight/);
   assert.match(popupSource, /setPopupActionStatus/);
+  assert.match(popupSource, /createSettingsShortcutButton/);
+  assert.match(popupSource, /shouldShowSettingsShortcut/);
+  assert.match(popupSource, /settingsShortcutButton/);
+  assert.match(popupSource, /summaryActions\.appendChild\(createSettingsShortcutButton\(\)\)/);
   assert.match(popupSource, /popupCheckingCoverageStatus/);
   assert.match(popupSource, /popupRequestingAccessStatus/);
   assert.match(popupSource, /popupStartingPreviewStatus/);
@@ -323,6 +327,7 @@ function testPreviewApplySurface() {
 
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
   assert.match(i18nSource, /cancelRequestedButton/);
+  assert.match(i18nSource, /settingsShortcutButton/);
 
   const backgroundSourceForCancel = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSourceForCancel, /cancelRequested: true/);

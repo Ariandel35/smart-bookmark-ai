@@ -308,16 +308,33 @@ function createEmptyState(title, description) {
 function createSetupRequiredState() {
   const empty = createEmptyState(t("setupRequiredTitle"), getSetupProblem(currentConfig));
 
+  empty.appendChild(createSettingsShortcutButton());
+  return empty;
+}
+
+function createSettingsShortcutButton() {
   const action = document.createElement("button");
   action.type = "button";
   action.className = "button button--primary button--compact";
-  action.textContent = t("setupButton");
+  action.textContent = t("settingsShortcutButton");
   action.addEventListener("click", () => {
     chrome.runtime.openOptionsPage();
   });
 
-  empty.appendChild(action);
-  return empty;
+  return action;
+}
+
+function shouldShowSettingsShortcut() {
+  if (currentStatus?.phase !== "error") {
+    return false;
+  }
+
+  if (!hasPreviewAttemptConfig(currentConfig) || !hasModelAccessConfig(currentConfig)) {
+    return true;
+  }
+
+  const message = currentStatus?.message || "";
+  return message === t("hostPermissionRequiredTitle") || message === t("setupMissingApiKey");
 }
 
 function createApplyConfirmationState() {
@@ -648,6 +665,12 @@ function renderMainDetail() {
   summary.append(summaryTitle);
   if (summaryDetail) {
     summary.append(summaryDesc);
+  }
+  if (shouldShowSettingsShortcut()) {
+    const summaryActions = document.createElement("div");
+    summaryActions.className = "record-item__actions";
+    summaryActions.appendChild(createSettingsShortcutButton());
+    summary.appendChild(summaryActions);
   }
   wrapper.appendChild(summary);
 
