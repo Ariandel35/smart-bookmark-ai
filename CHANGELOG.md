@@ -28,6 +28,7 @@
 - Settings now refreshes API access status immediately after changing providers and generated defaults
 - Settings access checks now show a checking state and ignore stale async results after rapid endpoint changes
 - Settings now disables the access grant button while access checks are still in flight
+- Settings now debounces API access checks after Base URL or speed-mode edits so the displayed authorization state follows the current endpoint
 - Settings load failures now show a clear inline fallback message when defaults are displayed
 - Settings save failures now show a clear inline error instead of leaving the page in a saving state
 - Test & Save now distinguishes a successful API test from a later settings-save failure

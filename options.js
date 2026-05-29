@@ -55,6 +55,7 @@ let backupActionInFlight = false;
 let settingsActionInFlight = false;
 let hostAccessRefreshVersion = 0;
 let hostAccessCheckingInFlight = false;
+let hostAccessRefreshTimer = null;
 
 I18N.applyDocument(document);
 renderProviderOptions();
@@ -532,6 +533,19 @@ async function refreshHostAccessStatus() {
   grantAccessButton.textContent = granted ? t("hostAccessGrantedButton") : t("hostAccessButton");
   grantAccessButton.dataset.granted = String(granted);
   updateSettingsOperationControls();
+}
+
+function scheduleHostAccessStatusRefresh(reason) {
+  if (hostAccessRefreshTimer) {
+    clearTimeout(hostAccessRefreshTimer);
+  }
+
+  hostAccessRefreshTimer = setTimeout(() => {
+    hostAccessRefreshTimer = null;
+    void refreshHostAccessStatus().catch((error) => {
+      console.error(`Failed to refresh host access status after ${reason}:`, error);
+    });
+  }, 250);
 }
 
 function populateForm(config) {
@@ -1130,10 +1144,8 @@ function handleFormMutation(event) {
     clearApiTestStatus();
   }
 
-  if (targetId === "linkCheckMode") {
-    void refreshHostAccessStatus().catch((error) => {
-      console.error("Failed to refresh host access status after speed mode change:", error);
-    });
+  if (targetId === "baseUrl" || targetId === "linkCheckMode") {
+    scheduleHostAccessStatusRefresh(targetId === "baseUrl" ? "Base URL change" : "speed mode change");
   }
 
   markPending();

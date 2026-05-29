@@ -393,6 +393,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /testApiButton\.disabled = settingsActionInFlight/);
   assert.match(optionsSource, /resetButton\.disabled = settingsActionInFlight/);
   assert.match(optionsSource, /hostAccessCheckingInFlight/);
+  assert.match(optionsSource, /hostAccessRefreshTimer/);
+  assert.match(optionsSource, /scheduleHostAccessStatusRefresh/);
   assert.match(optionsSource, /grantAccessButton\.disabled = settingsActionInFlight \|\| granted \|\| hostAccessCheckingInFlight/);
   assert.match(optionsSource, /if \(settingsActionInFlight\) \{\n    return;\n  \}/);
   assert.match(optionsSource, /parseIntegerInput/);
@@ -405,6 +407,9 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /hostAccessCheckingInFlight = false/);
   assert.match(optionsSource, /hostAccessChecking/);
   assert.match(optionsSource, /refreshVersion !== hostAccessRefreshVersion/);
+  assert.match(optionsSource, /targetId === "baseUrl" \|\| targetId === "linkCheckMode"/);
+  assert.match(optionsSource, /Base URL change/);
+  assert.match(optionsSource, /speed mode change/);
   assert.match(optionsSource, /Failed to refresh host access status after provider change/);
   assert.match(optionsSource, /providerSelect\.addEventListener\("change"[\s\S]*markPending\(\);[\s\S]*refreshHostAccessStatus/);
   assert.match(optionsSource, /pendingBackupAction/);
