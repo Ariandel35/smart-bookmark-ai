@@ -319,11 +319,16 @@ function testPreviewApplySurface() {
   assert.doesNotMatch(popupSource, /window\.confirm/);
 
   const popupHtml = fs.readFileSync(path.join(ROOT_DIR, "popup.html"), "utf8");
+  assert.match(popupHtml, /id="phaseBadge"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*aria-atomic="true"/);
   assert.match(popupHtml, /id="popupActionStatus"/);
   assert.match(popupHtml, /role="status"/);
   assert.match(popupHtml, /id="progressTrack"/);
   assert.match(popupHtml, /role="progressbar"/);
+  assert.match(popupHtml, /aria-describedby="progressSummary progressMeta"/);
   assert.match(popupHtml, /data-i18n-aria-label="progressAriaLabel"/);
+  assert.match(popupHtml, /id="detailPanel"[\s\S]*role="region"[\s\S]*data-i18n-aria-label="detailPanelAriaLabel"/);
+  assert.match(popupSource, /if \(phaseBadge\.textContent !== phaseLabel\)/);
+  assert.match(popupSource, /progressTrack\.setAttribute\("aria-valuetext", `\$\{progress\}%, \$\{progressSummaryText\}`\)/);
 
   const stylesSource = fs.readFileSync(path.join(ROOT_DIR, "styles.css"), "utf8");
   assert.match(stylesSource, /\.confirm-strip/);
@@ -332,6 +337,7 @@ function testPreviewApplySurface() {
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
   assert.match(i18nSource, /cancelRequestedButton/);
   assert.match(i18nSource, /settingsShortcutButton/);
+  assert.match(i18nSource, /detailPanelAriaLabel/);
 
   const backgroundSourceForCancel = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSourceForCancel, /cancelRequested: true/);

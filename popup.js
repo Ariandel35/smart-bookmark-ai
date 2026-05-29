@@ -272,7 +272,10 @@ function renderStatus(status) {
   const progress = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : 0;
   const isRunning = phase === "running";
 
-  phaseBadge.textContent = titleCasePhase(phase);
+  const phaseLabel = titleCasePhase(phase);
+  if (phaseBadge.textContent !== phaseLabel) {
+    phaseBadge.textContent = phaseLabel;
+  }
   phaseBadge.className = "pill";
 
   if (phase === "running") {
@@ -287,9 +290,10 @@ function renderStatus(status) {
 
   progressBar.style.width = `${progress}%`;
   progressTrack.setAttribute("aria-valuenow", String(progress));
-  progressTrack.setAttribute("aria-valuetext", `${progress}%`);
   progressPercent.textContent = `${progress}%`;
-  progressSummary.textContent = total > 0 ? `${processed} / ${total}` : "0 / 0";
+  const progressSummaryText = total > 0 ? `${processed} / ${total}` : "0 / 0";
+  progressSummary.textContent = progressSummaryText;
+  progressTrack.setAttribute("aria-valuetext", `${progress}%, ${progressSummaryText}`);
 
   const metaParts = [];
   if (status?.currentBatch && status?.totalBatches) {

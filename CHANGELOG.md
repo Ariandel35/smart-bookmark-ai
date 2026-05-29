@@ -18,6 +18,7 @@
 - Popup setup and permission errors now include an inline settings shortcut instead of only relying on the header button
 - Popup settings shortcuts now deep-link directly to the connection section when setup fixes are needed
 - Popup progress now exposes standard progressbar state for assistive technologies
+- Popup phase, progress, and detail regions now expose clearer assistive-technology semantics without repeating unchanged phase text
 - Settings save and backup inline status messages now expose live status semantics for assistive technologies
 - Settings navigation now uses linked tab and panel semantics with arrow-key navigation
 - Fast mode now finishes locally when rules and the classification cache cover every bookmark, skipping model calls and batch scheduling

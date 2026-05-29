@@ -22,7 +22,16 @@
             >
               Settings
             </button>
-            <span class="pill pill--warm" id="phaseBadge" data-i18n="phaseIdle">Idle</span>
+            <span
+              class="pill pill--warm"
+              id="phaseBadge"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              data-i18n="phaseIdle"
+            >
+              Idle
+            </span>
           </div>
         </div>
       </header>
@@ -73,6 +82,7 @@
           aria-valuemax="100"
           aria-valuenow="0"
           aria-valuetext="0%"
+          aria-describedby="progressSummary progressMeta"
           data-i18n-aria-label="progressAriaLabel"
           aria-label="Organize progress"
         >
@@ -100,7 +110,13 @@
       </section>
 
       <section class="section-block section-block--detail">
-        <div class="detail-panel" id="detailPanel"></div>
+        <div
+          class="detail-panel"
+          id="detailPanel"
+          role="region"
+          data-i18n-aria-label="detailPanelAriaLabel"
+          aria-label="Status details"
+        ></div>
       </section>
 
       <span id="processedValue" class="hidden">0</span>
