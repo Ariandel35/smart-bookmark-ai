@@ -850,28 +850,36 @@ async function loadConfig() {
   setSaveBadge(t("saveBadgeSynced"), "success");
   clearSettingsActionStatus();
 
-  await refreshBackupStatus().catch((error) => {
-    console.error("Failed to refresh backup status after config load:", error);
-    renderBackupLoadFailure(t("backupReadFailed"));
-  });
+  await refreshBackupStatus("config load");
   await refreshHostAccessStatus().catch((error) => {
     console.error("Failed to refresh host access status after config load:", error);
     renderHostAccessRefreshFailure();
   });
 }
 
-async function refreshBackupStatus() {
+async function refreshBackupStatus(reason = "manual refresh", options = {}) {
   createBackupButton.disabled = backupActionInFlight;
   pendingBackupAction = null;
   backupList.replaceChildren();
 
-  const response = await chrome.runtime.sendMessage({
-    type: "GET_BACKUP_RECORDS"
-  });
+  let response;
+  try {
+    response = await chrome.runtime.sendMessage({
+      type: "GET_BACKUP_RECORDS"
+    });
+  } catch (error) {
+    console.error(`Failed to refresh backup status after ${reason}:`, error);
+    renderBackupLoadFailure(t("backupReadFailed"), {
+      preserveActionStatus: options.preserveActionStatus
+    });
+    return false;
+  }
 
   if (!response?.ok) {
-    renderBackupLoadFailure(response?.error || t("backupReadFailed"));
-    return;
+    renderBackupLoadFailure(response?.error || t("backupReadFailed"), {
+      preserveActionStatus: options.preserveActionStatus
+    });
+    return false;
   }
 
   const records = Array.isArray(response.records) ? response.records : [];
@@ -883,11 +891,12 @@ async function refreshBackupStatus() {
     empty.textContent = t("backupEmpty");
     backupList.appendChild(empty);
     setBackupBadge(t("backupRatio", { count: 0 }));
-    return;
+    return true;
   }
 
   renderBackupRecords(records);
   setBackupBadge(t("backupRatio", { count: records.length }), "success");
+  return true;
 }
 
 function clearBackupErrorStatus() {
@@ -896,7 +905,7 @@ function clearBackupErrorStatus() {
   }
 }
 
-function renderBackupLoadFailure(message) {
+function renderBackupLoadFailure(message, options = {}) {
   currentBackupRecords = [];
   pendingBackupAction = null;
   backupList.replaceChildren();
@@ -906,7 +915,9 @@ function renderBackupLoadFailure(message) {
   empty.textContent = message || t("backupReadFailed");
   backupList.appendChild(empty);
   setBackupBadge(t("backupErrorBadge"), "danger");
-  setBackupActionStatus(message || t("backupReadFailed"), true);
+  if (!options.preserveActionStatus || !backupActionStatus.textContent.trim()) {
+    setBackupActionStatus(message || t("backupReadFailed"), true);
+  }
 }
 
 function renderBackupRecords(records = currentBackupRecords) {
@@ -1289,7 +1300,7 @@ async function createManualBackup() {
   } finally {
     backupActionInFlight = false;
     createBackupButton.disabled = false;
-    await refreshBackupStatus();
+    await refreshBackupStatus("manual backup", { preserveActionStatus: true });
   }
 }
 
@@ -1319,7 +1330,7 @@ async function restoreBackupEntry(backupId) {
   } finally {
     backupActionInFlight = false;
     createBackupButton.disabled = false;
-    await refreshBackupStatus();
+    await refreshBackupStatus("backup restore", { preserveActionStatus: true });
   }
 }
 
@@ -1349,7 +1360,7 @@ async function deleteBackupEntry(backupId) {
   } finally {
     backupActionInFlight = false;
     createBackupButton.disabled = false;
-    await refreshBackupStatus();
+    await refreshBackupStatus("backup delete", { preserveActionStatus: true });
   }
 }
 
@@ -1513,9 +1524,7 @@ loadConfig().catch((error) => {
     console.error("Failed to refresh host access status after config load failure:", hostAccessError);
     renderHostAccessRefreshFailure();
   });
-  void refreshBackupStatus().catch((backupError) => {
-    console.error("Failed to refresh backup status:", backupError);
-  });
+  void refreshBackupStatus("config load failure");
   clearApiTestStatus();
   setSaveBadge(t("saveBadgeLoadFailed"), "danger");
   setSettingsActionStatus(t("settingsLoadException"), true);

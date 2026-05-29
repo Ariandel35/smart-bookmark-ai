@@ -18,6 +18,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 设置页加载时，即使备份列表或权限状态刷新失败，也会保留已读取的连接配置并在对应区域提示错误
 - 权限状态刷新失败时会恢复按钮并显示页面内错误，避免访问检查一直卡住
 - 备份列表重新加载成功后会清除之前的过期错误提示，避免成功列表和旧错误同时显示
+- 备份创建、恢复或删除成功后，如果列表刷新失败，会保留已完成的操作提示，并在备份列表区域显示加载错误
 - 批大小和自动整理间隔会校验原始输入，避免非法数值被静默改写
 - 整理规则页默认只保留常用项，高级规则收起到 Advanced
 - 优化中英文标签、状态文案、间距、颜色和移动端表单表现
@@ -45,6 +46,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Settings load keeps the saved connection visible even if backup-list or access-status refreshes fail, then reports those secondary failures inline
 - Access-status refresh failures now restore controls and show an inline permission-state error instead of leaving checks stuck
 - Successful backup-list refreshes now clear stale backup error text instead of showing a recovered list beside an old error
+- Backup create, restore, and delete actions now preserve the completed action message if the follow-up list refresh fails, while the backup list shows the load error inline
 - Batch size and auto interval fields validate raw input instead of silently clamping invalid values
 - Everyday organization rules stay visible while advanced rules are collapsed
 - Refined bilingual labels, status copy, spacing, colors, and responsive form behavior

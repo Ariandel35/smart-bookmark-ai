@@ -80,6 +80,7 @@
 - Settings load now keeps the saved configuration visible when backup-list or access-status refreshes fail, and reports those secondary failures inline
 - Settings access-status refresh failures now restore controls and show an inline permission-state error instead of leaving access checks stuck
 - Backup list refreshes now clear stale backup error text once the list loads successfully again
+- Backup actions now preserve the completed action message and render an inline list-load error if the follow-up backup refresh fails
 - Resetting provider defaults and fallback settings now refresh access status immediately instead of leaving stale endpoint state visible
 - Saving auto-organize settings now marks the Save badge as failed when required access is denied
 - Debounced settings access checks now invalidate any older in-flight check immediately when endpoint fields change

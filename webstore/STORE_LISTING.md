@@ -25,6 +25,7 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 设置页会把连接配置加载和备份/权限状态刷新分开处理，局部刷新失败不会覆盖已保存配置
 - 权限状态刷新失败时会恢复控件并给出页面内提示
 - 备份列表恢复加载后会清除过期错误提示，状态显示更一致
+- 备份操作成功但列表刷新失败时，会保留操作完成提示，并在列表区域显示加载错误
 - 支持中英文界面，可根据浏览器语言自动切换
 - 先预览，再确认执行，减少误整理风险
 - 可选扫描明显失效链接，分类前清理重复入口
@@ -68,6 +69,7 @@ Key features:
 - Settings load keeps saved connection fields visible even when backup or permission status refreshes fail
 - Access-status refresh failures restore controls and show inline feedback
 - Recovered backup-list refreshes clear stale error text for more consistent status feedback
+- Backup action successes stay visible even if the follow-up list refresh fails, with the list-load error shown inline
 - English and Simplified Chinese interface support
 - Preview-first organize flow to reduce mistakes
 - Optional dead-link cleanup and conservative duplicate removal before AI classification

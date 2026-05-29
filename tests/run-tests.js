@@ -773,9 +773,14 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /settingsLoadException/);
   assert.match(optionsSource, /settingsSaveException/);
   assert.match(optionsSource, /setSaveBadge\(t\("saveBadgeLoadFailed"\), "danger"\)/);
-  assert.match(optionsSource, /refreshBackupStatus\(\)\.catch\(\(error\) => \{/);
-  assert.match(optionsSource, /Failed to refresh backup status after config load/);
-  assert.match(optionsSource, /renderBackupLoadFailure\(t\("backupReadFailed"\)\)/);
+  assert.match(optionsSource, /async function refreshBackupStatus\(reason = "manual refresh", options = \{\}\)/);
+  assert.match(optionsSource, /Failed to refresh backup status after \$\{reason\}/);
+  assert.match(optionsSource, /renderBackupLoadFailure\(t\("backupReadFailed"\), \{/);
+  assert.match(optionsSource, /preserveActionStatus: options\.preserveActionStatus/);
+  assert.match(optionsSource, /if \(!options\.preserveActionStatus \|\| !backupActionStatus\.textContent\.trim\(\)\)/);
+  assert.match(optionsSource, /refreshBackupStatus\("manual backup", \{ preserveActionStatus: true \}\)/);
+  assert.match(optionsSource, /refreshBackupStatus\("backup restore", \{ preserveActionStatus: true \}\)/);
+  assert.match(optionsSource, /refreshBackupStatus\("backup delete", \{ preserveActionStatus: true \}\)/);
   assert.match(optionsSource, /refreshHostAccessStatus\(\)\.catch\(\(error\) => \{/);
   assert.match(optionsSource, /Failed to refresh host access status after config load/);
   assert.match(optionsSource, /hostAccessCheckingInFlight = false/);
@@ -857,7 +862,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /clearBackupErrorStatus/);
   assert.match(optionsSource, /if \(backupActionStatus\.classList\.contains\("is-error"\)\) \{/);
   assert.match(optionsSource, /setBackupActionStatus\(""\)/);
-  assert.match(optionsSource, /function renderBackupLoadFailure\(message\)/);
+  assert.match(optionsSource, /function renderBackupLoadFailure\(message, options = \{\}\)/);
   assert.match(optionsSource, /getBackupRecordAccessibleName/);
   assert.match(optionsSource, /restoreButton\.setAttribute\("aria-label", t\("backupRestoreRecordAria", \{ title: backupName \}\)\)/);
   assert.match(optionsSource, /deleteButton\.setAttribute\("aria-label", t\("backupDeleteRecordAria", \{ title: backupName \}\)\)/);
@@ -941,6 +946,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /keeps the saved configuration visible/);
   assert.match(changelog, /access-status refresh failures now restore controls/);
   assert.match(changelog, /clear stale backup error text/);
+  assert.match(changelog, /Backup actions now preserve the completed action message/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run package:webstore/);
   assert.match(readme, /restoring creates a fresh local snapshot first/);
@@ -965,6 +971,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /keeps the saved connection visible/);
   assert.match(releaseNotes, /Access-status refresh failures now restore controls/);
   assert.match(releaseNotes, /clear stale backup error text/);
+  assert.match(releaseNotes, /preserve the completed action message/);
   assert.match(releaseNotes, /silently clamping invalid values/);
 
   const historicalReleaseNotes = fs.readFileSync(
@@ -989,6 +996,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /keeps saved connection fields visible/);
   assert.match(storeListing, /Access-status refresh failures restore controls/);
   assert.match(storeListing, /clear stale error text/);
+  assert.match(storeListing, /Backup action successes stay visible/);
   assert.match(storeListing, /Popup inline apply confirmation/);
   assert.match(storeListing, /Backup management with inline restore confirmation/);
 
