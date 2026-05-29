@@ -376,10 +376,20 @@ function setSettingsActionStatus(message = "", isError = false) {
 
 function clearSettingsActionStatus() {
   setSettingsActionStatus("");
+  clearSettingsFieldIssues();
 }
 
 function clearApiTestStatus() {
   setApiTestStatus("");
+}
+
+function clearSettingsFieldIssues() {
+  Array.from(form.querySelectorAll("[aria-invalid], [aria-describedby]")).forEach((field) => {
+    field.removeAttribute("aria-invalid");
+    if ([settingsActionStatus.id, apiTestStatus.id].includes(field.getAttribute("aria-describedby"))) {
+      field.removeAttribute("aria-describedby");
+    }
+  });
 }
 
 function updateSettingsOperationControls() {
@@ -404,12 +414,44 @@ function setHostAccessStatus(message = "", isGranted = false) {
   hostAccessStatus.classList.toggle("is-error", Boolean(message) && !isGranted);
 }
 
-function showSettingsIssue(message, sectionId = "") {
+function focusSettingsField(fieldId) {
+  const field = fieldId ? document.getElementById(fieldId) : null;
+  if (!field) {
+    return;
+  }
+
+  window.requestAnimationFrame(() => {
+    field.focus();
+  });
+}
+
+function markSettingsFieldIssue(fieldId, describedByElement = settingsActionStatus) {
+  const field = fieldId ? document.getElementById(fieldId) : null;
+  if (!field) {
+    return;
+  }
+
+  field.setAttribute("aria-invalid", "true");
+  if (describedByElement?.id) {
+    field.setAttribute("aria-describedby", describedByElement.id);
+  }
+}
+
+function showSettingsIssue(message, sectionId = "", fieldId = "") {
   if (sectionId) {
     setActiveSection(sectionId);
   }
 
+  markSettingsFieldIssue(fieldId);
   setSettingsActionStatus(message, true);
+  focusSettingsField(fieldId);
+}
+
+function showApiTestIssue(message, fieldId = "") {
+  setActiveSection("connection");
+  markSettingsFieldIssue(fieldId, apiTestStatus);
+  setApiTestStatus(message, true);
+  focusSettingsField(fieldId);
 }
 
 function formatDate(dateString) {
@@ -941,17 +983,17 @@ async function saveConfig(event) {
   const defaults = getDefaults(config.provider);
 
   if (!config.baseUrl) {
-    showSettingsIssue(t("baseUrlRequired"), "connection");
+    showSettingsIssue(t("baseUrlRequired"), "connection", "baseUrl");
     return;
   }
 
   if (!config.model) {
-    showSettingsIssue(t("modelRequired"), "connection");
+    showSettingsIssue(t("modelRequired"), "connection", "model");
     return;
   }
 
   if (!Number.isInteger(config.batchSize) || config.batchSize < 5 || config.batchSize > 100) {
-    showSettingsIssue(t("batchSizeValidation"), "organize");
+    showSettingsIssue(t("batchSizeValidation"), "organize", "batchSize");
     return;
   }
 
@@ -960,12 +1002,12 @@ async function saveConfig(event) {
     config.autoOrganizeIntervalHours < 1 ||
     config.autoOrganizeIntervalHours > 168
   ) {
-    showSettingsIssue(t("autoIntervalValidation"), "automation");
+    showSettingsIssue(t("autoIntervalValidation"), "automation", "autoOrganizeIntervalHours");
     return;
   }
 
   if (!defaults.apiKeyOptional && !config.apiKey) {
-    showSettingsIssue(t("requiredApiKey", { provider: defaults.label }), "connection");
+    showSettingsIssue(t("requiredApiKey", { provider: defaults.label }), "connection", "apiKey");
     return;
   }
 
@@ -979,7 +1021,7 @@ async function saveConfig(event) {
         : await ensureOriginAccess(config.baseUrl);
       await refreshHostAccessStatus();
       if (!granted) {
-        showSettingsIssue(t("autoOrganizePermission"), "automation");
+        showSettingsIssue(t("autoOrganizePermission"), "automation", "autoOrganizeEnabled");
         return;
       }
     }
@@ -1012,20 +1054,17 @@ async function testApiConnection() {
   const defaults = getDefaults(config.provider);
 
   if (!config.baseUrl) {
-    setActiveSection("connection");
-    setApiTestStatus(t("baseUrlRequired"), true);
+    showApiTestIssue(t("baseUrlRequired"), "baseUrl");
     return;
   }
 
   if (!config.model) {
-    setActiveSection("connection");
-    setApiTestStatus(t("modelRequired"), true);
+    showApiTestIssue(t("modelRequired"), "model");
     return;
   }
 
   if (!defaults.apiKeyOptional && !config.apiKey) {
-    setActiveSection("connection");
-    setApiTestStatus(t("requiredApiKey", { provider: defaults.label }), true);
+    showApiTestIssue(t("requiredApiKey", { provider: defaults.label }), "apiKey");
     return;
   }
 
@@ -1199,7 +1238,7 @@ async function requestHostAccess() {
 
   const config = collectFormData();
   if (!config.baseUrl) {
-    showSettingsIssue(t("baseUrlRequired"), "connection");
+    showSettingsIssue(t("baseUrlRequired"), "connection", "baseUrl");
     await refreshHostAccessStatus();
     return;
   }
@@ -1212,7 +1251,7 @@ async function requestHostAccess() {
       : await ensureOriginAccess(config.baseUrl);
     await refreshHostAccessStatus();
     if (!granted) {
-      showSettingsIssue(t("hostAccessMissingAlert"), "connection");
+      showSettingsIssue(t("hostAccessMissingAlert"), "connection", "grantAccessButton");
     }
   } finally {
     setSettingsActionInFlight(false);
@@ -1280,7 +1319,7 @@ testApiButton.addEventListener("click", testApiConnection);
 grantAccessButton.addEventListener("click", () => {
   requestHostAccess().catch((error) => {
     console.error("Failed to request host access:", error);
-    showSettingsIssue(t("hostAccessRequestException"), "connection");
+    showSettingsIssue(t("hostAccessRequestException"), "connection", "grantAccessButton");
   });
 });
 resetButton.addEventListener("click", resetCurrentProviderDefaults);

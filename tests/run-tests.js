@@ -401,6 +401,13 @@ function testOptionsBackupInlineConfirmationSurface() {
 
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
   assert.match(optionsSource, /showSettingsIssue/);
+  assert.match(optionsSource, /clearSettingsFieldIssues/);
+  assert.match(optionsSource, /focusSettingsField/);
+  assert.match(optionsSource, /markSettingsFieldIssue/);
+  assert.match(optionsSource, /showApiTestIssue/);
+  assert.match(optionsSource, /field\.setAttribute\("aria-invalid", "true"\)/);
+  assert.match(optionsSource, /field\.setAttribute\("aria-describedby", describedByElement\.id\)/);
+  assert.match(optionsSource, /window\.requestAnimationFrame\(\(\) => \{\n    field\.focus\(\);/);
   assert.match(optionsSource, /button\.tabIndex = isActive \? 0 : -1/);
   assert.match(optionsSource, /handleNavigationKeydown/);
   assert.match(optionsSource, /ArrowDown/);
@@ -438,6 +445,14 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /hostAccessCheckingInFlight = false/);
   assert.match(optionsSource, /hostAccessChecking/);
   assert.match(optionsSource, /refreshVersion !== hostAccessRefreshVersion/);
+  assert.match(optionsSource, /showSettingsIssue\(t\("baseUrlRequired"\), "connection", "baseUrl"\)/);
+  assert.match(optionsSource, /showSettingsIssue\(t\("modelRequired"\), "connection", "model"\)/);
+  assert.match(optionsSource, /showSettingsIssue\(t\("batchSizeValidation"\), "organize", "batchSize"\)/);
+  assert.match(optionsSource, /showSettingsIssue\(t\("autoIntervalValidation"\), "automation", "autoOrganizeIntervalHours"\)/);
+  assert.match(optionsSource, /showSettingsIssue\(t\("requiredApiKey", \{ provider: defaults\.label \}\), "connection", "apiKey"\)/);
+  assert.match(optionsSource, /showApiTestIssue\(t\("baseUrlRequired"\), "baseUrl"\)/);
+  assert.match(optionsSource, /showApiTestIssue\(t\("modelRequired"\), "model"\)/);
+  assert.match(optionsSource, /showApiTestIssue\(t\("requiredApiKey", \{ provider: defaults\.label \}\), "apiKey"\)/);
   assert.match(optionsSource, /targetId === "baseUrl" \|\| targetId === "linkCheckMode"/);
   assert.match(optionsSource, /Base URL change/);
   assert.match(optionsSource, /speed mode change/);
