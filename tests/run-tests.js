@@ -1,5 +1,7 @@
 const assert = require("node:assert/strict");
+const { execFileSync } = require("node:child_process");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const vm = require("node:vm");
 const JsonUtils = require("../json-utils.js");
@@ -296,6 +298,30 @@ function testStaticExtensionAssets() {
   }
 }
 
+function readZipLocalEntryNames(zipPath) {
+  const buffer = fs.readFileSync(zipPath);
+  const names = [];
+  let offset = 0;
+
+  while (offset < buffer.length) {
+    const signature = buffer.readUInt32LE(offset);
+    if (signature === 0x02014b50 || signature === 0x06054b50) {
+      break;
+    }
+
+    assert.equal(signature, 0x04034b50, `Unexpected ZIP signature at offset ${offset}`);
+    const compressedSize = buffer.readUInt32LE(offset + 18);
+    const nameLength = buffer.readUInt16LE(offset + 26);
+    const extraLength = buffer.readUInt16LE(offset + 28);
+    const nameStart = offset + 30;
+    const nameEnd = nameStart + nameLength;
+    names.push(buffer.subarray(nameStart, nameEnd).toString("utf8"));
+    offset = nameEnd + extraLength + compressedSize;
+  }
+
+  return names;
+}
+
 function testExtensionPackageFileList() {
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "manifest.json"), "utf8"));
   const buildScriptSource = fs.readFileSync(
@@ -349,6 +375,20 @@ function testExtensionPackageFileList() {
       true,
       `Package file list is missing required runtime file: ${requiredFile}`
     );
+  }
+
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "marko-package-"));
+  const outputPath = path.join(tempDir, "marko-test.zip");
+  try {
+    const output = execFileSync(
+      process.execPath,
+      ["webstore/build_extension_package.mjs", "--out", outputPath],
+      { cwd: ROOT_DIR, encoding: "utf8" }
+    );
+    assert.match(output, /Created .*marko-test\.zip with 19 files\./);
+    assert.deepEqual(readZipLocalEntryNames(outputPath), packageFiles);
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
   }
 }
 
