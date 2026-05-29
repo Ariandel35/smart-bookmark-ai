@@ -598,6 +598,8 @@ textarea {
   background: transparent;
   color: var(--text);
   font-weight: 700;
+  text-align: center;
+  overflow-wrap: anywhere;
   cursor: pointer;
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, opacity 160ms ease;
 }
@@ -724,6 +726,7 @@ textarea {
   color: var(--text-soft);
   font-size: 13px;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .results-workspace {
@@ -1025,11 +1028,13 @@ textarea {
 .bookmark-item__title {
   font-size: 13px;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .bookmark-item__meta {
   color: var(--text-soft);
   font-size: 12px;
+  overflow-wrap: anywhere;
 }
 
 .record-item__row {
@@ -1039,9 +1044,14 @@ textarea {
   gap: 12px;
 }
 
+.record-item__row > :first-child {
+  min-width: 0;
+}
+
 .record-item__title {
   font-size: 14px;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .record-item__meta,
@@ -1049,6 +1059,7 @@ textarea {
   color: var(--text-soft);
   font-size: 12px;
   line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .record-item__reason {
@@ -1077,6 +1088,7 @@ textarea {
 .result-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
   font-size: 13px;
 }
 
@@ -1085,6 +1097,7 @@ textarea {
   padding: 10px 0;
   border-bottom: 1px solid var(--line);
   text-align: left;
+  overflow-wrap: anywhere;
 }
 
 .result-table th {
@@ -1182,12 +1195,14 @@ textarea {
 .confirm-strip__title {
   font-size: 14px;
   line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .confirm-strip__desc {
   color: var(--text-soft);
   font-size: 12px;
   line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .confirm-strip__actions {

@@ -261,6 +261,19 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.doesNotMatch(i18nSource, /backupDeleteConfirm/);
 }
 
+function testResponsiveTextHardeningSurface() {
+  const stylesSource = fs.readFileSync(path.join(ROOT_DIR, "styles.css"), "utf8");
+  assert.match(stylesSource, /\.button[\s\S]*overflow-wrap: anywhere/);
+  assert.match(stylesSource, /\.progress-head__summary,[\s\S]*\.progress-head__meta[\s\S]*overflow-wrap: anywhere/);
+  assert.match(stylesSource, /\.bookmark-item__title[\s\S]*overflow-wrap: anywhere/);
+  assert.match(stylesSource, /\.bookmark-item__meta[\s\S]*overflow-wrap: anywhere/);
+  assert.match(stylesSource, /\.record-item__row > :first-child[\s\S]*min-width: 0/);
+  assert.match(stylesSource, /\.record-item__title[\s\S]*overflow-wrap: anywhere/);
+  assert.match(stylesSource, /\.result-table[\s\S]*table-layout: fixed/);
+  assert.match(stylesSource, /\.result-table th,[\s\S]*\.result-table td[\s\S]*overflow-wrap: anywhere/);
+  assert.match(stylesSource, /\.confirm-strip__desc[\s\S]*overflow-wrap: anywhere/);
+}
+
 function testReleaseMaterialsCurrent() {
   const changelog = fs.readFileSync(path.join(ROOT_DIR, "CHANGELOG.md"), "utf8");
   assert.match(changelog, /without a second model request/);
@@ -313,6 +326,7 @@ function main() {
   testPreviewApplySurface();
   testSlowModelResilienceSurface();
   testOptionsBackupInlineConfirmationSurface();
+  testResponsiveTextHardeningSurface();
   testReleaseMaterialsCurrent();
   testI18nCoverage();
   console.log("All tests passed.");
