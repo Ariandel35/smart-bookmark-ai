@@ -1096,6 +1096,7 @@ async function saveConfig(event) {
         : await ensureOriginAccess(config.baseUrl);
       await refreshHostAccessStatus();
       if (!granted) {
+        setSaveBadge(t("saveBadgeFailed"), "danger");
         showSettingsIssue(t("autoOrganizePermission"), "automation", "autoOrganizeEnabled");
         return;
       }
