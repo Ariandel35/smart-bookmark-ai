@@ -492,9 +492,15 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /providerSelect\.addEventListener\("change"[\s\S]*markPending\(\);[\s\S]*refreshHostAccessStatus/);
   assert.match(optionsSource, /pendingBackupAction/);
   assert.match(optionsSource, /backupActionInFlight/);
+  assert.match(optionsSource, /getBackupRecordAccessibleName/);
+  assert.match(optionsSource, /restoreButton\.setAttribute\("aria-label", t\("backupRestoreRecordAria", \{ title: backupName \}\)\)/);
+  assert.match(optionsSource, /deleteButton\.setAttribute\("aria-label", t\("backupDeleteRecordAria", \{ title: backupName \}\)\)/);
   assert.match(optionsSource, /restoreButton\.setAttribute\("aria-describedby", backupActionStatus\.id\)/);
   assert.match(optionsSource, /deleteButton\.setAttribute\("aria-describedby", backupActionStatus\.id\)/);
   assert.match(optionsSource, /confirmButton\.setAttribute\("aria-describedby", backupActionStatus\.id\)/);
+  assert.match(optionsSource, /backupConfirmRestoreRecordAria/);
+  assert.match(optionsSource, /backupConfirmDeleteRecordAria/);
+  assert.match(optionsSource, /backupCancelActionAria/);
   assert.match(optionsSource, /restoreButton\.dataset\.backupActionButton = "restore"/);
   assert.match(optionsSource, /deleteButton\.dataset\.backupActionButton = "delete"/);
   assert.match(optionsSource, /focusBackupConfirmationPrimary/);
@@ -532,6 +538,11 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(i18nSource, /hostAccessChecking/);
   assert.match(i18nSource, /backupRestoreInlineConfirm/);
   assert.match(i18nSource, /backupDeleteInlineConfirm/);
+  assert.match(i18nSource, /backupRestoreRecordAria/);
+  assert.match(i18nSource, /backupDeleteRecordAria/);
+  assert.match(i18nSource, /backupConfirmRestoreRecordAria/);
+  assert.match(i18nSource, /backupConfirmDeleteRecordAria/);
+  assert.match(i18nSource, /backupCancelActionAria/);
   assert.doesNotMatch(i18nSource, /backupRestoreConfirm/);
   assert.doesNotMatch(i18nSource, /backupDeleteConfirm/);
 }

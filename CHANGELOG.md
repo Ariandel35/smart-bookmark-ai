@@ -28,6 +28,7 @@
 - Settings save and backup inline status messages now expose live status semantics for assistive technologies
 - Settings navigation now uses linked tab and panel semantics with arrow-key navigation
 - Backup create, restore, delete, and inline confirmation buttons are now explicitly associated with the backup action status text
+- Backup list action buttons now include the specific backup name in their accessible labels
 - Backup restore/delete confirmations now move focus into the inline confirmation and return it to the matching action when dismissed
 - Settings validation errors now move focus to the affected field and mark it for assistive technologies
 - Invalid settings fields now show a visible error border and soft error background
