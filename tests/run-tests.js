@@ -219,13 +219,40 @@ function testStaticExtensionAssets() {
   assert.equal(manifest.manifest_version, 3);
   assert.equal(manifest.version, "3.0.0");
 
-  for (const iconPath of Object.values(manifest.icons || {})) {
+  assert.deepEqual(manifest.permissions, ["bookmarks", "storage", "alarms"]);
+  assert.deepEqual(manifest.optional_host_permissions, ["https://*/*", "http://*/*"]);
+  assert.equal(Object.prototype.hasOwnProperty.call(manifest, "host_permissions"), false);
+
+  for (const requiredPath of [
+    manifest.background?.service_worker,
+    manifest.action?.default_popup,
+    manifest.options_page
+  ]) {
+    assert.ok(requiredPath, "Manifest is missing a required entry point");
+    assert.equal(
+      fs.existsSync(path.join(ROOT_DIR, requiredPath)),
+      true,
+      `Manifest references missing ${requiredPath}`
+    );
+  }
+
+  for (const iconPath of [
+    ...Object.values(manifest.icons || {}),
+    ...Object.values(manifest.action?.default_icon || {})
+  ]) {
     assert.equal(fs.existsSync(path.join(ROOT_DIR, iconPath)), true, `Missing icon ${iconPath}`);
   }
 
   const localeMessages = {};
   for (const localePath of ["_locales/en/messages.json", "_locales/zh_CN/messages.json"]) {
     localeMessages[localePath] = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, localePath), "utf8"));
+  }
+  for (const manifestMessage of [manifest.name, manifest.description, manifest.action?.default_title]) {
+    const key = String(manifestMessage || "").match(/^__MSG_([A-Za-z0-9_]+)__$/)?.[1];
+    assert.ok(key, `Manifest value ${manifestMessage} is not localized`);
+    for (const [localePath, messages] of Object.entries(localeMessages)) {
+      assert.ok(messages[key]?.message, `${localePath} is missing manifest message ${key}`);
+    }
   }
   assert.equal(localeMessages["_locales/en/messages.json"].extName.message, "Marko");
   assert.equal(localeMessages["_locales/zh_CN/messages.json"].extName.message, "Marko");
