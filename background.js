@@ -30,6 +30,8 @@ const DEFAULT_BATCH_SIZE = 50;
 const MIN_BATCH_SIZE = 5;
 const MAX_AUTO_RETRY_BATCH_SIZE = 20;
 const DEFAULT_DEAD_SCAN_BATCH_SIZE = 20;
+const LINK_CHECK_MODE_FAST = "fast";
+const LINK_CHECK_MODE_COMPLETE = "complete";
 const DEFAULT_ROOT_FOLDER = "Marko";
 const LEGACY_ROOT_FOLDERS = ["Smart Bookmark AI", "TidyMarks AI"];
 const BACKUP_DB_NAME = "smart-bookmark-ai-backups";
@@ -418,6 +420,7 @@ function buildDefaultConfig(provider = "openai") {
     apiKey: "",
     model: defaults.model,
     batchSize: getDefaultBatchSize(provider),
+    linkCheckMode: LINK_CHECK_MODE_FAST,
     autoOrganizeEnabled: false,
     autoOrganizeIntervalHours: 24,
     whitelistDomains: "",
@@ -441,6 +444,7 @@ function mergeConfig(raw = {}) {
     apiKey: typeof raw.apiKey === "string" ? raw.apiKey.trim() : "",
     model: typeof raw.model === "string" && raw.model.trim() ? raw.model.trim() : defaults.model,
     batchSize: normalizeBatchSize(raw.batchSize, defaults.batchSize),
+    linkCheckMode: normalizeLinkCheckMode(raw.linkCheckMode || defaults.linkCheckMode),
     autoOrganizeEnabled: Boolean(raw.autoOrganizeEnabled),
     autoOrganizeIntervalHours: normalizeAutoInterval(raw.autoOrganizeIntervalHours),
     whitelistDomains:
@@ -491,7 +495,11 @@ async function hasOriginAccess(rawUrl) {
   }
 }
 
-async function assertOrganizeHostAccess(trigger = "manual") {
+async function assertOrganizeHostAccess(trigger = "manual", config = {}) {
+  if (!shouldCheckDeadLinks(config)) {
+    return;
+  }
+
   if (await hasBroadHostAccess()) {
     return;
   }
@@ -833,7 +841,7 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
 
   const config = await readStoredConfig();
   validateConfig(config);
-  await assertOrganizeHostAccess(runContext.trigger);
+  await assertOrganizeHostAccess(runContext.trigger, config);
   await assertApiOriginAccess(config.baseUrl);
 
   const tree = await chrome.bookmarks.getTree();
@@ -939,6 +947,15 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
         "当前书签已命中本地规则或分类缓存，跳过模型目录规划。",
         "Local rules or the classification cache cover the current bookmarks, so model taxonomy planning is skipped."
       );
+  const linkCheckDetail = shouldCheckDeadLinks(config)
+    ? ux(
+        "完整检查模式会在分类前检测失效链接。",
+        "Complete mode checks dead links before classification."
+      )
+    : ux(
+        "快速模式会跳过失效链接检测，只做去重、规则、缓存和模型分类。",
+        "Fast mode skips dead-link checks and only runs duplicate cleanup, rules, cache reuse, and model classification."
+      );
 
   const totalBatches = Math.ceil(bookmarks.length / config.batchSize);
   const runId = crypto.randomUUID();
@@ -1015,8 +1032,8 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
       startedAt,
       finishedAt: "",
       detail: ux(
-        `${runContext.trigger === "auto" ? "这是一次自动静默整理。" : jobMode === "preview" ? "这是一次手动预览。" : "这是一次手动整理。"} 批大小 ${config.batchSize}。${snapshotInfo.detail} ${taxonomyFlowDetail}${taxonomyPlanningNote ? ` ${taxonomyPlanningNote}` : ""}${jobMode === "preview" ? " 预览不会落地改动。" : " 最终会一次性重建书签结构，中途不会边跑边改。"} 受保护根目录 ${protectedRootFolderIds.length} 个，目录规则 ${domainFolderRules.length} 条。`.trim(),
-        `${runContext.trigger === "auto" ? "This is an automatic silent run." : jobMode === "preview" ? "This is a manual preview." : "This is a manual organize run."} Batch size ${config.batchSize}. ${snapshotInfo.detail} ${taxonomyFlowDetail}${taxonomyPlanningNote ? ` ${taxonomyPlanningNote}` : ""}${jobMode === "preview" ? " The preview does not apply any changes." : " The final rebuild happens in one pass instead of mutating bookmarks mid-run."} Protected root folders: ${protectedRootFolderIds.length}. Domain rules: ${domainFolderRules.length}.`.trim()
+        `${runContext.trigger === "auto" ? "这是一次自动静默整理。" : jobMode === "preview" ? "这是一次手动预览。" : "这是一次手动整理。"} 批大小 ${config.batchSize}。${linkCheckDetail} ${snapshotInfo.detail} ${taxonomyFlowDetail}${taxonomyPlanningNote ? ` ${taxonomyPlanningNote}` : ""}${jobMode === "preview" ? " 预览不会落地改动。" : " 最终会一次性重建书签结构，中途不会边跑边改。"} 受保护根目录 ${protectedRootFolderIds.length} 个，目录规则 ${domainFolderRules.length} 条。`.trim(),
+        `${runContext.trigger === "auto" ? "This is an automatic silent run." : jobMode === "preview" ? "This is a manual preview." : "This is a manual organize run."} Batch size ${config.batchSize}. ${linkCheckDetail} ${snapshotInfo.detail} ${taxonomyFlowDetail}${taxonomyPlanningNote ? ` ${taxonomyPlanningNote}` : ""}${jobMode === "preview" ? " The preview does not apply any changes." : " The final rebuild happens in one pass instead of mutating bookmarks mid-run."} Protected root folders: ${protectedRootFolderIds.length}. Domain rules: ${domainFolderRules.length}.`.trim()
       )
     })
   );
@@ -1361,25 +1378,39 @@ async function processNextBatch() {
     }
 
     const currentBatch = Math.floor(job.processed / job.batchSize) + 1;
+    const checkDeadLinks = shouldCheckDeadLinks(job.config);
 
     await updateBatchStatus(job, currentBatch, {
       message: ux(
-        `正在检测第 ${currentBatch}/${job.totalBatches} 批链接状态 (${job.processed}/${job.total})。`,
-        `Checking link health for batch ${currentBatch}/${job.totalBatches} (${job.processed}/${job.total}).`
+        checkDeadLinks
+          ? `正在检测第 ${currentBatch}/${job.totalBatches} 批链接状态 (${job.processed}/${job.total})。`
+          : `正在快速处理第 ${currentBatch}/${job.totalBatches} 批书签 (${job.processed}/${job.total})。`,
+        checkDeadLinks
+          ? `Checking link health for batch ${currentBatch}/${job.totalBatches} (${job.processed}/${job.total}).`
+          : `Fast processing batch ${currentBatch}/${job.totalBatches} (${job.processed}/${job.total}).`
       ),
       detail: ux(
-        `本批 ${batch.length} 条。会先识别确认失效的链接，把状态不明确的链接留到“${MANUAL_FOLDER_TITLE}”，再对剩余书签做 AI 分类。提交前不会改动现有书签树。`,
-        `${batch.length} items in this batch. Confirmed dead links are removed first, uncertain links are kept in "${MANUAL_FOLDER_TITLE}", and only the remaining bookmarks are sent to AI. The bookmark tree is not changed before the final rebuild.`
+        checkDeadLinks
+          ? `本批 ${batch.length} 条。会先识别确认失效的链接，把状态不明确的链接留到“${MANUAL_FOLDER_TITLE}”，再对剩余书签做 AI 分类。提交前不会改动现有书签树。`
+          : `本批 ${batch.length} 条。快速模式会跳过链接可用性探测，直接进入去重、规则、缓存和 AI 分类。提交前不会改动现有书签树。`,
+        checkDeadLinks
+          ? `${batch.length} items in this batch. Confirmed dead links are removed first, uncertain links are kept in "${MANUAL_FOLDER_TITLE}", and only the remaining bookmarks are sent to AI. The bookmark tree is not changed before the final rebuild.`
+          : `${batch.length} items in this batch. Fast mode skips link availability checks and goes straight to duplicate cleanup, rules, cache reuse, and AI classification. The bookmark tree is not changed before the final rebuild.`
       )
     });
 
-    const deadLinkCache = await loadDeadLinkCache();
-    const scanResult = await scanDeadBookmarksBatch(
-      batch,
-      (stage) => updateBatchStatus(job, currentBatch, stage),
-      { mutate: false, cache: deadLinkCache }
-    );
-    await saveDeadLinkCache(scanResult.nextDeadLinkCache || deadLinkCache);
+    let scanResult;
+    if (checkDeadLinks) {
+      const deadLinkCache = await loadDeadLinkCache();
+      scanResult = await scanDeadBookmarksBatch(
+        batch,
+        (stage) => updateBatchStatus(job, currentBatch, stage),
+        { mutate: false, cache: deadLinkCache }
+      );
+      await saveDeadLinkCache(scanResult.nextDeadLinkCache || deadLinkCache);
+    } else {
+      scanResult = buildSkippedDeadLinkScanResult(batch);
+    }
     const duplicateState = markHealthyExactDuplicates(
       scanResult.healthyBookmarks,
       job.exactDuplicateSeenByUrl
@@ -1540,10 +1571,7 @@ async function processNextBatch() {
 
       await finishJob(
         "completed",
-        ux(
-          `书签整理完成，已重建 ${rebuildResult.createdCount} 条书签，并删除 ${job.deleted} 条失效或重复书签。`,
-          `Bookmark organizing completed. Rebuilt ${rebuildResult.createdCount} bookmarks and removed ${job.deleted} dead or duplicate entries.`
-        ),
+        buildOrganizeCompletedMessage(job, rebuildResult),
         job,
         {
           detail: ux(
@@ -1693,6 +1721,20 @@ async function processNextDeadScanBatch(job) {
   }
 
   await scheduleNextBatch();
+}
+
+function buildOrganizeCompletedMessage(job, rebuildResult) {
+  if (shouldCheckDeadLinks(job?.config)) {
+    return ux(
+      `书签整理完成，已重建 ${rebuildResult.createdCount} 条书签，并删除 ${job.deleted} 条失效或重复书签。`,
+      `Bookmark organizing completed. Rebuilt ${rebuildResult.createdCount} bookmarks and removed ${job.deleted} dead or duplicate entries.`
+    );
+  }
+
+  return ux(
+    `书签整理完成，已重建 ${rebuildResult.createdCount} 条书签，并删除 ${job.deleted} 条重复书签。快速模式未检查失效链接。`,
+    `Bookmark organizing completed. Rebuilt ${rebuildResult.createdCount} bookmarks and removed ${job.deleted} duplicate entries. Fast mode did not check dead links.`
+  );
 }
 
 async function finishJob(phase, message, job, overrides = {}) {
@@ -2474,7 +2516,15 @@ async function syncAutoOrganizeAlarm() {
     return;
   }
 
-  if (!(await hasBroadHostAccess())) {
+  if (shouldCheckDeadLinks(config) && !(await hasBroadHostAccess())) {
+    if (existingAlarm) {
+      await chrome.alarms.clear(AUTO_ORGANIZE_ALARM_NAME);
+    }
+
+    return;
+  }
+
+  if (!(await hasOriginAccess(config.baseUrl))) {
     if (existingAlarm) {
       await chrome.alarms.clear(AUTO_ORGANIZE_ALARM_NAME);
     }
@@ -2700,6 +2750,19 @@ async function scanDeadBookmarksBatch(batch, reportStage = () => {}, options = {
     healthyBookmarks,
     pendingWarnings,
     nextDeadLinkCache
+  };
+}
+
+function buildSkippedDeadLinkScanResult(batch) {
+  return {
+    deletedCount: 0,
+    warningCount: 0,
+    lastWarning: "",
+    warningEntries: [],
+    deletedEntries: [],
+    healthyBookmarks: Array.isArray(batch) ? batch : [],
+    pendingWarnings: [],
+    nextDeadLinkCache: {}
   };
 }
 
@@ -3707,6 +3770,14 @@ function normalizeBatchSize(rawValue, fallback = DEFAULT_BATCH_SIZE) {
   }
 
   return Math.min(100, Math.max(MIN_BATCH_SIZE, parsed));
+}
+
+function normalizeLinkCheckMode(rawValue) {
+  return rawValue === LINK_CHECK_MODE_COMPLETE ? LINK_CHECK_MODE_COMPLETE : LINK_CHECK_MODE_FAST;
+}
+
+function shouldCheckDeadLinks(config = {}) {
+  return normalizeLinkCheckMode(config.linkCheckMode) === LINK_CHECK_MODE_COMPLETE;
 }
 
 function normalizeAutoInterval(rawValue) {

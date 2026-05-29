@@ -134,6 +134,22 @@ function testStaticExtensionAssets() {
   }
 }
 
+function testSpeedModeSurface() {
+  const optionsHtml = fs.readFileSync(path.join(ROOT_DIR, "options.html"), "utf8");
+  assert.match(optionsHtml, /id="linkCheckMode"/);
+  assert.match(optionsHtml, /value="fast"/);
+  assert.match(optionsHtml, /value="complete"/);
+
+  const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
+  assert.match(optionsSource, /linkCheckMode/);
+  assert.match(optionsSource, /LINK_CHECK_MODE_FAST/);
+  assert.match(optionsSource, /LINK_CHECK_MODE_COMPLETE/);
+
+  const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
+  assert.match(backgroundSource, /shouldCheckDeadLinks/);
+  assert.match(backgroundSource, /buildSkippedDeadLinkScanResult/);
+}
+
 function testI18nCoverage() {
   const keys = collectI18nKeysFromFiles();
   for (const language of ["en", "zh-CN"]) {
@@ -148,6 +164,7 @@ function main() {
   testRules();
   testCacheUtils();
   testStaticExtensionAssets();
+  testSpeedModeSurface();
   testI18nCoverage();
   console.log("All tests passed.");
 }

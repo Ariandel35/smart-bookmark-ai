@@ -7,6 +7,8 @@ const LEGACY_DEFAULT_PROMPT = I18N.getLegacyDefaultPrompt();
 const DEFAULT_PROMPT = I18N.getDefaultPrompt();
 const DEFAULT_BATCH_SIZE = 50;
 const MIN_BATCH_SIZE = 5;
+const LINK_CHECK_MODE_FAST = "fast";
+const LINK_CHECK_MODE_COMPLETE = "complete";
 
 const form = document.getElementById("settingsForm");
 const providerSelect = document.getElementById("provider");
@@ -14,6 +16,7 @@ const baseUrlInput = document.getElementById("baseUrl");
 const apiKeyInput = document.getElementById("apiKey");
 const modelInput = document.getElementById("model");
 const batchSizeInput = document.getElementById("batchSize");
+const linkCheckModeSelect = document.getElementById("linkCheckMode");
 const autoOrganizeEnabledInput = document.getElementById("autoOrganizeEnabled");
 const autoOrganizeIntervalInput = document.getElementById("autoOrganizeIntervalHours");
 const whitelistSearchInput = document.getElementById("whitelistSearch");
@@ -64,6 +67,7 @@ function buildDefaultConfig(provider = "openai") {
     apiKey: "",
     model: defaults.model,
     batchSize: getDefaultBatchSize(provider),
+    linkCheckMode: LINK_CHECK_MODE_FAST,
     autoOrganizeEnabled: false,
     autoOrganizeIntervalHours: 24,
     whitelistDomains: "",
@@ -87,6 +91,7 @@ function mergeConfig(raw = {}) {
     apiKey: typeof raw.apiKey === "string" ? raw.apiKey : "",
     model: typeof raw.model === "string" && raw.model.trim() ? raw.model.trim() : defaults.model,
     batchSize: normalizeBatchSize(raw.batchSize, defaults.batchSize),
+    linkCheckMode: normalizeLinkCheckMode(raw.linkCheckMode || defaults.linkCheckMode),
     autoOrganizeEnabled: Boolean(raw.autoOrganizeEnabled),
     autoOrganizeIntervalHours: normalizeAutoInterval(raw.autoOrganizeIntervalHours),
     whitelistDomains:
@@ -451,8 +456,15 @@ async function ensureOriginAccess(rawUrl) {
 }
 
 async function refreshHostAccessStatus() {
-  const granted = await hasBroadHostAccess();
-  setHostAccessStatus(granted ? "" : t("hostAccessMissing"), granted);
+  const config = collectFormData();
+  const requiresBroadAccess = shouldRequireBroadHostAccess(config);
+  const granted = requiresBroadAccess
+    ? await hasBroadHostAccess()
+    : await hasOriginAccess(config.baseUrl);
+  setHostAccessStatus(
+    granted ? "" : requiresBroadAccess ? t("hostAccessMissing") : t("currentApiAccessMissing"),
+    granted
+  );
   grantAccessButton.textContent = granted ? t("hostAccessGrantedButton") : t("hostAccessButton");
   grantAccessButton.disabled = granted;
 }
@@ -463,6 +475,7 @@ function populateForm(config) {
   apiKeyInput.value = config.apiKey;
   modelInput.value = config.model;
   batchSizeInput.value = String(config.batchSize);
+  linkCheckModeSelect.value = normalizeLinkCheckMode(config.linkCheckMode);
   autoOrganizeEnabledInput.value = config.autoOrganizeEnabled ? "true" : "false";
   autoOrganizeIntervalInput.value = String(config.autoOrganizeIntervalHours);
   setWhitelistSelection(parseWhitelistDomains(config.whitelistDomains));
@@ -483,6 +496,7 @@ function collectFormData() {
     apiKey: apiKeyInput.value.trim(),
     model: modelInput.value.trim() || defaults.model,
     batchSize: normalizeBatchSize(batchSizeInput.value),
+    linkCheckMode: normalizeLinkCheckMode(linkCheckModeSelect.value),
     autoOrganizeEnabled: autoOrganizeEnabledInput.value === "true",
     autoOrganizeIntervalHours: normalizeAutoInterval(autoOrganizeIntervalInput.value),
     whitelistDomains: serializeWhitelistDomains(),
@@ -499,6 +513,14 @@ function normalizeBatchSize(rawValue, fallback = DEFAULT_BATCH_SIZE) {
   }
 
   return Math.min(100, Math.max(MIN_BATCH_SIZE, parsed));
+}
+
+function normalizeLinkCheckMode(rawValue) {
+  return rawValue === LINK_CHECK_MODE_COMPLETE ? LINK_CHECK_MODE_COMPLETE : LINK_CHECK_MODE_FAST;
+}
+
+function shouldRequireBroadHostAccess(config) {
+  return normalizeLinkCheckMode(config?.linkCheckMode) === LINK_CHECK_MODE_COMPLETE;
 }
 
 function normalizeAutoInterval(rawValue) {
@@ -698,7 +720,9 @@ async function saveConfig(event) {
   }
 
   if (config.autoOrganizeEnabled) {
-    const granted = await ensureBroadHostAccess();
+    const granted = shouldRequireBroadHostAccess(config)
+      ? await ensureBroadHostAccess()
+      : await ensureOriginAccess(config.baseUrl);
     await refreshHostAccessStatus();
     if (!granted) {
       showAlert(t("autoOrganizePermission"), "automation");
@@ -870,7 +894,10 @@ function resetCurrentProviderDefaults() {
 }
 
 async function requestHostAccess() {
-  const granted = await ensureBroadHostAccess();
+  const config = collectFormData();
+  const granted = shouldRequireBroadHostAccess(config)
+    ? await ensureBroadHostAccess()
+    : await ensureOriginAccess(config.baseUrl);
   await refreshHostAccessStatus();
   if (!granted) {
     showAlert(t("hostAccessMissingAlert"), "connection");
@@ -885,6 +912,12 @@ function handleFormMutation(event) {
 
   if (["baseUrl", "apiKey", "model"].includes(targetId)) {
     clearApiTestStatus();
+  }
+
+  if (targetId === "linkCheckMode") {
+    void refreshHostAccessStatus().catch((error) => {
+      console.error("Failed to refresh host access status after speed mode change:", error);
+    });
   }
 
   markPending();
@@ -934,16 +967,19 @@ grantAccessButton.addEventListener("click", () => {
 resetButton.addEventListener("click", resetCurrentProviderDefaults);
 createBackupButton.addEventListener("click", createManualBackup);
 privacyButton.addEventListener("click", () => {
-  window.open(chrome.runtime.getURL("privacy.html"), "_blank", "noopener");
+  const privacyUrl = globalThis.chrome?.runtime?.getURL
+    ? chrome.runtime.getURL("privacy.html")
+    : "privacy.html";
+  window.open(privacyUrl, "_blank", "noopener");
 });
 
-chrome.permissions.onAdded?.addListener(() => {
+globalThis.chrome?.permissions?.onAdded?.addListener(() => {
   void refreshHostAccessStatus().catch((error) => {
     console.error("Failed to refresh host access status after permission add:", error);
   });
 });
 
-chrome.permissions.onRemoved?.addListener(() => {
+globalThis.chrome?.permissions?.onRemoved?.addListener(() => {
   void refreshHostAccessStatus().catch((error) => {
     console.error("Failed to refresh host access status after permission removal:", error);
   });
