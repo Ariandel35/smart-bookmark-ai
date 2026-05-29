@@ -12,6 +12,7 @@
 - Replaced blocking browser alert/confirm flows in popup and settings with inline confirmations and status messages
 - Popup actions now disable related controls immediately to avoid duplicate apply, preview, or backup requests
 - Fast mode now finishes locally when rules and the classification cache cover every bookmark, skipping model calls and batch scheduling
+- Preview now checks local rule/cache coverage before asking for API keys or model endpoint access
 - Backup create, restore, and delete actions now lock related controls while an operation is in flight
 - Settings now validate raw numeric input instead of silently clamping invalid batch sizes or automation intervals
 - Updated privacy, Chrome Web Store, README, locale, and visual materials to describe optional dead-link checks accurately

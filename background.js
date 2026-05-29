@@ -195,6 +195,24 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       return;
     }
 
+    if (message?.type === "CHECK_LOCAL_MODEL_REQUIREMENT") {
+      try {
+        const result = await checkLocalModelRequirement();
+        sendResponse(result);
+      } catch (error) {
+        console.error("Failed to check local model requirement:", error);
+        sendResponse({
+          ok: false,
+          error: toUserMessage(
+            error,
+            ux("检查本地规则和缓存覆盖情况失败。", "Failed to check local rules and cache coverage.")
+          ),
+          detail: error?.userDetail || ""
+        });
+      }
+      return;
+    }
+
     if (message?.type === "START_ORGANIZE") {
       try {
         const result = await startOrganizeJob();
@@ -1067,6 +1085,43 @@ async function finishFastLocalJob(job, localPlan) {
   );
 }
 
+async function checkLocalModelRequirement() {
+  const config = await readStoredConfig();
+  validateConfig(config, { requireModelAccess: false });
+
+  const runtimeBatchSize = getRuntimeBatchSize(config);
+  const runtimeConfig = {
+    ...config,
+    batchSize: runtimeBatchSize
+  };
+  const bookmarkState = await collectBookmarkPlanningState(config);
+  const domainFolderRules = Rules.parseDomainFolderRules(
+    runtimeConfig.domainFolderRules,
+    MANUAL_FOLDER_TITLE
+  );
+  const classificationSignature = Rules.buildClassificationSignature(runtimeConfig, MANUAL_FOLDER_TITLE);
+  const classificationCacheStore = await loadClassificationCacheStore();
+  const classificationCacheBucket = normalizeClassificationCacheBucket(
+    classificationCacheStore[classificationSignature]?.items || {}
+  );
+  const localPlan = buildFastLocalClassificationPlan(
+    bookmarkState.bookmarks,
+    domainFolderRules,
+    classificationCacheBucket
+  );
+  const aiCandidateCount = localPlan.aiCandidates.length;
+
+  return {
+    ok: true,
+    needsModel: aiCandidateCount > 0,
+    canFinishWithoutModel: aiCandidateCount === 0,
+    requiresBroadHostAccess: shouldCheckDeadLinks(runtimeConfig),
+    total: bookmarkState.bookmarks.length,
+    aiCandidateCount,
+    protectedRootCount: bookmarkState.protectedRootFolderIds.length
+  };
+}
+
 function updateClassificationCacheBucket(cacheBucket, bookmarks, normalizedResults) {
   const nextBucket = {
     ...(cacheBucket && typeof cacheBucket === "object" ? cacheBucket : {})
@@ -1117,9 +1172,8 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
   }
 
   const config = await readStoredConfig();
-  validateConfig(config);
+  validateConfig(config, { requireModelAccess: false });
   await assertOrganizeHostAccess(runContext.trigger, config);
-  await assertApiOriginAccess(config.baseUrl);
   const runtimeBatchSize = getRuntimeBatchSize(config);
   const runtimeConfig = {
     ...config,
@@ -1195,6 +1249,11 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
   const startupAiCandidateCount = startupLocalPlan.aiCandidates.length;
   let taxonomyTopFolders = buildTaxonomyFallbackTopFolders();
   let taxonomyPlanningNote = "";
+
+  if (startupAiCandidateCount) {
+    validateConfig(config, { requireModelAccess: true });
+    await assertApiOriginAccess(config.baseUrl);
+  }
 
   const planTaxonomy = shouldPlanGlobalTaxonomy(runtimeConfig);
   if (startupAiCandidateCount && planTaxonomy) {
@@ -2416,7 +2475,8 @@ async function finishJob(phase, message, job, overrides = {}) {
   });
 }
 
-function validateConfig(config) {
+function validateConfig(config, options = {}) {
+  const requireModelAccess = options.requireModelAccess !== false;
   const defaults = getProviderDefaults(config.provider);
 
   if (!config.baseUrl) {
@@ -2444,7 +2504,7 @@ function validateConfig(config) {
     );
   }
 
-  if (!defaults.apiKeyOptional && !config.apiKey) {
+  if (requireModelAccess && !defaults.apiKeyOptional && !config.apiKey) {
     throw new Error(
       ux(
         `${getProviderLabel(config.provider)} 需要 API Key。`,

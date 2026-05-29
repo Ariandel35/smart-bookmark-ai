@@ -49,13 +49,13 @@ Preview first, then use AI to clean obvious duplicates and optionally check dead
 ### Detailed description
 Marko is a bookmark cleanup tool for people with large, messy bookmark libraries. The goal is not to create more folders. The goal is to make websites easier to find later.
 
-When you click Preview, the extension generates a plan before changing anything. When you apply that plan, Marko reuses the saved preview, creates a local snapshot backup, and rebuilds locally without calling the model again. Fast mode skips dead-link checks and the separate taxonomy-planning request for quicker previews and fewer permissions; if rules and cached classifications cover every bookmark, it finishes locally without model calls or batch scheduling. If you choose Complete mode, the preview also checks clearly dead links and asks the model for a global folder plan first. Marko removes obvious duplicates, uses your chosen model provider to classify bookmarks in batches only when needed, and rebuilds the final result directly at the bookmark root in one pass.
+When you click Preview, the extension generates a plan before changing anything. When you apply that plan, Marko reuses the saved preview, creates a local snapshot backup, and rebuilds locally without calling the model again. Fast mode skips dead-link checks and the separate taxonomy-planning request for quicker previews and fewer permissions; if rules and cached classifications cover every bookmark, it finishes locally without model calls, batch scheduling, or model endpoint access. If you choose Complete mode, the preview also checks clearly dead links and asks the model for a global folder plan first when uncached bookmarks need classification. Marko removes obvious duplicates, uses your chosen model provider to classify bookmarks in batches only when needed, and rebuilds the final result directly at the bookmark root in one pass.
 
 Key features:
 - Works with OpenAI, DeepSeek, Anthropic, Gemini, OpenRouter, Groq, xAI, Moonshot AI, Ollama, and generic OpenAI-compatible endpoints
 - Custom Base URL, API key, model name, and prompt
 - Successful API tests save the current connection settings
-- Fast mode only needs access to your configured model endpoint and skips the extra taxonomy-planning request; Complete mode adds link checks and global planning
+- Fast mode asks for model endpoint access only when uncached bookmarks need the model; Complete mode adds link checks and global planning
 - Fast local reruns can finish from rules and cached classifications without model calls or batch scheduling
 - Slow providers such as DeepSeek start with a safer runtime batch size, then retry with smaller batches if needed
 - Applying a generated preview reuses the saved plan and rebuilds locally without another model request

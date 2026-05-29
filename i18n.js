@@ -272,11 +272,13 @@ Hard rules:
         "Deleted duplicates and confirmed dead links will leave a traceable log here.",
       setupRequiredTitle: "Set up your model",
       setupRequiredDesc:
-        "Provider, Base URL, model, and API key are required before preview.",
+        "Provider, Base URL, and model are required before preview.",
       setupMissingProvider: "Choose a provider first.",
       setupMissingBaseUrl: "Base URL is required before preview.",
       setupMissingModel: "Model is required before preview.",
       setupMissingApiKey: "API key is required for this provider.",
+      modelAccessRequiredForUncachedPreview:
+        "Some bookmarks are not covered by local rules or cached classifications, so Marko needs model access before it can preview them.",
       applyConfirmTitle: "Apply saved preview plan",
       applyConfirmDesc:
         "Marko will create a fresh backup, verify the preview is still current, then rebuild locally without calling the model again.",
@@ -284,7 +286,7 @@ Hard rules:
       applyConfirmSecondary: "Not now",
       hostPermissionRequiredTitle: "Access is required before organizing.",
       hostPermissionRequiredDetail:
-        "Fast mode needs access to your configured model endpoint. Complete mode also needs website access for link checks.",
+        "Marko asks for model endpoint access only when a model call is needed. Complete mode also needs website access for link checks.",
       startJobFailed: "Failed to start the task.",
       createBackupFailed: "Failed to create backup.",
       previewStartFailed: "Failed to generate preview.",
@@ -497,18 +499,20 @@ Hard rules:
       noDeletedTitle: "暂无删除记录",
       noDeletedDesc: "自动删除重复书签或确认失效书签后，这里会留下可追溯的记录。",
       setupRequiredTitle: "先配置模型",
-      setupRequiredDesc: "预览前需要 Provider、Base URL、Model 和 API Key。",
+      setupRequiredDesc: "预览前需要 Provider、Base URL 和 Model。",
       setupMissingProvider: "请先选择 Provider。",
       setupMissingBaseUrl: "预览前需要填写 Base URL。",
       setupMissingModel: "预览前需要填写 Model。",
       setupMissingApiKey: "当前 Provider 需要 API Key。",
+      modelAccessRequiredForUncachedPreview:
+        "部分书签没有命中本地规则或分类缓存，Marko 需要先访问模型才能生成预览。",
       applyConfirmTitle: "应用已保存的预览方案",
       applyConfirmDesc: "Marko 会先创建新备份，确认预览仍然有效，然后直接本地重建，不会再次请求模型。",
       applyConfirmPrimary: "备份并应用",
       applyConfirmSecondary: "暂不应用",
       hostPermissionRequiredTitle: "缺少访问授权，无法开始整理。",
       hostPermissionRequiredDetail:
-        "快速模式需要访问你配置的模型接口；完整模式还需要网站访问权限来检测链接。",
+        "只有确实需要调用模型时，Marko 才会请求模型接口访问；完整模式还需要网站访问权限来检测链接。",
       startJobFailed: "启动任务失败。",
       createBackupFailed: "创建备份失败。",
       previewStartFailed: "生成预览失败。",

@@ -155,8 +155,16 @@ function getLogKindLabel(kind) {
   );
 }
 
-function hasRunnableConfig(config) {
+function hasPreviewAttemptConfig(config) {
   if (!config?.provider || !config?.baseUrl || !config?.model) {
+    return false;
+  }
+
+  return true;
+}
+
+function hasModelAccessConfig(config) {
+  if (!hasPreviewAttemptConfig(config)) {
     return false;
   }
 
@@ -191,7 +199,7 @@ function isPreviewReady() {
 
 function syncActionButtons() {
   const isRunning = currentStatus?.phase === "running";
-  const isConfigured = hasRunnableConfig(currentConfig);
+  const isConfigured = hasPreviewAttemptConfig(currentConfig);
   startButton.disabled = isRunning;
   backupButton.disabled = isRunning;
   cancelButton.disabled = !isRunning;
@@ -577,7 +585,7 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
 }
 
 function renderMainDetail() {
-  if (!hasRunnableConfig(currentConfig)) {
+  if (!hasPreviewAttemptConfig(currentConfig)) {
     return createSetupRequiredState();
   }
 
@@ -704,7 +712,28 @@ async function startJob() {
 async function startPreview() {
   startButton.disabled = true;
   backupButton.disabled = true;
-  const granted = await ensureOrganizeAccess(currentConfig);
+  const requirement = await chrome.runtime.sendMessage({ type: "CHECK_LOCAL_MODEL_REQUIREMENT" });
+
+  if (!requirement?.ok) {
+    await refreshAll();
+    renderResponseError(requirement, t("previewStartFailed"));
+    return;
+  }
+
+  if (requirement.needsModel && !hasModelAccessConfig(currentConfig)) {
+    await refreshAll();
+    renderResponseError(
+      {
+        error: t("setupMissingApiKey"),
+        detail: t("modelAccessRequiredForUncachedPreview")
+      },
+      t("setupMissingApiKey")
+    );
+    return;
+  }
+
+  const shouldRequestAccess = requirement.needsModel || requirement.requiresBroadHostAccess;
+  const granted = shouldRequestAccess ? await ensureOrganizeAccess(currentConfig) : true;
 
   if (!granted) {
     await refreshAll();
@@ -727,7 +756,7 @@ async function startPreview() {
 }
 
 async function handlePrimaryAction() {
-  if (!hasRunnableConfig(currentConfig)) {
+  if (!hasPreviewAttemptConfig(currentConfig)) {
     chrome.runtime.openOptionsPage();
     return;
   }
