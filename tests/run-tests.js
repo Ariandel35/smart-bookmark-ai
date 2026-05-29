@@ -296,6 +296,54 @@ function testStaticExtensionAssets() {
   }
 }
 
+function testExtensionPackageFileList() {
+  const manifest = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "manifest.json"), "utf8"));
+  const packageList = JSON.parse(
+    fs.readFileSync(path.join(ROOT_DIR, "webstore/EXTENSION_PACKAGE_FILES.json"), "utf8")
+  );
+  const packageFiles = packageList.packageFiles || [];
+  const packageFileSet = new Set(packageFiles);
+
+  assert.equal(packageFiles.length, packageFileSet.size, "Package file list contains duplicates");
+  assert.ok(packageFileSet.has("manifest.json"), "Package file list must include manifest.json");
+
+  const requiredFiles = new Set([
+    manifest.background?.service_worker,
+    manifest.action?.default_popup,
+    manifest.options_page,
+    ...Object.values(manifest.icons || {}),
+    ...Object.values(manifest.action?.default_icon || {}),
+    "_locales/en/messages.json",
+    "_locales/zh_CN/messages.json"
+  ]);
+
+  for (const htmlFile of ["popup.html", "options.html", "privacy.html"]) {
+    const source = fs.readFileSync(path.join(ROOT_DIR, htmlFile), "utf8");
+    for (const match of source.matchAll(/<(?:script|link)[^>]+(?:src|href)="([^"]+)"/g)) {
+      const ref = match[1];
+      if (!/^https?:/.test(ref)) {
+        requiredFiles.add(ref);
+      }
+    }
+  }
+
+  for (const file of packageFiles) {
+    assert.equal(fs.existsSync(path.join(ROOT_DIR, file)), true, `Package file is missing: ${file}`);
+    assert.equal(/^(\.|\.\.)($|\/)/.test(file), false, `Package file path is not normalized: ${file}`);
+    assert.equal(/^(docs|tests|webstore)\//.test(file), false, `Package file should not include release-only material: ${file}`);
+    assert.equal(/(^|\/)(README|CHANGELOG|CONTRIBUTING|SUPPORT|SECURITY|LICENSE)\.md$/i.test(file), false, `Package file should not include repo docs: ${file}`);
+  }
+
+  for (const requiredFile of requiredFiles) {
+    assert.ok(requiredFile, "Package required file cannot be empty");
+    assert.equal(
+      packageFileSet.has(requiredFile),
+      true,
+      `Package file list is missing required runtime file: ${requiredFile}`
+    );
+  }
+}
+
 function testSpeedModeSurface() {
   const optionsHtml = fs.readFileSync(path.join(ROOT_DIR, "options.html"), "utf8");
   assert.match(optionsHtml, /id="linkCheckMode"/);
@@ -737,6 +785,7 @@ function main() {
   testCacheUtils();
   testHtmlRelationshipIntegrity();
   testStaticExtensionAssets();
+  testExtensionPackageFileList();
   testSpeedModeSurface();
   testPreviewApplySurface();
   testSlowModelResilienceSurface();

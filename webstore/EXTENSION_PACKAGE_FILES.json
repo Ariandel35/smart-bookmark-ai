@@ -1,0 +1,23 @@
+{
+  "packageFiles": [
+    "manifest.json",
+    "background.js",
+    "cache-utils.js",
+    "i18n.js",
+    "json-utils.js",
+    "providers.js",
+    "rules.js",
+    "styles.css",
+    "popup.html",
+    "popup.js",
+    "options.html",
+    "options.js",
+    "privacy.html",
+    "_locales/en/messages.json",
+    "_locales/zh_CN/messages.json",
+    "icons/icon-16.png",
+    "icons/icon-32.png",
+    "icons/icon-48.png",
+    "icons/icon-128.png"
+  ]
+}
