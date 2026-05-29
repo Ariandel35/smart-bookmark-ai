@@ -376,6 +376,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   const optionsHtml = fs.readFileSync(path.join(ROOT_DIR, "options.html"), "utf8");
   assert.match(optionsHtml, /id="settingsActionStatus"/);
   assert.match(optionsHtml, /id="backupActionStatus"/);
+  assert.match(optionsHtml, /id="settingsActionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
+  assert.match(optionsHtml, /id="backupActionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.match(optionsHtml, /id="saveButton"/);
 
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");

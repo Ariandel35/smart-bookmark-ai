@@ -94,7 +94,13 @@
 
         <section class="content-stack">
           <form id="settingsForm" class="form-grid">
-            <div class="status-text settings-action-status" id="settingsActionStatus" hidden></div>
+            <div
+              class="status-text settings-action-status"
+              id="settingsActionStatus"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></div>
 
             <section
               class="panel settings-section is-active"
@@ -318,7 +324,13 @@
                 </div>
 
                 <div class="form-grid">
-                  <div class="status-text" id="backupActionStatus" hidden></div>
+                  <div
+                    class="status-text"
+                    id="backupActionStatus"
+                    role="status"
+                    aria-live="polite"
+                    hidden
+                  ></div>
                   <div class="backup-list" id="backupList">
                     <div class="empty-state" data-i18n="backupLoading">Loading</div>
                   </div>
