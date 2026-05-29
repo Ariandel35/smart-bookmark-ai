@@ -2525,6 +2525,7 @@ async function applyPreviewPlan() {
 }
 
 async function rejectApplyPreviewPlan(error, detail) {
+  await chrome.storage.local.remove(STORAGE_KEYS.previewPlan);
   await updateStatus({
     phase: "error",
     message: error,

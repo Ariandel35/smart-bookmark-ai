@@ -1,5 +1,6 @@
 const CONFIG_KEY = "smartBookmarkConfig";
 const STATUS_KEY = "smartBookmarkJobStatus";
+const PREVIEW_PLAN_KEY = "smartBookmarkPreviewPlan";
 const MANAGED_FOLDER_IDS_KEY = "smartBookmarkManagedFolderIds";
 const MANAGED_ROOT_BOOKMARK_IDS_KEY = "smartBookmarkManagedRootBookmarkIds";
 const HOST_ACCESS_ORIGINS = ["https://*/*", "http://*/*"];
@@ -28,6 +29,7 @@ const popupActionStatus = document.getElementById("popupActionStatus");
 let refreshTimer = null;
 let currentConfig = null;
 let currentStatus = null;
+let currentPreviewPlan = null;
 let currentFolderViews = [];
 let detailRequestVersion = 0;
 let applyConfirmationVisible = false;
@@ -233,6 +235,20 @@ function isPreviewReady() {
   return currentStatus?.phase === "preview" && Number(currentStatus?.total || 0) > 0;
 }
 
+function isSavedPreviewPlanUsable(previewPlan) {
+  return Boolean(
+    previewPlan &&
+      previewPlan.version === 1 &&
+      typeof previewPlan.configSignature === "string" &&
+      typeof previewPlan.sourceBookmarkSignature === "string" &&
+      Array.isArray(previewPlan.plannedBookmarks)
+  );
+}
+
+function canApplyPreviewPlan() {
+  return isPreviewReady() || (currentStatus?.phase === "error" && isSavedPreviewPlanUsable(currentPreviewPlan));
+}
+
 function syncActionButtons() {
   const isRunning = currentStatus?.phase === "running";
   const isCancelling = Boolean(currentStatus?.cancelRequested);
@@ -247,7 +263,7 @@ function syncActionButtons() {
   cancelButton.textContent = isCancelling ? t("cancelRequestedButton") : t("cancelButton");
   startButton.textContent = !isConfigured
     ? t("setupButton")
-    : isPreviewReady()
+    : canApplyPreviewPlan()
       ? t("confirmOrganizeButton")
       : t("previewButton");
 }
@@ -270,7 +286,7 @@ function renderConfig(_config) {
 
 function renderStatus(status) {
   currentStatus = status || null;
-  if (!isPreviewReady()) {
+  if (!canApplyPreviewPlan()) {
     applyConfirmationVisible = false;
   }
 
@@ -806,8 +822,9 @@ async function refreshDetailPanel() {
 }
 
 async function refreshAll() {
-  const stored = await chrome.storage.local.get([CONFIG_KEY, STATUS_KEY]);
+  const stored = await chrome.storage.local.get([CONFIG_KEY, STATUS_KEY, PREVIEW_PLAN_KEY]);
   currentConfig = stored[CONFIG_KEY] || null;
+  currentPreviewPlan = stored[PREVIEW_PLAN_KEY] || null;
   renderConfig(currentConfig);
   renderStatus(stored[STATUS_KEY]);
   await refreshDetailPanel();
@@ -894,7 +911,7 @@ async function handlePrimaryAction() {
     return;
   }
 
-  if (isPreviewReady()) {
+  if (canApplyPreviewPlan()) {
     applyConfirmationVisible = true;
     renderDetailPanelContent();
     focusApplyConfirmationPrimary();
@@ -979,7 +996,7 @@ startButton.addEventListener("click", () => {
     renderStatus({
       ...(currentStatus || {}),
       phase: "error",
-      message: isPreviewReady() ? t("startJobException") : t("previewStartException")
+      message: canApplyPreviewPlan() ? t("startJobException") : t("previewStartException")
     });
     renderDetailPanelContent();
   });

@@ -489,6 +489,7 @@ function testPreviewApplySurface() {
   assert.match(backgroundSource, /onCreated\?\.addListener\(invalidatePreviewAfterBookmarkChange\)/);
   assert.match(backgroundSource, /onChildrenReordered\?\.addListener\(invalidatePreviewAfterBookmarkChange\)/);
   assert.match(backgroundSource, /rejectApplyPreviewPlan/);
+  assert.match(backgroundSource, /async function rejectApplyPreviewPlan\(error, detail\) \{\n  await chrome\.storage\.local\.remove\(STORAGE_KEYS\.previewPlan\)/);
   assert.match(backgroundSource, /Preview plans are tied to the provider/);
   assert.doesNotMatch(backgroundSource, /Preview plans are tied to the provider, batch size/);
   assert.match(backgroundSource, /Marko detected that the bookmark set no longer matches the preview/);
@@ -502,6 +503,11 @@ function testPreviewApplySurface() {
 
   const popupSource = fs.readFileSync(path.join(ROOT_DIR, "popup.js"), "utf8");
   assert.match(popupSource, /APPLY_PREVIEW_PLAN/);
+  assert.match(popupSource, /PREVIEW_PLAN_KEY = "smartBookmarkPreviewPlan"/);
+  assert.match(popupSource, /currentPreviewPlan/);
+  assert.match(popupSource, /isSavedPreviewPlanUsable/);
+  assert.match(popupSource, /function canApplyPreviewPlan/);
+  assert.match(popupSource, /isPreviewReady\(\) \|\| \(currentStatus\?\.phase === "error" && isSavedPreviewPlanUsable\(currentPreviewPlan\)\)/);
   assert.match(popupSource, /applyConfirmationVisible/);
   assert.match(popupSource, /popupActionInFlight/);
   assert.match(popupSource, /setPopupActionInFlight/);
@@ -526,6 +532,8 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /const isCancelling = Boolean\(currentStatus\?\.cancelRequested\)/);
   assert.match(popupSource, /cancelButton\.disabled = popupActionInFlight \|\| !isRunning \|\| isCancelling/);
   assert.match(popupSource, /cancelButton\.textContent = isCancelling \? t\("cancelRequestedButton"\) : t\("cancelButton"\)/);
+  assert.match(popupSource, /startButton\.textContent = !isConfigured[\s\S]*canApplyPreviewPlan\(\)[\s\S]*t\("confirmOrganizeButton"\)/);
+  assert.match(popupSource, /if \(!canApplyPreviewPlan\(\)\) \{\n    applyConfirmationVisible = false;/);
   assert.match(popupSource, /createApplyConfirmationState/);
   assert.match(popupSource, /wrapper\.id = "applyConfirmation"/);
   assert.match(popupSource, /wrapper\.setAttribute\("aria-labelledby", "applyConfirmTitle"\)/);
@@ -546,6 +554,7 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /hasModelAccessConfig/);
   assert.match(popupSource, /CHECK_LOCAL_MODEL_REQUIREMENT/);
   assert.match(popupSource, /localRequirementCheckId: requirement\.checkId \|\| ""/);
+  assert.match(popupSource, /chrome\.storage\.local\.get\(\[CONFIG_KEY, STATUS_KEY, PREVIEW_PLAN_KEY\]\)/);
   assert.match(popupSource, /requirement\.needsModel \|\| requirement\.requiresBroadHostAccess/);
   assert.match(popupSource, /modelAccessRequiredForUncachedPreview/);
   assert.match(popupSource, /async function createManualBackup\(\) \{\n  setPopupActionInFlight\(true, t\("popupCreatingBackupStatus"\)\);/);

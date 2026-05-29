@@ -6,6 +6,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 
 - 弹窗改为“预览整理 -> 应用方案”的主流程，避免默认按钮含义不清
 - 应用已生成的预览方案时会复用保存的方案，本地重建，不会再次请求模型
+- 如果应用预览时遇到可恢复失败，弹窗会保留应用入口，修复后可直接重试保存方案
 - 配置不完整时，弹窗主按钮会直接进入设置页
 - DeepSeek 等慢响应模型会在请求前再次拆分大批量，运行批次最多 10 条、单个模型请求最多 5 条，并使用受控小并发、更短的请求超时、更短的内置请求提示和更紧的输出预算，超时后还会继续拆到 1 条小批次重试
 - 新增快速/完整速度模式：快速模式跳过失效链接检测和额外目录规划请求，完整模式保留链接检查和全局规划
@@ -28,6 +29,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 
 - The popup now uses a clear `Preview` -> `Apply Plan` primary flow
 - Applying a ready preview reuses the saved plan and rebuilds locally without another model request
+- If applying a saved preview hits a recoverable failure, the popup keeps the apply path available so the saved plan can be retried
 - Incomplete setup routes directly from the popup to settings
 - Slow providers such as DeepSeek re-split large batches before each request, cap runtime batches at 10 bookmarks, cap each model request at 5 bookmarks, use limited mini-request concurrency, shorter request timeouts, a shorter built-in request prompt, and a tighter output budget, then still retry down to one-bookmark mini-batches after timeouts
 - Added Fast and Complete speed modes: Fast skips dead-link checks and the extra taxonomy-planning request, while Complete keeps link checks and global planning
