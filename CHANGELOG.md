@@ -43,6 +43,7 @@
 - Added a machine-readable extension package file list and tests to keep store upload packages limited to runtime files
 - Added a dependency-free webstore package builder that creates the upload zip from the runtime file list
 - Release tests now execute the webstore package builder and verify the generated ZIP entries match the runtime file list
+- Default webstore package output is now explicitly ignored so generated upload ZIPs are not accidentally committed
 - Settings validation errors now move focus to the affected field and mark it for assistive technologies
 - Invalid settings fields now show a visible error border and soft error background
 - Invalid settings action buttons now show the same visible error treatment as invalid fields

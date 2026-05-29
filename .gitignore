@@ -4,6 +4,7 @@ Thumbs.db
 *.crx
 *.pem
 *.log
+webstore/dist/
 node_modules/
 .idea/
 .vscode/

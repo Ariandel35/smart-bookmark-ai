@@ -328,9 +328,12 @@ function testExtensionPackageFileList() {
     path.join(ROOT_DIR, "webstore/build_extension_package.mjs"),
     "utf8"
   );
+  const gitignoreSource = fs.readFileSync(path.join(ROOT_DIR, ".gitignore"), "utf8");
   assert.match(buildScriptSource, /EXTENSION_PACKAGE_FILES\.json/);
   assert.match(buildScriptSource, /buildZip/);
   assert.match(buildScriptSource, /--out/);
+  assert.match(gitignoreSource, /^webstore\/dist\/$/m);
+  assert.match(gitignoreSource, /^\*\.zip$/m);
 
   const packageList = JSON.parse(
     fs.readFileSync(path.join(ROOT_DIR, "webstore/EXTENSION_PACKAGE_FILES.json"), "utf8")
