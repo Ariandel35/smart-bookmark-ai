@@ -54,6 +54,7 @@ let pendingBackupAction = null;
 let backupActionInFlight = false;
 let settingsActionInFlight = false;
 let hostAccessRefreshVersion = 0;
+let hostAccessCheckingInFlight = false;
 
 I18N.applyDocument(document);
 renderProviderOptions();
@@ -388,7 +389,7 @@ function updateSettingsOperationControls() {
   saveButton.disabled = settingsActionInFlight;
   testApiButton.disabled = settingsActionInFlight;
   resetButton.disabled = settingsActionInFlight;
-  grantAccessButton.disabled = settingsActionInFlight || granted;
+  grantAccessButton.disabled = settingsActionInFlight || granted || hostAccessCheckingInFlight;
 }
 
 function setSettingsActionInFlight(isInFlight) {
@@ -500,6 +501,7 @@ async function refreshHostAccessStatus() {
   const refreshVersion = ++hostAccessRefreshVersion;
   const config = collectFormData();
   if (!config.baseUrl) {
+    hostAccessCheckingInFlight = false;
     setHostAccessStatus(t("baseUrlRequired"), false);
     grantAccessButton.textContent = t("hostAccessButton");
     grantAccessButton.dataset.granted = "false";
@@ -508,6 +510,7 @@ async function refreshHostAccessStatus() {
   }
 
   const requiresBroadAccess = shouldRequireBroadHostAccess(config);
+  hostAccessCheckingInFlight = true;
   setHostAccessStatus(t("hostAccessChecking"), true);
   grantAccessButton.textContent = t("hostAccessButton");
   grantAccessButton.dataset.granted = "false";
@@ -521,6 +524,7 @@ async function refreshHostAccessStatus() {
     return;
   }
 
+  hostAccessCheckingInFlight = false;
   setHostAccessStatus(
     granted ? "" : requiresBroadAccess ? t("hostAccessMissing") : t("currentApiAccessMissing"),
     granted
