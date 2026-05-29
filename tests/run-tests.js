@@ -200,17 +200,27 @@ function testSlowModelResilienceSurface() {
 
 function testOptionsBackupInlineConfirmationSurface() {
   const optionsHtml = fs.readFileSync(path.join(ROOT_DIR, "options.html"), "utf8");
+  assert.match(optionsHtml, /id="settingsActionStatus"/);
   assert.match(optionsHtml, /id="backupActionStatus"/);
 
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
+  assert.match(optionsSource, /showSettingsIssue/);
+  assert.match(optionsSource, /setSettingsActionStatus/);
+  assert.match(optionsSource, /parseIntegerInput/);
+  assert.match(optionsSource, /batchSize: parseIntegerInput\(batchSizeInput\.value\)/);
+  assert.match(optionsSource, /autoOrganizeIntervalHours: parseIntegerInput\(autoOrganizeIntervalInput\.value\)/);
+  assert.match(optionsSource, /if \(!config\.baseUrl\) \{\n    setHostAccessStatus/);
   assert.match(optionsSource, /pendingBackupAction/);
   assert.match(optionsSource, /createBackupInlineConfirm/);
+  assert.doesNotMatch(optionsSource, /window\.alert/);
   assert.doesNotMatch(optionsSource, /window\.confirm/);
 
   const stylesSource = fs.readFileSync(path.join(ROOT_DIR, "styles.css"), "utf8");
+  assert.match(stylesSource, /\.settings-action-status/);
   assert.match(stylesSource, /\.backup-confirm/);
 
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
+  assert.match(i18nSource, /settingsSavedStatus/);
   assert.match(i18nSource, /backupRestoreInlineConfirm/);
   assert.match(i18nSource, /backupDeleteInlineConfirm/);
   assert.doesNotMatch(i18nSource, /backupRestoreConfirm/);

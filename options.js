@@ -30,6 +30,7 @@ const domainFolderRulesInput = document.getElementById("domainFolderRules");
 const customPromptInput = document.getElementById("customPrompt");
 const apiTestStatus = document.getElementById("apiTestStatus");
 const hostAccessStatus = document.getElementById("hostAccessStatus");
+const settingsActionStatus = document.getElementById("settingsActionStatus");
 const saveBadge = document.getElementById("saveBadge");
 const testApiButton = document.getElementById("testApiButton");
 const grantAccessButton = document.getElementById("grantAccessButton");
@@ -360,6 +361,16 @@ function setBackupActionStatus(message = "", isError = false) {
   backupActionStatus.classList.toggle("is-error", Boolean(message) && isError);
 }
 
+function setSettingsActionStatus(message = "", isError = false) {
+  settingsActionStatus.textContent = message;
+  settingsActionStatus.hidden = !message;
+  settingsActionStatus.classList.toggle("is-error", Boolean(message) && isError);
+}
+
+function clearSettingsActionStatus() {
+  setSettingsActionStatus("");
+}
+
 function clearApiTestStatus() {
   setApiTestStatus("");
 }
@@ -370,12 +381,12 @@ function setHostAccessStatus(message = "", isGranted = false) {
   hostAccessStatus.classList.toggle("is-error", Boolean(message) && !isGranted);
 }
 
-function showAlert(message, sectionId = "") {
+function showSettingsIssue(message, sectionId = "") {
   if (sectionId) {
     setActiveSection(sectionId);
   }
 
-  window.alert(message);
+  setSettingsActionStatus(message, true);
 }
 
 function formatDate(dateString) {
@@ -466,6 +477,13 @@ async function ensureOriginAccess(rawUrl) {
 
 async function refreshHostAccessStatus() {
   const config = collectFormData();
+  if (!config.baseUrl) {
+    setHostAccessStatus(t("baseUrlRequired"), false);
+    grantAccessButton.textContent = t("hostAccessButton");
+    grantAccessButton.disabled = false;
+    return;
+  }
+
   const requiresBroadAccess = shouldRequireBroadHostAccess(config);
   const granted = requiresBroadAccess
     ? await hasBroadHostAccess()
@@ -497,22 +515,30 @@ function populateForm(config) {
 
 function collectFormData() {
   const provider = providerSelect.value;
-  const defaults = getDefaults(provider);
 
   return {
     provider,
-    baseUrl: baseUrlInput.value.trim() || defaults.baseUrl,
+    baseUrl: baseUrlInput.value.trim(),
     apiKey: apiKeyInput.value.trim(),
-    model: modelInput.value.trim() || defaults.model,
-    batchSize: normalizeBatchSize(batchSizeInput.value),
+    model: modelInput.value.trim(),
+    batchSize: parseIntegerInput(batchSizeInput.value),
     linkCheckMode: normalizeLinkCheckMode(linkCheckModeSelect.value),
     autoOrganizeEnabled: autoOrganizeEnabledInput.value === "true",
-    autoOrganizeIntervalHours: normalizeAutoInterval(autoOrganizeIntervalInput.value),
+    autoOrganizeIntervalHours: parseIntegerInput(autoOrganizeIntervalInput.value),
     whitelistDomains: serializeWhitelistDomains(),
     protectedRootFolders: protectedRootFoldersInput.value.trim(),
     domainFolderRules: domainFolderRulesInput.value.trim(),
     customPrompt: customPromptInput.value.trim() || DEFAULT_PROMPT
   };
+}
+
+function parseIntegerInput(rawValue) {
+  const value = String(rawValue ?? "").trim();
+  if (!/^-?\d+$/.test(value)) {
+    return Number.NaN;
+  }
+
+  return Number.parseInt(value, 10);
 }
 
 function normalizeBatchSize(rawValue, fallback = DEFAULT_BATCH_SIZE) {
@@ -582,6 +608,7 @@ function setActiveSection(sectionId, updateHash = true) {
 
 function markPending() {
   setSaveBadge(t("saveBadgeUnsaved"), "warm");
+  clearSettingsActionStatus();
 }
 
 function initializeNavigation() {
@@ -753,17 +780,17 @@ async function saveConfig(event) {
   const defaults = getDefaults(config.provider);
 
   if (!config.baseUrl) {
-    showAlert(t("baseUrlRequired"), "connection");
+    showSettingsIssue(t("baseUrlRequired"), "connection");
     return;
   }
 
   if (!config.model) {
-    showAlert(t("modelRequired"), "connection");
+    showSettingsIssue(t("modelRequired"), "connection");
     return;
   }
 
   if (!Number.isInteger(config.batchSize) || config.batchSize < 5 || config.batchSize > 100) {
-    showAlert(t("batchSizeValidation"), "organize");
+    showSettingsIssue(t("batchSizeValidation"), "organize");
     return;
   }
 
@@ -772,12 +799,12 @@ async function saveConfig(event) {
     config.autoOrganizeIntervalHours < 1 ||
     config.autoOrganizeIntervalHours > 168
   ) {
-    showAlert(t("autoIntervalValidation"), "automation");
+    showSettingsIssue(t("autoIntervalValidation"), "automation");
     return;
   }
 
   if (!defaults.apiKeyOptional && !config.apiKey) {
-    showAlert(t("requiredApiKey", { provider: defaults.label }), "connection");
+    showSettingsIssue(t("requiredApiKey", { provider: defaults.label }), "connection");
     return;
   }
 
@@ -787,7 +814,7 @@ async function saveConfig(event) {
       : await ensureOriginAccess(config.baseUrl);
     await refreshHostAccessStatus();
     if (!granted) {
-      showAlert(t("autoOrganizePermission"), "automation");
+      showSettingsIssue(t("autoOrganizePermission"), "automation");
       return;
     }
   }
@@ -798,6 +825,7 @@ async function saveConfig(event) {
 async function saveConfigData(config) {
   await chrome.storage.local.set({ [STORAGE_KEY]: config });
   setSaveBadge(t("saveBadgeSaved"), "success");
+  setSettingsActionStatus(t("settingsSavedStatus"));
 }
 
 async function testApiConnection() {
@@ -951,17 +979,24 @@ function resetCurrentProviderDefaults() {
   populateForm(config);
   setActiveSection("connection");
   clearApiTestStatus();
+  clearSettingsActionStatus();
   setSaveBadge(t("saveBadgeUnsaved"), "warm");
 }
 
 async function requestHostAccess() {
   const config = collectFormData();
+  if (!config.baseUrl) {
+    showSettingsIssue(t("baseUrlRequired"), "connection");
+    await refreshHostAccessStatus();
+    return;
+  }
+
   const granted = shouldRequireBroadHostAccess(config)
     ? await ensureBroadHostAccess()
     : await ensureOriginAccess(config.baseUrl);
   await refreshHostAccessStatus();
   if (!granted) {
-    showAlert(t("hostAccessMissingAlert"), "connection");
+    showSettingsIssue(t("hostAccessMissingAlert"), "connection");
   }
 }
 
@@ -1022,7 +1057,7 @@ testApiButton.addEventListener("click", testApiConnection);
 grantAccessButton.addEventListener("click", () => {
   requestHostAccess().catch((error) => {
     console.error("Failed to request host access:", error);
-    showAlert(t("hostAccessRequestException"), "connection");
+    showSettingsIssue(t("hostAccessRequestException"), "connection");
   });
 });
 resetButton.addEventListener("click", resetCurrentProviderDefaults);

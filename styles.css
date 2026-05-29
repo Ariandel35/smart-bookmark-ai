@@ -665,6 +665,15 @@ textarea {
   color: var(--danger);
 }
 
+.settings-action-status {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.settings-action-status[hidden] {
+  display: none;
+}
+
 .summary-list {
   display: grid;
   gap: 4px;
