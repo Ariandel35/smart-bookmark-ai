@@ -1432,6 +1432,6 @@ loadConfig().catch((error) => {
     console.error("Failed to refresh backup status:", backupError);
   });
   clearApiTestStatus();
-  setSaveBadge(t("saveBadgeFailed"), "danger");
+  setSaveBadge(t("saveBadgeLoadFailed"), "danger");
   setSettingsActionStatus(t("settingsLoadException"), true);
 });

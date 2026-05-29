@@ -587,6 +587,8 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /navEyebrow: "Navigation"/);
   assert.match(i18nSource, /optionsMeta: "Marko \/ 设置"/);
   assert.match(i18nSource, /navEyebrow: "导航"/);
+  assert.match(i18nSource, /saveBadgeFailed: "失败"/);
+  assert.match(i18nSource, /saveBadgeLoadFailed: "读取失败"/);
   assert.match(i18nSource, /connectionTitle: "模型连接"/);
   assert.match(i18nSource, /labelProvider: "服务商"/);
   assert.match(i18nSource, /labelModel: "模型名称"/);
@@ -705,6 +707,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /settingsSavingStatus/);
   assert.match(optionsSource, /settingsLoadException/);
   assert.match(optionsSource, /settingsSaveException/);
+  assert.match(optionsSource, /setSaveBadge\(t\("saveBadgeLoadFailed"\), "danger"\)/);
   assert.match(optionsSource, /console\.error\("Failed to save settings:"/);
   assert.match(optionsSource, /console\.error\("Failed to save settings after API test:"/);
   assert.match(optionsSource, /apiTestSaveFailed/);
