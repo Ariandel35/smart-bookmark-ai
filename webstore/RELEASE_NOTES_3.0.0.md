@@ -8,7 +8,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 应用已生成的预览方案时会复用保存的方案，本地重建，不会再次请求模型
 - 如果应用预览时遇到可恢复失败，弹窗会保留应用入口，修复后可直接重试保存方案
 - 配置不完整时，弹窗主按钮会直接进入设置页
-- DeepSeek 和 DeepSeek 兼容接口会跳过单独目录规划请求，在请求前再次拆分大批量，运行批次最多 12 条、单个模型请求最多 4 条，并最多 3 个小请求并发处理；如果 8 秒无首包或 18 秒未完整返回，本轮会停止等待模型，改用本地规则、缓存、内置规则和待手动分类兜底完成
+- DeepSeek 和 DeepSeek 兼容接口会跳过单独目录规划请求，在请求前再次拆分大批量，运行批次最多 9 条、单个模型请求最多 3 条，并最多 3 个小请求并发处理；如果 6 秒无首包或 14 秒未完整返回，本轮会停止等待模型，改用本地规则、缓存、内置规则和待手动分类兜底完成
 - 完整模式也会先应用确定性的内置域名规则，常见网站不再占用模型分类请求
 - 新增快速/平衡/完整速度模式：快速模式跳过失效链接检测、额外目录规划请求和模型等待；平衡模式跳过失效链接检测但保留 AI 分类；完整模式保留链接检查和 AI 分类，并按服务商速度决定是否额外规划目录
 - 快速模式会直接本地完成预览；规则和缓存无法确定的书签会进入待手动分类，不再因为慢模型排队而卡住
@@ -29,7 +29,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 
 适合商店后台的简短版本：
 
-3.0.0 优化了核心使用路径：先预览，再应用方案。应用预览不会再次跑模型；快速模式默认更快且权限更少，会跳过失效链接检测、单独目录规划和模型等待，未命中本地规则的书签进入待手动分类；平衡模式保留 AI 分类但跳过网站检测；快速自动整理也可不填 API Key 本地运行；设置页使用内联确认和校验提示，API 检测成功后会保存连接配置，完整模式下也会先用内置域名规则减少模型请求。DeepSeek 和 DeepSeek 兼容接口会跳过单独目录规划请求，在请求前再次拆分大批量，运行批次最多 12 条、单请求最多 4 条，并最多 3 个小请求并发处理；如果模型仍然超时，本轮会停止等待模型并改用本地兜底继续完成。
+3.0.0 优化了核心使用路径：先预览，再应用方案。应用预览不会再次跑模型；快速模式默认更快且权限更少，会跳过失效链接检测、单独目录规划和模型等待，未命中本地规则的书签进入待手动分类；平衡模式保留 AI 分类但跳过网站检测；快速自动整理也可不填 API Key 本地运行；设置页使用内联确认和校验提示，API 检测成功后会保存连接配置，完整模式下也会先用内置域名规则减少模型请求。DeepSeek 和 DeepSeek 兼容接口会跳过单独目录规划请求，在请求前再次拆分大批量，运行批次最多 9 条、单请求最多 3 条，并最多 3 个小请求并发处理；如果模型仍然超时，本轮会停止等待模型并改用本地兜底继续完成。
 
 ## English
 
@@ -43,7 +43,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Apply Plan retry is shown only for preview-apply failures, not unrelated error states that merely still have a saved preview
 - Incomplete setup routes directly from the popup to settings
 - Complete mode also applies deterministic built-in domain rules before AI classification, so common sites no longer spend model-request time
-- Slow providers such as DeepSeek and DeepSeek-compatible endpoints skip the separate taxonomy-planning request, re-split large batches before each request, cap runtime batches at 12 bookmarks, cap each model request at 4 bookmarks, and run up to three mini requests at a time; if there is no first response in 8 seconds or no full response in 18 seconds, the run stops waiting for the model and finishes with local rules, cache, built-in rules, and manual review
+- Slow providers such as DeepSeek and DeepSeek-compatible endpoints skip the separate taxonomy-planning request, re-split large batches before each request, cap runtime batches at 9 bookmarks, cap each model request at 3 bookmarks, and run up to three mini requests at a time; if there is no first response in 6 seconds or no full response in 14 seconds, the run stops waiting for the model and finishes with local rules, cache, built-in rules, and manual review
 - Added Fast, Balanced, and Complete speed modes: Fast skips dead-link checks, the extra taxonomy-planning request, and model waiting; Balanced skips dead-link checks but keeps AI classification; Complete keeps link checks and AI classification with provider-aware planning
 - Fast mode now finishes previews locally; bookmarks that custom rules, cache, and built-in domain rules cannot classify go to manual review instead of blocking on a slow model queue
 - Preview checks local rule/cache coverage first; Fast mode does not ask for model endpoint access, and Balanced/Complete ask only when uncached bookmarks need AI classification
@@ -63,4 +63,4 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 
 Short version for store release notes:
 
-3.0.0 streamlines the core workflow: preview first, switch Fast/Balanced/Complete directly in the popup when needed, then apply the plan without a second model run. Fast mode skips dead-link checks, the extra taxonomy-planning request, and model waiting; unmatched bookmarks go to manual review so slow model queues do not block preview. Balanced keeps AI classification without website scans, and Fast automatic organize can run locally without an API key. Complete mode now applies built-in domain rules before AI to reduce model work. Settings use inline confirmations and validation feedback, successful API tests save the connection, and slow providers such as DeepSeek and DeepSeek-compatible endpoints in Complete mode skip the separate taxonomy-planning request, re-split large batches before each request, cap runtime batches at 12 bookmarks, cap each model request at 4 bookmarks, and run up to three mini requests at a time. If the model still times out, the run stops waiting for the model and finishes with local fallback instead of failing the whole flow.
+3.0.0 streamlines the core workflow: preview first, switch Fast/Balanced/Complete directly in the popup when needed, then apply the plan without a second model run. Fast mode skips dead-link checks, the extra taxonomy-planning request, and model waiting; unmatched bookmarks go to manual review so slow model queues do not block preview. Balanced keeps AI classification without website scans, and Fast automatic organize can run locally without an API key. Complete mode now applies built-in domain rules before AI to reduce model work. Settings use inline confirmations and validation feedback, successful API tests save the connection, and slow providers such as DeepSeek and DeepSeek-compatible endpoints in Complete mode skip the separate taxonomy-planning request, re-split large batches before each request, cap runtime batches at 9 bookmarks, cap each model request at 3 bookmarks, and run up to three mini requests at a time. If the model still times out, the run stops waiting for the model and finishes with local fallback instead of failing the whole flow.

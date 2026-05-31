@@ -31,11 +31,13 @@ const DEFAULT_BATCH_SIZE = 50;
 const MIN_BATCH_SIZE = 5;
 const MIN_AUTO_RETRY_BATCH_SIZE = 1;
 const MAX_AUTO_RETRY_BATCH_SIZE = 20;
+const DEEPSEEK_RUNTIME_BATCH_SIZE = 9;
+const DEEPSEEK_MODEL_REQUEST_BATCH_SIZE = 3;
 const RUNTIME_BATCH_SIZE_CAPS = {
-  deepseek: 12
+  deepseek: DEEPSEEK_RUNTIME_BATCH_SIZE
 };
 const MODEL_REQUEST_BATCH_SIZE_CAPS = {
-  deepseek: 4
+  deepseek: DEEPSEEK_MODEL_REQUEST_BATCH_SIZE
 };
 const MODEL_REQUEST_CONCURRENCY_CAPS = {
   deepseek: 3
@@ -222,10 +224,10 @@ const KEEP_ALIVE_INTERVAL_MS = 25_000;
 const FIRST_RESPONSE_TIMEOUT_MS = 25_000;
 const REQUEST_TIMEOUT_MS = 90_000;
 const FIRST_RESPONSE_TIMEOUT_CAPS_MS = {
-  deepseek: 8_000
+  deepseek: 6_000
 };
 const REQUEST_TIMEOUT_CAPS_MS = {
-  deepseek: 18_000
+  deepseek: 14_000
 };
 const NEXT_BATCH_DELAY_MS = 150;
 const MODEL_INPUT_TITLE_MAX_LENGTH = 120;
@@ -617,7 +619,7 @@ function getProviderLabel(provider) {
 }
 
 function getDefaultBatchSize(provider) {
-  return provider === "deepseek" ? 12 : DEFAULT_BATCH_SIZE;
+  return provider === "deepseek" ? DEEPSEEK_RUNTIME_BATCH_SIZE : DEFAULT_BATCH_SIZE;
 }
 
 function getProviderPerformanceProfile(configOrProvider = {}) {
@@ -653,10 +655,19 @@ function getRuntimeProviderLabel(config = {}) {
   return config?.provider ? getProviderLabel(config.provider) : "";
 }
 
+function getRuntimeBatchSizeCap(config = {}) {
+  return RUNTIME_BATCH_SIZE_CAPS[getProviderPerformanceProfile(config)] || 0;
+}
+
+function normalizeConfigBatchSize(rawValue, config = {}, fallback = DEFAULT_BATCH_SIZE) {
+  const normalizedBatchSize = normalizeBatchSize(rawValue, fallback);
+  const cap = getRuntimeBatchSizeCap(config);
+  return cap ? Math.min(normalizedBatchSize, cap) : normalizedBatchSize;
+}
+
 function getRuntimeBatchSize(config = {}) {
-  const configuredBatchSize = normalizeBatchSize(config.batchSize);
-  const profile = getProviderPerformanceProfile(config);
-  const cap = RUNTIME_BATCH_SIZE_CAPS[profile] || 0;
+  const configuredBatchSize = normalizeConfigBatchSize(config.batchSize, config);
+  const cap = getRuntimeBatchSizeCap(config);
   return cap ? Math.min(configuredBatchSize, cap) : configuredBatchSize;
 }
 
@@ -879,19 +890,22 @@ function mergeConfig(raw = {}) {
   const autoOrganizeEnabled =
     Boolean(raw.autoOrganizeEnabled) &&
     (!shouldRequireModelAccess({ linkCheckMode }) || Boolean(defaults.apiKeyOptional || apiKey));
+  const baseUrl =
+    providerKnown && typeof raw.baseUrl === "string" && raw.baseUrl.trim()
+      ? raw.baseUrl.trim()
+      : defaults.baseUrl;
+  const model =
+    providerKnown && typeof raw.model === "string" && raw.model.trim()
+      ? raw.model.trim()
+      : defaults.model;
+  const batchProfileConfig = { provider, baseUrl, model };
 
   return {
     provider,
-    baseUrl:
-      providerKnown && typeof raw.baseUrl === "string" && raw.baseUrl.trim()
-        ? raw.baseUrl.trim()
-        : defaults.baseUrl,
+    baseUrl,
     apiKey,
-    model:
-      providerKnown && typeof raw.model === "string" && raw.model.trim()
-        ? raw.model.trim()
-        : defaults.model,
-    batchSize: normalizeBatchSize(raw.batchSize, defaults.batchSize),
+    model,
+    batchSize: normalizeConfigBatchSize(raw.batchSize, batchProfileConfig, defaults.batchSize),
     linkCheckMode,
     autoOrganizeEnabled,
     autoOrganizeIntervalHours: normalizeAutoInterval(raw.autoOrganizeIntervalHours),
@@ -4714,6 +4728,17 @@ async function classifySingleModelRequest(
   taxonomyLocks = {},
   taxonomyTopFolders = []
 ) {
+  const requestBatchCap = getModelRequestBatchSizeCap(config);
+  if (requestBatchCap && batch.length > requestBatchCap) {
+    return classifySplitModelRequestBatches(
+      splitIntoFixedSizeChunks(batch, requestBatchCap),
+      config,
+      reportStage,
+      taxonomyLocks,
+      taxonomyTopFolders
+    );
+  }
+
   const messages = buildClassificationMessages(
     batch,
     config,
@@ -5474,7 +5499,7 @@ function isModelTimeoutError(error) {
   const text = [error?.message, error?.userMessage, error?.userDetail]
     .filter(Boolean)
     .join(" ");
-  return /first-response-timeout|request-timeout|8 秒|10 秒|15 秒|18 秒|25 秒|30 秒|45 秒|90 秒|within 8 seconds|within 10 seconds|within 15 seconds|within 18 seconds|within 25 seconds|within 30 seconds|within 45 seconds|within 90 seconds/i.test(text);
+  return /first-response-timeout|request-timeout|6 秒|8 秒|10 秒|14 秒|15 秒|18 秒|25 秒|30 秒|45 秒|90 秒|within 6 seconds|within 8 seconds|within 10 seconds|within 14 seconds|within 15 seconds|within 18 seconds|within 25 seconds|within 30 seconds|within 45 seconds|within 90 seconds/i.test(text);
 }
 
 function normalizeRetryBatchSize(rawValue, fallback = MIN_BATCH_SIZE) {

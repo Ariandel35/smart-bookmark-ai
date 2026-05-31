@@ -1177,13 +1177,19 @@ speedModeButtons.forEach((button, index) => {
   });
 
   button.addEventListener("keydown", (event) => {
-    if (!["ArrowLeft", "ArrowRight"].includes(event.key)) {
+    const handledKeys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"];
+    if (!handledKeys.includes(event.key)) {
       return;
     }
 
     event.preventDefault();
-    const direction = event.key === "ArrowRight" ? 1 : -1;
-    const nextIndex = (index + direction + speedModeButtons.length) % speedModeButtons.length;
+    const nextIndex =
+      event.key === "Home"
+        ? 0
+        : event.key === "End"
+          ? speedModeButtons.length - 1
+          : (index + (["ArrowRight", "ArrowDown"].includes(event.key) ? 1 : -1) + speedModeButtons.length) %
+            speedModeButtons.length;
     const nextButton = speedModeButtons[nextIndex];
     nextButton.focus();
     updatePopupSpeedMode(nextButton.dataset.popupSpeedMode).catch((error) => {

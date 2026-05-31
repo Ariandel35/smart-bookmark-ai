@@ -662,6 +662,7 @@ function testPreviewApplySurface() {
   assert.match(popupHtml, /id="cancelButton"[\s\S]*aria-describedby="popupActionStatus"/);
   assert.match(popupHtml, /class="popup-mode-bar"[\s\S]*aria-labelledby="popupSpeedModeLabel"/);
   assert.match(popupHtml, /role="radiogroup"[\s\S]*aria-labelledby="popupSpeedModeLabel"/);
+  assert.match(popupHtml, /role="radiogroup"[\s\S]*aria-orientation="horizontal"/);
   assert.match(popupHtml, /id="speedModeFastButton"[\s\S]*role="radio"[\s\S]*data-popup-speed-mode="fast"/);
   assert.match(popupHtml, /id="speedModeBalancedButton"[\s\S]*role="radio"[\s\S]*data-popup-speed-mode="balanced"/);
   assert.match(popupHtml, /id="speedModeCompleteButton"[\s\S]*role="radio"[\s\S]*data-popup-speed-mode="complete"/);
@@ -677,6 +678,10 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /if \(phaseBadge\.textContent !== phaseLabel\)/);
   assert.match(popupSource, /function formatDuration\(milliseconds\)/);
   assert.match(popupSource, /function buildElapsedMeta\(status, phase\)/);
+  assert.match(popupSource, /"ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"/);
+  assert.match(popupSource, /event\.key === "Home"/);
+  assert.match(popupSource, /event\.key === "End"/);
+  assert.match(popupSource, /\["ArrowRight", "ArrowDown"\]\.includes\(event\.key\)/);
   assert.match(popupSource, /phase !== "running" \|\| !status\?\.startedAt/);
   assert.match(popupSource, /metaParts\.push\(elapsedMeta\)/);
   assert.match(popupSource, /progressTrack\.setAttribute\("aria-valuetext", `\$\{progress\}%, \$\{progressSummaryText\}, \$\{progressMetaText\}`\)/);
@@ -743,13 +748,17 @@ function testPreviewApplySurface() {
 
 function testSlowModelResilienceSurface() {
   const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
+  assert.match(backgroundSource, /DEEPSEEK_RUNTIME_BATCH_SIZE = 9/);
+  assert.match(backgroundSource, /DEEPSEEK_MODEL_REQUEST_BATCH_SIZE = 3/);
   assert.match(backgroundSource, /RUNTIME_BATCH_SIZE_CAPS/);
-  assert.match(backgroundSource, /RUNTIME_BATCH_SIZE_CAPS[\s\S]*deepseek: 12/);
-  assert.match(backgroundSource, /return provider === "deepseek" \? 12 : DEFAULT_BATCH_SIZE/);
+  assert.match(backgroundSource, /RUNTIME_BATCH_SIZE_CAPS[\s\S]*deepseek: DEEPSEEK_RUNTIME_BATCH_SIZE/);
+  assert.match(backgroundSource, /return provider === "deepseek" \? DEEPSEEK_RUNTIME_BATCH_SIZE : DEFAULT_BATCH_SIZE/);
   assert.match(backgroundSource, /MODEL_REQUEST_BATCH_SIZE_CAPS/);
-  assert.match(backgroundSource, /MODEL_REQUEST_BATCH_SIZE_CAPS[\s\S]*deepseek: 4/);
+  assert.match(backgroundSource, /MODEL_REQUEST_BATCH_SIZE_CAPS[\s\S]*deepseek: DEEPSEEK_MODEL_REQUEST_BATCH_SIZE/);
   assert.match(backgroundSource, /MODEL_REQUEST_CONCURRENCY_CAPS/);
   assert.match(backgroundSource, /MODEL_REQUEST_CONCURRENCY_CAPS[\s\S]*deepseek: 3/);
+  assert.match(backgroundSource, /getRuntimeBatchSizeCap/);
+  assert.match(backgroundSource, /normalizeConfigBatchSize/);
   assert.match(backgroundSource, /getProviderPerformanceProfile/);
   assert.match(backgroundSource, /normalizedBaseUrl\.includes\("deepseek"\)/);
   assert.match(backgroundSource, /normalizedModel\.includes\("deepseek"\)/);
@@ -767,6 +776,7 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /getAdaptiveRetryBatchSize/);
   assert.match(backgroundSource, /classifySplitModelRequestBatches/);
   assert.match(backgroundSource, /classifyAdaptiveModelRequestBatch/);
+  assert.match(backgroundSource, /if \(requestBatchCap && batch\.length > requestBatchCap\)/);
   assert.match(backgroundSource, /Promise\.allSettled\(workers\)/);
   assert.match(backgroundSource, /activeModelAbortControllers/);
   assert.match(backgroundSource, /abortActiveModelRequests/);
@@ -778,10 +788,10 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /normalizeRetryBatchSize/);
   assert.match(backgroundSource, /FIRST_RESPONSE_TIMEOUT_CAPS_MS/);
   assert.match(backgroundSource, /REQUEST_TIMEOUT_CAPS_MS/);
-  assert.match(backgroundSource, /deepseek:\s*8_000/);
-  assert.match(backgroundSource, /deepseek:\s*18_000/);
-  assert.match(backgroundSource, /within 8 seconds/);
-  assert.match(backgroundSource, /within 18 seconds/);
+  assert.match(backgroundSource, /deepseek:\s*6_000/);
+  assert.match(backgroundSource, /deepseek:\s*14_000/);
+  assert.match(backgroundSource, /within 6 seconds/);
+  assert.match(backgroundSource, /within 14 seconds/);
   assert.match(backgroundSource, /getFirstResponseTimeoutMs/);
   assert.match(backgroundSource, /getRequestTimeoutMs/);
   assert.match(backgroundSource, /formatTimeoutSeconds/);
@@ -883,16 +893,25 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="saveButton"/);
 
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
-  assert.match(optionsSource, /return provider === "deepseek" \? 12 : DEFAULT_BATCH_SIZE/);
+  assert.match(optionsSource, /DEEPSEEK_RUNTIME_BATCH_SIZE = 9/);
+  assert.match(optionsSource, /return provider === "deepseek" \? DEEPSEEK_RUNTIME_BATCH_SIZE : DEFAULT_BATCH_SIZE/);
+  assert.match(optionsSource, /getProviderPerformanceProfile/);
+  assert.match(optionsSource, /normalizedBaseUrl\.includes\("deepseek"\)/);
+  assert.match(optionsSource, /getRuntimeBatchSizeCap/);
+  assert.match(optionsSource, /normalizeConfigBatchSize/);
+  assert.match(optionsSource, /capConfigBatchSize/);
+  assert.match(optionsSource, /settingsSlowBatchAdjustedStatus/);
   assert.match(optionsSource, /showSettingsIssue/);
   assert.match(optionsSource, /isValidHttpUrl/);
   assert.match(optionsSource, /const providerKnown = Boolean\(raw\.provider && Providers\.hasProvider\(raw\.provider\)\)/);
   assert.match(optionsSource, /const apiKey = providerKnown && typeof raw\.apiKey === "string" \? raw\.apiKey\.trim\(\) : ""/);
   assert.match(optionsSource, /const linkCheckMode = normalizeLinkCheckMode\(raw\.linkCheckMode \|\| defaults\.linkCheckMode\)/);
   assert.match(optionsSource, /!shouldRequireModelAccess\(\{ linkCheckMode \}\) \|\| Boolean\(defaults\.apiKeyOptional \|\| apiKey\)/);
-  assert.match(optionsSource, /baseUrl:\s*providerKnown && typeof raw\.baseUrl === "string"/);
+  assert.match(optionsSource, /const baseUrl =\s*providerKnown && typeof raw\.baseUrl === "string"/);
+  assert.match(optionsSource, /const batchProfileConfig = \{ provider, baseUrl, model \}/);
+  assert.match(optionsSource, /batchSize: normalizeConfigBatchSize\(raw\.batchSize, batchProfileConfig, defaults\.batchSize\)/);
   assert.match(optionsSource, /apiKey,/);
-  assert.match(optionsSource, /model:\s*providerKnown && typeof raw\.model === "string"/);
+  assert.match(optionsSource, /const model =\s*providerKnown && typeof raw\.model === "string"/);
   assert.match(optionsSource, /autoOrganizeEnabled,/);
   assert.match(optionsSource, /function setButtonLabel\(button, label\)/);
   assert.match(optionsSource, /button\.title = safeLabel/);
@@ -1009,13 +1028,14 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /showApiTestIssue\(t\("baseUrlRequired"\), "baseUrl"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("baseUrlInvalid"\), "baseUrl"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("modelRequired"\), "model"\)/);
+  assert.match(optionsSource, /showApiTestIssue\(t\("batchSizeValidation"\), "batchSize"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("requiredApiKey", \{ provider: defaults\.label \}\), "apiKey"\)/);
   assert.match(optionsSource, /setSaveBadge\(t\("saveBadgeUnsaved"\), "accent"\);\n  setApiTestStatus\(t\("apiTesting"\)\)/);
   assert.match(optionsSource, /if \(!granted\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*setApiTestStatus\(t\("currentApiAccessMissing"\), true\)/);
   assert.match(optionsSource, /if \(!response\?\.ok\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*setApiTestStatus\(/);
   assert.match(optionsSource, /if \(!granted\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
   assert.match(optionsSource, /function shouldRequireModelAccess\(config\)/);
-  assert.match(optionsSource, /if \(config\.autoOrganizeEnabled\) \{[\s\S]*const granted = shouldRequireBroadHostAccess\(config\)[\s\S]*ensureBroadHostAccess\(\)[\s\S]*shouldRequireModelAccess\(config\)[\s\S]*ensureOriginAccess\(config\.baseUrl\)[\s\S]*: true/);
+  assert.match(optionsSource, /if \(configToSave\.autoOrganizeEnabled\) \{[\s\S]*const granted = shouldRequireBroadHostAccess\(configToSave\)[\s\S]*ensureBroadHostAccess\(\)[\s\S]*shouldRequireModelAccess\(configToSave\)[\s\S]*ensureOriginAccess\(configToSave\.baseUrl\)[\s\S]*: true/);
   assert.match(optionsSource, /showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
   assert.match(optionsSource, /targetId === "baseUrl" \|\| targetId === "linkCheckMode"/);
   assert.match(optionsSource, /Base URL change/);
@@ -1036,9 +1056,11 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(backgroundSource, /const apiKey = providerKnown && typeof raw\.apiKey === "string" \? raw\.apiKey\.trim\(\) : ""/);
   assert.match(backgroundSource, /const linkCheckMode = normalizeLinkCheckMode\(raw\.linkCheckMode \|\| defaults\.linkCheckMode\)/);
   assert.match(backgroundSource, /!shouldRequireModelAccess\(\{ linkCheckMode \}\) \|\| Boolean\(defaults\.apiKeyOptional \|\| apiKey\)/);
-  assert.match(backgroundSource, /baseUrl:\s*providerKnown && typeof raw\.baseUrl === "string"/);
+  assert.match(backgroundSource, /const baseUrl =\s*providerKnown && typeof raw\.baseUrl === "string"/);
+  assert.match(backgroundSource, /const batchProfileConfig = \{ provider, baseUrl, model \}/);
+  assert.match(backgroundSource, /batchSize: normalizeConfigBatchSize\(raw\.batchSize, batchProfileConfig, defaults\.batchSize\)/);
   assert.match(backgroundSource, /apiKey,/);
-  assert.match(backgroundSource, /model:\s*providerKnown && typeof raw\.model === "string"/);
+  assert.match(backgroundSource, /const model =\s*providerKnown && typeof raw\.model === "string"/);
   assert.match(backgroundSource, /autoOrganizeEnabled,/);
   assert.match(backgroundSource, /function shouldRequireModelAccess\(config = \{\}\)/);
   assert.match(backgroundSource, /if \(shouldRequireModelAccess\(config\) && !hasRequiredProviderCredential\(config\)\) \{[\s\S]*chrome\.alarms\.clear\(AUTO_ORGANIZE_ALARM_NAME\)/);
@@ -1148,8 +1170,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /built-in domain rules/);
   assert.match(changelog, /Backup failures before applying a saved preview/);
   assert.match(changelog, /only for explicit preview-apply failures/);
-  assert.match(changelog, /runtime batches are capped to twelve bookmarks/);
-  assert.match(changelog, /four-bookmark model requests/);
+  assert.match(changelog, /runtime batches are capped to nine bookmarks/);
+  assert.match(changelog, /three-bookmark model requests/);
+  assert.match(changelog, /older 48-item settings/);
   assert.match(changelog, /DeepSeek-compatible endpoints/);
   assert.match(changelog, /up to three mini requests/);
   assert.match(changelog, /preview-time model calls, local Apply Plan rebuilds, and auto organize data flow/);
@@ -1213,8 +1236,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Backup failures before applying a saved preview/);
   assert.match(releaseNotes, /only for preview-apply failures/);
   assert.match(releaseNotes, /re-split large batches before each request/);
-  assert.match(releaseNotes, /cap runtime batches at 12 bookmarks/);
-  assert.match(releaseNotes, /cap each model request at 4 bookmarks/);
+  assert.match(releaseNotes, /cap runtime batches at 9 bookmarks/);
+  assert.match(releaseNotes, /cap each model request at 3 bookmarks/);
   assert.match(releaseNotes, /run up to three mini requests at a time/);
   assert.match(releaseNotes, /skip the separate taxonomy-planning request/);
   assert.match(releaseNotes, /finishes with local fallback/);
@@ -1242,8 +1265,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /Backup failures before applying a saved preview/);
   assert.match(storeListing, /only after a preview-apply failure/);
   assert.match(storeListing, /re-split large batches before each request/);
-  assert.match(storeListing, /cap runtime batches at 12 bookmarks/);
-  assert.match(storeListing, /cap each model request at 4 bookmarks/);
+  assert.match(storeListing, /cap runtime batches at 9 bookmarks/);
+  assert.match(storeListing, /cap each model request at 3 bookmarks/);
   assert.match(storeListing, /run up to three mini requests at a time/);
   assert.match(storeListing, /skip the separate taxonomy-planning request/);
   assert.match(storeListing, /finishes with local fallback/);
@@ -1263,7 +1286,7 @@ function testReleaseMaterialsCurrent() {
     path.join(ROOT_DIR, "webstore/render_store_assets.mjs"),
     "utf8"
   );
-  assert.match(storeAssetRenderer, /batchSize: 12/);
+  assert.match(storeAssetRenderer, /batchSize: 9/);
   assert.match(storeAssetRenderer, /currentBatch: 18/);
   assert.match(storeAssetRenderer, /totalBatches: 18/);
 

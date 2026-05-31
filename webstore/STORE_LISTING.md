@@ -18,7 +18,7 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 支持自定义 Base URL、API Key、模型名和 Prompt
 - API 检测成功后自动保存当前连接配置
 - 快速模式不需要模型接口访问即可本地完成；平衡模式保留 AI 分类但跳过网站检测；完整模式才会检测书签链接并使用 AI 分类，且会先用内置域名规则减少模型请求
-- DeepSeek 和 DeepSeek 兼容接口会在请求前再次拆分大批量，运行批次最多 12 条、单个模型请求最多 4 条，并最多 3 个小请求并发处理；如果 8 秒无首包或 18 秒未完整返回，本轮会停止等待模型，改用本地规则、缓存、内置规则和待手动分类兜底完成
+- DeepSeek 和 DeepSeek 兼容接口会在请求前再次拆分大批量，运行批次最多 9 条、单个模型请求最多 3 条，并最多 3 个小请求并发处理；如果 6 秒无首包或 14 秒未完整返回，本轮会停止等待模型，改用本地规则、缓存、内置规则和待手动分类兜底完成
 - 应用已生成预览时复用保存的方案，本地重建，不会再次请求模型
 - 应用预览遇到可恢复失败时，可修复后直接重试保存方案
 - 预览阶段的未处理项保持只读，应用方案前不会出现保留/删除操作
@@ -66,7 +66,7 @@ Key features:
 - Fast mode finishes locally without model endpoint access; Balanced keeps AI classification without website scans; Complete mode adds link checks and AI classification but uses built-in domain rules before AI, while slow providers skip the extra taxonomy-planning request
 - Fast local reruns use built-in domain rules, cached classifications, and manual-review fallback to skip model calls and batch scheduling
 - Fast automatic organize can run locally without an API key; Balanced automatic organize requires model credentials; Complete automatic organize also requires website access
-- Slow providers such as DeepSeek and DeepSeek-compatible endpoints re-split large batches before each request, cap runtime batches at 12 bookmarks, cap each model request at 4 bookmarks, and run up to three mini requests at a time; if the model has no first response in 8 seconds or no full response in 18 seconds, the run stops waiting and finishes with local fallback instead of failing the whole flow
+- Slow providers such as DeepSeek and DeepSeek-compatible endpoints re-split large batches before each request, cap runtime batches at 9 bookmarks, cap each model request at 3 bookmarks, and run up to three mini requests at a time; if the model has no first response in 6 seconds or no full response in 14 seconds, the run stops waiting and finishes with local fallback instead of failing the whole flow
 - Applying a generated preview reuses the saved plan and rebuilds locally without another model request
 - Recoverable apply failures keep the saved preview retry path available after the issue is fixed
 - Backup failures before applying a saved preview keep the same retry path available

@@ -7,6 +7,10 @@ const LEGACY_DEFAULT_PROMPT = I18N.getLegacyDefaultPrompt();
 const DEFAULT_PROMPT = I18N.getDefaultPrompt();
 const DEFAULT_BATCH_SIZE = 50;
 const MIN_BATCH_SIZE = 5;
+const DEEPSEEK_RUNTIME_BATCH_SIZE = 9;
+const RUNTIME_BATCH_SIZE_CAPS = {
+  deepseek: DEEPSEEK_RUNTIME_BATCH_SIZE
+};
 const LINK_CHECK_MODE_FAST = "fast";
 const LINK_CHECK_MODE_BALANCED = "balanced";
 const LINK_CHECK_MODE_COMPLETE = "complete";
@@ -116,7 +120,35 @@ function getDefaults(provider) {
 }
 
 function getDefaultBatchSize(provider) {
-  return provider === "deepseek" ? 12 : DEFAULT_BATCH_SIZE;
+  return provider === "deepseek" ? DEEPSEEK_RUNTIME_BATCH_SIZE : DEFAULT_BATCH_SIZE;
+}
+
+function getProviderPerformanceProfile(configOrProvider = {}) {
+  const provider =
+    typeof configOrProvider === "string"
+      ? configOrProvider
+      : String(configOrProvider?.provider || "");
+  const baseUrl =
+    typeof configOrProvider === "string" ? "" : String(configOrProvider?.baseUrl || "");
+  const model =
+    typeof configOrProvider === "string" ? "" : String(configOrProvider?.model || "");
+  const normalizedProvider = provider.trim().toLowerCase();
+  const normalizedBaseUrl = baseUrl.trim().toLowerCase();
+  const normalizedModel = model.trim().toLowerCase();
+
+  if (
+    normalizedProvider === "deepseek" ||
+    normalizedBaseUrl.includes("deepseek") ||
+    normalizedModel.includes("deepseek")
+  ) {
+    return "deepseek";
+  }
+
+  return normalizedProvider;
+}
+
+function getRuntimeBatchSizeCap(config = {}) {
+  return RUNTIME_BATCH_SIZE_CAPS[getProviderPerformanceProfile(config)] || 0;
 }
 
 function buildDefaultConfig(provider = "openai") {
@@ -150,19 +182,22 @@ function mergeConfig(raw = {}) {
   const autoOrganizeEnabled =
     Boolean(raw.autoOrganizeEnabled) &&
     (!shouldRequireModelAccess({ linkCheckMode }) || Boolean(defaults.apiKeyOptional || apiKey));
+  const baseUrl =
+    providerKnown && typeof raw.baseUrl === "string" && raw.baseUrl.trim()
+      ? raw.baseUrl.trim()
+      : defaults.baseUrl;
+  const model =
+    providerKnown && typeof raw.model === "string" && raw.model.trim()
+      ? raw.model.trim()
+      : defaults.model;
+  const batchProfileConfig = { provider, baseUrl, model };
 
   return {
     provider,
-    baseUrl:
-      providerKnown && typeof raw.baseUrl === "string" && raw.baseUrl.trim()
-        ? raw.baseUrl.trim()
-        : defaults.baseUrl,
+    baseUrl,
     apiKey,
-    model:
-      providerKnown && typeof raw.model === "string" && raw.model.trim()
-        ? raw.model.trim()
-        : defaults.model,
-    batchSize: normalizeBatchSize(raw.batchSize, defaults.batchSize),
+    model,
+    batchSize: normalizeConfigBatchSize(raw.batchSize, batchProfileConfig, defaults.batchSize),
     linkCheckMode,
     autoOrganizeEnabled,
     autoOrganizeIntervalHours: normalizeAutoInterval(raw.autoOrganizeIntervalHours),
@@ -784,6 +819,17 @@ function collectFormData() {
   };
 }
 
+function capConfigBatchSize(config) {
+  const batchSize = normalizeConfigBatchSize(config.batchSize, config, getDefaultBatchSize(config.provider));
+  return {
+    config: {
+      ...config,
+      batchSize
+    },
+    changed: batchSize !== config.batchSize
+  };
+}
+
 function parseIntegerInput(rawValue) {
   const value = String(rawValue ?? "").trim();
   if (!/^-?\d+$/.test(value)) {
@@ -800,6 +846,12 @@ function normalizeBatchSize(rawValue, fallback = DEFAULT_BATCH_SIZE) {
   }
 
   return Math.min(100, Math.max(MIN_BATCH_SIZE, parsed));
+}
+
+function normalizeConfigBatchSize(rawValue, config = {}, fallback = DEFAULT_BATCH_SIZE) {
+  const normalizedBatchSize = normalizeBatchSize(rawValue, fallback);
+  const cap = getRuntimeBatchSizeCap(config);
+  return cap ? Math.min(normalizedBatchSize, cap) : normalizedBatchSize;
 }
 
 function normalizeLinkCheckMode(rawValue) {
@@ -1229,15 +1281,21 @@ async function saveConfig(event) {
     return;
   }
 
+  const cappedBatch = capConfigBatchSize(config);
+  const configToSave = cappedBatch.config;
+  if (cappedBatch.changed) {
+    batchSizeInput.value = String(configToSave.batchSize);
+  }
+
   setSettingsActionInFlight(true);
   setSaveBadge(t("saveBadgeUnsaved"), "accent");
   setSettingsActionStatus(t("settingsSavingStatus"));
   try {
-    if (config.autoOrganizeEnabled) {
-      const granted = shouldRequireBroadHostAccess(config)
+    if (configToSave.autoOrganizeEnabled) {
+      const granted = shouldRequireBroadHostAccess(configToSave)
         ? await ensureBroadHostAccess()
-        : shouldRequireModelAccess(config)
-          ? await ensureOriginAccess(config.baseUrl)
+        : shouldRequireModelAccess(configToSave)
+          ? await ensureOriginAccess(configToSave.baseUrl)
           : true;
       await refreshHostAccessStatus();
       if (!granted) {
@@ -1247,7 +1305,7 @@ async function saveConfig(event) {
       }
     }
 
-    await saveConfigData(config);
+    await saveConfigData(configToSave, { batchAdjusted: cappedBatch.changed });
   } catch (error) {
     console.error("Failed to save settings:", error);
     setSaveBadge(t("saveBadgeFailed"), "danger");
@@ -1261,10 +1319,14 @@ async function saveConfig(event) {
   }
 }
 
-async function saveConfigData(config) {
+async function saveConfigData(config, options = {}) {
   await chrome.storage.local.set({ [STORAGE_KEY]: config });
   setSaveBadge(t("saveBadgeSaved"), "success");
-  setSettingsActionStatus(t("settingsSavedStatus"));
+  setSettingsActionStatus(
+    options.batchAdjusted
+      ? t("settingsSlowBatchAdjustedStatus", { count: config.batchSize })
+      : t("settingsSavedStatus")
+  );
 }
 
 async function testApiConnection() {
@@ -1287,6 +1349,11 @@ async function testApiConnection() {
 
   if (!config.model) {
     showApiTestIssue(t("modelRequired"), "model");
+    return;
+  }
+
+  if (!Number.isInteger(config.batchSize) || config.batchSize < 5 || config.batchSize > 100) {
+    showApiTestIssue(t("batchSizeValidation"), "batchSize");
     return;
   }
 
@@ -1323,8 +1390,14 @@ async function testApiConnection() {
       return;
     }
 
-    if (config.autoOrganizeEnabled) {
-      const autoAccessGranted = shouldRequireBroadHostAccess(config)
+    const cappedBatch = capConfigBatchSize(config);
+    const configToSave = cappedBatch.config;
+    if (cappedBatch.changed) {
+      batchSizeInput.value = String(configToSave.batchSize);
+    }
+
+    if (configToSave.autoOrganizeEnabled) {
+      const autoAccessGranted = shouldRequireBroadHostAccess(configToSave)
         ? await ensureBroadHostAccess()
         : true;
       await refreshHostAccessStatus();
@@ -1336,7 +1409,7 @@ async function testApiConnection() {
     }
 
     try {
-      await saveConfigData(config);
+      await saveConfigData(configToSave, { batchAdjusted: cappedBatch.changed });
     } catch (saveError) {
       console.error("Failed to save settings after API test:", saveError);
       setSaveBadge(t("saveBadgeFailed"), "danger");

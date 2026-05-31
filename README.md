@@ -98,12 +98,12 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 | Popup mode switch | Fast/Balanced/Complete can be changed directly in the popup, and any saved preview is invalidated when the mode changes. |
 | Setup | Missing provider, Base URL, or model routes the user to settings. Fast preview does not request model access; Balanced and Complete request it only when uncached bookmarks need AI classification. |
 | API settings | `Test & Save` validates the connection and stores the working configuration. |
-| Slow models | DeepSeek and DeepSeek-compatible runs skip the separate taxonomy-planning request, cap each runtime batch at 12 bookmarks, split model requests to 4 bookmarks each, and run up to three mini requests at a time. They stop waiting after an 8-second first-response stall or an 18-second full-response stall, then finish with local rules, cache, built-in rules, and manual review. |
+| Slow models | DeepSeek and DeepSeek-compatible runs skip the separate taxonomy-planning request, cap each runtime batch at 9 bookmarks, split model requests to 3 bookmarks each, and run up to three mini requests at a time. They stop waiting after a 6-second first-response stall or a 14-second full-response stall, then finish with local rules, cache, built-in rules, and manual review. |
 | Apply speed | Applying a ready preview reuses the saved plan and rebuilds locally without a second model run. |
 | Speed mode | Fast mode skips dead-link checks, the extra taxonomy-planning request, and model waiting; unmatched bookmarks go to manual review. Balanced skips dead-link checks and extra planning but keeps AI classification. Complete keeps link checks and AI classification, but deterministic built-in domain rules run before AI so common sites do not spend model time. |
 | Local reruns | Fast mode can preview without asking for an API key or model endpoint access, because custom rules, cached classifications, built-in domain rules, and manual-review fallback finish locally. |
 | Automation | Fast automatic organize can run locally without an API key; Balanced automatic organize needs model credentials; Complete automatic organize also requires website access. |
-| DeepSeek | New/reset configurations start at 12; older large-batch settings are capped per run, DeepSeek-compatible Base URLs or model names use the same profile, and active older jobs are normalized before the next batch without changing the saved setting. |
+| DeepSeek | New/reset configurations start at 9; older large-batch settings are capped when loaded or saved, DeepSeek-compatible Base URLs or model names use the same profile, and active older jobs are normalized before the next batch. |
 | Advanced rules | Protected folders, domain rules, and prompt fields stay available but quieter. |
 | Language | English and Simplified Chinese are both supported in the extension UI. |
 
