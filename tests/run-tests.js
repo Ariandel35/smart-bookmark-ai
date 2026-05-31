@@ -1122,6 +1122,12 @@ function testOptionsBackupInlineConfirmationSurface() {
 function testResponsiveTextHardeningSurface() {
   const stylesSource = fs.readFileSync(path.join(ROOT_DIR, "styles.css"), "utf8");
   assert.match(stylesSource, /\.button[\s\S]*overflow-wrap: anywhere/);
+  assert.match(stylesSource, /body\.popup-body[\s\S]*width: min\(400px, 100vw\)/);
+  assert.match(stylesSource, /\.popup-mode-bar[\s\S]*flex-wrap: wrap/);
+  assert.match(stylesSource, /\.segmented-control[\s\S]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(stylesSource, /\.segmented-control__button[\s\S]*min-width: 0/);
+  assert.match(stylesSource, /@media \(max-width: 360px\)/);
+  assert.match(stylesSource, /\.popup-shell \.topbar__actions--popup[\s\S]*position: static/);
   assert.match(stylesSource, /\.progress-head__summary,[\s\S]*\.progress-head__meta[\s\S]*overflow-wrap: anywhere/);
   assert.match(stylesSource, /\.bookmark-item__title[\s\S]*overflow-wrap: anywhere/);
   assert.match(stylesSource, /\.bookmark-item__meta[\s\S]*overflow-wrap: anywhere/);

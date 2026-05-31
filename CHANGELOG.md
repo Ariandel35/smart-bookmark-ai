@@ -25,6 +25,7 @@
 - Popup primary, settings, backup, cancel, and apply-confirmation buttons now keep localized text, hover tooltips, and accessible names in sync
 - Settings save, reset, privacy, API test, access, and manual backup buttons now keep localized text, hover tooltips, and accessible names in sync
 - Popup Fast, Balanced, and Complete mode toggles now expose localized tooltips and accessible names that explain the speed/quality tradeoff
+- Popup speed-mode controls now shrink and wrap cleanly in narrow popup containers instead of relying on a fixed minimum width
 - Settings navigation tabs now expose localized hover tooltips and explicit accessible names
 - Settings save and backup status badges now expose polite atomic status semantics
 - Complete-mode site-access errors and duplicate cleanup suggestions now refer to preview-first setup instead of the removed direct organize flow
