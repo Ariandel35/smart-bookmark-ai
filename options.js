@@ -58,6 +58,7 @@ let hostAccessCheckingInFlight = false;
 let hostAccessRefreshTimer = null;
 
 I18N.applyDocument(document);
+syncNavigationButtonLabels();
 syncPrimaryActionButtonLabels();
 renderProviderOptions();
 renderWhitelistSelection();
@@ -86,6 +87,19 @@ function syncPrimaryActionButtonLabels() {
   setButtonLabel(testApiButton, t("testApiButton"));
   setButtonLabel(createBackupButton, t("createBackupNow"));
   setGrantAccessButtonState(grantAccessButton.dataset.granted === "true");
+}
+
+function syncNavigationButtonLabels() {
+  navButtons.forEach((button) => {
+    const label = button.querySelector(".nav-button__title")?.textContent || "";
+    const safeLabel = label.trim();
+    if (!safeLabel) {
+      return;
+    }
+
+    button.title = safeLabel;
+    button.setAttribute("aria-label", safeLabel);
+  });
 }
 
 function getDefaults(provider) {

@@ -869,6 +869,10 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /setButtonLabel\(testApiButton, t\("testApiButton"\)\)/);
   assert.match(optionsSource, /setButtonLabel\(createBackupButton, t\("createBackupNow"\)\)/);
   assert.match(optionsSource, /setGrantAccessButtonState\(grantAccessButton\.dataset\.granted === "true"\)/);
+  assert.match(optionsSource, /function syncNavigationButtonLabels\(\)/);
+  assert.match(optionsSource, /button\.querySelector\("\.nav-button__title"\)\?\.textContent/);
+  assert.match(optionsSource, /button\.title = safeLabel/);
+  assert.match(optionsSource, /button\.setAttribute\("aria-label", safeLabel\)/);
   assert.match(optionsSource, /const removeLabel = t\("whitelistRemoveDomain", \{ domain \}\)/);
   assert.match(optionsSource, /button\.title = removeLabel/);
   assert.match(optionsSource, /button\.setAttribute\("aria-label", removeLabel\)/);
@@ -1102,6 +1106,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Popup primary, settings, backup, cancel, and apply-confirmation buttons/);
   assert.match(changelog, /Settings save, reset, privacy, API test, access, and manual backup buttons/);
   assert.match(changelog, /Popup Fast and Complete mode toggles/);
+  assert.match(changelog, /Settings navigation tabs now expose localized hover tooltips/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);

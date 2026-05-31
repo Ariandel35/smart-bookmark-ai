@@ -19,6 +19,7 @@
 - Popup primary, settings, backup, cancel, and apply-confirmation buttons now keep localized text, hover tooltips, and accessible names in sync
 - Settings save, reset, privacy, API test, access, and manual backup buttons now keep localized text, hover tooltips, and accessible names in sync
 - Popup Fast and Complete mode toggles now expose localized tooltips and accessible names that explain the speed/quality tradeoff
+- Settings navigation tabs now expose localized hover tooltips and explicit accessible names
 - Complete-mode site-access errors and duplicate cleanup suggestions now refer to preview-first setup instead of the removed direct organize flow
 - DeepSeek-compatible runs now keep the same runtime provider label through preview apply and final completion statuses
 - Popup preview checks now merge provider defaults before deciding setup is incomplete, so legacy or partial configs do not block local-rule previews unnecessarily
