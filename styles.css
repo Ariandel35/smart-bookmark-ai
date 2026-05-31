@@ -179,8 +179,8 @@ textarea {
 
 .segmented-control {
   display: grid;
-  grid-template-columns: repeat(2, minmax(74px, 1fr));
-  min-width: 170px;
+  grid-template-columns: repeat(3, minmax(70px, 1fr));
+  min-width: 246px;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 8px;

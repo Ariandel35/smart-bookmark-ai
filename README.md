@@ -33,7 +33,7 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 | --- | --- |
 | Duplicate links scattered across folders | Conservative duplicate cleanup before classification |
 | Old links that no longer open | Dead-link checks that remove only clearly failed URLs |
-| Folders created one batch at a time | Stable root categories in Fast mode; Complete mode can use global planning on faster providers |
+| Folders created one batch at a time | Stable root categories in Fast mode; Balanced keeps AI without link scans; Complete can use global planning on faster providers |
 | Risky one-click cleanup tools | Preview first, backup second, rebuild last |
 | Too many settings for a simple task | A focused popup and a shorter setup path |
 
@@ -85,9 +85,9 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 
 1. Generate a preview plan without changing the current bookmark tree.
 2. Create a local snapshot backup before a real organize run.
-3. Check links and remove only confirmed dead bookmarks.
+3. Use the selected mode: Fast local rules, Balanced AI classification without link scans, or Complete link checks plus AI classification.
 4. Detect exact duplicates and preserve uncertain items for review.
-5. Use local rules in Fast mode, or classify bookmarks with AI in Complete mode. Faster providers can plan a global taxonomy first; slow providers skip that extra request and can fall back locally on timeout.
+5. Faster Complete providers can plan a global taxonomy first; slow providers skip that extra request and can fall back locally on timeout.
 6. Rebuild the bookmark bar root in one final pass.
 
 ## What v3.0 Focuses On
@@ -95,14 +95,14 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 | Area | v3.0 behavior |
 | --- | --- |
 | Main action | `Preview` is the first step. `Apply Plan` appears only when a plan is ready. |
-| Popup mode switch | Fast/Complete can be changed directly in the popup, and any saved preview is invalidated when the mode changes. |
-| Setup | Missing provider, Base URL, or model routes the user to settings. Fast preview does not request model access; Complete requests it only when uncached bookmarks need AI classification. |
+| Popup mode switch | Fast/Balanced/Complete can be changed directly in the popup, and any saved preview is invalidated when the mode changes. |
+| Setup | Missing provider, Base URL, or model routes the user to settings. Fast preview does not request model access; Balanced and Complete request it only when uncached bookmarks need AI classification. |
 | API settings | `Test & Save` validates the connection and stores the working configuration. |
 | Slow models | DeepSeek and DeepSeek-compatible runs skip the separate taxonomy-planning request, cap each runtime batch at 15 bookmarks, split model requests to 5 bookmarks each, and run up to three mini requests at a time. They stop waiting after a 10-second first-response stall or a 30-second full-response stall, then finish with local rules, cache, built-in rules, and manual review. |
 | Apply speed | Applying a ready preview reuses the saved plan and rebuilds locally without a second model run. |
-| Speed mode | Fast mode skips dead-link checks, the extra taxonomy-planning request, and model waiting; unmatched bookmarks go to manual review. Complete mode keeps link checks and AI classification, while slow providers skip the extra planning request and can fall back locally on timeout. |
+| Speed mode | Fast mode skips dead-link checks, the extra taxonomy-planning request, and model waiting; unmatched bookmarks go to manual review. Balanced skips dead-link checks and extra planning but keeps AI classification. Complete keeps link checks and AI classification, while slow providers skip extra planning and can fall back locally on timeout. |
 | Local reruns | Fast mode can preview without asking for an API key or model endpoint access, because custom rules, cached classifications, built-in domain rules, and manual-review fallback finish locally. |
-| Automation | Fast automatic organize can run locally without an API key; Complete automatic organize still requires model credentials and website access. |
+| Automation | Fast automatic organize can run locally without an API key; Balanced automatic organize needs model credentials; Complete automatic organize also requires website access. |
 | DeepSeek | New/reset configurations start at 15; older large-batch settings are capped per run, DeepSeek-compatible Base URLs or model names use the same profile, and active older jobs are normalized before the next batch without changing the saved setting. |
 | Advanced rules | Protected folders, domain rules, and prompt fields stay available but quieter. |
 | Language | English and Simplified Chinese are both supported in the extension UI. |
@@ -150,11 +150,11 @@ Core files:
 
 ## Privacy Boundaries
 
-- Bookmark titles, URLs, current paths, prompts, API settings, caches, and backups stay in local browser storage unless Complete preview or enabled auto organize needs external access.
-- Bookmark metadata is sent only to the model provider you configured when Complete preview or enabled auto organize still needs model classification after local rules and cache reuse.
+- Bookmark titles, URLs, current paths, prompts, API settings, caches, and backups stay in local browser storage unless Balanced/Complete preview or enabled auto organize needs external access.
+- Bookmark metadata is sent only to the model provider you configured when Balanced/Complete preview or enabled auto organize still needs model classification after local rules and cache reuse.
 - Applying a saved preview plan rebuilds locally and does not call the model again.
 - API keys are stored locally and are never sent to this project or its developer.
-- Complete mode connects directly to bookmarked websites for link checks and uses model classification. Faster providers may add a separate taxonomy-planning request; slow providers skip that extra request. Fast mode skips those external requests.
+- Balanced mode can use model classification without directly checking bookmarked websites. Complete mode connects directly to bookmarked websites for link checks and uses model classification. Faster providers may add a separate taxonomy-planning request; slow providers skip that extra request. Fast mode skips those external requests.
 - Snapshot backups are local and can be restored or deleted from the settings page; restoring creates a fresh local snapshot first.
 
 Read the full policy in [PRIVACY.md](PRIVACY.md).

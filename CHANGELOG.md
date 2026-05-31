@@ -2,13 +2,14 @@
 
 ## Unreleased
 
-- Added Fast and Complete speed modes so users can choose quicker organizing that skips extra checks and taxonomy planning, or full dead-link checks with provider-aware AI classification and planning
-- Popup now includes a Fast/Complete mode switch so speed and quality can be adjusted without opening settings
-- Switching Fast/Complete in the popup now actively clears stale saved previews before the popup refreshes
+- Added Fast, Balanced, and Complete speed modes so users can choose local-only organizing, AI classification without website scans, or full dead-link checks with provider-aware planning
+- Popup now includes a Fast/Balanced/Complete mode switch so speed and quality can be adjusted without opening settings
+- Switching Fast/Balanced/Complete in the popup now actively clears stale saved previews before the popup refreshes
+- Balanced mode now skips dead-link scans and separate taxonomy planning while keeping AI classification for bookmarks not covered by local rules or cache
 - Fast mode now applies conservative built-in domain rules for common developer, learning, productivity, design, community, shopping, media, and life sites after custom rules and cache reuse
 - Fast mode now finishes locally without waiting for the model; bookmarks that do not match rules or cache are moved to the manual review folder, while Complete mode keeps AI classification
 - Fast mode no longer asks for model endpoint access during preview because it does not call the model
-- Fast automatic organize can now run locally without an API key; Complete automatic organize still requires model credentials and website access
+- Fast automatic organize can now run locally without an API key; Balanced requires model credentials, and Complete still requires model credentials plus website access
 - DeepSeek and DeepSeek-compatible Complete runs now skip the separate taxonomy-planning request and fall back to local rules, cache, built-in rules, and manual review if model classification times out
 - DeepSeek and DeepSeek-compatible endpoints now use the slow-model profile automatically, cap runtime batches at 15, split actual model requests to 5 bookmarks, and run up to three mini requests at once
 - DeepSeek and DeepSeek-compatible classification now stops after a 10-second first-response stall or a 30-second full-response stall before falling back locally
@@ -22,7 +23,7 @@
 - Popup unprocessed-item keep/delete controls now show localized bookmark-specific action tooltips
 - Popup primary, settings, backup, cancel, and apply-confirmation buttons now keep localized text, hover tooltips, and accessible names in sync
 - Settings save, reset, privacy, API test, access, and manual backup buttons now keep localized text, hover tooltips, and accessible names in sync
-- Popup Fast and Complete mode toggles now expose localized tooltips and accessible names that explain the speed/quality tradeoff
+- Popup Fast, Balanced, and Complete mode toggles now expose localized tooltips and accessible names that explain the speed/quality tradeoff
 - Settings navigation tabs now expose localized hover tooltips and explicit accessible names
 - Settings save and backup status badges now expose polite atomic status semantics
 - Complete-mode site-access errors and duplicate cleanup suggestions now refer to preview-first setup instead of the removed direct organize flow
@@ -77,8 +78,8 @@
 - Chinese setup, validation, and privacy copy now uses the same service-provider and model-name wording as the settings UI
 - Manifest locale descriptions now lead with the preview-first workflow and are checked against Chrome description length limits
 - Historical webstore release notes now use the Marko brand consistently instead of the old extension name
-- Webstore privacy policy now matches the Fast/Complete mode data-flow disclosures used in the README and review notes
-- Privacy page fallback copy now matches the Fast and Complete speed-mode data-access behavior even before localization applies
+- Webstore privacy policy now matches the Fast/Balanced/Complete mode data-flow disclosures used in the README and review notes
+- Privacy page fallback copy now matches the Fast, Balanced, and Complete speed-mode data-access behavior even before localization applies
 - GitHub privacy policy now explicitly covers auto organize runs and the current Complete-mode data flow
 - Webstore provider lists now include MiniMax so store copy matches the actual provider registry and README
 - Background configuration errors now use the same Chinese model-name wording as the settings UI

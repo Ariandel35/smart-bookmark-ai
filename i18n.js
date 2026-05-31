@@ -164,6 +164,8 @@ Hard rules:
       popupSpeedModeLabel: "Mode",
       popupSpeedModeFastAria:
         "Fast mode: finish locally without waiting for the model; unmatched bookmarks go to manual review",
+      popupSpeedModeBalancedAria:
+        "Balanced mode: skip dead-link checks and extra planning, then use AI classification",
       popupSpeedModeCompleteAria:
         "Complete mode: check dead links and use AI classification; slow models skip extra planning",
       popupSavingSpeedModeStatus: "Saving mode…",
@@ -221,9 +223,10 @@ Hard rules:
       hintBatchSize: "Use 5 to 100. DeepSeek and DeepSeek-compatible endpoints are capped per run and split into 5-item model requests with small parallelism.",
       labelLinkCheckMode: "Speed mode",
       linkCheckFast: "Fast",
+      linkCheckBalanced: "Balanced",
       linkCheckComplete: "Complete",
       hintLinkCheckMode:
-        "Fast finishes locally without waiting for the model and leaves unmatched bookmarks for review. Complete checks links and uses AI; slow models skip extra planning.",
+        "Fast finishes locally without waiting for the model. Balanced skips link checks but keeps AI classification. Complete checks links and uses AI.",
       labelWhitelistDomains: "Whitelist Websites",
       labelProtectedRootFolders: "Protected Root Folders",
       labelDomainFolderRules: "Domain Folder Rules",
@@ -252,7 +255,7 @@ Hard rules:
       labelAutoOrganizeInterval: "Interval (hours)",
       hintAutoOrganizeInterval: "Use 1 to 168 hours.",
       settingsStepConnect: "Connect your provider and test the API.",
-      settingsStepAccess: "Fast automation runs locally. Complete mode asks for model endpoint access and full website access.",
+      settingsStepAccess: "Fast automation runs locally. Balanced asks for model endpoint access. Complete also asks for website access.",
       settingsStepRun: "Preview first, then organize when the result looks right.",
       advancedSettingsTitle: "Advanced",
       backupEyebrow: "Backup",
@@ -313,7 +316,7 @@ Hard rules:
       setupMissingModel: "Model is required before preview.",
       setupMissingApiKey: "API key is required for this provider.",
       modelAccessRequiredForUncachedPreview:
-        "Complete mode has bookmarks that are not covered by local rules or cached classifications, so Marko needs model access before it can classify them. Slow-model timeouts fall back to local review.",
+        "Balanced or Complete mode has bookmarks that are not covered by local rules or cached classifications, so Marko needs model access before it can classify them. Slow-model timeouts fall back to local review.",
       applyConfirmTitle: "Apply saved preview plan",
       applyConfirmDesc:
         "Marko will create a fresh backup, verify the preview is still current, then rebuild locally without calling the model again.",
@@ -356,7 +359,7 @@ Hard rules:
       autoIntervalValidation: "Auto organize interval must be an integer between 1 and 168 hours.",
       requiredApiKey: "{provider} usually requires an API key. Please enter it first.",
       autoOrganizePermission:
-        "Fast auto organize runs locally. Complete auto organize requires model endpoint and website access.",
+        "Fast auto organize runs locally. Balanced requires model endpoint access. Complete auto organize also requires website access.",
       baseUrlRequired: "Base URL is required.",
       baseUrlInvalid: "Base URL must be a valid http or https URL.",
       modelRequired: "Model Name is required.",
@@ -379,7 +382,7 @@ Hard rules:
       backupDeleteFailedAlert: "Failed to delete backup.",
       backupDeleteExceptionAlert: "An error occurred while deleting backup.",
       hostAccessMissingAlert:
-        "Access was not granted. API testing and Complete mode require the selected model endpoint; Complete link checks also require website access.",
+        "Access was not granted. API testing plus Balanced and Complete modes require the selected model endpoint; Complete link checks also require website access.",
       hostAccessRequestException: "An error occurred while requesting access.",
       backupReadFailed: "Failed to load backup list.",
       backupRatio: "{count} / 10",
@@ -395,10 +398,10 @@ Hard rules:
       privacyLocalDataDesc: "Bookmark titles, URLs, current folder paths, extension settings, and backup snapshots.",
       privacyThirdPartyTitle: "Data sent to third parties",
       privacyThirdPartyDesc:
-        "Only when Complete preview or enabled auto organize still needs model classification, bookmark titles, URLs, current paths, and your custom prompt are sent to the model provider you chose. Applying a saved preview does not call the model again.",
+        "Only when Balanced or Complete preview, or enabled auto organize, still needs model classification, bookmark titles, URLs, current paths, and your custom prompt are sent to the model provider you chose. Applying a saved preview does not call the model again.",
       privacyDeadLinkTitle: "Dead-link checks",
       privacyDeadLinkDesc:
-        "When Complete mode is enabled, preview and organize runs can send direct HEAD / GET requests to bookmarked websites and use model classification. Faster providers may also use a separate taxonomy-planning request; slow providers skip that extra request. Fast mode skips those external requests.",
+        "Balanced mode skips direct website checks but can use model classification. Complete mode can send direct HEAD / GET requests to bookmarked websites and use model classification. Faster providers may also use a separate taxonomy-planning request; slow providers skip that extra request. Fast mode skips those external requests.",
       privacyStorageTitle: "Local storage",
       privacyStorageDesc:
         "API keys, provider settings, model names, whitelist rules, and backup snapshots are stored locally in browser storage and IndexedDB.",
@@ -446,6 +449,7 @@ Hard rules:
       popupCancellingStatus: "正在取消任务…",
       popupSpeedModeLabel: "模式",
       popupSpeedModeFastAria: "快速模式：本地完成，不等待模型；未命中书签进入待手动分类",
+      popupSpeedModeBalancedAria: "平衡模式：跳过失效链接和额外规划，但保留 AI 分类",
       popupSpeedModeCompleteAria: "完整模式：检测失效链接并使用 AI 分类，慢模型会跳过额外规划",
       popupSavingSpeedModeStatus: "正在保存模式…",
       popupSpeedModeSavedStatus: "模式已保存，请重新生成预览。",
@@ -502,8 +506,9 @@ Hard rules:
       hintBatchSize: "可填 5 到 100。DeepSeek 和 DeepSeek 兼容接口会自动压低运行批次，并拆成 5 条以内的小请求并发处理。",
       labelLinkCheckMode: "速度模式",
       linkCheckFast: "快速",
+      linkCheckBalanced: "平衡",
       linkCheckComplete: "完整",
-      hintLinkCheckMode: "快速模式本地完成，不等待模型，未命中书签留给人工查看；完整模式会检查链接并使用 AI，慢模型会跳过额外目录规划。",
+      hintLinkCheckMode: "快速模式本地完成，不等待模型；平衡模式跳过链接检查但保留 AI 分类；完整模式会检查链接并使用 AI。",
       labelWhitelistDomains: "白名单网站",
       labelProtectedRootFolders: "受保护根目录",
       labelDomainFolderRules: "域名目录规则",
@@ -532,7 +537,7 @@ Hard rules:
       labelAutoOrganizeInterval: "间隔（小时）",
       hintAutoOrganizeInterval: "可填 1 到 168 小时。",
       settingsStepConnect: "先连接你的模型服务并检测 API 是否可用。",
-      settingsStepAccess: "快速自动整理可本地运行；完整模式才会请求模型接口和完整网站访问权限。",
+      settingsStepAccess: "快速自动整理可本地运行；平衡模式需要模型接口权限；完整模式还需要网站访问权限。",
       settingsStepRun: "先预览，再正式整理，尽量避免误改。",
       advancedSettingsTitle: "高级",
       backupEyebrow: "备份",
@@ -589,7 +594,7 @@ Hard rules:
       setupMissingModel: "预览前需要填写模型名称。",
       setupMissingApiKey: "当前服务商需要 API Key。",
       modelAccessRequiredForUncachedPreview:
-        "完整模式中有书签没有命中本地规则或分类缓存，Marko 需要先访问模型才能分类；慢模型超时会改用本地待分类兜底。",
+        "平衡或完整模式中有书签没有命中本地规则或分类缓存，Marko 需要先访问模型才能分类；慢模型超时会改用本地待分类兜底。",
       applyConfirmTitle: "应用已保存的预览方案",
       applyConfirmDesc: "Marko 会先创建新备份，确认预览仍然有效，然后直接本地重建，不会再次请求模型。",
       applyConfirmPrimary: "备份并应用",
@@ -629,7 +634,7 @@ Hard rules:
       batchSizeValidation: "批大小必须是 5 到 100 之间的整数。",
       autoIntervalValidation: "自动整理间隔必须是 1 到 168 小时之间的整数。",
       requiredApiKey: "{provider} 通常需要 API Key，请先填写。",
-      autoOrganizePermission: "快速自动整理会在本地运行；完整自动整理需要模型接口和网站访问权限。",
+      autoOrganizePermission: "快速自动整理会在本地运行；平衡自动整理需要模型接口权限，完整自动整理还需要网站访问权限。",
       baseUrlRequired: "Base URL 不能为空。",
       baseUrlInvalid: "Base URL 必须是有效的 http 或 https 地址。",
       modelRequired: "模型名称不能为空。",
@@ -651,7 +656,7 @@ Hard rules:
       backupRestoreExceptionAlert: "恢复备份时发生异常。",
       backupDeleteFailedAlert: "删除备份失败。",
       backupDeleteExceptionAlert: "删除备份时发生异常。",
-      hostAccessMissingAlert: "未授予访问权限。API 检测和完整模式需要访问当前模型接口，完整链接检查还需要网站访问权限。",
+      hostAccessMissingAlert: "未授予访问权限。API 检测、平衡模式和完整模式需要访问当前模型接口，完整链接检查还需要网站访问权限。",
       hostAccessRequestException: "申请访问权限时发生异常。",
       backupReadFailed: "读取备份列表失败。",
       backupRatio: "{count} / 10",
@@ -667,9 +672,9 @@ Hard rules:
       privacyLocalDataDesc: "书签标题、URL、当前文件夹路径、插件设置、备份快照。",
       privacyThirdPartyTitle: "发送到第三方的数据",
       privacyThirdPartyDesc:
-        "只有在完整模式预览或已开启自动整理且仍需要模型分类时，书签标题、URL、现有路径和自定义 Prompt 才会发送到你选择的模型服务商。应用已保存预览不会再次请求模型。",
+        "只有在平衡或完整模式预览、或已开启自动整理且仍需要模型分类时，书签标题、URL、现有路径和自定义 Prompt 才会发送到你选择的模型服务商。应用已保存预览不会再次请求模型。",
       privacyDeadLinkTitle: "失效链接检测",
-      privacyDeadLinkDesc: "开启完整模式时，预览和整理流程会直接向书签对应的网站发送 HEAD / GET 请求，并使用模型分类；较快服务商可能会额外请求目录规划，慢模型会跳过这一步。快速模式会跳过这些外部请求。",
+      privacyDeadLinkDesc: "平衡模式会跳过直接网站检测，但可以使用模型分类。开启完整模式时，预览和整理流程会直接向书签对应的网站发送 HEAD / GET 请求，并使用模型分类；较快服务商可能会额外请求目录规划，慢模型会跳过这一步。快速模式会跳过这些外部请求。",
       privacyStorageTitle: "本地存储",
       privacyStorageDesc: "API Key、服务商设置、模型名、白名单和备份快照都保存在你的浏览器本地存储与 IndexedDB 中。",
       privacyControlEyebrow: "控制项",

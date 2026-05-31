@@ -5,6 +5,7 @@ const MANAGED_FOLDER_IDS_KEY = "smartBookmarkManagedFolderIds";
 const MANAGED_ROOT_BOOKMARK_IDS_KEY = "smartBookmarkManagedRootBookmarkIds";
 const HOST_ACCESS_ORIGINS = ["https://*/*", "http://*/*"];
 const LINK_CHECK_MODE_FAST = "fast";
+const LINK_CHECK_MODE_BALANCED = "balanced";
 const LINK_CHECK_MODE_COMPLETE = "complete";
 const I18N = globalThis.SmartBookmarkI18n;
 const Providers = globalThis.SmartBookmarkProviders;
@@ -151,8 +152,14 @@ function shouldRequireBroadHostAccess(config) {
   return config?.linkCheckMode === LINK_CHECK_MODE_COMPLETE;
 }
 
+function shouldRequireModelAccess(config) {
+  return normalizeLinkCheckMode(config?.linkCheckMode) !== LINK_CHECK_MODE_FAST;
+}
+
 function normalizeLinkCheckMode(rawValue) {
-  return rawValue === LINK_CHECK_MODE_COMPLETE ? LINK_CHECK_MODE_COMPLETE : LINK_CHECK_MODE_FAST;
+  return [LINK_CHECK_MODE_FAST, LINK_CHECK_MODE_BALANCED, LINK_CHECK_MODE_COMPLETE].includes(rawValue)
+    ? rawValue
+    : LINK_CHECK_MODE_FAST;
 }
 
 function mergePopupConfig(raw = {}) {
@@ -177,9 +184,11 @@ function mergePopupConfig(raw = {}) {
 }
 
 async function ensureOrganizeAccess(config) {
-  return shouldRequireBroadHostAccess(config)
-    ? await ensureBroadHostAccess()
-    : await ensureOriginAccess(config?.baseUrl);
+  if (shouldRequireBroadHostAccess(config)) {
+    return await ensureBroadHostAccess();
+  }
+
+  return shouldRequireModelAccess(config) ? await ensureOriginAccess(config?.baseUrl) : true;
 }
 
 function titleCasePhase(phase) {
@@ -339,10 +348,12 @@ function renderConfig(config) {
   const activeMode = normalizeLinkCheckMode(config?.linkCheckMode);
   speedModeButtons.forEach((button) => {
     const isActive = button.dataset.popupSpeedMode === activeMode;
-    const modeLabel =
-      button.dataset.popupSpeedMode === LINK_CHECK_MODE_COMPLETE
-        ? t("popupSpeedModeCompleteAria")
-        : t("popupSpeedModeFastAria");
+    const modeLabels = {
+      [LINK_CHECK_MODE_FAST]: t("popupSpeedModeFastAria"),
+      [LINK_CHECK_MODE_BALANCED]: t("popupSpeedModeBalancedAria"),
+      [LINK_CHECK_MODE_COMPLETE]: t("popupSpeedModeCompleteAria")
+    };
+    const modeLabel = modeLabels[button.dataset.popupSpeedMode] || t("popupSpeedModeFastAria");
     button.classList.toggle("is-active", isActive);
     button.setAttribute("aria-checked", String(isActive));
     setButtonAccessibleLabel(button, modeLabel);

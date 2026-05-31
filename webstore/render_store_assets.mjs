@@ -329,7 +329,7 @@ function screenshotVariant({ popupSrc, optionsConnectionSrc }) {
         <h1 class="brand__title" style="font-size: 48px;">先预览，<br />再整理</h1>
         <p class="brand__sub">确认方案后本地应用，不重复跑模型。</p>
         <div class="badge-row">
-          <div class="badge badge--soft">快速模式</div>
+          <div class="badge badge--soft">平衡 AI 模式</div>
           <div class="badge">内联确认</div>
           <div class="badge">本地备份恢复</div>
         </div>
@@ -389,7 +389,7 @@ function marqueeVariant({ popupSrc, optionsBackupSrc }) {
         <h1 class="brand__title" style="font-size: 56px;">书签整理，<br />不该更乱</h1>
         <p class="brand__sub">先预览，再确认。本地备份和恢复都留在设置里。</p>
         <div class="badge-row">
-          <div class="badge badge--soft">快速 / 完整模式</div>
+          <div class="badge badge--soft">快速 / 平衡 / 完整</div>
           <div class="badge">重复删除</div>
           <div class="badge">行内确认</div>
         </div>

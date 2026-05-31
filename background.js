@@ -50,6 +50,7 @@ const TAXONOMY_TIMEOUT_CAPS_MS = {
   deepseek: 15_000
 };
 const LINK_CHECK_MODE_FAST = "fast";
+const LINK_CHECK_MODE_BALANCED = "balanced";
 const LINK_CHECK_MODE_COMPLETE = "complete";
 const DEFAULT_ROOT_FOLDER = "Marko";
 const LEGACY_ROOT_FOLDERS = ["Smart Bookmark AI", "TidyMarks AI"];
@@ -1344,8 +1345,8 @@ function buildFastLocalUnclassifiedWarnings(bookmarks) {
       "Fast mode did not wait for the model, so this bookmark was left for manual review."
     ),
     suggestion: ux(
-      "如果你希望 AI 自动精细分类，请切换到完整模式重新生成预览；也可以在设置页添加域名目录规则。",
-      "Switch to Complete mode and generate a new preview if you want AI classification, or add a domain folder rule in settings."
+      "如果你希望 AI 自动精细分类，请切换到平衡或完整模式重新生成预览；也可以在设置页添加域名目录规则。",
+      "Switch to Balanced or Complete mode and generate a new preview if you want AI classification, or add a domain folder rule in settings."
     )
   }));
 }
@@ -1456,6 +1457,8 @@ function buildFastLocalClassificationPlan(
 async function finishFastLocalJob(job, localPlan) {
   const scanResult = localPlan.scanResult;
   const planResult = localPlan.planResult;
+  const localOnlyMode = normalizeLinkCheckMode(job?.config?.linkCheckMode);
+  const isBalancedMode = localOnlyMode === LINK_CHECK_MODE_BALANCED;
 
   job.exactDuplicateSeenByUrl = localPlan.exactDuplicateSeenByUrl || {};
   job.processed = job.total;
@@ -1507,8 +1510,12 @@ async function finishFastLocalJob(job, localPlan) {
       job,
       {
         detail: ux(
-          `快速模式已在本地生成预览，本次没有调用模型。预计归类 ${job.moved} 条，其中复用缓存 ${job.reused} 条、内置快速规则 ${localPlan.fastRuleCount || 0} 条；${localPlan.localUnclassifiedCount || 0} 条未命中本地规则，已放入 ${MANUAL_FOLDER_TITLE}；删除 ${job.deleted} 条。确认无误后点击“应用方案”正式重建。`,
-          `Fast mode generated this preview locally without calling the model. It would categorize ${job.moved}, including ${job.reused} reused cached results and ${localPlan.fastRuleCount || 0} from built-in fast rules; ${localPlan.localUnclassifiedCount || 0} unmatched items were left in "${MANUAL_FOLDER_TITLE}"; ${job.deleted} items would be deleted. If it looks good, click Apply Plan to rebuild.`
+          isBalancedMode
+            ? `平衡模式本轮已被本地规则、缓存和内置规则覆盖，没有调用模型，也没有扫描网站链接。预计归类 ${job.moved} 条，其中复用缓存 ${job.reused} 条、内置规则 ${localPlan.fastRuleCount || 0} 条；删除 ${job.deleted} 条。确认无误后点击“应用方案”正式重建。`
+            : `快速模式已在本地生成预览，本次没有调用模型。预计归类 ${job.moved} 条，其中复用缓存 ${job.reused} 条、内置快速规则 ${localPlan.fastRuleCount || 0} 条；${localPlan.localUnclassifiedCount || 0} 条未命中本地规则，已放入 ${MANUAL_FOLDER_TITLE}；删除 ${job.deleted} 条。确认无误后点击“应用方案”正式重建。`,
+          isBalancedMode
+            ? `Balanced mode was fully covered by local rules, cache, and built-in rules this time, so it did not call the model or scan websites. It would categorize ${job.moved}, including ${job.reused} reused cached results and ${localPlan.fastRuleCount || 0} from built-in rules; ${job.deleted} items would be deleted. If it looks good, click Apply Plan to rebuild.`
+            : `Fast mode generated this preview locally without calling the model. It would categorize ${job.moved}, including ${job.reused} reused cached results and ${localPlan.fastRuleCount || 0} from built-in fast rules; ${localPlan.localUnclassifiedCount || 0} unmatched items were left in "${MANUAL_FOLDER_TITLE}"; ${job.deleted} items would be deleted. If it looks good, click Apply Plan to rebuild.`
         ),
         previewFolders
       }
@@ -1518,12 +1525,20 @@ async function finishFastLocalJob(job, localPlan) {
 
   await updateBatchStatus(job, job.totalBatches, {
     message: ux(
-      "快速模式已生成本地整理方案，正在直接重建书签结构。",
-      "Fast mode generated a local organize plan. Rebuilding directly."
+      isBalancedMode
+        ? "平衡模式本轮无需模型，正在直接重建书签结构。"
+        : "快速模式已生成本地整理方案，正在直接重建书签结构。",
+      isBalancedMode
+        ? "Balanced mode did not need the model this time. Rebuilding directly."
+        : "Fast mode generated a local organize plan. Rebuilding directly."
     ),
     detail: ux(
-      `快速模式无需等待模型返回；备份已经提前完成，未命中本地规则的 ${localPlan.localUnclassifiedCount || 0} 条会进入 ${MANUAL_FOLDER_TITLE}。`,
-      `Fast mode does not wait for the model. A backup has already been created, and ${localPlan.localUnclassifiedCount || 0} unmatched items will go to "${MANUAL_FOLDER_TITLE}".`
+      isBalancedMode
+        ? "本轮已被本地规则、缓存和内置规则覆盖；备份已经提前完成，接下来只做本地重建。"
+        : `快速模式无需等待模型返回；备份已经提前完成，未命中本地规则的 ${localPlan.localUnclassifiedCount || 0} 条会进入 ${MANUAL_FOLDER_TITLE}。`,
+      isBalancedMode
+        ? "Local rules, cache, and built-in rules covered this run. A backup has already been created, and the rebuild is local."
+        : `Fast mode does not wait for the model. A backup has already been created, and ${localPlan.localUnclassifiedCount || 0} unmatched items will go to "${MANUAL_FOLDER_TITLE}".`
     )
   });
 
@@ -1540,8 +1555,12 @@ async function finishFastLocalJob(job, localPlan) {
     job,
     {
       detail: ux(
-        `本次快速模式完全本地完成，没有调用模型。共归类 ${job.moved} 条，其中复用缓存 ${job.reused} 条、内置快速规则 ${localPlan.fastRuleCount || 0} 条；白名单保留 ${rebuildResult.preservedCount} 条，受保护根目录保留 ${job.protectedRootFolderIds.length} 个，${MANUAL_FOLDER_TITLE} ${rebuildResult.warningEntries.length} 条。`,
-        `This fast-mode run finished locally without calling the model. It categorized ${job.moved} bookmarks, including ${job.reused} reused cached results and ${localPlan.fastRuleCount || 0} from built-in fast rules, preserved ${rebuildResult.preservedCount} whitelisted bookmarks, kept ${job.protectedRootFolderIds.length} protected root folders untouched, and left ${rebuildResult.warningEntries.length} items in "${MANUAL_FOLDER_TITLE}".`
+        isBalancedMode
+          ? `本次平衡模式完全由本地规则、缓存和内置规则覆盖，没有调用模型或扫描网站链接。共归类 ${job.moved} 条，其中复用缓存 ${job.reused} 条、内置规则 ${localPlan.fastRuleCount || 0} 条；白名单保留 ${rebuildResult.preservedCount} 条，受保护根目录保留 ${job.protectedRootFolderIds.length} 个，${MANUAL_FOLDER_TITLE} ${rebuildResult.warningEntries.length} 条。`
+          : `本次快速模式完全本地完成，没有调用模型。共归类 ${job.moved} 条，其中复用缓存 ${job.reused} 条、内置快速规则 ${localPlan.fastRuleCount || 0} 条；白名单保留 ${rebuildResult.preservedCount} 条，受保护根目录保留 ${job.protectedRootFolderIds.length} 个，${MANUAL_FOLDER_TITLE} ${rebuildResult.warningEntries.length} 条。`,
+        isBalancedMode
+          ? `This balanced-mode run was fully covered by local rules, cache, and built-in rules, so it did not call the model or scan websites. It categorized ${job.moved} bookmarks, including ${job.reused} reused cached results and ${localPlan.fastRuleCount || 0} from built-in rules, preserved ${rebuildResult.preservedCount} whitelisted bookmarks, kept ${job.protectedRootFolderIds.length} protected root folders untouched, and left ${rebuildResult.warningEntries.length} items in "${MANUAL_FOLDER_TITLE}".`
+          : `This fast-mode run finished locally without calling the model. It categorized ${job.moved} bookmarks, including ${job.reused} reused cached results and ${localPlan.fastRuleCount || 0} from built-in fast rules, preserved ${rebuildResult.preservedCount} whitelisted bookmarks, kept ${job.protectedRootFolderIds.length} protected root folders untouched, and left ${rebuildResult.warningEntries.length} items in "${MANUAL_FOLDER_TITLE}".`
       )
     }
   );
@@ -1557,6 +1576,7 @@ async function buildLocalRequirementCheck(config) {
     ...config,
     batchSize: runtimeBatchSize
   };
+  const useAiClassification = shouldUseAiClassification(runtimeConfig);
   const bookmarkState = await collectBookmarkPlanningState(config);
   const domainFolderRules = Rules.parseDomainFolderRules(
     runtimeConfig.domainFolderRules,
@@ -1573,7 +1593,7 @@ async function buildLocalRequirementCheck(config) {
     classificationCacheBucket,
     {
       useBuiltInFastRules: !shouldCheckDeadLinks(runtimeConfig),
-      finishUnclassifiedLocally: !shouldCheckDeadLinks(runtimeConfig)
+      finishUnclassifiedLocally: !useAiClassification
     }
   );
   const aiCandidateCount = localPlan.aiCandidates.length;
@@ -1751,6 +1771,7 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
   const domainFolderRules =
     reusableLocalCheck?.domainFolderRules ||
     Rules.parseDomainFolderRules(runtimeConfig.domainFolderRules, MANUAL_FOLDER_TITLE);
+  const useAiClassification = shouldUseAiClassification(runtimeConfig);
   let startupLocalPlan = reusableLocalCheck?.localPlan || null;
   if (!startupLocalPlan) {
     const startupClassificationCacheStore = await loadClassificationCacheStore();
@@ -1763,7 +1784,7 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
       startupClassificationCacheBucket,
       {
         useBuiltInFastRules: !shouldCheckDeadLinks(runtimeConfig),
-        finishUnclassifiedLocally: !shouldCheckDeadLinks(runtimeConfig)
+        finishUnclassifiedLocally: !useAiClassification
       }
     );
   }
@@ -1793,6 +1814,11 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
       `${getRuntimeProviderLabel(runtimeConfig)} 会跳过单独的全局目录规划请求，先使用内置稳定大类；如果分类请求过慢，本次会继续本地兜底完成。`,
       `${getRuntimeProviderLabel(runtimeConfig)} skips the separate global taxonomy request and starts with stable folders; if classification is too slow, this run will finish with the local fallback.`
     );
+  } else if (startupAiCandidateCount && useAiClassification) {
+    taxonomyPlanningNote = ux(
+      "平衡模式会跳过失效链接扫描和单独目录规划，直接对本地规则、缓存和内置规则未覆盖的书签做 AI 分类。",
+      "Balanced mode skips dead-link checks and the separate taxonomy-planning request, then uses AI only for bookmarks not covered by local rules, cache, or built-in rules."
+    );
   } else if (startupAiCandidateCount) {
     taxonomyPlanningNote = ux(
       "快速模式已跳过单独的全局目录规划请求，直接使用内置稳定大类和待手动分类兜底。",
@@ -1821,10 +1847,15 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
             "完整模式会跳过慢模型的单独目录规划请求，并在模型超时时切到本地兜底继续完成。",
             "Complete mode skips the slow-model taxonomy request and switches to the local fallback if the model times out."
           )
-      : ux(
-          "快速模式会跳过单独的全局目录规划，使用内置稳定大类和待手动分类兜底。",
-          "Fast mode skips the separate taxonomy-planning request and uses built-in stable folders plus manual-review fallback."
-        );
+        : useAiClassification
+          ? ux(
+              "平衡模式会跳过失效链接扫描和单独目录规划，只把本地规则与缓存无法覆盖的书签交给 AI。",
+              "Balanced mode skips dead-link checks and separate taxonomy planning, then sends only bookmarks not covered by local rules or cache to AI."
+            )
+          : ux(
+              "快速模式会跳过单独的全局目录规划，使用内置稳定大类和待手动分类兜底。",
+              "Fast mode skips the separate taxonomy-planning request and uses built-in stable folders plus manual-review fallback."
+            );
   const linkCheckDetail = shouldCheckDeadLinks(runtimeConfig)
     ? planTaxonomy
       ? ux(
@@ -1835,10 +1866,15 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
           "完整模式会检测失效链接；慢模型会跳过单独目录规划，并在模型超时时本地兜底。",
           "Complete mode checks dead links; slow models skip the separate taxonomy request and fall back locally on model timeout."
         )
-    : ux(
-        `快速模式会跳过失效链接检测、单独目录规划和模型等待；未命中本地规则的书签会进入 ${MANUAL_FOLDER_TITLE}，需要 AI 精细分类时可切换完整模式。`,
-        `Fast mode skips dead-link checks, the separate taxonomy-planning request, and model waiting; unmatched bookmarks go to "${MANUAL_FOLDER_TITLE}". Switch to Complete mode for AI classification.`
-      );
+    : useAiClassification
+      ? ux(
+          "平衡模式会跳过失效链接检测和单独目录规划，但保留 AI 分类；只需要模型接口权限，不需要完整网站访问权限。",
+          "Balanced mode skips dead-link checks and separate taxonomy planning but keeps AI classification; it needs model endpoint access, not full website access."
+        )
+      : ux(
+          `快速模式会跳过失效链接检测、单独目录规划和模型等待；未命中本地规则的书签会进入 ${MANUAL_FOLDER_TITLE}，需要 AI 精细分类时可切换平衡或完整模式。`,
+          `Fast mode skips dead-link checks, the separate taxonomy-planning request, and model waiting; unmatched bookmarks go to "${MANUAL_FOLDER_TITLE}". Switch to Balanced or Complete mode for AI classification.`
+        );
 
   const totalBatches = Math.ceil(bookmarks.length / runtimeBatchSize);
   const runId = crypto.randomUUID();
@@ -2355,23 +2391,32 @@ async function processNextBatch() {
 
     const currentBatch = Math.floor(job.processed / job.batchSize) + 1;
     const checkDeadLinks = shouldCheckDeadLinks(job.config);
+    const useAiClassification = shouldUseAiClassification(job.config);
 
     await updateBatchStatus(job, currentBatch, {
       message: ux(
         checkDeadLinks
           ? `正在检测第 ${currentBatch}/${job.totalBatches} 批链接状态 (${job.processed}/${job.total})。`
-          : `正在快速处理第 ${currentBatch}/${job.totalBatches} 批书签 (${job.processed}/${job.total})。`,
+          : useAiClassification
+            ? `正在平衡分类第 ${currentBatch}/${job.totalBatches} 批书签 (${job.processed}/${job.total})。`
+            : `正在快速处理第 ${currentBatch}/${job.totalBatches} 批书签 (${job.processed}/${job.total})。`,
         checkDeadLinks
           ? `Checking link health for batch ${currentBatch}/${job.totalBatches} (${job.processed}/${job.total}).`
-          : `Fast processing batch ${currentBatch}/${job.totalBatches} (${job.processed}/${job.total}).`
+          : useAiClassification
+            ? `Balanced classification for batch ${currentBatch}/${job.totalBatches} (${job.processed}/${job.total}).`
+            : `Fast processing batch ${currentBatch}/${job.totalBatches} (${job.processed}/${job.total}).`
       ),
       detail: ux(
         checkDeadLinks
           ? `本批 ${batch.length} 条。会先识别确认失效的链接，把状态不明确的链接留到“${MANUAL_FOLDER_TITLE}”，再对剩余书签做 AI 分类。提交前不会改动现有书签树。`
-          : `本批 ${batch.length} 条。快速模式会跳过链接可用性探测、单独目录规划和模型等待，先做去重、自定义规则、缓存复用和内置快速规则，剩余部分放入“${MANUAL_FOLDER_TITLE}”。提交前不会改动现有书签树。`,
+          : useAiClassification
+            ? `本批 ${batch.length} 条。平衡模式会跳过链接可用性探测和单独目录规划，先做去重、自定义规则、缓存复用和内置规则，剩余书签再交给 AI 分类。提交前不会改动现有书签树。`
+            : `本批 ${batch.length} 条。快速模式会跳过链接可用性探测、单独目录规划和模型等待，先做去重、自定义规则、缓存复用和内置快速规则，剩余部分放入“${MANUAL_FOLDER_TITLE}”。提交前不会改动现有书签树。`,
         checkDeadLinks
           ? `${batch.length} items in this batch. Confirmed dead links are removed first, uncertain links are kept in "${MANUAL_FOLDER_TITLE}", and only the remaining bookmarks are sent to AI. The bookmark tree is not changed before the final rebuild.`
-          : `${batch.length} items in this batch. Fast mode skips link availability checks, the separate taxonomy plan, and model waiting, then uses duplicate cleanup, custom rules, cache reuse, and built-in fast rules before putting anything left in "${MANUAL_FOLDER_TITLE}". The bookmark tree is not changed before the final rebuild.`
+          : useAiClassification
+            ? `${batch.length} items in this batch. Balanced mode skips link availability checks and the separate taxonomy plan, then uses duplicate cleanup, custom rules, cache reuse, and built-in rules before sending the rest to AI. The bookmark tree is not changed before the final rebuild.`
+            : `${batch.length} items in this batch. Fast mode skips link availability checks, the separate taxonomy plan, and model waiting, then uses duplicate cleanup, custom rules, cache reuse, and built-in fast rules before putting anything left in "${MANUAL_FOLDER_TITLE}". The bookmark tree is not changed before the final rebuild.`
       )
     });
 
@@ -2405,12 +2450,12 @@ async function processNextBatch() {
       checkDeadLinks && !job.modelFallbackToManual
         ? { plans: [], remaining: cachedPlans.remaining }
         : buildBuiltInFastFolderPlans(cachedPlans.remaining);
-    let localFallbackPendingWarnings = !checkDeadLinks
+    let localFallbackPendingWarnings = !useAiClassification
       ? buildFastLocalUnclassifiedWarnings(builtInFastPlans.remaining)
       : job.modelFallbackToManual
         ? buildModelTimeoutFallbackWarnings(builtInFastPlans.remaining, null, job.config)
         : [];
-    let bookmarksToClassify = checkDeadLinks && !job.modelFallbackToManual ? builtInFastPlans.remaining : [];
+    let bookmarksToClassify = useAiClassification && !job.modelFallbackToManual ? builtInFastPlans.remaining : [];
     let needsModelClassification = bookmarksToClassify.length > 0;
     let normalized = {
       results: [],
@@ -2520,7 +2565,7 @@ async function processNextBatch() {
         ...exactDuplicatePlans
       ],
       {
-        includeMissingAsManual: checkDeadLinks && !job.modelFallbackToManual
+        includeMissingAsManual: useAiClassification && !job.modelFallbackToManual
       }
     );
 
@@ -2787,6 +2832,13 @@ function buildOrganizeCompletedMessage(job, rebuildResult) {
     return ux(
       `书签整理完成，已重建 ${rebuildResult.createdCount} 条书签，并删除 ${job.deleted} 条失效或重复书签。`,
       `Bookmark organizing completed. Rebuilt ${rebuildResult.createdCount} bookmarks and removed ${job.deleted} dead or duplicate entries.`
+    );
+  }
+
+  if (shouldUseAiClassification(job?.config)) {
+    return ux(
+      `书签整理完成，已重建 ${rebuildResult.createdCount} 条书签，并删除 ${job.deleted} 条重复书签。平衡模式未扫描失效链接。`,
+      `Bookmark organizing completed. Rebuilt ${rebuildResult.createdCount} bookmarks and removed ${job.deleted} duplicate entries. Balanced mode did not scan for dead links.`
     );
   }
 
@@ -5567,11 +5619,17 @@ function normalizeRunningOrganizeJobRuntime(job) {
 }
 
 function normalizeLinkCheckMode(rawValue) {
-  return rawValue === LINK_CHECK_MODE_COMPLETE ? LINK_CHECK_MODE_COMPLETE : LINK_CHECK_MODE_FAST;
+  return [LINK_CHECK_MODE_FAST, LINK_CHECK_MODE_BALANCED, LINK_CHECK_MODE_COMPLETE].includes(rawValue)
+    ? rawValue
+    : LINK_CHECK_MODE_FAST;
 }
 
 function shouldCheckDeadLinks(config = {}) {
   return normalizeLinkCheckMode(config.linkCheckMode) === LINK_CHECK_MODE_COMPLETE;
+}
+
+function shouldUseAiClassification(config = {}) {
+  return normalizeLinkCheckMode(config.linkCheckMode) !== LINK_CHECK_MODE_FAST;
 }
 
 function shouldPlanGlobalTaxonomy(config = {}) {
@@ -5582,7 +5640,7 @@ function shouldPlanGlobalTaxonomy(config = {}) {
 }
 
 function shouldRequireModelAccess(config = {}) {
-  return normalizeLinkCheckMode(config.linkCheckMode) === LINK_CHECK_MODE_COMPLETE;
+  return shouldUseAiClassification(config);
 }
 
 function shouldUseModelTimeoutFallback(config = {}) {

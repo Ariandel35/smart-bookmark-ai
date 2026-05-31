@@ -263,10 +263,11 @@
                     <label for="linkCheckMode" data-i18n="labelLinkCheckMode">Speed Mode</label>
                     <select id="linkCheckMode" name="linkCheckMode" aria-describedby="linkCheckModeHint">
                       <option value="fast" data-i18n="linkCheckFast">Fast</option>
+                      <option value="balanced" data-i18n="linkCheckBalanced">Balanced</option>
                       <option value="complete" data-i18n="linkCheckComplete">Complete</option>
                     </select>
                     <p class="field__hint" id="linkCheckModeHint" data-i18n="hintLinkCheckMode">
-                      Fast finishes locally without waiting for the model. Complete checks links and uses AI classification.
+                      Fast finishes locally. Balanced skips link checks but keeps AI classification. Complete checks links and uses AI.
                     </p>
                   </div>
 

@@ -437,11 +437,13 @@ function testSpeedModeSurface() {
   const optionsHtml = fs.readFileSync(path.join(ROOT_DIR, "options.html"), "utf8");
   assert.match(optionsHtml, /id="linkCheckMode"/);
   assert.match(optionsHtml, /value="fast"/);
+  assert.match(optionsHtml, /value="balanced"/);
   assert.match(optionsHtml, /value="complete"/);
 
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
   assert.match(optionsSource, /linkCheckMode/);
   assert.match(optionsSource, /LINK_CHECK_MODE_FAST/);
+  assert.match(optionsSource, /LINK_CHECK_MODE_BALANCED/);
   assert.match(optionsSource, /LINK_CHECK_MODE_COMPLETE/);
 
   const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
@@ -456,6 +458,7 @@ function testSpeedModeSurface() {
   assert.match(popupSource, /ensureOriginAccess/);
   assert.match(popupSource, /isValidHttpUrl/);
   assert.match(popupSource, /setupInvalidBaseUrl/);
+  assert.match(popupSource, /LINK_CHECK_MODE_BALANCED/);
   assert.match(popupSource, /LINK_CHECK_MODE_COMPLETE/);
 
   const localeDescription = JSON.parse(
@@ -466,20 +469,23 @@ function testSpeedModeSurface() {
 
   const storeListing = fs.readFileSync(path.join(ROOT_DIR, "webstore/STORE_LISTING.md"), "utf8");
   assert.match(storeListing, /Fast mode/);
+  assert.match(storeListing, /Balanced mode/);
   assert.match(storeListing, /Complete mode/);
 
   const privacyPolicy = fs.readFileSync(path.join(ROOT_DIR, "PRIVACY.md"), "utf8");
   assert.match(privacyPolicy, /Last updated: 2026-05-31/);
-  assert.match(privacyPolicy, /when Complete preview or enabled auto organize/);
+  assert.match(privacyPolicy, /when Balanced\/Complete preview or enabled auto organize/);
   assert.match(privacyPolicy, /Applying a saved preview plan rebuilds locally and does not call the model again/);
   assert.match(privacyPolicy, /Fast mode skips dead-link checks, the separate taxonomy-planning model request, and model classification/);
+  assert.match(privacyPolicy, /Balanced mode can use model classification without sending HEAD \/ GET requests/);
   assert.match(privacyPolicy, /Complete mode can send HEAD \/ GET requests directly to bookmarked websites/);
   assert.match(privacyPolicy, /before restoring an older backup/);
   assert.match(privacyPolicy, /pre-restore snapshots/);
 
   const privacyHtml = fs.readFileSync(path.join(ROOT_DIR, "privacy.html"), "utf8");
   assert.match(privacyHtml, /Faster providers may also use a separate taxonomy-planning request/);
-  assert.match(privacyHtml, /preview and organize runs can send direct HEAD \/ GET requests/);
+  assert.match(privacyHtml, /Balanced mode skips direct website checks/);
+  assert.match(privacyHtml, /Complete mode can send direct HEAD \/ GET requests/);
   assert.match(privacyHtml, /Fast mode skips those external requests/);
   assert.match(privacyHtml, /Applying a saved preview does not call the model again/);
   assert.match(privacyHtml, /before restoring an older backup/);
@@ -587,7 +593,8 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /button\.title = safeLabel/);
   assert.match(popupSource, /button\.setAttribute\("aria-label", safeLabel\)/);
   assert.match(popupSource, /function setButtonAccessibleLabel\(button, label\)/);
-  assert.match(popupSource, /button\.dataset\.popupSpeedMode === LINK_CHECK_MODE_COMPLETE[\s\S]*popupSpeedModeCompleteAria[\s\S]*popupSpeedModeFastAria/);
+  assert.match(popupSource, /\[LINK_CHECK_MODE_BALANCED\]: t\("popupSpeedModeBalancedAria"\)/);
+  assert.match(popupSource, /\[LINK_CHECK_MODE_COMPLETE\]: t\("popupSpeedModeCompleteAria"\)/);
   assert.match(popupSource, /setButtonAccessibleLabel\(button, modeLabel\)/);
   assert.match(popupSource, /startButton\.disabled = popupActionInFlight \|\| isRunning/);
   assert.match(popupSource, /backupButton\.disabled = popupActionInFlight \|\| isRunning/);
@@ -656,6 +663,7 @@ function testPreviewApplySurface() {
   assert.match(popupHtml, /class="popup-mode-bar"[\s\S]*aria-labelledby="popupSpeedModeLabel"/);
   assert.match(popupHtml, /role="radiogroup"[\s\S]*aria-labelledby="popupSpeedModeLabel"/);
   assert.match(popupHtml, /id="speedModeFastButton"[\s\S]*role="radio"[\s\S]*data-popup-speed-mode="fast"/);
+  assert.match(popupHtml, /id="speedModeBalancedButton"[\s\S]*role="radio"[\s\S]*data-popup-speed-mode="balanced"/);
   assert.match(popupHtml, /id="speedModeCompleteButton"[\s\S]*role="radio"[\s\S]*data-popup-speed-mode="complete"/);
   assert.match(popupHtml, /id="phaseBadge"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*aria-atomic="true"/);
   assert.match(popupHtml, /id="popupActionStatus"/);
@@ -688,6 +696,7 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /settingsShortcutButton/);
   assert.match(i18nSource, /popupSpeedModeLabel/);
   assert.match(i18nSource, /popupSpeedModeFastAria/);
+  assert.match(i18nSource, /popupSpeedModeBalancedAria/);
   assert.match(i18nSource, /popupSpeedModeCompleteAria/);
   assert.match(i18nSource, /popupSpeedModeSavedStatus/);
   assert.match(i18nSource, /logModelTimeoutFallback/);
@@ -705,8 +714,8 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /labelProvider: "服务商"/);
   assert.match(i18nSource, /labelModel: "模型名称"/);
   assert.match(i18nSource, /automationTitle: "自动整理"/);
-  assert.match(i18nSource, /settingsStepAccess: "快速自动整理可本地运行；完整模式才会请求模型接口和完整网站访问权限。"/);
-  assert.match(i18nSource, /autoOrganizePermission: "快速自动整理会在本地运行；完整自动整理需要模型接口和网站访问权限。"/);
+  assert.match(i18nSource, /settingsStepAccess: "快速自动整理可本地运行；平衡模式需要模型接口权限；完整模式还需要网站访问权限。"/);
+  assert.match(i18nSource, /autoOrganizePermission: "快速自动整理会在本地运行；平衡自动整理需要模型接口权限，完整自动整理还需要网站访问权限。"/);
   assert.match(i18nSource, /backupTitle: "备份管理"/);
   assert.match(i18nSource, /setupRequiredDesc: "预览前需要先选择服务商，并填写 Base URL 和模型名称。"/);
   assert.match(i18nSource, /setupMissingProvider: "请先选择服务商。"/);
@@ -799,19 +808,21 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /TAXONOMY_SAMPLE_SIZE_CAPS/);
   assert.match(backgroundSource, /getTaxonomyPlanningTimeoutMs/);
   assert.match(backgroundSource, /shouldPlanGlobalTaxonomy/);
+  assert.match(backgroundSource, /shouldUseAiClassification/);
   assert.match(backgroundSource, /shouldUseModelTimeoutFallback/);
   assert.match(backgroundSource, /modelFallbackToManual/);
   assert.match(backgroundSource, /buildModelTimeoutFallbackWarnings/);
   assert.match(backgroundSource, /skips the separate global taxonomy request/);
   assert.match(backgroundSource, /slow models will continue with the local fallback/);
   assert.match(backgroundSource, /Fast mode skipped the separate taxonomy-planning request/);
+  assert.match(backgroundSource, /Balanced mode skips dead-link checks and separate taxonomy planning/);
   assert.match(backgroundSource, /FAST_LOCAL_FOLDER_RULES/);
   assert.match(backgroundSource, /buildBuiltInFastFolderPlans/);
   assert.match(backgroundSource, /matchBuiltInFastFolderPath/);
   assert.match(backgroundSource, /buildFastLocalUnclassifiedWarnings/);
-  assert.match(backgroundSource, /finishUnclassifiedLocally: !shouldCheckDeadLinks\(runtimeConfig\)/);
+  assert.match(backgroundSource, /finishUnclassifiedLocally: !useAiClassification/);
   assert.match(backgroundSource, /includeMissingAsManual: !finishUnclassifiedLocally/);
-  assert.match(backgroundSource, /includeMissingAsManual: checkDeadLinks && !job\.modelFallbackToManual/);
+  assert.match(backgroundSource, /includeMissingAsManual: useAiClassification && !job\.modelFallbackToManual/);
   assert.match(backgroundSource, /Fast mode does not wait for the model/);
   assert.match(backgroundSource, /useBuiltInFastRules: !shouldCheckDeadLinks\(runtimeConfig\)/);
   assert.match(backgroundSource, /built-in fast rules/);
@@ -997,7 +1008,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /if \(!response\?\.ok\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*setApiTestStatus\(/);
   assert.match(optionsSource, /if \(!granted\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
   assert.match(optionsSource, /function shouldRequireModelAccess\(config\)/);
-  assert.match(optionsSource, /if \(config\.autoOrganizeEnabled\) \{[\s\S]*const autoAccessGranted = shouldRequireBroadHostAccess\(config\)[\s\S]*ensureBroadHostAccess\(\)[\s\S]*: true/);
+  assert.match(optionsSource, /if \(config\.autoOrganizeEnabled\) \{[\s\S]*const granted = shouldRequireBroadHostAccess\(config\)[\s\S]*ensureBroadHostAccess\(\)[\s\S]*shouldRequireModelAccess\(config\)[\s\S]*ensureOriginAccess\(config\.baseUrl\)[\s\S]*: true/);
   assert.match(optionsSource, /showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
   assert.match(optionsSource, /targetId === "baseUrl" \|\| targetId === "linkCheckMode"/);
   assert.match(optionsSource, /Base URL change/);
@@ -1117,7 +1128,8 @@ function testReleaseMaterialsCurrent() {
   const readme = fs.readFileSync(path.join(ROOT_DIR, "README.md"), "utf8");
   const readmeZh = fs.readFileSync(path.join(ROOT_DIR, "README.zh-CN.md"), "utf8");
   assert.match(changelog, /without a second model request/);
-  assert.match(changelog, /Fast\/Complete mode switch/);
+  assert.match(changelog, /Fast\/Balanced\/Complete mode switch/);
+  assert.match(changelog, /Balanced mode now skips dead-link scans/);
   assert.match(changelog, /built-in domain rules/);
   assert.match(changelog, /Backup failures before applying a saved preview/);
   assert.match(changelog, /only for explicit preview-apply failures/);
@@ -1134,7 +1146,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Popup unprocessed-item keep\/delete controls/);
   assert.match(changelog, /Popup primary, settings, backup, cancel, and apply-confirmation buttons/);
   assert.match(changelog, /Settings save, reset, privacy, API test, access, and manual backup buttons/);
-  assert.match(changelog, /Popup Fast and Complete mode toggles/);
+  assert.match(changelog, /Popup Fast, Balanced, and Complete mode toggles/);
   assert.match(changelog, /Settings navigation tabs now expose localized hover tooltips/);
   assert.match(changelog, /Settings save and backup status badges/);
   assert.match(changelog, /Fast mode now finishes locally without waiting for the model/);
@@ -1158,7 +1170,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /npm run package:webstore/);
   assert.match(readme, /Popup mode switch/);
   assert.match(readme, /built-in domain rules/);
-  assert.match(readme, /unless Complete preview or enabled auto organize needs external access/);
+  assert.match(readme, /unless Balanced\/Complete preview or enabled auto organize needs external access/);
   assert.match(readme, /manual-review fallback finish locally/);
   assert.match(readme, /Fast automatic organize can run locally without an API key/);
   assert.doesNotMatch(readme, /unless you start an organize run/);
@@ -1177,10 +1189,12 @@ function testReleaseMaterialsCurrent() {
     "utf8"
   );
   assert.match(releaseNotes, /without another model request/);
-  assert.match(releaseNotes, /Fast\/Complete mode switch/);
+  assert.match(releaseNotes, /Fast\/Balanced\/Complete mode switch/);
+  assert.match(releaseNotes, /Balanced skips dead-link checks but keeps AI classification/);
   assert.match(releaseNotes, /built-in domain rules/);
   assert.match(releaseNotes, /unmatched bookmarks go to manual review/);
   assert.match(releaseNotes, /Fast automatic organize can now run locally without an API key/);
+  assert.match(releaseNotes, /Balanced automatic organize requires model credentials/);
   assert.match(releaseNotes, /Backup failures before applying a saved preview/);
   assert.match(releaseNotes, /only for preview-apply failures/);
   assert.match(releaseNotes, /re-split large batches before each request/);
@@ -1208,6 +1222,7 @@ function testReleaseMaterialsCurrent() {
   const storeListing = fs.readFileSync(path.join(ROOT_DIR, "webstore/STORE_LISTING.md"), "utf8");
   assert.match(storeListing, /without calling the model again/);
   assert.match(storeListing, /changed directly in the popup/);
+  assert.match(storeListing, /Balanced keeps AI classification without website scans/);
   assert.match(storeListing, /built-in domain rules/);
   assert.match(storeListing, /Backup failures before applying a saved preview/);
   assert.match(storeListing, /only after a preview-apply failure/);
@@ -1231,7 +1246,8 @@ function testReleaseMaterialsCurrent() {
 
   const reviewNotes = fs.readFileSync(path.join(ROOT_DIR, "webstore/REVIEW_NOTES.md"), "utf8");
   assert.match(reviewNotes, /复用已保存方案/);
-  assert.match(reviewNotes, /完整模式预览或已开启自动整理且本地规则、缓存无法覆盖/);
+  assert.match(reviewNotes, /平衡\/完整模式预览或已开启自动整理且本地规则、缓存无法覆盖/);
+  assert.match(reviewNotes, /平衡模式会跳过失效链接检测和单独目录规划请求，但保留 AI 分类/);
 
   const webstorePrivacyPolicy = fs.readFileSync(
     path.join(ROOT_DIR, "webstore/PRIVACY_POLICY.md"),
@@ -1242,6 +1258,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(webstorePrivacyPolicy, /较快服务商可能会在分类前额外生成全局目录方案/);
   assert.match(webstorePrivacyPolicy, /应用已保存的预览方案会直接本地重建，不会再次请求模型/);
   assert.match(webstorePrivacyPolicy, /快速模式会在预览和整理流程中跳过失效链接检测、单独目录规划请求和模型分类/);
+  assert.match(webstorePrivacyPolicy, /平衡模式可以使用模型分类，但不会直接访问书签对应的网站做链接检测/);
   assert.match(webstorePrivacyPolicy, /完整模式会直接访问书签对应的网站/);
   assert.match(webstorePrivacyPolicy, /恢复旧备份前也会先为当前书签状态创建本地快照/);
 

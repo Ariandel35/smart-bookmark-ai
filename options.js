@@ -8,6 +8,7 @@ const DEFAULT_PROMPT = I18N.getDefaultPrompt();
 const DEFAULT_BATCH_SIZE = 50;
 const MIN_BATCH_SIZE = 5;
 const LINK_CHECK_MODE_FAST = "fast";
+const LINK_CHECK_MODE_BALANCED = "balanced";
 const LINK_CHECK_MODE_COMPLETE = "complete";
 
 const form = document.getElementById("settingsForm");
@@ -802,7 +803,9 @@ function normalizeBatchSize(rawValue, fallback = DEFAULT_BATCH_SIZE) {
 }
 
 function normalizeLinkCheckMode(rawValue) {
-  return rawValue === LINK_CHECK_MODE_COMPLETE ? LINK_CHECK_MODE_COMPLETE : LINK_CHECK_MODE_FAST;
+  return [LINK_CHECK_MODE_FAST, LINK_CHECK_MODE_BALANCED, LINK_CHECK_MODE_COMPLETE].includes(rawValue)
+    ? rawValue
+    : LINK_CHECK_MODE_FAST;
 }
 
 function shouldRequireBroadHostAccess(config) {
@@ -810,7 +813,7 @@ function shouldRequireBroadHostAccess(config) {
 }
 
 function shouldRequireModelAccess(config) {
-  return normalizeLinkCheckMode(config?.linkCheckMode) === LINK_CHECK_MODE_COMPLETE;
+  return normalizeLinkCheckMode(config?.linkCheckMode) !== LINK_CHECK_MODE_FAST;
 }
 
 function normalizeAutoInterval(rawValue) {
@@ -1233,7 +1236,9 @@ async function saveConfig(event) {
     if (config.autoOrganizeEnabled) {
       const granted = shouldRequireBroadHostAccess(config)
         ? await ensureBroadHostAccess()
-        : true;
+        : shouldRequireModelAccess(config)
+          ? await ensureOriginAccess(config.baseUrl)
+          : true;
       await refreshHostAccessStatus();
       if (!granted) {
         setSaveBadge(t("saveBadgeFailed"), "danger");
