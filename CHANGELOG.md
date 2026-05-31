@@ -13,6 +13,7 @@
 - Remaining README, privacy page, and review checklist wording now uses the same preview-first data-flow language
 - Privacy page breadcrumb and section eyebrow labels are now localized in English and Chinese
 - The shared i18n document applier now sets page language reliably for full documents and partial roots without requiring a global document
+- Whitelist domain chips and catalog options now expose localized add/remove action labels in tooltips and accessible names
 - Complete-mode site-access errors and duplicate cleanup suggestions now refer to preview-first setup instead of the removed direct organize flow
 - DeepSeek-compatible runs now keep the same runtime provider label through preview apply and final completion statuses
 - Popup preview checks now merge provider defaults before deciding setup is incomplete, so legacy or partial configs do not block local-rule previews unnecessarily

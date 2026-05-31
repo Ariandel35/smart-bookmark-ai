@@ -836,7 +836,12 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /apiKey,/);
   assert.match(optionsSource, /model:\s*providerKnown && typeof raw\.model === "string"/);
   assert.match(optionsSource, /autoOrganizeEnabled,/);
-  assert.match(optionsSource, /t\("whitelistRemoveDomain", \{ domain \}\)/);
+  assert.match(optionsSource, /const removeLabel = t\("whitelistRemoveDomain", \{ domain \}\)/);
+  assert.match(optionsSource, /button\.title = removeLabel/);
+  assert.match(optionsSource, /button\.setAttribute\("aria-label", removeLabel\)/);
+  assert.match(optionsSource, /const actionLabel = t\(isSelected \? "whitelistRemoveDomainWithCount" : "whitelistAddDomainWithCount"/);
+  assert.match(optionsSource, /button\.title = actionLabel/);
+  assert.match(optionsSource, /button\.setAttribute\("aria-label", actionLabel\)/);
   assert.match(optionsSource, /button\.setAttribute\("aria-pressed", String\(isSelected\)\)/);
   assert.match(optionsSource, /const isSelected = selectedSet\.has\(item\.domain\)/);
   assert.match(optionsSource, /clearSettingsFieldIssues/);
@@ -993,6 +998,8 @@ function testOptionsBackupInlineConfirmationSurface() {
 
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
   assert.match(i18nSource, /whitelistRemoveDomain/);
+  assert.match(i18nSource, /whitelistAddDomainWithCount/);
+  assert.match(i18nSource, /whitelistRemoveDomainWithCount/);
   assert.match(i18nSource, /hintBatchSize/);
   assert.match(i18nSource, /hintAutoOrganizeInterval/);
   assert.match(i18nSource, /settingsSavedStatus/);
@@ -1043,6 +1050,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /same preview-first data-flow language/);
   assert.match(changelog, /Privacy page breadcrumb and section eyebrow labels/);
   assert.match(changelog, /i18n document applier now sets page language reliably/);
+  assert.match(changelog, /Whitelist domain chips and catalog options/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);
