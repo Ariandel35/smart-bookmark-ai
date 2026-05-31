@@ -1107,6 +1107,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(i18nSource, /settingsAccessRequestingStatus/);
   assert.match(i18nSource, /hostAccessChecking/);
   assert.match(i18nSource, /backupRestoreInlineConfirm/);
+  assert.match(i18nSource, /A fresh snapshot of current bookmarks is created first/);
+  assert.match(i18nSource, /恢复前会先为当前书签创建新快照/);
   assert.match(i18nSource, /backupDeleteInlineConfirm/);
   assert.match(i18nSource, /backupRestoreRecordAria/);
   assert.match(i18nSource, /backupDeleteRecordAria/);

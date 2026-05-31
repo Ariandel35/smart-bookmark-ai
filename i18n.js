@@ -345,7 +345,7 @@ Hard rules:
       backupRestoreSuccess: "Backup restored.",
       backupDeleteSuccess: "Backup deleted.",
       backupRestoreInlineConfirm:
-        "Restore this snapshot? Current bookmark bar content will be replaced.",
+        "A fresh snapshot of current bookmarks is created first. Then this backup replaces the bookmark bar.",
       backupRestoreInlinePrimary: "Restore backup",
       backupDeleteInlineConfirm: "Delete this snapshot? This cannot be undone.",
       backupDeleteInlinePrimary: "Delete backup",
@@ -622,7 +622,7 @@ Hard rules:
       backupCreateSuccess: "备份已创建。",
       backupRestoreSuccess: "备份已恢复。",
       backupDeleteSuccess: "备份已删除。",
-      backupRestoreInlineConfirm: "恢复这个快照吗？当前书签栏内容会被替换。",
+      backupRestoreInlineConfirm: "恢复前会先为当前书签创建新快照，然后用这个备份替换书签栏。",
       backupRestoreInlinePrimary: "恢复备份",
       backupDeleteInlineConfirm: "删除这个快照吗？删除后无法恢复。",
       backupDeleteInlinePrimary: "删除备份",
