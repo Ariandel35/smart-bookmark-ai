@@ -1516,7 +1516,7 @@ async function buildLocalRequirementCheck(config) {
     classificationSignature,
     localPlan,
     aiCandidateCount,
-    requiresBroadHostAccess: shouldCheckDeadLinks(runtimeConfig)
+    requiresBroadHostAccess: shouldCheckDeadLinks(runtimeConfig) && bookmarkState.bookmarks.length > 0
   };
 }
 
@@ -1614,7 +1614,6 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
 
   const config = await readStoredConfig();
   validateConfig(config, { requireModelAccess: false });
-  await assertOrganizeHostAccess(runContext.trigger, config);
   const runtimeBatchSize = getRuntimeBatchSize(config);
   const runtimeConfig = {
     ...config,
@@ -1649,6 +1648,7 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
     return { ok: true };
   }
 
+  await assertOrganizeHostAccess(runContext.trigger, runtimeConfig);
   await chrome.storage.local.remove(STORAGE_KEYS.previewPlan);
 
   const snapshotInfo =

@@ -762,12 +762,14 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /finishFastLocalJob/);
   assert.match(backgroundSource, /CHECK_LOCAL_MODEL_REQUIREMENT/);
   assert.match(backgroundSource, /checkLocalModelRequirement/);
+  assert.match(backgroundSource, /requiresBroadHostAccess: shouldCheckDeadLinks\(runtimeConfig\) && bookmarkState\.bookmarks\.length > 0/);
   assert.match(backgroundSource, /LOCAL_REQUIREMENT_CHECK_TTL_MS/);
   assert.match(backgroundSource, /lastLocalRequirementCheck/);
   assert.match(backgroundSource, /takeReusableLocalRequirementCheck/);
   assert.match(backgroundSource, /localRequirementCheckId: message\.localRequirementCheckId \|\| ""/);
   assert.match(backgroundSource, /reusableLocalCheck\?\.bookmarkState \|\| await collectBookmarkPlanningState/);
   assert.match(backgroundSource, /validateConfig\(config, \{ requireModelAccess: false \}\)/);
+  assert.match(backgroundSource, /if \(!bookmarks\.length\) \{[\s\S]*return \{ ok: true \};[\s\S]*await assertOrganizeHostAccess\(runContext\.trigger, runtimeConfig\)/);
   assert.match(backgroundSource, /validateConfig\(config, \{ requireModelAccess: true \}\)/);
   assert.match(backgroundSource, /function hasRequiredProviderCredential/);
   assert.match(backgroundSource, /requireModelAccess && !hasRequiredProviderCredential\(config\)/);
@@ -1022,6 +1024,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);
+  assert.match(changelog, /Complete-mode preview no longer asks for broad website access/);
   assert.match(changelog, /mini-request timeouts now keep completed mini results/);
   assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
   assert.match(changelog, /inline confirmations and status messages/);
