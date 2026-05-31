@@ -243,6 +243,7 @@ const CLASSIFICATION_OUTPUT_BUDGET_PROFILES = {
 };
 const LOCAL_REQUIREMENT_CHECK_TTL_MS = 15_000;
 const BOOTSTRAP_BACKUP_SYNC_TTL_MS = 60_000;
+const BOOTSTRAP_ROOT_CLEANUP_TTL_MS = 60_000;
 const MAX_BACKUP_RECORDS = 10;
 const MAX_CLASSIFICATION_SIGNATURES = 6;
 const MAX_CLASSIFICATION_CACHE_ITEMS = 5000;
@@ -258,6 +259,7 @@ let activeAbortController = null;
 const activeModelAbortControllers = new Set();
 let lastLocalRequirementCheck = null;
 let lastBootstrapBackupSyncMs = 0;
+let lastBootstrapRootCleanupMs = 0;
 const activeDeadScanControllers = new Set();
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -766,17 +768,7 @@ async function bootstrapState() {
   }
 
   await syncBackupRecordsForBootstrap();
-
-  if (stored[STORAGE_KEYS.job]?.phase !== "running") {
-    try {
-      const tree = await chrome.bookmarks.getTree();
-      const bookmarkBarNode = findBookmarksBarNode(tree);
-      await cleanupForbiddenAiRootFolders(bookmarkBarNode?.id);
-    } catch (error) {
-      console.error("Failed to clean forbidden Smart Bookmark root folders:", error);
-    }
-  }
-
+  await cleanupForbiddenRootFoldersForBootstrap(stored[STORAGE_KEYS.job]);
 }
 
 async function syncBackupRecordsForBootstrap() {
@@ -785,11 +777,31 @@ async function syncBackupRecordsForBootstrap() {
     return;
   }
 
+  lastBootstrapBackupSyncMs = now;
   try {
     await syncBackupRecords();
-    lastBootstrapBackupSyncMs = now;
   } catch (error) {
     console.error("Failed to sync local backup records:", error);
+  }
+}
+
+async function cleanupForbiddenRootFoldersForBootstrap(activeJob) {
+  if (activeJob?.phase === "running") {
+    return;
+  }
+
+  const now = Date.now();
+  if (now - lastBootstrapRootCleanupMs < BOOTSTRAP_ROOT_CLEANUP_TTL_MS) {
+    return;
+  }
+
+  lastBootstrapRootCleanupMs = now;
+  try {
+    const tree = await chrome.bookmarks.getTree();
+    const bookmarkBarNode = findBookmarksBarNode(tree);
+    await cleanupForbiddenAiRootFolders(bookmarkBarNode?.id);
+  } catch (error) {
+    console.error("Failed to clean forbidden Smart Bookmark root folders:", error);
   }
 }
 

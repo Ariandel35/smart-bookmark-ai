@@ -77,7 +77,7 @@
 - Fast mode now finishes locally when custom rules, the classification cache, and built-in fast rules cover every bookmark, skipping model calls and batch scheduling
 - Preview now checks local rule/cache coverage before asking for API keys or model endpoint access
 - Preview startup now reuses the fresh local coverage check when possible instead of scanning bookmarks and cache twice
-- Background bootstrap now throttles backup-record synchronization so consecutive popup actions do not repeat backup scans
+- Background bootstrap now throttles backup-record synchronization and legacy root cleanup so consecutive popup actions do not repeat maintenance scans
 - Unprocessed-item keep/delete actions now lock together immediately to avoid duplicate handling requests
 - Stale unprocessed records are now cleared cleanly when the underlying bookmark was already removed
 - Settings save, API test, access grant, and reset controls now lock together while a settings operation is in flight
