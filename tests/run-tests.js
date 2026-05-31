@@ -763,8 +763,11 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /MODEL_REQUEST_CONCURRENCY_CAPS[\s\S]*deepseek: 3/);
   assert.match(backgroundSource, /getRuntimeBatchSizeCap/);
   assert.match(backgroundSource, /normalizeConfigBatchSize/);
+  assert.match(backgroundSource, /CONFIG_PERSISTENCE_KEYS/);
   assert.match(backgroundSource, /persistNormalizedConfigIfSafe/);
   assert.match(backgroundSource, /shouldPersistNormalizedConfig/);
+  assert.match(backgroundSource, /CONFIG_PERSISTENCE_KEYS\.some\(\(key\) => rawConfig\[key\] !== normalizedConfig\[key\]\)/);
+  assert.doesNotMatch(backgroundSource, /normalizeRetryBatchSize\(rawConfig\.batchSize, Number\.NaN\)/);
   assert.match(backgroundSource, /options\.activeJob\?\.phase === "running" \|\| options\.previewPlan/);
   assert.match(backgroundSource, /STORAGE_KEYS\.previewPlan/);
   assert.match(backgroundSource, /getProviderPerformanceProfile/);
@@ -1206,6 +1209,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /three-bookmark model requests/);
   assert.match(changelog, /older 48-item settings/);
   assert.match(changelog, /writes normalized batch-size settings back to storage only when no run or saved preview is active/);
+  assert.match(changelog, /full normalized config instead of using retry-batch rules/);
   assert.match(changelog, /warn inline before saving when a DeepSeek-compatible batch size will be capped/);
   assert.match(changelog, /auto-organize permission impact inline/);
   assert.match(changelog, /API test succeeded but auto-organize permission was not granted/);

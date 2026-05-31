@@ -253,6 +253,20 @@ const BOOTSTRAP_ROOT_CLEANUP_TTL_MS = 60_000;
 const MAX_BACKUP_RECORDS = 10;
 const MAX_CLASSIFICATION_SIGNATURES = 6;
 const MAX_CLASSIFICATION_CACHE_ITEMS = 5000;
+const CONFIG_PERSISTENCE_KEYS = [
+  "provider",
+  "baseUrl",
+  "apiKey",
+  "model",
+  "batchSize",
+  "linkCheckMode",
+  "autoOrganizeEnabled",
+  "autoOrganizeIntervalHours",
+  "whitelistDomains",
+  "protectedRootFolders",
+  "domainFolderRules",
+  "customPrompt"
+];
 
 const LEGACY_DEFAULT_PROMPT = I18N.getLegacyDefaultPrompt();
 const DEFAULT_PROMPT = I18N.getDefaultPrompt();
@@ -940,7 +954,7 @@ function shouldPersistNormalizedConfig(rawConfig, normalizedConfig) {
     return false;
   }
 
-  return normalizeRetryBatchSize(rawConfig.batchSize, Number.NaN) !== normalizedConfig.batchSize;
+  return CONFIG_PERSISTENCE_KEYS.some((key) => rawConfig[key] !== normalizedConfig[key]);
 }
 
 async function persistNormalizedConfigIfSafe(rawConfig, options = {}) {
