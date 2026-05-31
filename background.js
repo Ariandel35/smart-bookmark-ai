@@ -242,6 +242,7 @@ const CLASSIFICATION_OUTPUT_BUDGET_PROFILES = {
   }
 };
 const LOCAL_REQUIREMENT_CHECK_TTL_MS = 15_000;
+const BOOTSTRAP_BACKUP_SYNC_TTL_MS = 60_000;
 const MAX_BACKUP_RECORDS = 10;
 const MAX_CLASSIFICATION_SIGNATURES = 6;
 const MAX_CLASSIFICATION_CACHE_ITEMS = 5000;
@@ -256,6 +257,7 @@ let batchLock = false;
 let activeAbortController = null;
 const activeModelAbortControllers = new Set();
 let lastLocalRequirementCheck = null;
+let lastBootstrapBackupSyncMs = 0;
 const activeDeadScanControllers = new Set();
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -763,11 +765,7 @@ async function bootstrapState() {
     await scheduleNextBatch();
   }
 
-  try {
-    await syncBackupRecords();
-  } catch (error) {
-    console.error("Failed to sync local backup records:", error);
-  }
+  await syncBackupRecordsForBootstrap();
 
   if (stored[STORAGE_KEYS.job]?.phase !== "running") {
     try {
@@ -779,6 +777,20 @@ async function bootstrapState() {
     }
   }
 
+}
+
+async function syncBackupRecordsForBootstrap() {
+  const now = Date.now();
+  if (now - lastBootstrapBackupSyncMs < BOOTSTRAP_BACKUP_SYNC_TTL_MS) {
+    return;
+  }
+
+  try {
+    await syncBackupRecords();
+    lastBootstrapBackupSyncMs = now;
+  } catch (error) {
+    console.error("Failed to sync local backup records:", error);
+  }
 }
 
 function buildDefaultConfig(provider = "openai") {

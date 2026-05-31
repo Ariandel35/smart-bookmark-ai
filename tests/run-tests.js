@@ -519,6 +519,10 @@ function testPreviewApplySurface() {
   assert.match(backgroundSource, /preserveIds/);
   assert.match(backgroundSource, /addBackupRecord\(record, source = "manual", options = \{\}\)/);
   assert.match(backgroundSource, /createCurrentSnapshotBackup\(bookmarkBarNode, source = "manual", options = \{\}\)/);
+  assert.match(backgroundSource, /BOOTSTRAP_BACKUP_SYNC_TTL_MS/);
+  assert.match(backgroundSource, /let lastBootstrapBackupSyncMs = 0/);
+  assert.match(backgroundSource, /await syncBackupRecordsForBootstrap\(\)/);
+  assert.match(backgroundSource, /now - lastBootstrapBackupSyncMs < BOOTSTRAP_BACKUP_SYNC_TTL_MS/);
 
   const popupSource = fs.readFileSync(path.join(ROOT_DIR, "popup.js"), "utf8");
   assert.match(popupSource, /APPLY_PREVIEW_PLAN/);
