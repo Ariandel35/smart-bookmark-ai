@@ -968,11 +968,13 @@ function renderBackupRecords(records = currentBackupRecords) {
     if (pendingBackupAction?.id === record.id) {
       actions.appendChild(createBackupInlineConfirm(record, pendingBackupAction.action));
     } else {
+      const restoreLabel = t("backupRestoreRecordAria", { title: backupName });
       const restoreButton = document.createElement("button");
       restoreButton.type = "button";
       restoreButton.className = "button button--ghost button--compact";
       restoreButton.textContent = t("restoreButton");
-      restoreButton.setAttribute("aria-label", t("backupRestoreRecordAria", { title: backupName }));
+      restoreButton.title = restoreLabel;
+      restoreButton.setAttribute("aria-label", restoreLabel);
       restoreButton.setAttribute("aria-describedby", backupActionStatus.id);
       restoreButton.dataset.backupId = String(record.id || "");
       restoreButton.dataset.backupActionButton = "restore";
@@ -981,11 +983,13 @@ function renderBackupRecords(records = currentBackupRecords) {
         setPendingBackupAction(record.id, "restore");
       });
 
+      const deleteLabel = t("backupDeleteRecordAria", { title: backupName });
       const deleteButton = document.createElement("button");
       deleteButton.type = "button";
       deleteButton.className = "button button--danger button--compact";
       deleteButton.textContent = t("deleteButton");
-      deleteButton.setAttribute("aria-label", t("backupDeleteRecordAria", { title: backupName }));
+      deleteButton.title = deleteLabel;
+      deleteButton.setAttribute("aria-label", deleteLabel);
       deleteButton.setAttribute("aria-describedby", backupActionStatus.id);
       deleteButton.dataset.backupId = String(record.id || "");
       deleteButton.dataset.backupActionButton = "delete";
@@ -1062,12 +1066,12 @@ function createBackupInlineConfirm(record, action) {
       : "button button--danger button--compact";
   confirmButton.textContent =
     action === "restore" ? t("backupRestoreInlinePrimary") : t("backupDeleteInlinePrimary");
-  confirmButton.setAttribute(
-    "aria-label",
+  const confirmLabel =
     action === "restore"
       ? t("backupConfirmRestoreRecordAria", { title: backupName })
-      : t("backupConfirmDeleteRecordAria", { title: backupName })
-  );
+      : t("backupConfirmDeleteRecordAria", { title: backupName });
+  confirmButton.title = confirmLabel;
+  confirmButton.setAttribute("aria-label", confirmLabel);
   confirmButton.setAttribute("aria-describedby", backupActionStatus.id);
   confirmButton.dataset.backupId = String(record.id || "");
   confirmButton.dataset.backupConfirmPrimary = "true";
@@ -1096,7 +1100,9 @@ function createBackupInlineConfirm(record, action) {
   cancelButton.type = "button";
   cancelButton.className = "button button--secondary button--compact";
   cancelButton.textContent = t("backupInlineCancel");
-  cancelButton.setAttribute("aria-label", t("backupCancelActionAria", { title: backupName }));
+  const cancelLabel = t("backupCancelActionAria", { title: backupName });
+  cancelButton.title = cancelLabel;
+  cancelButton.setAttribute("aria-label", cancelLabel);
   cancelButton.disabled = backupActionInFlight;
   cancelButton.addEventListener("click", () => {
     if (backupActionInFlight) {
