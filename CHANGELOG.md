@@ -16,6 +16,7 @@
 - DeepSeek and DeepSeek-compatible classification now stops after a 6-second first-response stall or a 14-second full-response stall before falling back locally
 - DeepSeek and DeepSeek-compatible batch-size settings are capped when loaded or saved, so older 48-item settings cannot keep driving slow previews
 - Settings now warn inline before saving when a DeepSeek-compatible batch size will be capped for faster previews
+- Settings now show the auto-organize permission impact inline as users switch automation and speed modes
 - Running legacy organize jobs are normalized before the next batch so stale large batches cannot continue after an update
 - Privacy, README, and store disclosures now describe preview-time model calls, local Apply Plan rebuilds, and auto organize data flow consistently
 - Remaining README, privacy page, and review checklist wording now uses the same preview-first data-flow language

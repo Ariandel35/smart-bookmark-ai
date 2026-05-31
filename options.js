@@ -25,6 +25,7 @@ const batchSizeInput = document.getElementById("batchSize");
 const batchSizeCapHint = document.getElementById("batchSizeCapHint");
 const linkCheckModeSelect = document.getElementById("linkCheckMode");
 const autoOrganizeEnabledInput = document.getElementById("autoOrganizeEnabled");
+const autoOrganizeAccessHint = document.getElementById("autoOrganizeAccessHint");
 const autoOrganizeIntervalInput = document.getElementById("autoOrganizeIntervalHours");
 const whitelistSearchInput = document.getElementById("whitelistSearch");
 const whitelistDomainsInput = document.getElementById("whitelistDomains");
@@ -800,6 +801,7 @@ function populateForm(config) {
   lastProvider = config.provider;
   updateProviderHints(config.provider);
   updateBatchSizeCapHint();
+  updateAutoOrganizeAccessHint();
 }
 
 function collectFormData() {
@@ -842,6 +844,24 @@ function updateBatchSizeCapHint() {
   } else {
     removeDescribedByTokens(batchSizeInput, [batchSizeCapHint.id]);
   }
+}
+
+function updateAutoOrganizeAccessHint() {
+  const enabled = autoOrganizeEnabledInput.value === "true";
+  const mode = normalizeLinkCheckMode(linkCheckModeSelect.value);
+  const key = !enabled
+    ? "autoOrganizeDisabledHint"
+    : mode === LINK_CHECK_MODE_COMPLETE
+      ? "autoOrganizeCompleteHint"
+      : mode === LINK_CHECK_MODE_BALANCED
+        ? "autoOrganizeBalancedHint"
+        : "autoOrganizeFastHint";
+  const caution = enabled && mode !== LINK_CHECK_MODE_FAST;
+
+  autoOrganizeAccessHint.hidden = false;
+  autoOrganizeAccessHint.textContent = t(key);
+  autoOrganizeAccessHint.className = caution ? "field__hint field__hint--warm" : "field__hint";
+  addDescribedByToken(autoOrganizeEnabledInput, autoOrganizeAccessHint.id);
 }
 
 function capConfigBatchSize(config) {
@@ -1634,6 +1654,10 @@ function handleFormMutation(event) {
     updateBatchSizeCapHint();
   }
 
+  if (targetId === "autoOrganizeEnabled" || targetId === "linkCheckMode") {
+    updateAutoOrganizeAccessHint();
+  }
+
   if (targetId === "baseUrl" || targetId === "linkCheckMode") {
     scheduleHostAccessStatusRefresh(targetId === "baseUrl" ? "Base URL change" : "speed mode change");
   }
@@ -1671,6 +1695,7 @@ providerSelect.addEventListener("change", () => {
 
   updateProviderHints(nextProvider);
   updateBatchSizeCapHint();
+  updateAutoOrganizeAccessHint();
   lastProvider = nextProvider;
   if (shouldClearApiKey) {
     setApiTestStatus(t("apiKeyClearedOnProviderChange"));

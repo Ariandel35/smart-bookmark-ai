@@ -882,6 +882,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="createBackupButton"[\s\S]*aria-describedby="backupActionStatus"/);
   assert.match(optionsHtml, /id="testApiButton"[\s\S]*aria-describedby="apiTestStatus"/);
   assert.match(optionsHtml, /id="grantAccessButton"[\s\S]*aria-describedby="hostAccessStatus"/);
+  assert.match(optionsHtml, /id="autoOrganizeAccessHint"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*hidden/);
   assert.match(optionsHtml, /id="linkCheckMode"[\s\S]*aria-describedby="linkCheckModeHint"/);
   assert.match(optionsHtml, /id="linkCheckModeHint"[\s\S]*data-i18n="hintLinkCheckMode"/);
   assert.match(optionsHtml, /id="batchSize"[\s\S]*aria-describedby="batchSizeHint"/);
@@ -908,6 +909,14 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /addDescribedByToken\(batchSizeInput, batchSizeCapHint\.id\)/);
   assert.match(optionsSource, /removeDescribedByTokens\(batchSizeInput, \[batchSizeCapHint\.id\]\)/);
   assert.match(optionsSource, /settingsSlowBatchAdjustedStatus/);
+  assert.match(optionsSource, /autoOrganizeAccessHint/);
+  assert.match(optionsSource, /function updateAutoOrganizeAccessHint\(\)/);
+  assert.match(optionsSource, /autoOrganizeDisabledHint/);
+  assert.match(optionsSource, /autoOrganizeFastHint/);
+  assert.match(optionsSource, /autoOrganizeBalancedHint/);
+  assert.match(optionsSource, /autoOrganizeCompleteHint/);
+  assert.match(optionsSource, /addDescribedByToken\(autoOrganizeEnabledInput, autoOrganizeAccessHint\.id\)/);
+  assert.match(optionsSource, /updateAutoOrganizeAccessHint\(\)/);
   assert.match(optionsSource, /showSettingsIssue/);
   assert.match(optionsSource, /isValidHttpUrl/);
   assert.match(optionsSource, /const providerKnown = Boolean\(raw\.provider && Providers\.hasProvider\(raw\.provider\)\)/);
@@ -1137,6 +1146,10 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(i18nSource, /apiTestSaveFailed/);
   assert.match(i18nSource, /settingsAccessRequestingStatus/);
   assert.match(i18nSource, /hostAccessChecking/);
+  assert.match(i18nSource, /autoOrganizeDisabledHint/);
+  assert.match(i18nSource, /autoOrganizeFastHint/);
+  assert.match(i18nSource, /autoOrganizeBalancedHint/);
+  assert.match(i18nSource, /autoOrganizeCompleteHint/);
   assert.match(i18nSource, /backupRestoreInlineConfirm/);
   assert.match(i18nSource, /A fresh snapshot of current bookmarks is created first/);
   assert.match(i18nSource, /恢复前会先为当前书签创建新快照/);
@@ -1183,6 +1196,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /three-bookmark model requests/);
   assert.match(changelog, /older 48-item settings/);
   assert.match(changelog, /warn inline before saving when a DeepSeek-compatible batch size will be capped/);
+  assert.match(changelog, /auto-organize permission impact inline/);
   assert.match(changelog, /DeepSeek-compatible endpoints/);
   assert.match(changelog, /up to three mini requests/);
   assert.match(changelog, /preview-time model calls, local Apply Plan rebuilds, and auto organize data flow/);
