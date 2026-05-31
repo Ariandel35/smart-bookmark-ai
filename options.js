@@ -58,9 +58,35 @@ let hostAccessCheckingInFlight = false;
 let hostAccessRefreshTimer = null;
 
 I18N.applyDocument(document);
+syncPrimaryActionButtonLabels();
 renderProviderOptions();
 renderWhitelistSelection();
 renderWhitelistDomainList();
+
+function setButtonLabel(button, label) {
+  const safeLabel = String(label || "").trim();
+  button.textContent = safeLabel;
+  button.title = safeLabel;
+  button.setAttribute("aria-label", safeLabel);
+}
+
+function setGrantAccessButtonState(granted = false) {
+  const isGranted = Boolean(granted);
+  grantAccessButton.dataset.granted = String(isGranted);
+  setButtonLabel(
+    grantAccessButton,
+    isGranted ? t("hostAccessGrantedButton") : t("hostAccessButton")
+  );
+}
+
+function syncPrimaryActionButtonLabels() {
+  setButtonLabel(saveButton, t("saveButton"));
+  setButtonLabel(resetButton, t("resetButton"));
+  setButtonLabel(privacyButton, t("privacyButton"));
+  setButtonLabel(testApiButton, t("testApiButton"));
+  setButtonLabel(createBackupButton, t("createBackupNow"));
+  setGrantAccessButtonState(grantAccessButton.dataset.granted === "true");
+}
 
 function getDefaults(provider) {
   return Providers.getProvider(provider);
@@ -474,8 +500,7 @@ function setHostAccessStatus(message = "", isGranted = false) {
 function renderHostAccessRefreshFailure(message = t("hostAccessRefreshFailed")) {
   hostAccessCheckingInFlight = false;
   setHostAccessStatus(message, false);
-  grantAccessButton.textContent = t("hostAccessButton");
-  grantAccessButton.dataset.granted = "false";
+  setGrantAccessButtonState(false);
   updateSettingsOperationControls();
 }
 
@@ -617,16 +642,14 @@ async function refreshHostAccessStatus() {
   if (!config.baseUrl) {
     hostAccessCheckingInFlight = false;
     setHostAccessStatus(t("baseUrlRequired"), false);
-    grantAccessButton.textContent = t("hostAccessButton");
-    grantAccessButton.dataset.granted = "false";
+    setGrantAccessButtonState(false);
     updateSettingsOperationControls();
     return;
   }
   if (!isValidHttpUrl(config.baseUrl)) {
     hostAccessCheckingInFlight = false;
     setHostAccessStatus(t("baseUrlInvalid"), false);
-    grantAccessButton.textContent = t("hostAccessButton");
-    grantAccessButton.dataset.granted = "false";
+    setGrantAccessButtonState(false);
     updateSettingsOperationControls();
     return;
   }
@@ -634,8 +657,7 @@ async function refreshHostAccessStatus() {
   const requiresBroadAccess = shouldRequireBroadHostAccess(config);
   hostAccessCheckingInFlight = true;
   setHostAccessStatus(t("hostAccessChecking"), true);
-  grantAccessButton.textContent = t("hostAccessButton");
-  grantAccessButton.dataset.granted = "false";
+  setGrantAccessButtonState(false);
   updateSettingsOperationControls();
 
   let granted;
@@ -659,8 +681,7 @@ async function refreshHostAccessStatus() {
     granted ? "" : requiresBroadAccess ? t("hostAccessMissing") : t("currentApiAccessMissing"),
     granted
   );
-  grantAccessButton.textContent = granted ? t("hostAccessGrantedButton") : t("hostAccessButton");
-  grantAccessButton.dataset.granted = String(granted);
+  setGrantAccessButtonState(granted);
   updateSettingsOperationControls();
 }
 
@@ -678,8 +699,7 @@ function scheduleHostAccessStatusRefresh(reason) {
   hostAccessRefreshVersion += 1;
   hostAccessCheckingInFlight = true;
   setHostAccessStatus(t("hostAccessChecking"), true);
-  grantAccessButton.textContent = t("hostAccessButton");
-  grantAccessButton.dataset.granted = "false";
+  setGrantAccessButtonState(false);
   updateSettingsOperationControls();
 
   hostAccessRefreshTimer = setTimeout(() => {

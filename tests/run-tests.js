@@ -851,6 +851,19 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /apiKey,/);
   assert.match(optionsSource, /model:\s*providerKnown && typeof raw\.model === "string"/);
   assert.match(optionsSource, /autoOrganizeEnabled,/);
+  assert.match(optionsSource, /function setButtonLabel\(button, label\)/);
+  assert.match(optionsSource, /button\.title = safeLabel/);
+  assert.match(optionsSource, /button\.setAttribute\("aria-label", safeLabel\)/);
+  assert.match(optionsSource, /function setGrantAccessButtonState\(granted = false\)/);
+  assert.match(optionsSource, /grantAccessButton\.dataset\.granted = String\(isGranted\)/);
+  assert.match(optionsSource, /setButtonLabel\(\s*grantAccessButton,[\s\S]*hostAccessGrantedButton[\s\S]*hostAccessButton/);
+  assert.match(optionsSource, /function syncPrimaryActionButtonLabels\(\)/);
+  assert.match(optionsSource, /setButtonLabel\(saveButton, t\("saveButton"\)\)/);
+  assert.match(optionsSource, /setButtonLabel\(resetButton, t\("resetButton"\)\)/);
+  assert.match(optionsSource, /setButtonLabel\(privacyButton, t\("privacyButton"\)\)/);
+  assert.match(optionsSource, /setButtonLabel\(testApiButton, t\("testApiButton"\)\)/);
+  assert.match(optionsSource, /setButtonLabel\(createBackupButton, t\("createBackupNow"\)\)/);
+  assert.match(optionsSource, /setGrantAccessButtonState\(grantAccessButton\.dataset\.granted === "true"\)/);
   assert.match(optionsSource, /const removeLabel = t\("whitelistRemoveDomain", \{ domain \}\)/);
   assert.match(optionsSource, /button\.title = removeLabel/);
   assert.match(optionsSource, /button\.setAttribute\("aria-label", removeLabel\)/);
@@ -901,6 +914,9 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /hostAccessCheckingInFlight = false/);
   assert.match(optionsSource, /function renderHostAccessRefreshFailure\(message = t\("hostAccessRefreshFailed"\)\)/);
   assert.match(optionsSource, /setHostAccessStatus\(message, false\)/);
+  assert.match(optionsSource, /setGrantAccessButtonState\(false\)/);
+  assert.match(optionsSource, /setGrantAccessButtonState\(granted\)/);
+  assert.doesNotMatch(optionsSource, /grantAccessButton\.textContent/);
   assert.match(optionsSource, /renderHostAccessRefreshFailure\(\)/);
   assert.match(optionsSource, /console\.error\("Failed to save settings:"/);
   assert.match(optionsSource, /console\.error\("Failed to save settings after API test:"/);
@@ -1079,6 +1095,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Backup restore, delete, confirm, and cancel controls/);
   assert.match(changelog, /Popup unprocessed-item keep\/delete controls/);
   assert.match(changelog, /Popup primary, settings, backup, cancel, and apply-confirmation buttons/);
+  assert.match(changelog, /Settings save, reset, privacy, API test, access, and manual backup buttons/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);
