@@ -447,6 +447,9 @@ function testSpeedModeSurface() {
   const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSource, /shouldCheckDeadLinks/);
   assert.match(backgroundSource, /buildSkippedDeadLinkScanResult/);
+  assert.match(backgroundSource, /Cannot generate a Complete preview without site access/);
+  assert.match(backgroundSource, /previewing Complete mode/);
+  assert.doesNotMatch(backgroundSource, /Cannot start organizing without site access/);
 
   const popupSource = fs.readFileSync(path.join(ROOT_DIR, "popup.js"), "utf8");
   assert.match(popupSource, /ensureOrganizeAccess/);
@@ -515,6 +518,8 @@ function testPreviewApplySurface() {
   assert.match(backgroundSource, /Stale unprocessed record removed/);
   assert.match(backgroundSource, /currentStatus\?\.phase !== "completed"/);
   assert.match(backgroundSource, /Apply and finish the organize plan before handling unprocessed items/);
+  assert.match(backgroundSource, /before generating a preview/);
+  assert.doesNotMatch(backgroundSource, /whitelist that site before organizing/);
   assert.match(backgroundSource, /existingBookmark\.id/);
   assert.match(backgroundSource, /Pre-restore backup failed/);
   assert.match(backgroundSource, /createCurrentSnapshotBackup\(bookmarkBarNode, "manual", \{ preserveIds: \[backupId\] \}\)/);
@@ -1008,6 +1013,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /up to three mini requests/);
   assert.match(changelog, /preview-time model calls, local Apply Plan rebuilds, and auto organize data flow/);
   assert.match(changelog, /same preview-first data-flow language/);
+  assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /mini-request timeouts now keep completed mini results/);
   assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
   assert.match(changelog, /inline confirmations and status messages/);

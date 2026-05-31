@@ -959,10 +959,10 @@ async function assertOrganizeHostAccess(trigger = "manual", config = {}) {
   }
 
   throw buildUserFacingError(
-    ux("缺少网站访问权限，无法开始整理。", "Cannot start organizing without site access."),
+    ux("缺少网站访问权限，无法生成完整预览。", "Cannot generate a Complete preview without site access."),
     ux(
-      "请先在弹窗开始整理时授权网站访问，或去设置页点击“授权网站访问”。",
-      "Grant site access from the popup or from the settings page first."
+      "请先在弹窗预览完整模式时授权网站访问，或去设置页点击“授权网站访问”。",
+      "Grant site access from the popup while previewing Complete mode, or from the settings page first."
     )
   );
 }
@@ -4983,8 +4983,8 @@ function buildBatchClassificationPlan(batch, normalizedResults) {
             "Duplicate bookmarks with the same URL were detected. The current duplicate will not be kept during rebuild."
           ),
           ux(
-            "如果这是你刻意保留的多个入口，可以稍后手动重新添加，或在整理前把该网站加入白名单。",
-            "If you intentionally keep multiple entries, you can add it back manually later or whitelist that site before organizing."
+            "如果这是你刻意保留的多个入口，可以稍后手动重新添加，或在生成预览前把该网站加入白名单。",
+            "If you intentionally keep multiple entries, you can add it back manually later or whitelist that site before generating a preview."
           )
         )
       );
