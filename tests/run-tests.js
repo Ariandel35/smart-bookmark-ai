@@ -494,6 +494,8 @@ function testPreviewApplySurface() {
   assert.match(backgroundSource, /does not call the model again/);
   assert.match(backgroundSource, /oldSignature === nextSignature/);
   assert.match(backgroundSource, /invalidatePreviewPlan/);
+  assert.match(backgroundSource, /INVALIDATE_PREVIEW_PLAN/);
+  assert.match(backgroundSource, /Mode changed\. Generate a new preview/);
   assert.match(backgroundSource, /onCreated\?\.addListener\(invalidatePreviewAfterBookmarkChange\)/);
   assert.match(backgroundSource, /onChildrenReordered\?\.addListener\(invalidatePreviewAfterBookmarkChange\)/);
   assert.match(backgroundSource, /rejectApplyPreviewPlan/);
@@ -551,6 +553,8 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /normalizeLinkCheckMode/);
   assert.match(popupSource, /async function updatePopupSpeedMode/);
   assert.match(popupSource, /chrome\.storage\.local\.set\(\{ \[CONFIG_KEY\]: nextConfig \}\)/);
+  assert.match(popupSource, /chrome\.runtime\.sendMessage\(\{ type: "INVALIDATE_PREVIEW_PLAN" \}\)/);
+  assert.match(popupSource, /applyConfirmationVisible = false/);
   assert.match(popupSource, /popupSavingSpeedModeStatus/);
   assert.match(popupSource, /popupSpeedModeSavedStatus/);
   assert.match(popupSource, /button\.setAttribute\("aria-checked", String\(isActive\)\)/);

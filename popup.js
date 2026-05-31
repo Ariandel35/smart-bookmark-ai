@@ -881,8 +881,14 @@ async function updatePopupSpeedMode(rawMode) {
       linkCheckMode: nextMode
     };
     await chrome.storage.local.set({ [CONFIG_KEY]: nextConfig });
+    const invalidation = await chrome.runtime.sendMessage({ type: "INVALIDATE_PREVIEW_PLAN" });
+    if (!invalidation?.ok) {
+      throw new Error(invalidation?.error || t("popupSpeedModeFailedStatus"));
+    }
+
     currentConfig = nextConfig;
     currentPreviewPlan = null;
+    applyConfirmationVisible = false;
     renderConfig(currentConfig);
     await refreshAll();
     setPopupActionStatus(t("popupSpeedModeSavedStatus"));

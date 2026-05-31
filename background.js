@@ -424,6 +424,27 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       return;
     }
 
+    if (message?.type === "INVALIDATE_PREVIEW_PLAN") {
+      try {
+        await invalidatePreviewPlan(
+          ux("模式已更新，请重新生成预览。", "Mode changed. Generate a new preview."),
+          ux(
+            "旧预览已自动失效，避免把旧速度模式的方案应用到新模式。",
+            "The old preview was invalidated automatically so a plan from the previous speed mode is not applied to the new mode."
+          )
+        );
+        sendResponse({ ok: true });
+      } catch (error) {
+        console.error("Failed to invalidate preview plan:", error);
+        sendResponse({
+          ok: false,
+          error: toUserMessage(error, ux("清除旧预览失败。", "Failed to clear the old preview.")),
+          detail: error?.userDetail || ""
+        });
+      }
+      return;
+    }
+
     if (message?.type === "CREATE_MANUAL_BACKUP") {
       try {
         const result = await createManualBackup();
