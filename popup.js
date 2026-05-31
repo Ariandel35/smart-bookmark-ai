@@ -365,6 +365,10 @@ function syncActionButtons() {
   startButton.setAttribute("aria-busy", String(popupActionInFlight));
   backupButton.setAttribute("aria-busy", String(popupActionInFlight));
   cancelButton.setAttribute("aria-busy", String(popupActionInFlight));
+  detailPanel.querySelectorAll("[data-unprocessed-action-button]").forEach((button) => {
+    button.disabled = popupActionInFlight || isRunning;
+    button.setAttribute("aria-busy", String(popupActionInFlight));
+  });
   setButtonLabel(optionsButton, t("optionsButton"));
   setButtonLabel(startButton, startLabel);
   setButtonLabel(backupButton, t("backupButton"));
@@ -791,6 +795,7 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
       keepButton.title = keepLabel;
       keepButton.setAttribute("aria-label", keepLabel);
       keepButton.setAttribute("aria-describedby", popupActionStatus.id);
+      keepButton.dataset.unprocessedActionButton = "keep";
       keepButton.disabled = popupActionInFlight;
 
       const deleteLabel = t("deleteBookmarkAria", { title: recordTitle });
@@ -801,6 +806,7 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
       deleteButton.title = deleteLabel;
       deleteButton.setAttribute("aria-label", deleteLabel);
       deleteButton.setAttribute("aria-describedby", popupActionStatus.id);
+      deleteButton.dataset.unprocessedActionButton = "delete";
       deleteButton.disabled = popupActionInFlight;
 
       const lockEntryActions = () => {
@@ -809,6 +815,10 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
       };
 
       keepButton.addEventListener("click", () => {
+        if (popupActionInFlight) {
+          return;
+        }
+
         lockEntryActions();
         resolveUnprocessedEntry(entry.id, "keep").catch((error) => {
           console.error("Failed to keep unprocessed bookmark:", error);
@@ -822,6 +832,10 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
       });
 
       deleteButton.addEventListener("click", () => {
+        if (popupActionInFlight) {
+          return;
+        }
+
         lockEntryActions();
         resolveUnprocessedEntry(entry.id, "delete").catch((error) => {
           console.error("Failed to delete unprocessed bookmark:", error);

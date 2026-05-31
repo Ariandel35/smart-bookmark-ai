@@ -650,9 +650,13 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /deleteButton\.setAttribute\("aria-label", deleteLabel\)/);
   assert.match(popupSource, /keepButton\.setAttribute\("aria-describedby", popupActionStatus\.id\)/);
   assert.match(popupSource, /deleteButton\.setAttribute\("aria-describedby", popupActionStatus\.id\)/);
+  assert.match(popupSource, /keepButton\.dataset\.unprocessedActionButton = "keep"/);
+  assert.match(popupSource, /deleteButton\.dataset\.unprocessedActionButton = "delete"/);
+  assert.match(popupSource, /detailPanel\.querySelectorAll\("\[data-unprocessed-action-button\]"\)/);
+  assert.match(popupSource, /button\.disabled = popupActionInFlight \|\| isRunning/);
   assert.match(popupSource, /const lockEntryActions = \(\) => \{\n        keepButton\.disabled = true;\n        deleteButton\.disabled = true;/);
-  assert.match(popupSource, /keepButton\.addEventListener\("click", \(\) => \{\n        lockEntryActions\(\);/);
-  assert.match(popupSource, /deleteButton\.addEventListener\("click", \(\) => \{\n        lockEntryActions\(\);/);
+  assert.match(popupSource, /keepButton\.addEventListener\("click", \(\) => \{\n        if \(popupActionInFlight\) \{/);
+  assert.match(popupSource, /deleteButton\.addEventListener\("click", \(\) => \{\n        if \(popupActionInFlight\) \{/);
   assert.doesNotMatch(popupSource, /START_ORGANIZE/);
   assert.doesNotMatch(popupSource, /window\.confirm/);
 
@@ -1209,6 +1213,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Whitelist domain chips and catalog options/);
   assert.match(changelog, /Backup restore, delete, confirm, and cancel controls/);
   assert.match(changelog, /Popup unprocessed-item keep\/delete controls/);
+  assert.match(changelog, /unprocessed-item actions now lock the whole action group/);
   assert.match(changelog, /Popup primary, settings, backup, cancel, and apply-confirmation buttons/);
   assert.match(changelog, /Settings save, reset, privacy, API test, access, and manual backup buttons/);
   assert.match(changelog, /Popup Fast, Balanced, and Complete mode toggles/);
