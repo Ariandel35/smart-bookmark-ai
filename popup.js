@@ -221,6 +221,7 @@ function getLogKindLabel(kind) {
       duplicate_deleted: t("logDuplicateDeleted"),
       dead_link_deleted: t("logDeadLinkDeleted"),
       manual_deleted: t("logManualDeleted"),
+      model_timeout_fallback: t("logModelTimeoutFallback"),
       fast_local_unclassified: t("logFastLocalUnclassified")
     }[kind] || t("logRecord")
   );

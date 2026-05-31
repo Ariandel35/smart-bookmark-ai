@@ -1350,6 +1350,24 @@ function buildFastLocalUnclassifiedWarnings(bookmarks) {
   }));
 }
 
+function buildModelTimeoutFallbackWarnings(bookmarks, error, config = {}) {
+  const providerLabel = getRuntimeProviderLabel(config) || ux("模型", "the model");
+  const timeoutMessage = error?.userMessage || error?.message || "";
+  return (Array.isArray(bookmarks) ? bookmarks : []).map((bookmark) => ({
+    title: bookmark.title || t("untitledBookmark"),
+    url: bookmark.url,
+    kind: "model_timeout_fallback",
+    reason: ux(
+      `${providerLabel} 响应过慢，Marko 已停止等待模型，并把这条书签留到待手动分类。`,
+      `${providerLabel} was too slow, so Marko stopped waiting for the model and left this bookmark for manual review.`
+    ),
+    suggestion: ux(
+      `本次会继续完成，不再卡在模型队列。${timeoutMessage ? `最近错误：${truncate(timeoutMessage, 120)}。` : ""}若想减少待分类项目，请换更快模型、切到快速模式，或添加域名目录规则。`,
+      `This run will continue instead of staying blocked on the model queue. ${timeoutMessage ? `Recent error: ${truncate(timeoutMessage, 120)}. ` : ""}To reduce manual-review items, switch to a faster model, use Fast mode, or add domain folder rules.`
+    )
+  }));
+}
+
 function domainMatchesHost(hostname, domain) {
   const safeHost = String(hostname || "").trim().toLowerCase();
   const safeDomain = String(domain || "").trim().toLowerCase();
@@ -1770,6 +1788,11 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
         "Global taxonomy planning failed, so the extension fell back to the default stable folders."
       );
     }
+  } else if (startupAiCandidateCount && shouldCheckDeadLinks(runtimeConfig)) {
+    taxonomyPlanningNote = ux(
+      `${getRuntimeProviderLabel(runtimeConfig)} 会跳过单独的全局目录规划请求，先使用内置稳定大类；如果分类请求过慢，本次会继续本地兜底完成。`,
+      `${getRuntimeProviderLabel(runtimeConfig)} skips the separate global taxonomy request and starts with stable folders; if classification is too slow, this run will finish with the local fallback.`
+    );
   } else if (startupAiCandidateCount) {
     taxonomyPlanningNote = ux(
       "快速模式已跳过单独的全局目录规划请求，直接使用内置稳定大类和待手动分类兜底。",
@@ -1793,15 +1816,25 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
           "完整模式会先生成全局目录方案，再按批分类。",
           "Complete mode plans a global taxonomy first, then classifies in batches."
         )
+      : shouldCheckDeadLinks(runtimeConfig)
+        ? ux(
+            "完整模式会跳过慢模型的单独目录规划请求，并在模型超时时切到本地兜底继续完成。",
+            "Complete mode skips the slow-model taxonomy request and switches to the local fallback if the model times out."
+          )
       : ux(
           "快速模式会跳过单独的全局目录规划，使用内置稳定大类和待手动分类兜底。",
           "Fast mode skips the separate taxonomy-planning request and uses built-in stable folders plus manual-review fallback."
         );
   const linkCheckDetail = shouldCheckDeadLinks(runtimeConfig)
-    ? ux(
-        "完整模式会在分类前检测失效链接，并保留额外的全局目录规划。",
-        "Complete mode checks dead links before classification and keeps the extra global taxonomy planning step."
-      )
+    ? planTaxonomy
+      ? ux(
+          "完整模式会在分类前检测失效链接，并保留额外的全局目录规划。",
+          "Complete mode checks dead links before classification and keeps the extra global taxonomy planning step."
+        )
+      : ux(
+          "完整模式会检测失效链接；慢模型会跳过单独目录规划，并在模型超时时本地兜底。",
+          "Complete mode checks dead links; slow models skip the separate taxonomy request and fall back locally on model timeout."
+        )
     : ux(
         `快速模式会跳过失效链接检测、单独目录规划和模型等待；未命中本地规则的书签会进入 ${MANUAL_FOLDER_TITLE}，需要 AI 精细分类时可切换完整模式。`,
         `Fast mode skips dead-link checks, the separate taxonomy-planning request, and model waiting; unmatched bookmarks go to "${MANUAL_FOLDER_TITLE}". Switch to Complete mode for AI classification.`
@@ -1839,6 +1872,7 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
     plannedBookmarks: [],
     pendingWarnings: [],
     exactDuplicateSeenByUrl: {},
+    modelFallbackToManual: false,
     taxonomyLocks: {},
     taxonomyTopFolders,
     classificationSignature,
@@ -2367,16 +2401,25 @@ async function processNextBatch() {
       classificationCacheStore[job.classificationSignature]?.items || {}
     );
     const cachedPlans = buildCachedPlans(forcedPlans.remaining, classificationCacheBucket);
-    const builtInFastPlans = checkDeadLinks
-      ? { plans: [], remaining: cachedPlans.remaining }
-      : buildBuiltInFastFolderPlans(cachedPlans.remaining);
-    const fastLocalPendingWarnings = checkDeadLinks
-      ? []
-      : buildFastLocalUnclassifiedWarnings(builtInFastPlans.remaining);
-    const bookmarksToClassify = checkDeadLinks ? builtInFastPlans.remaining : [];
-    const needsModelClassification = bookmarksToClassify.length > 0;
-    const classifications = needsModelClassification
-      ? await withKeepAlive(
+    let builtInFastPlans =
+      checkDeadLinks && !job.modelFallbackToManual
+        ? { plans: [], remaining: cachedPlans.remaining }
+        : buildBuiltInFastFolderPlans(cachedPlans.remaining);
+    let localFallbackPendingWarnings = !checkDeadLinks
+      ? buildFastLocalUnclassifiedWarnings(builtInFastPlans.remaining)
+      : job.modelFallbackToManual
+        ? buildModelTimeoutFallbackWarnings(builtInFastPlans.remaining, null, job.config)
+        : [];
+    let bookmarksToClassify = checkDeadLinks && !job.modelFallbackToManual ? builtInFastPlans.remaining : [];
+    let needsModelClassification = bookmarksToClassify.length > 0;
+    let normalized = {
+      results: [],
+      taxonomyLocks: job.taxonomyLocks
+    };
+
+    if (needsModelClassification) {
+      try {
+        const classifications = await withKeepAlive(
           () =>
             classifyBatchWithModel(
               bookmarksToClassify,
@@ -2392,16 +2435,47 @@ async function processNextBatch() {
                 `Waiting for the model response for batch ${currentBatch}/${job.totalBatches}.`
               ),
               detail: ux(
-                `已启用后台 keep-alive 心跳。若模型 ${formatTimeoutSeconds(getFirstResponseTimeoutMs(job.config))} 秒内没有返回响应，会主动超时并提示减小批大小或检查网络。`,
-                `Keep-alive is active. If the model does not return a first response within ${formatTimeoutSeconds(getFirstResponseTimeoutMs(job.config))} seconds, the task will time out and suggest reducing batch size or checking the network.`
+                `已启用后台 keep-alive 心跳。若模型 ${formatTimeoutSeconds(getFirstResponseTimeoutMs(job.config))} 秒内没有返回响应，会主动超时；慢模型会改用本地兜底继续完成。`,
+                `Keep-alive is active. If the model does not return a first response within ${formatTimeoutSeconds(getFirstResponseTimeoutMs(job.config))} seconds, the task will time out; slow models will continue with the local fallback.`
               )
             })
-        )
-      : [];
-    const normalized = applyTaxonomyLocks(
-      normalizeClassificationResults(classifications, bookmarksToClassify),
-      job.taxonomyLocks
-    );
+        );
+        normalized = applyTaxonomyLocks(
+          normalizeClassificationResults(classifications, bookmarksToClassify),
+          job.taxonomyLocks
+        );
+      } catch (error) {
+        if (!isModelTimeoutError(error) || !shouldUseModelTimeoutFallback(job.config)) {
+          throw error;
+        }
+
+        job.modelFallbackToManual = true;
+        builtInFastPlans = buildBuiltInFastFolderPlans(cachedPlans.remaining);
+        bookmarksToClassify = [];
+        needsModelClassification = false;
+        localFallbackPendingWarnings = buildModelTimeoutFallbackWarnings(
+          builtInFastPlans.remaining,
+          error,
+          job.config
+        );
+        normalized = {
+          results: [],
+          taxonomyLocks: job.taxonomyLocks
+        };
+
+        await updateBatchStatus(job, currentBatch, {
+          message: ux(
+            `${getRuntimeProviderLabel(job.config)} 响应过慢，已切到本地兜底继续完成。`,
+            `${getRuntimeProviderLabel(job.config)} was too slow, so this run switched to the local fallback.`
+          ),
+          detail: ux(
+            `本批不再等待模型：已改用自定义规则、缓存、内置快速规则和 ${MANUAL_FOLDER_TITLE} 兜底，后续批次也会跳过模型请求。`,
+            `This batch will not keep waiting for the model: custom rules, cache, built-in fast rules, and "${MANUAL_FOLDER_TITLE}" will be used instead. Later batches will also skip model requests.`
+          )
+        });
+      }
+    }
+
     job.taxonomyLocks = normalized.taxonomyLocks;
     if (needsModelClassification) {
       const nextClassificationCacheBucket = updateClassificationCacheBucket(
@@ -2446,7 +2520,7 @@ async function processNextBatch() {
         ...exactDuplicatePlans
       ],
       {
-        includeMissingAsManual: checkDeadLinks
+        includeMissingAsManual: checkDeadLinks && !job.modelFallbackToManual
       }
     );
 
@@ -2455,9 +2529,9 @@ async function processNextBatch() {
     job.deleted += scanResult.deletedCount + planResult.deletedCount;
     job.reused += cachedPlans.plans.length;
     job.aiClassified += normalized.results.length;
-    job.warningCount += scanResult.warningCount + planResult.warningCount + fastLocalPendingWarnings.length;
+    job.warningCount += scanResult.warningCount + planResult.warningCount + localFallbackPendingWarnings.length;
     job.lastWarning =
-      fastLocalPendingWarnings.at(-1)?.reason ||
+      localFallbackPendingWarnings.at(-1)?.reason ||
       planResult.lastWarning ||
       scanResult.lastWarning ||
       job.lastWarning ||
@@ -2473,7 +2547,7 @@ async function processNextBatch() {
     job.plannedBookmarks = appendPlanEntries(job.plannedBookmarks, planResult.keepEntries);
     job.pendingWarnings = appendPlanEntries(job.pendingWarnings, [
       ...(scanResult.pendingWarnings || []),
-      ...fastLocalPendingWarnings
+      ...localFallbackPendingWarnings
     ]);
 
     await mergeStoredCancellationFlag(job);
@@ -2487,8 +2561,8 @@ async function processNextBatch() {
         `Batch ${currentBatch}/${job.totalBatches} finished. Processed ${job.processed}/${job.total} so far.`
       ),
       detail: ux(
-        `本批已写入 ${planResult.keepCount} 条整理结果，其中自定义规则命中 ${forcedPlans.plans.length} 条、缓存复用 ${cachedPlans.plans.length} 条、内置快速规则命中 ${builtInFastPlans.plans.length} 条、AI 新分类 ${normalized.results.length} 条；标记删除 ${scanResult.deletedCount + planResult.deletedCount} 条，未处理 ${scanResult.warningCount + planResult.warningCount + fastLocalPendingWarnings.length} 条。旧书签结构尚未改动。`,
-        `This batch added ${planResult.keepCount} organize results, including ${forcedPlans.plans.length} matched by custom rules, ${cachedPlans.plans.length} reused from cache, ${builtInFastPlans.plans.length} matched by built-in fast rules, and ${normalized.results.length} newly classified by AI. It also marked ${scanResult.deletedCount + planResult.deletedCount} deletions and left ${scanResult.warningCount + planResult.warningCount + fastLocalPendingWarnings.length} unresolved items. The original bookmark tree is still unchanged.`
+        `本批已写入 ${planResult.keepCount} 条整理结果，其中自定义规则命中 ${forcedPlans.plans.length} 条、缓存复用 ${cachedPlans.plans.length} 条、内置快速规则命中 ${builtInFastPlans.plans.length} 条、AI 新分类 ${normalized.results.length} 条；标记删除 ${scanResult.deletedCount + planResult.deletedCount} 条，未处理 ${scanResult.warningCount + planResult.warningCount + localFallbackPendingWarnings.length} 条。旧书签结构尚未改动。`,
+        `This batch added ${planResult.keepCount} organize results, including ${forcedPlans.plans.length} matched by custom rules, ${cachedPlans.plans.length} reused from cache, ${builtInFastPlans.plans.length} matched by built-in fast rules, and ${normalized.results.length} newly classified by AI. It also marked ${scanResult.deletedCount + planResult.deletedCount} deletions and left ${scanResult.warningCount + planResult.warningCount + localFallbackPendingWarnings.length} unresolved items. The original bookmark tree is still unchanged.`
       ),
       warnings: job.warnings,
       deletedItems: job.deletedItems
@@ -5501,11 +5575,18 @@ function shouldCheckDeadLinks(config = {}) {
 }
 
 function shouldPlanGlobalTaxonomy(config = {}) {
-  return normalizeLinkCheckMode(config.linkCheckMode) === LINK_CHECK_MODE_COMPLETE;
+  return (
+    normalizeLinkCheckMode(config.linkCheckMode) === LINK_CHECK_MODE_COMPLETE &&
+    !shouldUseModelTimeoutFallback(config)
+  );
 }
 
 function shouldRequireModelAccess(config = {}) {
   return normalizeLinkCheckMode(config.linkCheckMode) === LINK_CHECK_MODE_COMPLETE;
+}
+
+function shouldUseModelTimeoutFallback(config = {}) {
+  return getProviderPerformanceProfile(config) === "deepseek";
 }
 
 function normalizeAutoInterval(rawValue) {

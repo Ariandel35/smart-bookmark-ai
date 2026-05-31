@@ -17,8 +17,8 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 支持 OpenAI、DeepSeek、MiniMax、Anthropic、Gemini、OpenRouter、Groq、xAI、Moonshot AI、Ollama，以及兼容 OpenAI 的自定义接口
 - 支持自定义 Base URL、API Key、模型名和 Prompt
 - API 检测成功后自动保存当前连接配置
-- 快速模式不需要模型接口访问即可本地完成；完整模式才会检测书签链接、规划全局目录并使用 AI 分类
-- DeepSeek 和 DeepSeek 兼容接口会在请求前再次拆分大批量，运行批次最多 15 条、单个模型请求最多 5 条，并最多 3 个小请求并发处理，同时使用更短的请求超时、更短的内置请求提示、短字段输入输出和更紧的输出预算；单个小请求超时后会保留已完成结果，只把失败小块继续拆到 1 条重试
+- 快速模式不需要模型接口访问即可本地完成；完整模式才会检测书签链接并使用 AI 分类，慢模型会跳过额外目录规划请求
+- DeepSeek 和 DeepSeek 兼容接口会在请求前再次拆分大批量，运行批次最多 15 条、单个模型请求最多 5 条，并最多 3 个小请求并发处理；如果模型仍然超时，本轮会停止等待模型，改用本地规则、缓存、内置规则和待手动分类兜底完成
 - 应用已生成预览时复用保存的方案，本地重建，不会再次请求模型
 - 应用预览遇到可恢复失败时，可修复后直接重试保存方案
 - 预览阶段的未处理项保持只读，应用方案前不会出现保留/删除操作
@@ -42,7 +42,7 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 只有完整模式预览或已开启自动整理且仍需要模型分类时，相关书签信息才会发送到你选择的模型服务商
 - 应用已保存的预览方案会直接本地重建，不会再次请求模型
 - API Key、备份快照、分类缓存和死链缓存保存在浏览器本地
-- 只有完整模式会直接访问书签对应的网站并增加单独目录规划和 AI 分类；快速模式会跳过这些外部请求
+- 只有完整模式会直接访问书签对应的网站并使用 AI 分类；快速模式会跳过这些外部请求，慢模型会跳过额外目录规划请求
 - 扩展开发者不会接收你的书签数据
 
 ## English
@@ -56,17 +56,17 @@ Preview first, then use AI to clean obvious duplicates and optionally check dead
 ### Detailed description
 Marko is a bookmark cleanup tool for people with large, messy bookmark libraries. The goal is not to create more folders. The goal is to make websites easier to find later.
 
-When you click Preview, the extension generates a plan before changing anything. You can switch Fast or Complete directly in the popup before preview. When you apply that plan, Marko reuses the saved preview, creates a local snapshot backup, and rebuilds locally without calling the model again. Fast mode skips dead-link checks, the separate taxonomy-planning request, and model waiting for quicker previews and fewer permissions; it applies conservative built-in domain rules after custom rules and cache reuse, then puts unmatched bookmarks in manual review. If you choose Complete mode, the preview also checks clearly dead links, asks the model for a global folder plan first, and uses your chosen model provider to classify uncached bookmarks in batches. Marko removes obvious duplicates and rebuilds the final result directly at the bookmark root in one pass.
+When you click Preview, the extension generates a plan before changing anything. You can switch Fast or Complete directly in the popup before preview. When you apply that plan, Marko reuses the saved preview, creates a local snapshot backup, and rebuilds locally without calling the model again. Fast mode skips dead-link checks, the separate taxonomy-planning request, and model waiting for quicker previews and fewer permissions; it applies conservative built-in domain rules after custom rules and cache reuse, then puts unmatched bookmarks in manual review. If you choose Complete mode, the preview also checks clearly dead links and uses your chosen model provider to classify uncached bookmarks in batches. Slow providers skip the separate taxonomy-planning request and can fall back to local rules, cache, built-in rules, and manual review if model classification times out. Marko removes obvious duplicates and rebuilds the final result directly at the bookmark root in one pass.
 
 Key features:
 - Works with OpenAI, DeepSeek, MiniMax, Anthropic, Gemini, OpenRouter, Groq, xAI, Moonshot AI, Ollama, and generic OpenAI-compatible endpoints
 - Custom Base URL, API key, model name, and prompt
 - Successful API tests save the current connection settings
 - Fast/Complete mode can be changed directly in the popup before preview
-- Fast mode finishes locally without model endpoint access; Complete mode adds link checks, global planning, and AI classification
+- Fast mode finishes locally without model endpoint access; Complete mode adds link checks and AI classification, while slow providers skip the extra taxonomy-planning request
 - Fast local reruns use built-in domain rules, cached classifications, and manual-review fallback to skip model calls and batch scheduling
 - Fast automatic organize can run locally without an API key; Complete automatic organize still requires model credentials and website access
-- Slow providers such as DeepSeek and DeepSeek-compatible endpoints re-split large batches before each request, cap runtime batches at 15 bookmarks, cap each model request at 5 bookmarks, run up to three mini requests at a time, use shorter request timeouts, shorter built-in prompts, compact request/response keys, and tighter output budgets; when one mini request times out, completed mini results are kept and only the failed block shrinks down to one-bookmark retries
+- Slow providers such as DeepSeek and DeepSeek-compatible endpoints re-split large batches before each request, cap runtime batches at 15 bookmarks, cap each model request at 5 bookmarks, and run up to three mini requests at a time; if the model still times out, the run stops waiting and finishes with local fallback instead of failing the whole flow
 - Applying a generated preview reuses the saved plan and rebuilds locally without another model request
 - Recoverable apply failures keep the saved preview retry path available after the issue is fixed
 - Backup failures before applying a saved preview keep the same retry path available
@@ -92,7 +92,7 @@ Privacy summary:
 - Bookmark data is sent only to the model provider chosen by the user when Complete preview or enabled auto organize still needs model classification
 - Applying a saved preview rebuilds locally without another model request
 - API keys, backups, and caches are stored locally in the browser
-- Only Complete mode sends requests directly to bookmarked websites and adds separate taxonomy planning and AI classification; Fast mode skips those external requests
+- Only Complete mode sends requests directly to bookmarked websites and uses AI classification; Fast mode skips those external requests, and slow providers skip the extra taxonomy-planning request
 - The extension developer does not receive bookmark data
 
 ## Visual Assets Checklist

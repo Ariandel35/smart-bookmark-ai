@@ -71,12 +71,18 @@ function setButtonLabel(button, label) {
   button.setAttribute("aria-label", safeLabel);
 }
 
-function setGrantAccessButtonState(granted = false) {
+function setGrantAccessButtonState(granted = false, options = {}) {
   const isGranted = Boolean(granted);
+  const accessNeeded = options.accessNeeded !== false;
   grantAccessButton.dataset.granted = String(isGranted);
+  grantAccessButton.dataset.accessNeeded = String(accessNeeded);
   setButtonLabel(
     grantAccessButton,
-    isGranted ? t("hostAccessGrantedButton") : t("hostAccessButton")
+    !accessNeeded
+      ? t("hostAccessNotNeededButton")
+      : isGranted
+        ? t("hostAccessGrantedButton")
+        : t("hostAccessButton")
   );
 }
 
@@ -86,7 +92,9 @@ function syncPrimaryActionButtonLabels() {
   setButtonLabel(privacyButton, t("privacyButton"));
   setButtonLabel(testApiButton, t("testApiButton"));
   setButtonLabel(createBackupButton, t("createBackupNow"));
-  setGrantAccessButtonState(grantAccessButton.dataset.granted === "true");
+  setGrantAccessButtonState(grantAccessButton.dataset.granted === "true", {
+    accessNeeded: grantAccessButton.dataset.accessNeeded !== "false"
+  });
 }
 
 function syncNavigationButtonLabels() {
@@ -494,13 +502,14 @@ function clearSettingsFieldIssue(fieldId) {
 
 function updateSettingsOperationControls() {
   const granted = grantAccessButton.dataset.granted === "true";
+  const accessNeeded = grantAccessButton.dataset.accessNeeded !== "false";
   settingsFields.forEach((field) => {
     field.disabled = settingsActionInFlight;
   });
   saveButton.disabled = settingsActionInFlight;
   testApiButton.disabled = settingsActionInFlight;
   resetButton.disabled = settingsActionInFlight;
-  grantAccessButton.disabled = settingsActionInFlight || granted || hostAccessCheckingInFlight;
+  grantAccessButton.disabled = settingsActionInFlight || !accessNeeded || granted || hostAccessCheckingInFlight;
 }
 
 function setSettingsActionInFlight(isInFlight) {
@@ -656,6 +665,17 @@ async function refreshHostAccessStatus() {
   clearScheduledHostAccessStatusRefresh();
   const refreshVersion = ++hostAccessRefreshVersion;
   const config = collectFormData();
+  const requiresBroadAccess = shouldRequireBroadHostAccess(config);
+  const requiresModelAccess = shouldRequireModelAccess(config);
+
+  if (!requiresBroadAccess && !requiresModelAccess) {
+    hostAccessCheckingInFlight = false;
+    setHostAccessStatus(t("hostAccessNotNeeded"), true);
+    setGrantAccessButtonState(false, { accessNeeded: false });
+    updateSettingsOperationControls();
+    return;
+  }
+
   if (!config.baseUrl) {
     hostAccessCheckingInFlight = false;
     setHostAccessStatus(t("baseUrlRequired"), false);
@@ -671,7 +691,6 @@ async function refreshHostAccessStatus() {
     return;
   }
 
-  const requiresBroadAccess = shouldRequireBroadHostAccess(config);
   hostAccessCheckingInFlight = true;
   setHostAccessStatus(t("hostAccessChecking"), true);
   setGrantAccessButtonState(false);
@@ -1458,6 +1477,12 @@ async function requestHostAccess() {
   }
 
   const config = collectFormData();
+  if (!shouldRequireBroadHostAccess(config) && !shouldRequireModelAccess(config)) {
+    setSettingsActionStatus(t("hostAccessNotNeededAction"));
+    await refreshHostAccessStatus();
+    return;
+  }
+
   if (!config.baseUrl) {
     showSettingsIssue(t("baseUrlRequired"), "connection", "baseUrl");
     await refreshHostAccessStatus();
