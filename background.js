@@ -775,11 +775,21 @@ function buildModelStrategyPrompt(customPrompt) {
 }
 
 async function initializeDefaults() {
-  const stored = await chrome.storage.local.get([STORAGE_KEYS.config, STORAGE_KEYS.status]);
+  const stored = await chrome.storage.local.get([
+    STORAGE_KEYS.config,
+    STORAGE_KEYS.status,
+    STORAGE_KEYS.job,
+    STORAGE_KEYS.previewPlan
+  ]);
 
   if (!stored[STORAGE_KEYS.config]) {
     await chrome.storage.local.set({
       [STORAGE_KEYS.config]: buildDefaultConfig("openai")
+    });
+  } else {
+    await persistNormalizedConfigIfSafe(stored[STORAGE_KEYS.config], {
+      activeJob: stored[STORAGE_KEYS.job],
+      previewPlan: stored[STORAGE_KEYS.previewPlan]
     });
   }
 
@@ -795,12 +805,18 @@ async function bootstrapState() {
   const stored = await chrome.storage.local.get([
     STORAGE_KEYS.status,
     STORAGE_KEYS.job,
-    STORAGE_KEYS.config
+    STORAGE_KEYS.config,
+    STORAGE_KEYS.previewPlan
   ]);
 
   if (!stored[STORAGE_KEYS.config]) {
     await chrome.storage.local.set({
       [STORAGE_KEYS.config]: buildDefaultConfig("openai")
+    });
+  } else {
+    await persistNormalizedConfigIfSafe(stored[STORAGE_KEYS.config], {
+      activeJob: stored[STORAGE_KEYS.job],
+      previewPlan: stored[STORAGE_KEYS.previewPlan]
     });
   }
 
@@ -917,6 +933,30 @@ function mergeConfig(raw = {}) {
       typeof raw.domainFolderRules === "string" ? raw.domainFolderRules.trim() : "",
     customPrompt: normalizePromptValue(promptValue)
   };
+}
+
+function shouldPersistNormalizedConfig(rawConfig, normalizedConfig) {
+  if (!rawConfig || typeof rawConfig !== "object") {
+    return false;
+  }
+
+  return normalizeRetryBatchSize(rawConfig.batchSize, Number.NaN) !== normalizedConfig.batchSize;
+}
+
+async function persistNormalizedConfigIfSafe(rawConfig, options = {}) {
+  if (options.activeJob?.phase === "running" || options.previewPlan) {
+    return false;
+  }
+
+  const normalizedConfig = mergeConfig(rawConfig);
+  if (!shouldPersistNormalizedConfig(rawConfig, normalizedConfig)) {
+    return false;
+  }
+
+  await chrome.storage.local.set({
+    [STORAGE_KEYS.config]: normalizedConfig
+  });
+  return true;
 }
 
 function buildHostOriginPattern(rawUrl) {

@@ -15,6 +15,7 @@
 - DeepSeek and DeepSeek-compatible endpoints now use the slow-model profile automatically, cap runtime batches at 9, split actual model requests to 3 bookmarks, and run up to three mini requests at once
 - DeepSeek and DeepSeek-compatible classification now stops after a 6-second first-response stall or a 14-second full-response stall before falling back locally
 - DeepSeek and DeepSeek-compatible batch-size settings are capped when loaded or saved, so older 48-item settings cannot keep driving slow previews
+- Startup now writes normalized batch-size settings back to storage only when no run or saved preview is active
 - Settings now warn inline before saving when a DeepSeek-compatible batch size will be capped for faster previews
 - Settings now show the auto-organize permission impact inline as users switch automation and speed modes
 - Test & Save now reports when the API test succeeded but auto-organize permission was not granted
