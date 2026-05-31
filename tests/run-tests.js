@@ -600,6 +600,10 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /cancelButton\.disabled = true/);
   assert.match(popupSource, /hasPreviewAttemptConfig/);
   assert.match(popupSource, /Providers\?\.hasProvider\?\.\(config\.provider\)/);
+  assert.match(popupSource, /function mergePopupConfig\(raw = \{\}\)/);
+  assert.match(popupSource, /baseUrl:[\s\S]*defaults\.baseUrl \|\| ""/);
+  assert.match(popupSource, /model:[\s\S]*defaults\.model \|\| ""/);
+  assert.match(popupSource, /currentConfig = mergePopupConfig\(stored\[CONFIG_KEY\] \|\| \{\}\)/);
   assert.match(popupSource, /hasModelAccessConfig/);
   assert.match(popupSource, /CHECK_LOCAL_MODEL_REQUIREMENT/);
   assert.match(popupSource, /localRequirementCheckId: requirement\.checkId \|\| ""/);
@@ -1017,6 +1021,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /same preview-first data-flow language/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
+  assert.match(changelog, /Popup preview checks now merge provider defaults/);
   assert.match(changelog, /mini-request timeouts now keep completed mini results/);
   assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
   assert.match(changelog, /inline confirmations and status messages/);

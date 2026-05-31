@@ -142,6 +142,27 @@ function normalizeLinkCheckMode(rawValue) {
   return rawValue === LINK_CHECK_MODE_COMPLETE ? LINK_CHECK_MODE_COMPLETE : LINK_CHECK_MODE_FAST;
 }
 
+function mergePopupConfig(raw = {}) {
+  const providerKnown = Boolean(raw?.provider && Providers?.hasProvider?.(raw.provider));
+  const provider = providerKnown ? raw.provider : "openai";
+  const defaults = Providers?.getProvider?.(provider) || {};
+
+  return {
+    ...(raw && typeof raw === "object" ? raw : {}),
+    provider,
+    baseUrl:
+      providerKnown && typeof raw.baseUrl === "string" && raw.baseUrl.trim()
+        ? raw.baseUrl.trim()
+        : defaults.baseUrl || "",
+    apiKey: providerKnown && typeof raw.apiKey === "string" ? raw.apiKey.trim() : "",
+    model:
+      providerKnown && typeof raw.model === "string" && raw.model.trim()
+        ? raw.model.trim()
+        : defaults.model || "",
+    linkCheckMode: normalizeLinkCheckMode(raw.linkCheckMode)
+  };
+}
+
 async function ensureOrganizeAccess(config) {
   return shouldRequireBroadHostAccess(config)
     ? await ensureBroadHostAccess()
@@ -848,7 +869,7 @@ async function refreshDetailPanel() {
 
 async function refreshAll() {
   const stored = await chrome.storage.local.get([CONFIG_KEY, STATUS_KEY, PREVIEW_PLAN_KEY]);
-  currentConfig = stored[CONFIG_KEY] || null;
+  currentConfig = mergePopupConfig(stored[CONFIG_KEY] || {});
   currentPreviewPlan = stored[PREVIEW_PLAN_KEY] || null;
   renderConfig(currentConfig);
   renderStatus(stored[STATUS_KEY]);
