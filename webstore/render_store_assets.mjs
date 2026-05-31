@@ -562,7 +562,6 @@ function createChromeMockInitScript(data) {
                 message: payload.apiTestMessage || "API OK",
                 detail: payload.apiTestDetail || "Model responded successfully"
               };
-            case "START_ORGANIZE":
             case "START_PREVIEW":
             case "APPLY_PREVIEW_PLAN":
             case "CREATE_MANUAL_BACKUP":

@@ -377,20 +377,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       return;
     }
 
-    if (message?.type === "START_ORGANIZE") {
-      try {
-        const result = await startOrganizeJob();
-        sendResponse(result);
-      } catch (error) {
-        console.error("Failed to start organize job:", error);
-        sendResponse({
-          ok: false,
-          error: toUserMessage(error, ux("启动书签整理任务失败。", "Failed to start bookmark organizing."))
-        });
-      }
-      return;
-    }
-
     if (message?.type === "START_PREVIEW") {
       try {
         const result = await startOrganizeJob({

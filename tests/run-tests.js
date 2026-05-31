@@ -483,6 +483,7 @@ function testPreviewApplySurface() {
   const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSource, /smartBookmarkPreviewPlan/);
   assert.match(backgroundSource, /APPLY_PREVIEW_PLAN/);
+  assert.doesNotMatch(backgroundSource, /START_ORGANIZE/);
   assert.match(backgroundSource, /applyPreviewPlan/);
   assert.match(backgroundSource, /previewApplyRetryAvailable: false/);
   assert.match(backgroundSource, /const statusPatch = \{\n    previewApplyRetryAvailable: false,/);

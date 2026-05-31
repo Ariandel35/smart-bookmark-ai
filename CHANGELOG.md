@@ -8,6 +8,7 @@
 - Fast mode now applies conservative built-in domain rules for common developer, learning, productivity, design, community, shopping, media, and life sites after custom rules and cache reuse, before calling the model
 - Reduced popup and settings permission requests in Fast mode to the configured model API origin
 - Applying a saved preview plan now reuses the stored plan and rebuilds locally without a second model request
+- Removed the legacy direct organize message path so manual runs must go through Preview -> Apply Plan
 - If applying a saved preview hits a recoverable failure, the popup now keeps the Apply Plan path available so users can retry without generating the model plan again
 - Backup failures before applying a saved preview now also keep the saved preview retry path available
 - Apply Plan retry is now shown only for explicit preview-apply failures instead of any generic error that happens while a saved preview exists
