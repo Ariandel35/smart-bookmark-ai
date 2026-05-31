@@ -874,7 +874,10 @@ function mergeConfig(raw = {}) {
       ? raw.customPrompt
       : defaults.customPrompt;
   const apiKey = providerKnown && typeof raw.apiKey === "string" ? raw.apiKey.trim() : "";
-  const autoOrganizeEnabled = Boolean(raw.autoOrganizeEnabled) && Boolean(defaults.apiKeyOptional || apiKey);
+  const linkCheckMode = normalizeLinkCheckMode(raw.linkCheckMode || defaults.linkCheckMode);
+  const autoOrganizeEnabled =
+    Boolean(raw.autoOrganizeEnabled) &&
+    (!shouldRequireModelAccess({ linkCheckMode }) || Boolean(defaults.apiKeyOptional || apiKey));
 
   return {
     provider,
@@ -888,7 +891,7 @@ function mergeConfig(raw = {}) {
         ? raw.model.trim()
         : defaults.model,
     batchSize: normalizeBatchSize(raw.batchSize, defaults.batchSize),
-    linkCheckMode: normalizeLinkCheckMode(raw.linkCheckMode || defaults.linkCheckMode),
+    linkCheckMode,
     autoOrganizeEnabled,
     autoOrganizeIntervalHours: normalizeAutoInterval(raw.autoOrganizeIntervalHours),
     whitelistDomains:
@@ -3851,7 +3854,7 @@ async function syncAutoOrganizeAlarm() {
     return;
   }
 
-  if (!hasRequiredProviderCredential(config)) {
+  if (shouldRequireModelAccess(config) && !hasRequiredProviderCredential(config)) {
     if (existingAlarm) {
       await chrome.alarms.clear(AUTO_ORGANIZE_ALARM_NAME);
     }
@@ -3867,7 +3870,7 @@ async function syncAutoOrganizeAlarm() {
     return;
   }
 
-  if (!(await hasOriginAccess(config.baseUrl))) {
+  if (shouldRequireModelAccess(config) && !(await hasOriginAccess(config.baseUrl))) {
     if (existingAlarm) {
       await chrome.alarms.clear(AUTO_ORGANIZE_ALARM_NAME);
     }
@@ -5498,6 +5501,10 @@ function shouldCheckDeadLinks(config = {}) {
 }
 
 function shouldPlanGlobalTaxonomy(config = {}) {
+  return normalizeLinkCheckMode(config.linkCheckMode) === LINK_CHECK_MODE_COMPLETE;
+}
+
+function shouldRequireModelAccess(config = {}) {
   return normalizeLinkCheckMode(config.linkCheckMode) === LINK_CHECK_MODE_COMPLETE;
 }
 

@@ -8,6 +8,7 @@
 - Fast mode now applies conservative built-in domain rules for common developer, learning, productivity, design, community, shopping, media, and life sites after custom rules and cache reuse
 - Fast mode now finishes locally without waiting for the model; bookmarks that do not match rules or cache are moved to the manual review folder, while Complete mode keeps AI classification
 - Fast mode no longer asks for model endpoint access during preview because it does not call the model
+- Fast automatic organize can now run locally without an API key; Complete automatic organize still requires model credentials and website access
 - DeepSeek and DeepSeek-compatible endpoints now use the slow-model profile automatically, cap runtime batches at 15, split actual model requests to 5 bookmarks, and run up to three mini requests at once
 - Running legacy organize jobs are normalized before the next batch so stale large batches cannot continue after an update
 - Privacy, README, and store disclosures now describe preview-time model calls, local Apply Plan rebuilds, and auto organize data flow consistently

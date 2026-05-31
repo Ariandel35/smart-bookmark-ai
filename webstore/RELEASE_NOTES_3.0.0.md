@@ -12,6 +12,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 新增快速/完整速度模式：快速模式跳过失效链接检测、额外目录规划请求和模型等待，完整模式保留链接检查、全局规划和 AI 分类
 - 快速模式会直接本地完成预览；规则和缓存无法确定的书签会进入待手动分类，不再因为慢模型排队而卡住
 - 预览会先检查本地规则和缓存覆盖情况；快速模式不要求模型接口授权，完整模式只有未缓存书签需要 AI 分类时才要求 API Key 或模型接口授权
+- 快速自动整理现在可以不填 API Key 本地运行；完整自动整理仍要求模型凭据和网站访问权限
 - API 检测成功后自动保存当前连接配置
 - 弹窗应用方案、备份恢复/删除和设置校验都改成页面内确认与状态提示，不再弹出浏览器原生对话框
 - 预览阶段的未处理项保持只读，不会在点击“应用方案”前显示保留/删除操作
@@ -27,7 +28,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 
 适合商店后台的简短版本：
 
-3.0.0 优化了核心使用路径：先预览，再应用方案。应用预览不会再次跑模型；快速模式默认更快且权限更少，会跳过失效链接检测、单独目录规划和模型等待，未命中本地规则的书签进入待手动分类；设置页使用内联确认和校验提示，API 检测成功后会保存连接配置，完整模式下 DeepSeek 和 DeepSeek 兼容接口会在请求前再次拆分大批量，运行批次最多 15 条、单请求最多 5 条，并最多 3 个小请求并发处理，同时使用更短请求超时、更短内置提示、短字段输入输出和更紧输出预算；单个小请求超时后会保留已完成结果，只把失败小块继续拆到 1 条重试。
+3.0.0 优化了核心使用路径：先预览，再应用方案。应用预览不会再次跑模型；快速模式默认更快且权限更少，会跳过失效链接检测、单独目录规划和模型等待，未命中本地规则的书签进入待手动分类，快速自动整理也可不填 API Key 本地运行；设置页使用内联确认和校验提示，API 检测成功后会保存连接配置，完整模式下 DeepSeek 和 DeepSeek 兼容接口会在请求前再次拆分大批量，运行批次最多 15 条、单请求最多 5 条，并最多 3 个小请求并发处理，同时使用更短请求超时、更短内置提示、短字段输入输出和更紧输出预算；单个小请求超时后会保留已完成结果，只把失败小块继续拆到 1 条重试。
 
 ## English
 
@@ -44,6 +45,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Added Fast and Complete speed modes: Fast skips dead-link checks, the extra taxonomy-planning request, and model waiting, while Complete keeps link checks, global planning, and AI classification
 - Fast mode now finishes previews locally; bookmarks that custom rules, cache, and built-in domain rules cannot classify go to manual review instead of blocking on a slow model queue
 - Preview checks local rule/cache coverage first; Fast mode does not ask for model endpoint access, and Complete asks only when uncached bookmarks need AI classification
+- Fast automatic organize can now run locally without an API key; Complete automatic organize still requires model credentials and website access
 - Successful API tests now save the verified connection settings
 - Popup apply, backup restore/delete, and settings validation now use inline confirmations and status messages instead of browser dialogs
 - Unprocessed items stay read-only until an organize/apply run completes, so preview and error states cannot mutate bookmarks
@@ -59,4 +61,4 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 
 Short version for store release notes:
 
-3.0.0 streamlines the core workflow: preview first, switch Fast/Complete directly in the popup when needed, then apply the plan without a second model run. Fast mode skips dead-link checks, the extra taxonomy-planning request, and model waiting; unmatched bookmarks go to manual review so slow model queues do not block preview. Settings use inline confirmations and validation feedback, successful API tests save the connection, and slow providers such as DeepSeek and DeepSeek-compatible endpoints in Complete mode re-split large batches before each request, cap runtime batches at 15 bookmarks, cap each model request at 5 bookmarks, run up to three mini requests at a time, use shorter request timeouts, shorter built-in prompts, compact request/response keys, and tighter output budgets. When one mini request times out, completed mini results are kept and only the failed block shrinks down to one-bookmark retries.
+3.0.0 streamlines the core workflow: preview first, switch Fast/Complete directly in the popup when needed, then apply the plan without a second model run. Fast mode skips dead-link checks, the extra taxonomy-planning request, and model waiting; unmatched bookmarks go to manual review so slow model queues do not block preview, and Fast automatic organize can run locally without an API key. Settings use inline confirmations and validation feedback, successful API tests save the connection, and slow providers such as DeepSeek and DeepSeek-compatible endpoints in Complete mode re-split large batches before each request, cap runtime batches at 15 bookmarks, cap each model request at 5 bookmarks, run up to three mini requests at a time, use shorter request timeouts, shorter built-in prompts, compact request/response keys, and tighter output budgets. When one mini request times out, completed mini results are kept and only the failed block shrinks down to one-bookmark retries.

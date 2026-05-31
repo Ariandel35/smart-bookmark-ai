@@ -39,10 +39,10 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 支持查看未处理项目和删除记录
 
 隐私说明：
-- 只有生成预览或已开启自动整理且仍需要模型分类时，相关书签信息才会发送到你选择的模型服务商
+- 只有完整模式预览或已开启自动整理且仍需要模型分类时，相关书签信息才会发送到你选择的模型服务商
 - 应用已保存的预览方案会直接本地重建，不会再次请求模型
 - API Key、备份快照、分类缓存和死链缓存保存在浏览器本地
-- 只有完整模式会直接访问书签对应的网站并增加单独目录规划；快速模式会跳过这些额外步骤
+- 只有完整模式会直接访问书签对应的网站并增加单独目录规划和 AI 分类；快速模式会跳过这些外部请求
 - 扩展开发者不会接收你的书签数据
 
 ## English
@@ -65,6 +65,7 @@ Key features:
 - Fast/Complete mode can be changed directly in the popup before preview
 - Fast mode finishes locally without model endpoint access; Complete mode adds link checks, global planning, and AI classification
 - Fast local reruns use built-in domain rules, cached classifications, and manual-review fallback to skip model calls and batch scheduling
+- Fast automatic organize can run locally without an API key; Complete automatic organize still requires model credentials and website access
 - Slow providers such as DeepSeek and DeepSeek-compatible endpoints re-split large batches before each request, cap runtime batches at 15 bookmarks, cap each model request at 5 bookmarks, run up to three mini requests at a time, use shorter request timeouts, shorter built-in prompts, compact request/response keys, and tighter output budgets; when one mini request times out, completed mini results are kept and only the failed block shrinks down to one-bookmark retries
 - Applying a generated preview reuses the saved plan and rebuilds locally without another model request
 - Recoverable apply failures keep the saved preview retry path available after the issue is fixed

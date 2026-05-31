@@ -704,6 +704,8 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /labelProvider: "服务商"/);
   assert.match(i18nSource, /labelModel: "模型名称"/);
   assert.match(i18nSource, /automationTitle: "自动整理"/);
+  assert.match(i18nSource, /settingsStepAccess: "快速自动整理可本地运行；完整模式才会请求模型接口和完整网站访问权限。"/);
+  assert.match(i18nSource, /autoOrganizePermission: "快速自动整理会在本地运行；完整自动整理需要模型接口和网站访问权限。"/);
   assert.match(i18nSource, /backupTitle: "备份管理"/);
   assert.match(i18nSource, /setupRequiredDesc: "预览前需要先选择服务商，并填写 Base URL 和模型名称。"/);
   assert.match(i18nSource, /setupMissingProvider: "请先选择服务商。"/);
@@ -858,7 +860,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /isValidHttpUrl/);
   assert.match(optionsSource, /const providerKnown = Boolean\(raw\.provider && Providers\.hasProvider\(raw\.provider\)\)/);
   assert.match(optionsSource, /const apiKey = providerKnown && typeof raw\.apiKey === "string" \? raw\.apiKey\.trim\(\) : ""/);
-  assert.match(optionsSource, /const autoOrganizeEnabled = Boolean\(raw\.autoOrganizeEnabled\) && Boolean\(defaults\.apiKeyOptional \|\| apiKey\)/);
+  assert.match(optionsSource, /const linkCheckMode = normalizeLinkCheckMode\(raw\.linkCheckMode \|\| defaults\.linkCheckMode\)/);
+  assert.match(optionsSource, /!shouldRequireModelAccess\(\{ linkCheckMode \}\) \|\| Boolean\(defaults\.apiKeyOptional \|\| apiKey\)/);
   assert.match(optionsSource, /baseUrl:\s*providerKnown && typeof raw\.baseUrl === "string"/);
   assert.match(optionsSource, /apiKey,/);
   assert.match(optionsSource, /model:\s*providerKnown && typeof raw\.model === "string"/);
@@ -968,7 +971,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /showSettingsIssue\(t\("modelRequired"\), "connection", "model"\)/);
   assert.match(optionsSource, /showSettingsIssue\(t\("batchSizeValidation"\), "organize", "batchSize"\)/);
   assert.match(optionsSource, /showSettingsIssue\(t\("autoIntervalValidation"\), "automation", "autoOrganizeIntervalHours"\)/);
-  assert.match(optionsSource, /if \(config\.autoOrganizeEnabled && !defaults\.apiKeyOptional && !config\.apiKey\)/);
+  assert.match(optionsSource, /config\.autoOrganizeEnabled &&[\s\S]*shouldRequireModelAccess\(config\)[\s\S]*!defaults\.apiKeyOptional &&[\s\S]*!config\.apiKey/);
   assert.match(optionsSource, /showSettingsIssue\(t\("requiredApiKey", \{ provider: defaults\.label \}\), "connection", "apiKey"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("baseUrlRequired"\), "baseUrl"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("baseUrlInvalid"\), "baseUrl"\)/);
@@ -978,7 +981,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /if \(!granted\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*setApiTestStatus\(t\("currentApiAccessMissing"\), true\)/);
   assert.match(optionsSource, /if \(!response\?\.ok\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*setApiTestStatus\(/);
   assert.match(optionsSource, /if \(!granted\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
-  assert.match(optionsSource, /if \(config\.autoOrganizeEnabled\) \{[\s\S]*const autoAccessGranted = shouldRequireBroadHostAccess\(config\)[\s\S]*ensureBroadHostAccess\(\)[\s\S]*ensureOriginAccess\(config\.baseUrl\)/);
+  assert.match(optionsSource, /function shouldRequireModelAccess\(config\)/);
+  assert.match(optionsSource, /if \(config\.autoOrganizeEnabled\) \{[\s\S]*const autoAccessGranted = shouldRequireBroadHostAccess\(config\)[\s\S]*ensureBroadHostAccess\(\)[\s\S]*: true/);
   assert.match(optionsSource, /showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
   assert.match(optionsSource, /targetId === "baseUrl" \|\| targetId === "linkCheckMode"/);
   assert.match(optionsSource, /Base URL change/);
@@ -997,12 +1001,15 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(backgroundSource, /Base URL must be a valid http or https URL/);
   assert.match(backgroundSource, /const providerKnown = Boolean\(raw\.provider && Providers\.hasProvider\(raw\.provider\)\)/);
   assert.match(backgroundSource, /const apiKey = providerKnown && typeof raw\.apiKey === "string" \? raw\.apiKey\.trim\(\) : ""/);
-  assert.match(backgroundSource, /const autoOrganizeEnabled = Boolean\(raw\.autoOrganizeEnabled\) && Boolean\(defaults\.apiKeyOptional \|\| apiKey\)/);
+  assert.match(backgroundSource, /const linkCheckMode = normalizeLinkCheckMode\(raw\.linkCheckMode \|\| defaults\.linkCheckMode\)/);
+  assert.match(backgroundSource, /!shouldRequireModelAccess\(\{ linkCheckMode \}\) \|\| Boolean\(defaults\.apiKeyOptional \|\| apiKey\)/);
   assert.match(backgroundSource, /baseUrl:\s*providerKnown && typeof raw\.baseUrl === "string"/);
   assert.match(backgroundSource, /apiKey,/);
   assert.match(backgroundSource, /model:\s*providerKnown && typeof raw\.model === "string"/);
   assert.match(backgroundSource, /autoOrganizeEnabled,/);
-  assert.match(backgroundSource, /if \(!hasRequiredProviderCredential\(config\)\) \{[\s\S]*chrome\.alarms\.clear\(AUTO_ORGANIZE_ALARM_NAME\)/);
+  assert.match(backgroundSource, /function shouldRequireModelAccess\(config = \{\}\)/);
+  assert.match(backgroundSource, /if \(shouldRequireModelAccess\(config\) && !hasRequiredProviderCredential\(config\)\) \{[\s\S]*chrome\.alarms\.clear\(AUTO_ORGANIZE_ALARM_NAME\)/);
+  assert.match(backgroundSource, /if \(shouldRequireModelAccess\(config\) && !\(await hasOriginAccess\(config\.baseUrl\)\)\) \{/);
 
   assert.match(optionsSource, /pendingBackupAction/);
   assert.match(optionsSource, /backupActionInFlight/);
@@ -1138,6 +1145,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /built-in domain rules/);
   assert.match(readme, /unless Complete preview or enabled auto organize needs external access/);
   assert.match(readme, /manual-review fallback finish locally/);
+  assert.match(readme, /Fast automatic organize can run locally without an API key/);
   assert.doesNotMatch(readme, /unless you start an organize run/);
   assert.match(readme, /restoring creates a fresh local snapshot first/);
   assert.match(readmeZh, /DeepSeek 兼容接口/);
@@ -1146,6 +1154,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /弹窗模式切换/);
   assert.match(readmeZh, /内置域名规则/);
   assert.match(readmeZh, /待手动分类兜底会在本地完成/);
+  assert.match(readmeZh, /快速自动整理可以不填 API Key 本地运行/);
   assert.match(readmeZh, /恢复前会先创建新的本地快照/);
 
   const releaseNotes = fs.readFileSync(
@@ -1156,6 +1165,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Fast\/Complete mode switch/);
   assert.match(releaseNotes, /built-in domain rules/);
   assert.match(releaseNotes, /unmatched bookmarks go to manual review/);
+  assert.match(releaseNotes, /Fast automatic organize can now run locally without an API key/);
   assert.match(releaseNotes, /Backup failures before applying a saved preview/);
   assert.match(releaseNotes, /only for preview-apply failures/);
   assert.match(releaseNotes, /re-split large batches before each request/);
