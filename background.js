@@ -1331,6 +1331,22 @@ function matchBuiltInFastFolderPath(bookmark) {
   return matchedRule ? matchedRule.folderPath : null;
 }
 
+function buildFastLocalUnclassifiedWarnings(bookmarks) {
+  return (Array.isArray(bookmarks) ? bookmarks : []).map((bookmark) => ({
+    title: bookmark.title || t("untitledBookmark"),
+    url: bookmark.url,
+    kind: "fast_local_unclassified",
+    reason: ux(
+      "快速模式没有等待模型，已把这条书签留到待手动分类。",
+      "Fast mode did not wait for the model, so this bookmark was left for manual review."
+    ),
+    suggestion: ux(
+      "如果你希望 AI 自动精细分类，请切换到完整模式重新生成预览；也可以在设置页添加域名目录规则。",
+      "Switch to Complete mode and generate a new preview if you want AI classification, or add a domain folder rule in settings."
+    )
+  }));
+}
+
 function domainMatchesHost(hostname, domain) {
   const safeHost = String(hostname || "").trim().toLowerCase();
   const safeDomain = String(domain || "").trim().toLowerCase();
@@ -1382,20 +1398,33 @@ function buildFastLocalClassificationPlan(
   const nonDuplicateBookmarks = aliveBookmarks.filter((bookmark) => !bookmark.exactDuplicateOf);
   const forcedPlans = buildForcedPlans(nonDuplicateBookmarks, domainFolderRules);
   const cachedPlans = buildCachedPlans(forcedPlans.remaining, cacheBucket);
-  const builtInFastPlans = options.useBuiltInFastRules === false
-    ? { plans: [], remaining: cachedPlans.remaining }
-    : buildBuiltInFastFolderPlans(cachedPlans.remaining);
-  const planResult = buildBatchClassificationPlan(aliveBookmarks, [
-    ...forcedPlans.plans,
-    ...cachedPlans.plans,
-    ...builtInFastPlans.plans,
-    ...exactDuplicatePlans
-  ]);
+  const builtInFastPlans =
+    options.useBuiltInFastRules === false
+      ? { plans: [], remaining: cachedPlans.remaining }
+      : buildBuiltInFastFolderPlans(cachedPlans.remaining);
+  const finishUnclassifiedLocally = Boolean(options.finishUnclassifiedLocally);
+  const localUnclassifiedWarnings = finishUnclassifiedLocally
+    ? buildFastLocalUnclassifiedWarnings(builtInFastPlans.remaining)
+    : [];
+  const planResult = buildBatchClassificationPlan(
+    aliveBookmarks,
+    [
+      ...forcedPlans.plans,
+      ...cachedPlans.plans,
+      ...builtInFastPlans.plans,
+      ...exactDuplicatePlans
+    ],
+    {
+      includeMissingAsManual: !finishUnclassifiedLocally
+    }
+  );
 
   return {
-    aiCandidates: builtInFastPlans.remaining,
+    aiCandidates: finishUnclassifiedLocally ? [] : builtInFastPlans.remaining,
     scanResult,
     planResult,
+    pendingWarnings: localUnclassifiedWarnings,
+    localUnclassifiedCount: localUnclassifiedWarnings.length,
     reusedCount: cachedPlans.plans.length,
     fastRuleCount: builtInFastPlans.plans.length,
     forcedCount: forcedPlans.plans.length,
@@ -1413,8 +1442,16 @@ async function finishFastLocalJob(job, localPlan) {
   job.deleted = scanResult.deletedCount + planResult.deletedCount;
   job.reused = localPlan.reusedCount;
   job.aiClassified = 0;
-  job.warningCount = scanResult.warningCount + planResult.warningCount;
-  job.lastWarning = planResult.lastWarning || scanResult.lastWarning || job.lastWarning || "";
+  job.warningCount =
+    scanResult.warningCount +
+    planResult.warningCount +
+    Number(localPlan.localUnclassifiedCount || 0);
+  job.lastWarning =
+    localPlan.pendingWarnings?.at(-1)?.reason ||
+    planResult.lastWarning ||
+    scanResult.lastWarning ||
+    job.lastWarning ||
+    "";
   job.warnings = appendLimitedEntries(job.warnings, [
     ...(scanResult.warningEntries || []),
     ...(planResult.warningEntries || [])
@@ -1424,7 +1461,10 @@ async function finishFastLocalJob(job, localPlan) {
     ...(planResult.deletedEntries || [])
   ]);
   job.plannedBookmarks = appendPlanEntries(job.plannedBookmarks, planResult.keepEntries);
-  job.pendingWarnings = appendPlanEntries(job.pendingWarnings, scanResult.pendingWarnings);
+  job.pendingWarnings = appendPlanEntries(job.pendingWarnings, [
+    ...(scanResult.pendingWarnings || []),
+    ...(localPlan.pendingWarnings || [])
+  ]);
 
   await chrome.storage.local.set({
     [STORAGE_KEYS.job]: job
@@ -1446,8 +1486,8 @@ async function finishFastLocalJob(job, localPlan) {
       job,
       {
         detail: ux(
-        `快速模式下自定义规则、分类缓存和内置快速规则已覆盖全部书签，本次没有调用模型。预计归类 ${job.moved} 条，其中复用缓存 ${job.reused} 条、内置快速规则 ${localPlan.fastRuleCount || 0} 条；删除 ${job.deleted} 条，${MANUAL_FOLDER_TITLE} ${job.pendingWarnings.length} 条。确认无误后点击“应用方案”正式重建。`,
-        `Fast mode covered every bookmark with custom rules, the classification cache, and built-in fast rules, so this preview did not call the model. It would categorize ${job.moved}, including ${job.reused} reused cached results and ${localPlan.fastRuleCount || 0} from built-in fast rules, delete ${job.deleted}, and leave ${job.pendingWarnings.length} items in "${MANUAL_FOLDER_TITLE}". If it looks good, click Apply Plan to rebuild.`
+          `快速模式已在本地生成预览，本次没有调用模型。预计归类 ${job.moved} 条，其中复用缓存 ${job.reused} 条、内置快速规则 ${localPlan.fastRuleCount || 0} 条；${localPlan.localUnclassifiedCount || 0} 条未命中本地规则，已放入 ${MANUAL_FOLDER_TITLE}；删除 ${job.deleted} 条。确认无误后点击“应用方案”正式重建。`,
+          `Fast mode generated this preview locally without calling the model. It would categorize ${job.moved}, including ${job.reused} reused cached results and ${localPlan.fastRuleCount || 0} from built-in fast rules; ${localPlan.localUnclassifiedCount || 0} unmatched items were left in "${MANUAL_FOLDER_TITLE}"; ${job.deleted} items would be deleted. If it looks good, click Apply Plan to rebuild.`
         ),
         previewFolders
       }
@@ -1457,12 +1497,12 @@ async function finishFastLocalJob(job, localPlan) {
 
   await updateBatchStatus(job, job.totalBatches, {
     message: ux(
-      "自定义规则、分类缓存和内置快速规则已覆盖全部书签，正在直接重建书签结构。",
-      "Custom rules, the classification cache, and built-in fast rules covered every bookmark. Rebuilding directly."
+      "快速模式已生成本地整理方案，正在直接重建书签结构。",
+      "Fast mode generated a local organize plan. Rebuilding directly."
     ),
     detail: ux(
-      "快速模式无需等待模型返回；备份已经提前完成，接下来会按本地方案一次性重建。",
-      "Fast mode does not need to wait for the model. A backup has already been created, and the local plan will be rebuilt in one pass."
+      `快速模式无需等待模型返回；备份已经提前完成，未命中本地规则的 ${localPlan.localUnclassifiedCount || 0} 条会进入 ${MANUAL_FOLDER_TITLE}。`,
+      `Fast mode does not wait for the model. A backup has already been created, and ${localPlan.localUnclassifiedCount || 0} unmatched items will go to "${MANUAL_FOLDER_TITLE}".`
     )
   });
 
@@ -1479,8 +1519,8 @@ async function finishFastLocalJob(job, localPlan) {
     job,
     {
       detail: ux(
-        `本次快速模式完全复用自定义规则、分类缓存和内置快速规则，没有调用模型。共归类 ${job.moved} 条，其中复用缓存 ${job.reused} 条、内置快速规则 ${localPlan.fastRuleCount || 0} 条；白名单保留 ${rebuildResult.preservedCount} 条，受保护根目录保留 ${job.protectedRootFolderIds.length} 个，${MANUAL_FOLDER_TITLE} ${rebuildResult.warningEntries.length} 条。`,
-        `This fast-mode run reused only custom rules, the classification cache, and built-in fast rules without calling the model. It categorized ${job.moved} bookmarks, including ${job.reused} reused cached results and ${localPlan.fastRuleCount || 0} from built-in fast rules, preserved ${rebuildResult.preservedCount} whitelisted bookmarks, kept ${job.protectedRootFolderIds.length} protected root folders untouched, and left ${rebuildResult.warningEntries.length} items in "${MANUAL_FOLDER_TITLE}".`
+        `本次快速模式完全本地完成，没有调用模型。共归类 ${job.moved} 条，其中复用缓存 ${job.reused} 条、内置快速规则 ${localPlan.fastRuleCount || 0} 条；白名单保留 ${rebuildResult.preservedCount} 条，受保护根目录保留 ${job.protectedRootFolderIds.length} 个，${MANUAL_FOLDER_TITLE} ${rebuildResult.warningEntries.length} 条。`,
+        `This fast-mode run finished locally without calling the model. It categorized ${job.moved} bookmarks, including ${job.reused} reused cached results and ${localPlan.fastRuleCount || 0} from built-in fast rules, preserved ${rebuildResult.preservedCount} whitelisted bookmarks, kept ${job.protectedRootFolderIds.length} protected root folders untouched, and left ${rebuildResult.warningEntries.length} items in "${MANUAL_FOLDER_TITLE}".`
       )
     }
   );
@@ -1510,7 +1550,10 @@ async function buildLocalRequirementCheck(config) {
     bookmarkState.bookmarks,
     domainFolderRules,
     classificationCacheBucket,
-    { useBuiltInFastRules: !shouldCheckDeadLinks(runtimeConfig) }
+    {
+      useBuiltInFastRules: !shouldCheckDeadLinks(runtimeConfig),
+      finishUnclassifiedLocally: !shouldCheckDeadLinks(runtimeConfig)
+    }
   );
   const aiCandidateCount = localPlan.aiCandidates.length;
 
@@ -1697,10 +1740,14 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
       bookmarks,
       domainFolderRules,
       startupClassificationCacheBucket,
-      { useBuiltInFastRules: !shouldCheckDeadLinks(runtimeConfig) }
+      {
+        useBuiltInFastRules: !shouldCheckDeadLinks(runtimeConfig),
+        finishUnclassifiedLocally: !shouldCheckDeadLinks(runtimeConfig)
+      }
     );
   }
   const startupAiCandidateCount = startupLocalPlan.aiCandidates.length;
+  const startupLocalUnclassifiedCount = Number(startupLocalPlan.localUnclassifiedCount || 0);
   let taxonomyTopFolders = buildTaxonomyFallbackTopFolders();
   let taxonomyPlanningNote = "";
 
@@ -1722,25 +1769,30 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
     }
   } else if (startupAiCandidateCount) {
     taxonomyPlanningNote = ux(
-      "快速模式已跳过单独的全局目录规划请求，直接使用内置稳定大类。",
-      "Fast mode skipped the separate taxonomy-planning request and used the built-in stable folders."
+      "快速模式已跳过单独的全局目录规划请求，直接使用内置稳定大类和待手动分类兜底。",
+      "Fast mode skipped the separate taxonomy-planning request and used the built-in stable folders plus manual-review fallback."
     );
   } else {
     taxonomyPlanningNote = "";
   }
   const taxonomyFlowDetail = !startupAiCandidateCount
-    ? ux(
-        "当前书签已命中本地规则或分类缓存，跳过模型目录规划。",
-        "Local rules or the classification cache cover the current bookmarks, so model taxonomy planning is skipped."
-      )
+    ? startupLocalUnclassifiedCount
+      ? ux(
+          `快速模式会跳过模型等待；${startupLocalUnclassifiedCount} 条未命中本地规则的书签会进入 ${MANUAL_FOLDER_TITLE}。`,
+          `Fast mode skips model waiting; ${startupLocalUnclassifiedCount} unmatched bookmarks will go to "${MANUAL_FOLDER_TITLE}".`
+        )
+      : ux(
+          "当前书签已命中本地规则或分类缓存，跳过模型目录规划。",
+          "Local rules or the classification cache cover the current bookmarks, so model taxonomy planning is skipped."
+        )
     : planTaxonomy
       ? ux(
           "完整模式会先生成全局目录方案，再按批分类。",
           "Complete mode plans a global taxonomy first, then classifies in batches."
         )
       : ux(
-          "快速模式会跳过单独的全局目录规划，直接按内置稳定大类分类。",
-          "Fast mode skips the separate taxonomy-planning request and classifies directly into built-in stable folders."
+          "快速模式会跳过单独的全局目录规划，使用内置稳定大类和待手动分类兜底。",
+          "Fast mode skips the separate taxonomy-planning request and uses built-in stable folders plus manual-review fallback."
         );
   const linkCheckDetail = shouldCheckDeadLinks(runtimeConfig)
     ? ux(
@@ -1748,8 +1800,8 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
         "Complete mode checks dead links before classification and keeps the extra global taxonomy planning step."
       )
     : ux(
-        "快速模式会跳过失效链接检测和单独目录规划，先做去重、自定义规则、缓存复用和内置快速规则，剩余书签才进入模型分类。",
-        "Fast mode skips dead-link checks and the separate taxonomy-planning request, then runs duplicate cleanup, custom rules, cache reuse, built-in fast rules, and model classification only for the remaining bookmarks."
+        `快速模式会跳过失效链接检测、单独目录规划和模型等待；未命中本地规则的书签会进入 ${MANUAL_FOLDER_TITLE}，需要 AI 精细分类时可切换完整模式。`,
+        `Fast mode skips dead-link checks, the separate taxonomy-planning request, and model waiting; unmatched bookmarks go to "${MANUAL_FOLDER_TITLE}". Switch to Complete mode for AI classification.`
       );
 
   const totalBatches = Math.ceil(bookmarks.length / runtimeBatchSize);
@@ -2279,10 +2331,10 @@ async function processNextBatch() {
       detail: ux(
         checkDeadLinks
           ? `本批 ${batch.length} 条。会先识别确认失效的链接，把状态不明确的链接留到“${MANUAL_FOLDER_TITLE}”，再对剩余书签做 AI 分类。提交前不会改动现有书签树。`
-          : `本批 ${batch.length} 条。快速模式会跳过链接可用性探测和单独目录规划，先做去重、自定义规则、缓存复用和内置快速规则，剩余部分才进入 AI 分类。提交前不会改动现有书签树。`,
+          : `本批 ${batch.length} 条。快速模式会跳过链接可用性探测、单独目录规划和模型等待，先做去重、自定义规则、缓存复用和内置快速规则，剩余部分放入“${MANUAL_FOLDER_TITLE}”。提交前不会改动现有书签树。`,
         checkDeadLinks
           ? `${batch.length} items in this batch. Confirmed dead links are removed first, uncertain links are kept in "${MANUAL_FOLDER_TITLE}", and only the remaining bookmarks are sent to AI. The bookmark tree is not changed before the final rebuild.`
-          : `${batch.length} items in this batch. Fast mode skips link availability checks and the separate taxonomy plan, then uses duplicate cleanup, custom rules, cache reuse, built-in fast rules, and AI only for anything left. The bookmark tree is not changed before the final rebuild.`
+          : `${batch.length} items in this batch. Fast mode skips link availability checks, the separate taxonomy plan, and model waiting, then uses duplicate cleanup, custom rules, cache reuse, and built-in fast rules before putting anything left in "${MANUAL_FOLDER_TITLE}". The bookmark tree is not changed before the final rebuild.`
       )
     });
 
@@ -2315,7 +2367,10 @@ async function processNextBatch() {
     const builtInFastPlans = checkDeadLinks
       ? { plans: [], remaining: cachedPlans.remaining }
       : buildBuiltInFastFolderPlans(cachedPlans.remaining);
-    const bookmarksToClassify = builtInFastPlans.remaining;
+    const fastLocalPendingWarnings = checkDeadLinks
+      ? []
+      : buildFastLocalUnclassifiedWarnings(builtInFastPlans.remaining);
+    const bookmarksToClassify = checkDeadLinks ? builtInFastPlans.remaining : [];
     const needsModelClassification = bookmarksToClassify.length > 0;
     const classifications = needsModelClassification
       ? await withKeepAlive(
@@ -2345,21 +2400,23 @@ async function processNextBatch() {
       job.taxonomyLocks
     );
     job.taxonomyLocks = normalized.taxonomyLocks;
-    const nextClassificationCacheBucket = updateClassificationCacheBucket(
-      classificationCacheBucket,
-      bookmarksToClassify,
-      normalized.results
-    );
-    await saveClassificationCacheBucket(job.classificationSignature, nextClassificationCacheBucket);
+    if (needsModelClassification) {
+      const nextClassificationCacheBucket = updateClassificationCacheBucket(
+        classificationCacheBucket,
+        bookmarksToClassify,
+        normalized.results
+      );
+      await saveClassificationCacheBucket(job.classificationSignature, nextClassificationCacheBucket);
+    }
 
     await updateBatchStatus(job, currentBatch, {
       message: ux(
         needsModelClassification
           ? `第 ${currentBatch}/${job.totalBatches} 批模型结果已返回，正在写入最终整理方案。`
-          : `第 ${currentBatch}/${job.totalBatches} 批已由本地规则覆盖，正在写入最终整理方案。`,
+          : `第 ${currentBatch}/${job.totalBatches} 批已完成本地处理，正在写入最终整理方案。`,
         needsModelClassification
           ? `Model output for batch ${currentBatch}/${job.totalBatches} received. Writing it into the final organize plan.`
-          : `Batch ${currentBatch}/${job.totalBatches} was covered by local rules. Writing it into the final organize plan.`
+          : `Batch ${currentBatch}/${job.totalBatches} finished local processing. Writing it into the final organize plan.`
       ),
       detail: aliveBatch.length
         ? ux(
@@ -2384,7 +2441,10 @@ async function processNextBatch() {
         ...builtInFastPlans.plans,
         ...normalized.results,
         ...exactDuplicatePlans
-      ]
+      ],
+      {
+        includeMissingAsManual: checkDeadLinks
+      }
     );
 
     job.processed += batch.length;
@@ -2392,8 +2452,13 @@ async function processNextBatch() {
     job.deleted += scanResult.deletedCount + planResult.deletedCount;
     job.reused += cachedPlans.plans.length;
     job.aiClassified += normalized.results.length;
-    job.warningCount += scanResult.warningCount + planResult.warningCount;
-    job.lastWarning = planResult.lastWarning || scanResult.lastWarning || job.lastWarning || "";
+    job.warningCount += scanResult.warningCount + planResult.warningCount + fastLocalPendingWarnings.length;
+    job.lastWarning =
+      fastLocalPendingWarnings.at(-1)?.reason ||
+      planResult.lastWarning ||
+      scanResult.lastWarning ||
+      job.lastWarning ||
+      "";
     job.warnings = appendLimitedEntries(job.warnings, [
       ...(scanResult.warningEntries || []),
       ...(planResult.warningEntries || [])
@@ -2403,7 +2468,10 @@ async function processNextBatch() {
       ...(planResult.deletedEntries || [])
     ]);
     job.plannedBookmarks = appendPlanEntries(job.plannedBookmarks, planResult.keepEntries);
-    job.pendingWarnings = appendPlanEntries(job.pendingWarnings, scanResult.pendingWarnings);
+    job.pendingWarnings = appendPlanEntries(job.pendingWarnings, [
+      ...(scanResult.pendingWarnings || []),
+      ...fastLocalPendingWarnings
+    ]);
 
     await mergeStoredCancellationFlag(job);
     await chrome.storage.local.set({
@@ -2416,8 +2484,8 @@ async function processNextBatch() {
         `Batch ${currentBatch}/${job.totalBatches} finished. Processed ${job.processed}/${job.total} so far.`
       ),
       detail: ux(
-        `本批已写入 ${planResult.keepCount} 条整理结果，其中自定义规则命中 ${forcedPlans.plans.length} 条、缓存复用 ${cachedPlans.plans.length} 条、内置快速规则命中 ${builtInFastPlans.plans.length} 条、AI 新分类 ${normalized.results.length} 条；标记删除 ${scanResult.deletedCount + planResult.deletedCount} 条，未处理 ${scanResult.warningCount + planResult.warningCount} 条。旧书签结构尚未改动。`,
-        `This batch added ${planResult.keepCount} organize results, including ${forcedPlans.plans.length} matched by custom rules, ${cachedPlans.plans.length} reused from cache, ${builtInFastPlans.plans.length} matched by built-in fast rules, and ${normalized.results.length} newly classified by AI. It also marked ${scanResult.deletedCount + planResult.deletedCount} deletions and left ${scanResult.warningCount + planResult.warningCount} unresolved items. The original bookmark tree is still unchanged.`
+        `本批已写入 ${planResult.keepCount} 条整理结果，其中自定义规则命中 ${forcedPlans.plans.length} 条、缓存复用 ${cachedPlans.plans.length} 条、内置快速规则命中 ${builtInFastPlans.plans.length} 条、AI 新分类 ${normalized.results.length} 条；标记删除 ${scanResult.deletedCount + planResult.deletedCount} 条，未处理 ${scanResult.warningCount + planResult.warningCount + fastLocalPendingWarnings.length} 条。旧书签结构尚未改动。`,
+        `This batch added ${planResult.keepCount} organize results, including ${forcedPlans.plans.length} matched by custom rules, ${cachedPlans.plans.length} reused from cache, ${builtInFastPlans.plans.length} matched by built-in fast rules, and ${normalized.results.length} newly classified by AI. It also marked ${scanResult.deletedCount + planResult.deletedCount} deletions and left ${scanResult.warningCount + planResult.warningCount + fastLocalPendingWarnings.length} unresolved items. The original bookmark tree is still unchanged.`
       ),
       warnings: job.warnings,
       deletedItems: job.deletedItems
@@ -5027,8 +5095,9 @@ function buildLogEntry(kind, bookmark, reason, suggestion) {
   };
 }
 
-function buildBatchClassificationPlan(batch, normalizedResults) {
+function buildBatchClassificationPlan(batch, normalizedResults, options = {}) {
   const resultMap = new Map(normalizedResults.map((item) => [item.id, item]));
+  const includeMissingAsManual = options.includeMissingAsManual !== false;
   const keepEntries = [];
   let keepCount = 0;
   let deletedCount = 0;
@@ -5038,13 +5107,17 @@ function buildBatchClassificationPlan(batch, normalizedResults) {
   const deletedEntries = [];
 
   for (const bookmark of batch) {
-    const plan = resultMap.get(bookmark.id) || {
+    const plan = resultMap.get(bookmark.id);
+    if (!plan && !includeMissingAsManual) {
+      continue;
+    }
+    const resolvedPlan = plan || {
       action: "keep",
       folderPath: [MANUAL_FOLDER_TITLE],
       duplicateOf: ""
     };
 
-    if (plan.action === "delete_duplicate") {
+    if (resolvedPlan.action === "delete_duplicate") {
       deletedCount += 1;
       deletedEntries.push(
         buildLogEntry(
@@ -5066,7 +5139,7 @@ function buildBatchClassificationPlan(batch, normalizedResults) {
     keepEntries.push({
       title: bookmark.title || t("untitledBookmark"),
       url: bookmark.url,
-      folderPath: normalizeFolderPath(plan.folderPath)
+      folderPath: normalizeFolderPath(resolvedPlan.folderPath)
     });
     keepCount += 1;
   }

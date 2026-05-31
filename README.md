@@ -87,7 +87,7 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 2. Create a local snapshot backup before a real organize run.
 3. Check links and remove only confirmed dead bookmarks.
 4. Detect exact duplicates and preserve uncertain items for review.
-5. Use stable root folders in Fast mode, or plan a global taxonomy in Complete mode, then classify bookmarks in batches.
+5. Use local rules in Fast mode, or plan a global taxonomy and classify bookmarks with AI in Complete mode.
 6. Rebuild the bookmark bar root in one final pass.
 
 ## What v3.0 Focuses On
@@ -96,12 +96,12 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 | --- | --- |
 | Main action | `Preview` is the first step. `Apply Plan` appears only when a plan is ready. |
 | Popup mode switch | Fast/Complete can be changed directly in the popup, and any saved preview is invalidated when the mode changes. |
-| Setup | Missing provider, Base URL, or model routes the user to settings. API access is requested only when uncached bookmarks still need a model call after local rules. |
+| Setup | Missing provider, Base URL, or model routes the user to settings. Fast preview does not request model access; Complete requests it only when uncached bookmarks need AI classification. |
 | API settings | `Test & Save` validates the connection and stores the working configuration. |
 | Slow models | DeepSeek and DeepSeek-compatible runs cap each runtime batch at 15 bookmarks, split model requests to 5 bookmarks each, run up to three mini requests at a time, and still use shorter provider-specific timeouts, compact model input, tighter output budgets, and adaptive mini-retries that keep completed results while only shrinking the failed block down to one bookmark. |
 | Apply speed | Applying a ready preview reuses the saved plan and rebuilds locally without a second model run. |
-| Speed mode | Fast mode skips dead-link checks and the extra taxonomy-planning request, then applies custom rules, cache reuse, built-in domain rules, and AI only for the remaining bookmarks; Complete mode keeps link checks and global planning. |
-| Local reruns | If custom rules, cached classifications, and built-in domain rules cover every bookmark, Marko can preview without asking for an API key or model endpoint access. |
+| Speed mode | Fast mode skips dead-link checks, the extra taxonomy-planning request, and model waiting; unmatched bookmarks go to manual review. Complete mode keeps link checks, global planning, and AI classification. |
+| Local reruns | Fast mode can preview without asking for an API key or model endpoint access, because custom rules, cached classifications, built-in domain rules, and manual-review fallback finish locally. |
 | DeepSeek | New/reset configurations start at 15; older large-batch settings are capped per run, DeepSeek-compatible Base URLs or model names use the same profile, and active older jobs are normalized before the next batch without changing the saved setting. |
 | Advanced rules | Protected folders, domain rules, and prompt fields stay available but quieter. |
 | Language | English and Simplified Chinese are both supported in the extension UI. |
@@ -149,11 +149,11 @@ Core files:
 
 ## Privacy Boundaries
 
-- Bookmark titles, URLs, current paths, prompts, API settings, caches, and backups stay in local browser storage unless a preview or enabled auto organize run needs external access.
-- Bookmark metadata is sent only to the model provider you configured when a preview or enabled auto organize run still needs model classification after local rules and cache reuse.
+- Bookmark titles, URLs, current paths, prompts, API settings, caches, and backups stay in local browser storage unless Complete preview or enabled auto organize needs external access.
+- Bookmark metadata is sent only to the model provider you configured when Complete preview or enabled auto organize still needs model classification after local rules and cache reuse.
 - Applying a saved preview plan rebuilds locally and does not call the model again.
 - API keys are stored locally and are never sent to this project or its developer.
-- Complete mode connects directly to bookmarked websites for link checks and adds a separate taxonomy-planning request; Fast mode skips both extras.
+- Complete mode connects directly to bookmarked websites for link checks and adds separate taxonomy-planning and model-classification requests; Fast mode skips those external requests.
 - Snapshot backups are local and can be restored or deleted from the settings page; restoring creates a fresh local snapshot first.
 
 Read the full policy in [PRIVACY.md](PRIVACY.md).

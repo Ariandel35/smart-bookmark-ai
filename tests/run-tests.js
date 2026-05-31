@@ -470,17 +470,17 @@ function testSpeedModeSurface() {
 
   const privacyPolicy = fs.readFileSync(path.join(ROOT_DIR, "PRIVACY.md"), "utf8");
   assert.match(privacyPolicy, /Last updated: 2026-05-31/);
-  assert.match(privacyPolicy, /when generating a preview or enabled auto organize run/);
+  assert.match(privacyPolicy, /when Complete preview or enabled auto organize/);
   assert.match(privacyPolicy, /Applying a saved preview plan rebuilds locally and does not call the model again/);
-  assert.match(privacyPolicy, /Fast mode skips dead-link checks and the separate taxonomy-planning model request/);
+  assert.match(privacyPolicy, /Fast mode skips dead-link checks, the separate taxonomy-planning model request, and model classification/);
   assert.match(privacyPolicy, /Complete mode can send HEAD \/ GET requests directly to bookmarked websites/);
   assert.match(privacyPolicy, /before restoring an older backup/);
   assert.match(privacyPolicy, /pre-restore snapshots/);
 
   const privacyHtml = fs.readFileSync(path.join(ROOT_DIR, "privacy.html"), "utf8");
-  assert.match(privacyHtml, /separate taxonomy-planning request/);
+  assert.match(privacyHtml, /separate taxonomy-planning and model-classification requests/);
   assert.match(privacyHtml, /preview and organize runs can send direct HEAD \/ GET requests/);
-  assert.match(privacyHtml, /Fast mode skips both extras/);
+  assert.match(privacyHtml, /Fast mode skips those external requests/);
   assert.match(privacyHtml, /Applying a saved preview does not call the model again/);
   assert.match(privacyHtml, /before restoring an older backup/);
   assert.match(privacyHtml, /data-i18n="privacyMeta"/);
@@ -796,6 +796,11 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /FAST_LOCAL_FOLDER_RULES/);
   assert.match(backgroundSource, /buildBuiltInFastFolderPlans/);
   assert.match(backgroundSource, /matchBuiltInFastFolderPath/);
+  assert.match(backgroundSource, /buildFastLocalUnclassifiedWarnings/);
+  assert.match(backgroundSource, /finishUnclassifiedLocally: !shouldCheckDeadLinks\(runtimeConfig\)/);
+  assert.match(backgroundSource, /includeMissingAsManual: !finishUnclassifiedLocally/);
+  assert.match(backgroundSource, /includeMissingAsManual: checkDeadLinks/);
+  assert.match(backgroundSource, /Fast mode does not wait for the model/);
   assert.match(backgroundSource, /useBuiltInFastRules: !shouldCheckDeadLinks\(runtimeConfig\)/);
   assert.match(backgroundSource, /built-in fast rules/);
   assert.match(backgroundSource, /buildFastLocalClassificationPlan/);
@@ -1110,6 +1115,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Popup Fast and Complete mode toggles/);
   assert.match(changelog, /Settings navigation tabs now expose localized hover tooltips/);
   assert.match(changelog, /Settings save and backup status badges/);
+  assert.match(changelog, /Fast mode now finishes locally without waiting for the model/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);
@@ -1130,7 +1136,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /npm run package:webstore/);
   assert.match(readme, /Popup mode switch/);
   assert.match(readme, /built-in domain rules/);
-  assert.match(readme, /unless a preview or enabled auto organize run needs external access/);
+  assert.match(readme, /unless Complete preview or enabled auto organize needs external access/);
+  assert.match(readme, /manual-review fallback finish locally/);
   assert.doesNotMatch(readme, /unless you start an organize run/);
   assert.match(readme, /restoring creates a fresh local snapshot first/);
   assert.match(readmeZh, /DeepSeek 兼容接口/);
@@ -1138,6 +1145,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /npm run package:webstore/);
   assert.match(readmeZh, /弹窗模式切换/);
   assert.match(readmeZh, /内置域名规则/);
+  assert.match(readmeZh, /待手动分类兜底会在本地完成/);
   assert.match(readmeZh, /恢复前会先创建新的本地快照/);
 
   const releaseNotes = fs.readFileSync(
@@ -1147,6 +1155,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /without another model request/);
   assert.match(releaseNotes, /Fast\/Complete mode switch/);
   assert.match(releaseNotes, /built-in domain rules/);
+  assert.match(releaseNotes, /unmatched bookmarks go to manual review/);
   assert.match(releaseNotes, /Backup failures before applying a saved preview/);
   assert.match(releaseNotes, /only for preview-apply failures/);
   assert.match(releaseNotes, /re-split large batches before each request/);
@@ -1199,7 +1208,7 @@ function testReleaseMaterialsCurrent() {
 
   const reviewNotes = fs.readFileSync(path.join(ROOT_DIR, "webstore/REVIEW_NOTES.md"), "utf8");
   assert.match(reviewNotes, /复用已保存方案/);
-  assert.match(reviewNotes, /生成预览或已开启自动整理且本地规则、缓存无法覆盖/);
+  assert.match(reviewNotes, /完整模式预览或已开启自动整理且本地规则、缓存无法覆盖/);
 
   const webstorePrivacyPolicy = fs.readFileSync(
     path.join(ROOT_DIR, "webstore/PRIVACY_POLICY.md"),
@@ -1209,7 +1218,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(webstorePrivacyPolicy, /模型服务商、Base URL、模型名/);
   assert.match(webstorePrivacyPolicy, /完整模式还会在分类前生成全局目录方案/);
   assert.match(webstorePrivacyPolicy, /应用已保存的预览方案会直接本地重建，不会再次请求模型/);
-  assert.match(webstorePrivacyPolicy, /快速模式会在预览和整理流程中跳过失效链接检测和单独目录规划请求/);
+  assert.match(webstorePrivacyPolicy, /快速模式会在预览和整理流程中跳过失效链接检测、单独目录规划请求和模型分类/);
   assert.match(webstorePrivacyPolicy, /完整模式会直接访问书签对应的网站/);
   assert.match(webstorePrivacyPolicy, /恢复旧备份前也会先为当前书签状态创建本地快照/);
 

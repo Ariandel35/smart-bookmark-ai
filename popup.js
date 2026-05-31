@@ -220,7 +220,8 @@ function getLogKindLabel(kind) {
       scan_failed: t("logScanFailed"),
       duplicate_deleted: t("logDuplicateDeleted"),
       dead_link_deleted: t("logDeadLinkDeleted"),
-      manual_deleted: t("logManualDeleted")
+      manual_deleted: t("logManualDeleted"),
+      fast_local_unclassified: t("logFastLocalUnclassified")
     }[kind] || t("logRecord")
   );
 }

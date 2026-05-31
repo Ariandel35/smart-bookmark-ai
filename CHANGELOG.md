@@ -5,8 +5,9 @@
 - Added Fast and Complete speed modes so users can choose quicker organizing that skips extra checks and taxonomy planning, or full dead-link checks with global planning
 - Popup now includes a Fast/Complete mode switch so speed and quality can be adjusted without opening settings
 - Switching Fast/Complete in the popup now actively clears stale saved previews before the popup refreshes
-- Fast mode now applies conservative built-in domain rules for common developer, learning, productivity, design, community, shopping, media, and life sites after custom rules and cache reuse, before calling the model
-- Reduced popup and settings permission requests in Fast mode to the configured model API origin
+- Fast mode now applies conservative built-in domain rules for common developer, learning, productivity, design, community, shopping, media, and life sites after custom rules and cache reuse
+- Fast mode now finishes locally without waiting for the model; bookmarks that do not match rules or cache are moved to the manual review folder, while Complete mode keeps AI classification
+- Fast mode no longer asks for model endpoint access during preview because it does not call the model
 - DeepSeek and DeepSeek-compatible endpoints now use the slow-model profile automatically, cap runtime batches at 15, split actual model requests to 5 bookmarks, and run up to three mini requests at once
 - Running legacy organize jobs are normalized before the next batch so stale large batches cannot continue after an update
 - Privacy, README, and store disclosures now describe preview-time model calls, local Apply Plan rebuilds, and auto organize data flow consistently
@@ -94,8 +95,8 @@
 - Batch size and automation interval fields now include persistent range hints that are preserved alongside validation errors
 - Settings validation now clears stale field error highlights when fields are edited or revalidated
 - Whitelist domain toggle buttons now expose selected state, and selected chips announce their remove action
-- Fast mode now finishes locally when custom rules, the classification cache, and built-in fast rules cover every bookmark, skipping model calls and batch scheduling
-- Preview now checks local rule/cache coverage before asking for API keys or model endpoint access
+- Fast mode can now finish locally with custom rules, the classification cache, built-in fast rules, and manual-review fallback, skipping model calls and batch scheduling
+- Preview now checks local rule/cache coverage before asking for API keys or model endpoint access in Complete mode
 - Preview startup now reuses the fresh local coverage check when possible instead of scanning bookmarks and cache twice
 - Background bootstrap now throttles backup-record synchronization and legacy root cleanup so consecutive popup actions do not repeat maintenance scans
 - Unprocessed-item keep/delete actions now lock together immediately to avoid duplicate handling requests
