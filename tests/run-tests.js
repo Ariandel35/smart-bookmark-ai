@@ -739,10 +739,10 @@ function testPreviewApplySurface() {
 function testSlowModelResilienceSurface() {
   const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSource, /RUNTIME_BATCH_SIZE_CAPS/);
-  assert.match(backgroundSource, /RUNTIME_BATCH_SIZE_CAPS[\s\S]*deepseek: 15/);
-  assert.match(backgroundSource, /return provider === "deepseek" \? 15 : DEFAULT_BATCH_SIZE/);
+  assert.match(backgroundSource, /RUNTIME_BATCH_SIZE_CAPS[\s\S]*deepseek: 12/);
+  assert.match(backgroundSource, /return provider === "deepseek" \? 12 : DEFAULT_BATCH_SIZE/);
   assert.match(backgroundSource, /MODEL_REQUEST_BATCH_SIZE_CAPS/);
-  assert.match(backgroundSource, /MODEL_REQUEST_BATCH_SIZE_CAPS[\s\S]*deepseek: 5/);
+  assert.match(backgroundSource, /MODEL_REQUEST_BATCH_SIZE_CAPS[\s\S]*deepseek: 4/);
   assert.match(backgroundSource, /MODEL_REQUEST_CONCURRENCY_CAPS/);
   assert.match(backgroundSource, /MODEL_REQUEST_CONCURRENCY_CAPS[\s\S]*deepseek: 3/);
   assert.match(backgroundSource, /getProviderPerformanceProfile/);
@@ -773,10 +773,10 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /normalizeRetryBatchSize/);
   assert.match(backgroundSource, /FIRST_RESPONSE_TIMEOUT_CAPS_MS/);
   assert.match(backgroundSource, /REQUEST_TIMEOUT_CAPS_MS/);
-  assert.match(backgroundSource, /deepseek:\s*10_000/);
-  assert.match(backgroundSource, /deepseek:\s*30_000/);
-  assert.match(backgroundSource, /within 10 seconds/);
-  assert.match(backgroundSource, /within 30 seconds/);
+  assert.match(backgroundSource, /deepseek:\s*8_000/);
+  assert.match(backgroundSource, /deepseek:\s*18_000/);
+  assert.match(backgroundSource, /within 8 seconds/);
+  assert.match(backgroundSource, /within 18 seconds/);
   assert.match(backgroundSource, /getFirstResponseTimeoutMs/);
   assert.match(backgroundSource, /getRequestTimeoutMs/);
   assert.match(backgroundSource, /formatTimeoutSeconds/);
@@ -810,6 +810,8 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /shouldPlanGlobalTaxonomy/);
   assert.match(backgroundSource, /shouldUseAiClassification/);
   assert.match(backgroundSource, /shouldUseModelTimeoutFallback/);
+  assert.match(backgroundSource, /shouldRetryModelTimeout/);
+  assert.match(backgroundSource, /!shouldRetryModelTimeout\(config\)/);
   assert.match(backgroundSource, /modelFallbackToManual/);
   assert.match(backgroundSource, /buildModelTimeoutFallbackWarnings/);
   assert.match(backgroundSource, /skips the separate global taxonomy request/);
@@ -824,7 +826,7 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /includeMissingAsManual: !finishUnclassifiedLocally/);
   assert.match(backgroundSource, /includeMissingAsManual: useAiClassification && !job\.modelFallbackToManual/);
   assert.match(backgroundSource, /Fast mode does not wait for the model/);
-  assert.match(backgroundSource, /useBuiltInFastRules: !shouldCheckDeadLinks\(runtimeConfig\)/);
+  assert.match(backgroundSource, /useBuiltInFastRules: true/);
   assert.match(backgroundSource, /built-in fast rules/);
   assert.match(backgroundSource, /buildFastLocalClassificationPlan/);
   assert.match(backgroundSource, /finishFastLocalJob/);
@@ -876,7 +878,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="saveButton"/);
 
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
-  assert.match(optionsSource, /return provider === "deepseek" \? 15 : DEFAULT_BATCH_SIZE/);
+  assert.match(optionsSource, /return provider === "deepseek" \? 12 : DEFAULT_BATCH_SIZE/);
   assert.match(optionsSource, /showSettingsIssue/);
   assert.match(optionsSource, /isValidHttpUrl/);
   assert.match(optionsSource, /const providerKnown = Boolean\(raw\.provider && Providers\.hasProvider\(raw\.provider\)\)/);
@@ -1133,8 +1135,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /built-in domain rules/);
   assert.match(changelog, /Backup failures before applying a saved preview/);
   assert.match(changelog, /only for explicit preview-apply failures/);
-  assert.match(changelog, /runtime batches are capped to fifteen bookmarks/);
-  assert.match(changelog, /five-bookmark model requests/);
+  assert.match(changelog, /runtime batches are capped to twelve bookmarks/);
+  assert.match(changelog, /four-bookmark model requests/);
   assert.match(changelog, /DeepSeek-compatible endpoints/);
   assert.match(changelog, /up to three mini requests/);
   assert.match(changelog, /preview-time model calls, local Apply Plan rebuilds, and auto organize data flow/);
@@ -1198,8 +1200,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Backup failures before applying a saved preview/);
   assert.match(releaseNotes, /only for preview-apply failures/);
   assert.match(releaseNotes, /re-split large batches before each request/);
-  assert.match(releaseNotes, /cap runtime batches at 15 bookmarks/);
-  assert.match(releaseNotes, /cap each model request at 5 bookmarks/);
+  assert.match(releaseNotes, /cap runtime batches at 12 bookmarks/);
+  assert.match(releaseNotes, /cap each model request at 4 bookmarks/);
   assert.match(releaseNotes, /run up to three mini requests at a time/);
   assert.match(releaseNotes, /skip the separate taxonomy-planning request/);
   assert.match(releaseNotes, /finishes with local fallback/);
@@ -1227,8 +1229,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /Backup failures before applying a saved preview/);
   assert.match(storeListing, /only after a preview-apply failure/);
   assert.match(storeListing, /re-split large batches before each request/);
-  assert.match(storeListing, /cap runtime batches at 15 bookmarks/);
-  assert.match(storeListing, /cap each model request at 5 bookmarks/);
+  assert.match(storeListing, /cap runtime batches at 12 bookmarks/);
+  assert.match(storeListing, /cap each model request at 4 bookmarks/);
   assert.match(storeListing, /run up to three mini requests at a time/);
   assert.match(storeListing, /skip the separate taxonomy-planning request/);
   assert.match(storeListing, /finishes with local fallback/);

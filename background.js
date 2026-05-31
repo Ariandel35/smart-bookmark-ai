@@ -32,10 +32,10 @@ const MIN_BATCH_SIZE = 5;
 const MIN_AUTO_RETRY_BATCH_SIZE = 1;
 const MAX_AUTO_RETRY_BATCH_SIZE = 20;
 const RUNTIME_BATCH_SIZE_CAPS = {
-  deepseek: 15
+  deepseek: 12
 };
 const MODEL_REQUEST_BATCH_SIZE_CAPS = {
-  deepseek: 5
+  deepseek: 4
 };
 const MODEL_REQUEST_CONCURRENCY_CAPS = {
   deepseek: 3
@@ -222,27 +222,27 @@ const KEEP_ALIVE_INTERVAL_MS = 25_000;
 const FIRST_RESPONSE_TIMEOUT_MS = 25_000;
 const REQUEST_TIMEOUT_MS = 90_000;
 const FIRST_RESPONSE_TIMEOUT_CAPS_MS = {
-  deepseek: 10_000
+  deepseek: 8_000
 };
 const REQUEST_TIMEOUT_CAPS_MS = {
-  deepseek: 30_000
+  deepseek: 18_000
 };
 const NEXT_BATCH_DELAY_MS = 150;
 const MODEL_INPUT_TITLE_MAX_LENGTH = 120;
 const MODEL_INPUT_URL_MAX_LENGTH = 260;
 const MODEL_INPUT_PATH_MAX_LENGTH = 140;
-const COMPACT_MODEL_INPUT_TITLE_MAX_LENGTH = 90;
-const COMPACT_MODEL_INPUT_URL_MAX_LENGTH = 180;
-const COMPACT_MODEL_INPUT_PATH_MAX_LENGTH = 90;
+const COMPACT_MODEL_INPUT_TITLE_MAX_LENGTH = 72;
+const COMPACT_MODEL_INPUT_URL_MAX_LENGTH = 140;
+const COMPACT_MODEL_INPUT_PATH_MAX_LENGTH = 72;
 const TAXONOMY_OUTPUT_TOKEN_BUDGET = 384;
 const CLASSIFICATION_OUTPUT_TOKEN_BASE = 256;
 const CLASSIFICATION_OUTPUT_TOKENS_PER_BOOKMARK = 80;
 const CLASSIFICATION_OUTPUT_TOKEN_MAX = 4096;
 const CLASSIFICATION_OUTPUT_BUDGET_PROFILES = {
   deepseek: {
-    base: 96,
-    perBookmark: 40,
-    max: 512
+    base: 80,
+    perBookmark: 34,
+    max: 384
   }
 };
 const LOCAL_REQUIREMENT_CHECK_TTL_MS = 15_000;
@@ -617,7 +617,7 @@ function getProviderLabel(provider) {
 }
 
 function getDefaultBatchSize(provider) {
-  return provider === "deepseek" ? 15 : DEFAULT_BATCH_SIZE;
+  return provider === "deepseek" ? 12 : DEFAULT_BATCH_SIZE;
 }
 
 function getProviderPerformanceProfile(configOrProvider = {}) {
@@ -1592,7 +1592,7 @@ async function buildLocalRequirementCheck(config) {
     domainFolderRules,
     classificationCacheBucket,
     {
-      useBuiltInFastRules: !shouldCheckDeadLinks(runtimeConfig),
+      useBuiltInFastRules: true,
       finishUnclassifiedLocally: !useAiClassification
     }
   );
@@ -1783,7 +1783,7 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
       domainFolderRules,
       startupClassificationCacheBucket,
       {
-        useBuiltInFastRules: !shouldCheckDeadLinks(runtimeConfig),
+        useBuiltInFastRules: true,
         finishUnclassifiedLocally: !useAiClassification
       }
     );
@@ -1844,13 +1844,13 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
         )
       : shouldCheckDeadLinks(runtimeConfig)
         ? ux(
-            "完整模式会跳过慢模型的单独目录规划请求，并在模型超时时切到本地兜底继续完成。",
-            "Complete mode skips the slow-model taxonomy request and switches to the local fallback if the model times out."
+            "完整模式会先用本地规则减少模型请求；慢模型会跳过单独目录规划，并在模型超时时切到本地兜底继续完成。",
+            "Complete mode reduces model requests with local rules first; slow models skip the separate taxonomy request and switch to the local fallback if the model times out."
           )
         : useAiClassification
           ? ux(
-              "平衡模式会跳过失效链接扫描和单独目录规划，只把本地规则与缓存无法覆盖的书签交给 AI。",
-              "Balanced mode skips dead-link checks and separate taxonomy planning, then sends only bookmarks not covered by local rules or cache to AI."
+              "平衡模式会跳过失效链接扫描和单独目录规划，只把本地规则、缓存与内置规则无法覆盖的书签交给 AI。",
+              "Balanced mode skips dead-link checks and separate taxonomy planning, then sends only bookmarks not covered by local rules, cache, or built-in rules to AI."
             )
           : ux(
               "快速模式会跳过单独的全局目录规划，使用内置稳定大类和待手动分类兜底。",
@@ -2408,12 +2408,12 @@ async function processNextBatch() {
       ),
       detail: ux(
         checkDeadLinks
-          ? `本批 ${batch.length} 条。会先识别确认失效的链接，把状态不明确的链接留到“${MANUAL_FOLDER_TITLE}”，再对剩余书签做 AI 分类。提交前不会改动现有书签树。`
+          ? `本批 ${batch.length} 条。会先识别确认失效的链接，再用自定义规则、缓存和内置规则减少模型请求；剩余书签才交给 AI。提交前不会改动现有书签树。`
           : useAiClassification
             ? `本批 ${batch.length} 条。平衡模式会跳过链接可用性探测和单独目录规划，先做去重、自定义规则、缓存复用和内置规则，剩余书签再交给 AI 分类。提交前不会改动现有书签树。`
             : `本批 ${batch.length} 条。快速模式会跳过链接可用性探测、单独目录规划和模型等待，先做去重、自定义规则、缓存复用和内置快速规则，剩余部分放入“${MANUAL_FOLDER_TITLE}”。提交前不会改动现有书签树。`,
         checkDeadLinks
-          ? `${batch.length} items in this batch. Confirmed dead links are removed first, uncertain links are kept in "${MANUAL_FOLDER_TITLE}", and only the remaining bookmarks are sent to AI. The bookmark tree is not changed before the final rebuild.`
+          ? `${batch.length} items in this batch. Confirmed dead links are handled first, then custom rules, cache, and built-in rules reduce model requests; only the remaining bookmarks are sent to AI. The bookmark tree is not changed before the final rebuild.`
           : useAiClassification
             ? `${batch.length} items in this batch. Balanced mode skips link availability checks and the separate taxonomy plan, then uses duplicate cleanup, custom rules, cache reuse, and built-in rules before sending the rest to AI. The bookmark tree is not changed before the final rebuild.`
             : `${batch.length} items in this batch. Fast mode skips link availability checks, the separate taxonomy plan, and model waiting, then uses duplicate cleanup, custom rules, cache reuse, and built-in fast rules before putting anything left in "${MANUAL_FOLDER_TITLE}". The bookmark tree is not changed before the final rebuild.`
@@ -2446,10 +2446,7 @@ async function processNextBatch() {
       classificationCacheStore[job.classificationSignature]?.items || {}
     );
     const cachedPlans = buildCachedPlans(forcedPlans.remaining, classificationCacheBucket);
-    let builtInFastPlans =
-      checkDeadLinks && !job.modelFallbackToManual
-        ? { plans: [], remaining: cachedPlans.remaining }
-        : buildBuiltInFastFolderPlans(cachedPlans.remaining);
+    let builtInFastPlans = buildBuiltInFastFolderPlans(cachedPlans.remaining);
     let localFallbackPendingWarnings = !useAiClassification
       ? buildFastLocalUnclassifiedWarnings(builtInFastPlans.remaining)
       : job.modelFallbackToManual
@@ -4659,6 +4656,7 @@ async function classifyAdaptiveModelRequestBatch(
     if (
       error?.abortReason === "cancelled-by-user" ||
       !isModelTimeoutError(error) ||
+      !shouldRetryModelTimeout(config) ||
       requestBatch.length <= MIN_AUTO_RETRY_BATCH_SIZE
     ) {
       throw error;
@@ -4750,12 +4748,12 @@ async function classifySingleModelRequest(
   try {
     await reportStage({
       message: ux(
-        `第 1 阶段：正在向模型发送 ${batch.length} 条书签的分类请求。`,
-        `Stage 1: sending a classification request for ${batch.length} bookmarks to the model.`
+        `正在请求 AI 分类 ${batch.length} 条书签。`,
+        `Requesting AI classification for ${batch.length} bookmarks.`
       ),
       detail: ux(
-        `请求地址：${truncate(requestSpec.endpoint, 90)}。输出预算 ${outputTokenBudget} tokens；如果 ${formatTimeoutSeconds(firstResponseTimeoutMs)} 秒内没有收到响应，会主动停止并提示你减小批大小。`,
-        `Endpoint: ${truncate(requestSpec.endpoint, 90)}. Output budget: ${outputTokenBudget} tokens. If no response is received within ${formatTimeoutSeconds(firstResponseTimeoutMs)} seconds, the request will stop and suggest reducing the batch size.`
+        `如果 ${formatTimeoutSeconds(firstResponseTimeoutMs)} 秒内没有收到模型响应，会主动停止等待；慢模型会直接改用本地规则和待手动分类兜底。`,
+        `If the model does not respond within ${formatTimeoutSeconds(firstResponseTimeoutMs)} seconds, Marko stops waiting; slow providers switch directly to local rules and manual review.`
       )
     });
 
@@ -4783,12 +4781,12 @@ async function classifySingleModelRequest(
 
     await reportStage({
       message: ux(
-        "第 2 阶段：模型已响应，正在读取返回内容。",
-        "Stage 2: the model has responded and the body is being read."
+        "AI 已响应，正在整理返回内容。",
+        "The AI responded. Reading and cleaning the result."
       ),
       detail: ux(
-        "已经收到服务器响应头，接下来会读取文本并进行 JSON 提取。",
-        "Response headers have arrived. The extension will read the text and extract JSON next."
+        "正在读取模型文本并准备转换成整理方案。",
+        "Reading the model text and preparing it for the organize plan."
       )
     });
 
@@ -4840,12 +4838,12 @@ async function classifySingleModelRequest(
 
     await reportStage({
       message: ux(
-        "第 3 阶段：模型文本已收到，正在提取并解析 JSON。",
-        "Stage 3: model text received. Extracting and parsing JSON."
+        "AI 结果已收到，正在生成整理方案。",
+        "AI results received. Building the organize plan."
       ),
       detail: ux(
-        "后台会自动剥离 ```json 代码块和多余说明文字，只保留合法 JSON 数组。",
-        "The extension removes ```json fences and extra explanations automatically, then keeps only a valid JSON array."
+        "Marko 正在校验分类结果，无法确认的项目会保守留到待手动分类。",
+        "Marko is validating the classifications; uncertain items are kept in manual review."
       )
     });
 
@@ -5476,7 +5474,7 @@ function isModelTimeoutError(error) {
   const text = [error?.message, error?.userMessage, error?.userDetail]
     .filter(Boolean)
     .join(" ");
-  return /first-response-timeout|request-timeout|10 秒|15 秒|25 秒|30 秒|45 秒|90 秒|within 10 seconds|within 15 seconds|within 25 seconds|within 30 seconds|within 45 seconds|within 90 seconds/i.test(text);
+  return /first-response-timeout|request-timeout|8 秒|10 秒|15 秒|18 秒|25 秒|30 秒|45 秒|90 秒|within 8 seconds|within 10 seconds|within 15 seconds|within 18 seconds|within 25 seconds|within 30 seconds|within 45 seconds|within 90 seconds/i.test(text);
 }
 
 function normalizeRetryBatchSize(rawValue, fallback = MIN_BATCH_SIZE) {
@@ -5645,6 +5643,10 @@ function shouldRequireModelAccess(config = {}) {
 
 function shouldUseModelTimeoutFallback(config = {}) {
   return getProviderPerformanceProfile(config) === "deepseek";
+}
+
+function shouldRetryModelTimeout(config = {}) {
+  return !shouldUseModelTimeoutFallback(config);
 }
 
 function normalizeAutoInterval(rawValue) {

@@ -10,9 +10,10 @@
 - Fast mode now finishes locally without waiting for the model; bookmarks that do not match rules or cache are moved to the manual review folder, while Complete mode keeps AI classification
 - Fast mode no longer asks for model endpoint access during preview because it does not call the model
 - Fast automatic organize can now run locally without an API key; Balanced requires model credentials, and Complete still requires model credentials plus website access
+- Complete mode now applies deterministic built-in domain rules before AI classification too, so common sites do not need a model request after dead-link checks
 - DeepSeek and DeepSeek-compatible Complete runs now skip the separate taxonomy-planning request and fall back to local rules, cache, built-in rules, and manual review if model classification times out
-- DeepSeek and DeepSeek-compatible endpoints now use the slow-model profile automatically, cap runtime batches at 15, split actual model requests to 5 bookmarks, and run up to three mini requests at once
-- DeepSeek and DeepSeek-compatible classification now stops after a 10-second first-response stall or a 30-second full-response stall before falling back locally
+- DeepSeek and DeepSeek-compatible endpoints now use the slow-model profile automatically, cap runtime batches at 12, split actual model requests to 4 bookmarks, and run up to three mini requests at once
+- DeepSeek and DeepSeek-compatible classification now stops after an 8-second first-response stall or an 18-second full-response stall before falling back locally
 - Running legacy organize jobs are normalized before the next batch so stale large batches cannot continue after an update
 - Privacy, README, and store disclosures now describe preview-time model calls, local Apply Plan rebuilds, and auto organize data flow consistently
 - Remaining README, privacy page, and review checklist wording now uses the same preview-first data-flow language
@@ -39,13 +40,14 @@
 - Applying a stale preview now shows specific guidance when settings or bookmarks changed
 - Saved previews are now invalidated automatically when settings or bookmarks change
 - Popup summary details now stay visible for non-error status messages such as invalidated previews
-- New and reset DeepSeek configurations now start at batch size fifteen so they use the split mini-request path immediately
-- DeepSeek runtime batches are capped to fifteen bookmarks, then split into five-bookmark model requests with shorter response timeouts before timeout retries shrink again
+- New and reset DeepSeek configurations now start at batch size twelve so they use the split mini-request path immediately
+- DeepSeek runtime batches are capped to twelve bookmarks, then split into four-bookmark model requests with shorter response timeouts before timeout retries shrink again
 - Slow-provider model calls are now split again right before the request is sent, so stale large batches cannot submit one oversized request
 - Slow-provider split requests now run with a small provider-specific concurrency cap, so DeepSeek can process up to three mini requests at a time instead of waiting on one long serial queue
-- Slow-provider mini-request timeouts now keep completed mini results and only split/retry the failed block, avoiding whole-batch restarts after one stalled request
+- Slow-provider mini-request timeouts now keep completed mini results for faster providers and only split/retry the failed block, avoiding whole-batch restarts after one stalled request
+- DeepSeek-compatible timeout handling now skips recursive mini-batch retries and switches to local fallback on the first stall, keeping the whole run responsive
 - Cancellation requests are now checked before each split slow-provider model request and preserved before batch results are written back
-- Slow-model timeout retries can now split the current run below the saved batch size down to one-bookmark mini-batches, and DeepSeek uses a tighter output budget to reduce response latency
+- Providers without a local timeout fallback can still split retries down to one-bookmark mini-batches, while DeepSeek uses a tighter output budget and switches to local fallback instead of waiting through recursive retries
 - Applying a preview generated after slow-model mini-batch retries now preserves the preview's runtime batch display instead of clamping it back to the saved setting
 - Model requests now use a compact built-in strategy prompt plus compact bookmark titles, URLs, paths, JSON payloads, and output budgets to reduce slow-provider latency
 - DeepSeek-compatible classification now uses compact request/output keys and a lower token budget, while the parser still accepts the previous verbose response schema
