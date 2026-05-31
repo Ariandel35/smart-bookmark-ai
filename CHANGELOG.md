@@ -15,6 +15,7 @@
 - DeepSeek-compatible runs now keep the same runtime provider label through preview apply and final completion statuses
 - Popup preview checks now merge provider defaults before deciding setup is incomplete, so legacy or partial configs do not block local-rule previews unnecessarily
 - Complete-mode preview no longer asks for broad website access when there are no non-whitelisted bookmarks to scan
+- Empty or missing job config no longer falls back to an OpenAI provider label in terminal status updates
 - Applying a saved preview plan now reuses the stored plan and rebuilds locally without a second model request
 - Removed the legacy direct organize message path so manual runs must go through Preview -> Apply Plan
 - If applying a saved preview hits a recoverable failure, the popup now keeps the Apply Plan path available so users can retry without generating the model plan again

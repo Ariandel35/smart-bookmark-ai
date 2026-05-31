@@ -709,6 +709,7 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /normalizedBaseUrl\.includes\("deepseek"\)/);
   assert.match(backgroundSource, /normalizedModel\.includes\("deepseek"\)/);
   assert.match(backgroundSource, /getRuntimeProviderLabel/);
+  assert.match(backgroundSource, /return config\?\.provider \? getProviderLabel\(config\.provider\) : ""/);
   assert.match(backgroundSource, /provider: getRuntimeProviderLabel\(config\)/);
   assert.match(backgroundSource, /getRuntimeProviderLabel\(job\?\.config \|\| \{\}\)/);
   assert.match(backgroundSource, /getModelRequestConcurrency/);
@@ -1025,6 +1026,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);
   assert.match(changelog, /Complete-mode preview no longer asks for broad website access/);
+  assert.match(changelog, /missing job config no longer falls back to an OpenAI provider label/);
   assert.match(changelog, /mini-request timeouts now keep completed mini results/);
   assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
   assert.match(changelog, /inline confirmations and status messages/);

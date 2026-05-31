@@ -646,7 +646,7 @@ function getRuntimeProviderLabel(config = {}) {
     return "DeepSeek-compatible";
   }
 
-  return getProviderLabel(config.provider);
+  return config?.provider ? getProviderLabel(config.provider) : "";
 }
 
 function getRuntimeBatchSize(config = {}) {
