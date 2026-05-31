@@ -466,8 +466,9 @@ function testSpeedModeSurface() {
   assert.match(storeListing, /Complete mode/);
 
   const privacyPolicy = fs.readFileSync(path.join(ROOT_DIR, "PRIVACY.md"), "utf8");
-  assert.match(privacyPolicy, /Last updated: 2026-05-30/);
-  assert.match(privacyPolicy, /when you start organize or when enabled auto organize runs/);
+  assert.match(privacyPolicy, /Last updated: 2026-05-31/);
+  assert.match(privacyPolicy, /when generating a preview or enabled auto organize run/);
+  assert.match(privacyPolicy, /Applying a saved preview plan rebuilds locally and does not call the model again/);
   assert.match(privacyPolicy, /Fast mode skips dead-link checks and the separate taxonomy-planning model request/);
   assert.match(privacyPolicy, /Complete mode can send HEAD \/ GET requests directly to bookmarked websites/);
   assert.match(privacyPolicy, /before restoring an older backup/);
@@ -476,6 +477,7 @@ function testSpeedModeSurface() {
   const privacyHtml = fs.readFileSync(path.join(ROOT_DIR, "privacy.html"), "utf8");
   assert.match(privacyHtml, /separate taxonomy-planning request/);
   assert.match(privacyHtml, /Fast mode skips both extras/);
+  assert.match(privacyHtml, /Applying a saved preview does not call the model again/);
   assert.match(privacyHtml, /before restoring an older backup/);
 }
 
@@ -673,8 +675,9 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /baseUrlInvalid: "Base URL 必须是有效的 http 或 https 地址。"/);
   assert.match(i18nSource, /modelRequired: "模型名称不能为空。"/);
   assert.match(i18nSource, /hostAccessRefreshFailed: "访问状态刷新失败。请检查 Chrome 扩展权限后重试。"/);
+  assert.match(i18nSource, /应用已保存预览不会再次请求模型。/);
   assert.match(i18nSource, /privacyStorageDesc: "API Key、服务商设置、模型名、白名单和备份快照都保存在你的浏览器本地存储与 IndexedDB 中。"/);
-  assert.match(i18nSource, /privacyBackupDesc: "整理前和恢复旧备份前都会先创建本地快照备份。你可以在设置页管理备份并恢复旧版本。"/);
+  assert.match(i18nSource, /privacyBackupDesc: "应用预览方案、自动整理重建和恢复旧备份前都会先创建本地快照备份。你可以在设置页管理备份并恢复旧版本。"/);
 
   const backgroundSourceForCancel = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSourceForCancel, /cancelRequested: true/);
@@ -1002,6 +1005,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /five-bookmark model requests/);
   assert.match(changelog, /DeepSeek-compatible endpoints/);
   assert.match(changelog, /up to three mini requests/);
+  assert.match(changelog, /preview-time model calls, local Apply Plan rebuilds, and auto organize data flow/);
   assert.match(changelog, /mini-request timeouts now keep completed mini results/);
   assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
   assert.match(changelog, /inline confirmations and status messages/);
@@ -1086,10 +1090,11 @@ function testReleaseMaterialsCurrent() {
     path.join(ROOT_DIR, "webstore/PRIVACY_POLICY.md"),
     "utf8"
   );
-  assert.match(webstorePrivacyPolicy, /最后更新：2026-05-30/);
+  assert.match(webstorePrivacyPolicy, /最后更新：2026-05-31/);
   assert.match(webstorePrivacyPolicy, /模型服务商、Base URL、模型名/);
   assert.match(webstorePrivacyPolicy, /完整模式还会在分类前生成全局目录方案/);
-  assert.match(webstorePrivacyPolicy, /快速模式会跳过失效链接检测和单独目录规划请求/);
+  assert.match(webstorePrivacyPolicy, /应用已保存的预览方案会直接本地重建，不会再次请求模型/);
+  assert.match(webstorePrivacyPolicy, /快速模式会在预览和整理流程中跳过失效链接检测和单独目录规划请求/);
   assert.match(webstorePrivacyPolicy, /完整模式会直接访问书签对应的网站/);
   assert.match(webstorePrivacyPolicy, /恢复旧备份前也会先为当前书签状态创建本地快照/);
 

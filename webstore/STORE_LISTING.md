@@ -39,7 +39,8 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 支持查看未处理项目和删除记录
 
 隐私说明：
-- 只有在你主动开始整理，或开启自动整理后，相关书签信息才会发送到你选择的模型服务商
+- 只有生成预览或已开启自动整理且仍需要模型分类时，相关书签信息才会发送到你选择的模型服务商
+- 应用已保存的预览方案会直接本地重建，不会再次请求模型
 - API Key、备份快照、分类缓存和死链缓存保存在浏览器本地
 - 只有完整模式会直接访问书签对应的网站并增加单独目录规划；快速模式会跳过这些额外步骤
 - 扩展开发者不会接收你的书签数据
@@ -87,7 +88,8 @@ Key features:
 - Reviewable unprocessed and deletion logs
 
 Privacy summary:
-- Bookmark data is only sent to the model provider chosen by the user
+- Bookmark data is sent only to the model provider chosen by the user when a preview or enabled auto organize run still needs model classification
+- Applying a saved preview rebuilds locally without another model request
 - API keys, backups, and caches are stored locally in the browser
 - Only Complete mode sends requests directly to bookmarked websites and adds separate taxonomy planning; Fast mode skips those extras
 - The extension developer does not receive bookmark data

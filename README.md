@@ -150,7 +150,8 @@ Core files:
 ## Privacy Boundaries
 
 - Bookmark titles, URLs, current paths, prompts, API settings, caches, and backups stay in local browser storage unless you start an organize run.
-- During organize or auto organize, bookmark metadata is sent only to the model provider you configured.
+- Bookmark metadata is sent only to the model provider you configured when a preview or enabled auto organize run still needs model classification after local rules and cache reuse.
+- Applying a saved preview plan rebuilds locally and does not call the model again.
 - API keys are stored locally and are never sent to this project or its developer.
 - Complete mode connects directly to bookmarked websites for link checks and adds a separate taxonomy-planning request; Fast mode skips both extras.
 - Snapshot backups are local and can be restored or deleted from the settings page; restoring creates a fresh local snapshot first.

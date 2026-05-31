@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Last updated: 2026-05-30
+Last updated: 2026-05-31
 
 Marko only processes data needed to organize bookmarks.
 
@@ -13,15 +13,16 @@ Marko only processes data needed to organize bookmarks.
 ## How the data is used
 
 - To check whether bookmarked links are clearly dead when Complete link checks are enabled
-- To send bookmark context to the model provider you choose for classification
+- To send bookmark context to the model provider you choose only when a preview or enabled auto organize run needs model classification
 - To generate preview plans and, in Complete mode, stable taxonomy suggestions before a full rebuild
-- To create local snapshot backups before reorganizing bookmarks and before restoring an older backup
+- To create local snapshot backups before applying a preview plan, before automatic organize rebuilds, and before restoring an older backup
 - To render progress, delete logs, and unprocessed items in the UI
 
 ## Where data is sent
 
-- Bookmark title, URL, current path, and custom prompt are only sent to the model provider you configure when you start organize or when enabled auto organize runs
-- Fast mode skips dead-link checks and the separate taxonomy-planning model request during organize runs
+- Bookmark title, URL, current path, and custom prompt are only sent to the model provider you configure when generating a preview or enabled auto organize run that still needs model classification after local rules and cache reuse
+- Applying a saved preview plan rebuilds locally and does not call the model again
+- Fast mode skips dead-link checks and the separate taxonomy-planning model request during preview and organize runs
 - Complete mode can send HEAD / GET requests directly to bookmarked websites and adds the separate taxonomy-planning model request when uncached bookmarks need classification
 
 ## Local storage

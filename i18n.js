@@ -310,7 +310,7 @@ Hard rules:
         "Marko will create a fresh backup, verify the preview is still current, then rebuild locally without calling the model again.",
       applyConfirmPrimary: "Back up and apply",
       applyConfirmSecondary: "Not now",
-      hostPermissionRequiredTitle: "Access is required before organizing.",
+      hostPermissionRequiredTitle: "Access is required before preview.",
       hostPermissionRequiredDetail:
         "Marko asks for model endpoint access only when a model call is needed. Complete mode also needs website access for link checks.",
       startJobFailed: "Failed to start the task.",
@@ -382,7 +382,7 @@ Hard rules:
       privacyLocalDataDesc: "Bookmark titles, URLs, current folder paths, extension settings, and backup snapshots.",
       privacyThirdPartyTitle: "Data sent to third parties",
       privacyThirdPartyDesc:
-        "Only when you actively organize bookmarks or enable auto organize, bookmark titles, URLs, current paths, and your custom prompt are sent to the model provider you chose.",
+        "Only when a preview or enabled auto organize run still needs model classification, bookmark titles, URLs, current paths, and your custom prompt are sent to the model provider you chose. Applying a saved preview does not call the model again.",
       privacyDeadLinkTitle: "Dead-link checks",
       privacyDeadLinkDesc:
         "When complete link checks are enabled, organize sends direct HEAD / GET requests to bookmarked websites and keeps the separate taxonomy-planning request. Fast mode skips both extras.",
@@ -392,13 +392,13 @@ Hard rules:
       privacyControlTitle: "Your Controls",
       privacyHostAccessTitle: "Grant access",
       privacyHostAccessDesc:
-        "You must explicitly grant API endpoint access before organizing. Complete link checks require broader website access, which you can later revoke from Chrome extension permissions.",
+        "You must explicitly grant API endpoint access before previews that need the model. Complete link checks require broader website access, which you can later revoke from Chrome extension permissions.",
       privacyWhitelistTitle: "Whitelist and manual review",
       privacyWhitelistDesc:
         "Whitelisted domains are not reorganized automatically. Uncertain bookmarks are placed in the manual review folder.",
       privacyBackupTitle: "Backup and restore",
       privacyBackupDesc:
-        "A local snapshot backup is created before organizing and before restoring an older backup. You can manage backups and restore older versions from the settings page.",
+        "A local snapshot backup is created before applying a preview plan, before automatic organize rebuilds, and before restoring an older backup. You can manage backups and restore older versions from the settings page.",
       defaultPrompt: DEFAULT_PROMPT_EN,
       legacyDefaultPrompt: LEGACY_DEFAULT_PROMPT_ZH
     },
@@ -573,7 +573,7 @@ Hard rules:
       applyConfirmDesc: "Marko 会先创建新备份，确认预览仍然有效，然后直接本地重建，不会再次请求模型。",
       applyConfirmPrimary: "备份并应用",
       applyConfirmSecondary: "暂不应用",
-      hostPermissionRequiredTitle: "缺少访问授权，无法开始整理。",
+      hostPermissionRequiredTitle: "缺少访问授权，无法生成预览。",
       hostPermissionRequiredDetail:
         "只有确实需要调用模型时，Marko 才会请求模型接口访问；完整模式还需要网站访问权限来检测链接。",
       startJobFailed: "启动任务失败。",
@@ -642,18 +642,18 @@ Hard rules:
       privacyLocalDataDesc: "书签标题、URL、当前文件夹路径、插件设置、备份快照。",
       privacyThirdPartyTitle: "发送到第三方的数据",
       privacyThirdPartyDesc:
-        "只有在你主动整理书签或开启自动整理时，书签标题、URL、现有路径和自定义 Prompt 才会发送到你选择的模型服务商。",
+        "只有在生成预览或已开启自动整理且仍需要模型分类时，书签标题、URL、现有路径和自定义 Prompt 才会发送到你选择的模型服务商。应用已保存预览不会再次请求模型。",
       privacyDeadLinkTitle: "失效链接检测",
-      privacyDeadLinkDesc: "开启完整链接检查时，整理流程会直接向书签对应的网站发送 HEAD / GET 请求，并保留单独目录规划请求；快速模式会跳过这两项额外步骤。",
+      privacyDeadLinkDesc: "开启完整链接检查时，预览和整理流程会直接向书签对应的网站发送 HEAD / GET 请求，并保留单独目录规划请求；快速模式会跳过这两项额外步骤。",
       privacyStorageTitle: "本地存储",
       privacyStorageDesc: "API Key、服务商设置、模型名、白名单和备份快照都保存在你的浏览器本地存储与 IndexedDB 中。",
       privacyControlTitle: "你可以控制的内容",
       privacyHostAccessTitle: "授权访问",
-      privacyHostAccessDesc: "整理前需要你显式授权模型接口访问。完整链接检查需要更广的网站访问权限，你也可以稍后在 Chrome 扩展权限里撤销。",
+      privacyHostAccessDesc: "需要模型的预览会先要求你显式授权模型接口访问。完整链接检查需要更广的网站访问权限，你也可以稍后在 Chrome 扩展权限里撤销。",
       privacyWhitelistTitle: "白名单与待手动分类",
       privacyWhitelistDesc: "白名单域名不会被自动整理；状态不明确的书签会进入“待手动分类”。",
       privacyBackupTitle: "备份与恢复",
-      privacyBackupDesc: "整理前和恢复旧备份前都会先创建本地快照备份。你可以在设置页管理备份并恢复旧版本。",
+      privacyBackupDesc: "应用预览方案、自动整理重建和恢复旧备份前都会先创建本地快照备份。你可以在设置页管理备份并恢复旧版本。",
       defaultPrompt: DEFAULT_PROMPT_ZH,
       legacyDefaultPrompt: LEGACY_DEFAULT_PROMPT_ZH
     }
