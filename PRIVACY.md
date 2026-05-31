@@ -14,7 +14,7 @@ Marko only processes data needed to organize bookmarks.
 
 - To check whether bookmarked links are clearly dead when Complete link checks are enabled
 - To send bookmark context to the model provider you choose only when Complete preview or enabled auto organize needs model classification
-- To generate preview plans and, in Complete mode, stable taxonomy suggestions before a full rebuild
+- To generate preview plans and, when the selected model is fast enough in Complete mode, stable taxonomy suggestions before a full rebuild
 - To create local snapshot backups before applying a preview plan, before automatic organize rebuilds, and before restoring an older backup
 - To render progress, delete logs, and unprocessed items in the UI
 
@@ -23,7 +23,7 @@ Marko only processes data needed to organize bookmarks.
 - Bookmark title, URL, current path, and custom prompt are only sent to the model provider you configure when Complete preview or enabled auto organize still needs model classification after local rules and cache reuse
 - Applying a saved preview plan rebuilds locally and does not call the model again
 - Fast mode skips dead-link checks, the separate taxonomy-planning model request, and model classification during preview and organize runs
-- Complete mode can send HEAD / GET requests directly to bookmarked websites and adds the separate taxonomy-planning model request when uncached bookmarks need classification
+- Complete mode can send HEAD / GET requests directly to bookmarked websites and uses model classification when uncached bookmarks need it. Faster providers may add the separate taxonomy-planning model request; slow providers skip that extra request.
 
 ## Local storage
 
@@ -35,7 +35,7 @@ Marko only processes data needed to organize bookmarks.
 ## Your control
 
 - You can change or remove API settings at any time
-- You can choose Fast mode for fewer requests, fewer permissions, and faster previews, or Complete mode for link checks and global planning before classification
+- You can choose Fast mode for fewer requests, fewer permissions, and faster previews, or Complete mode for link checks and AI classification with provider-aware planning
 - You can turn off auto organize
 - You can whitelist domains
 - You can delete backups or restore older versions; restoring first creates a fresh local snapshot of the current bookmark state when there is anything to preserve

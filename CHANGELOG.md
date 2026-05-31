@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Added Fast and Complete speed modes so users can choose quicker organizing that skips extra checks and taxonomy planning, or full dead-link checks with global planning
+- Added Fast and Complete speed modes so users can choose quicker organizing that skips extra checks and taxonomy planning, or full dead-link checks with provider-aware AI classification and planning
 - Popup now includes a Fast/Complete mode switch so speed and quality can be adjusted without opening settings
 - Switching Fast/Complete in the popup now actively clears stale saved previews before the popup refreshes
 - Fast mode now applies conservative built-in domain rules for common developer, learning, productivity, design, community, shopping, media, and life sites after custom rules and cache reuse
@@ -11,6 +11,7 @@
 - Fast automatic organize can now run locally without an API key; Complete automatic organize still requires model credentials and website access
 - DeepSeek and DeepSeek-compatible Complete runs now skip the separate taxonomy-planning request and fall back to local rules, cache, built-in rules, and manual review if model classification times out
 - DeepSeek and DeepSeek-compatible endpoints now use the slow-model profile automatically, cap runtime batches at 15, split actual model requests to 5 bookmarks, and run up to three mini requests at once
+- DeepSeek and DeepSeek-compatible classification now stops after a 10-second first-response stall or a 30-second full-response stall before falling back locally
 - Running legacy organize jobs are normalized before the next batch so stale large batches cannot continue after an update
 - Privacy, README, and store disclosures now describe preview-time model calls, local Apply Plan rebuilds, and auto organize data flow consistently
 - Remaining README, privacy page, and review checklist wording now uses the same preview-first data-flow language

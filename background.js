@@ -221,10 +221,10 @@ const KEEP_ALIVE_INTERVAL_MS = 25_000;
 const FIRST_RESPONSE_TIMEOUT_MS = 25_000;
 const REQUEST_TIMEOUT_MS = 90_000;
 const FIRST_RESPONSE_TIMEOUT_CAPS_MS = {
-  deepseek: 15_000
+  deepseek: 10_000
 };
 const REQUEST_TIMEOUT_CAPS_MS = {
-  deepseek: 45_000
+  deepseek: 30_000
 };
 const NEXT_BATCH_DELAY_MS = 150;
 const MODEL_INPUT_TITLE_MAX_LENGTH = 120;
@@ -5424,7 +5424,7 @@ function isModelTimeoutError(error) {
   const text = [error?.message, error?.userMessage, error?.userDetail]
     .filter(Boolean)
     .join(" ");
-  return /first-response-timeout|request-timeout|15 秒|25 秒|45 秒|90 秒|within 15 seconds|within 25 seconds|within 45 seconds|within 90 seconds/i.test(text);
+  return /first-response-timeout|request-timeout|10 秒|15 秒|25 秒|30 秒|45 秒|90 秒|within 10 seconds|within 15 seconds|within 25 seconds|within 30 seconds|within 45 seconds|within 90 seconds/i.test(text);
 }
 
 function normalizeRetryBatchSize(rawValue, fallback = MIN_BATCH_SIZE) {

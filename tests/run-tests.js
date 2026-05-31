@@ -478,7 +478,7 @@ function testSpeedModeSurface() {
   assert.match(privacyPolicy, /pre-restore snapshots/);
 
   const privacyHtml = fs.readFileSync(path.join(ROOT_DIR, "privacy.html"), "utf8");
-  assert.match(privacyHtml, /separate taxonomy-planning and model-classification requests/);
+  assert.match(privacyHtml, /Faster providers may also use a separate taxonomy-planning request/);
   assert.match(privacyHtml, /preview and organize runs can send direct HEAD \/ GET requests/);
   assert.match(privacyHtml, /Fast mode skips those external requests/);
   assert.match(privacyHtml, /Applying a saved preview does not call the model again/);
@@ -764,6 +764,10 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /normalizeRetryBatchSize/);
   assert.match(backgroundSource, /FIRST_RESPONSE_TIMEOUT_CAPS_MS/);
   assert.match(backgroundSource, /REQUEST_TIMEOUT_CAPS_MS/);
+  assert.match(backgroundSource, /deepseek:\s*10_000/);
+  assert.match(backgroundSource, /deepseek:\s*30_000/);
+  assert.match(backgroundSource, /within 10 seconds/);
+  assert.match(backgroundSource, /within 30 seconds/);
   assert.match(backgroundSource, /getFirstResponseTimeoutMs/);
   assert.match(backgroundSource, /getRequestTimeoutMs/);
   assert.match(backgroundSource, /formatTimeoutSeconds/);
@@ -1235,7 +1239,7 @@ function testReleaseMaterialsCurrent() {
   );
   assert.match(webstorePrivacyPolicy, /最后更新：2026-05-31/);
   assert.match(webstorePrivacyPolicy, /模型服务商、Base URL、模型名/);
-  assert.match(webstorePrivacyPolicy, /完整模式还会在分类前生成全局目录方案/);
+  assert.match(webstorePrivacyPolicy, /较快服务商可能会在分类前额外生成全局目录方案/);
   assert.match(webstorePrivacyPolicy, /应用已保存的预览方案会直接本地重建，不会再次请求模型/);
   assert.match(webstorePrivacyPolicy, /快速模式会在预览和整理流程中跳过失效链接检测、单独目录规划请求和模型分类/);
   assert.match(webstorePrivacyPolicy, /完整模式会直接访问书签对应的网站/);

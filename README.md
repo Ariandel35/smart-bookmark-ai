@@ -33,7 +33,7 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 | --- | --- |
 | Duplicate links scattered across folders | Conservative duplicate cleanup before classification |
 | Old links that no longer open | Dead-link checks that remove only clearly failed URLs |
-| Folders created one batch at a time | Stable root categories in Fast mode; global planning in Complete mode |
+| Folders created one batch at a time | Stable root categories in Fast mode; Complete mode can use global planning on faster providers |
 | Risky one-click cleanup tools | Preview first, backup second, rebuild last |
 | Too many settings for a simple task | A focused popup and a shorter setup path |
 
@@ -87,7 +87,7 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 2. Create a local snapshot backup before a real organize run.
 3. Check links and remove only confirmed dead bookmarks.
 4. Detect exact duplicates and preserve uncertain items for review.
-5. Use local rules in Fast mode, or plan a global taxonomy and classify bookmarks with AI in Complete mode.
+5. Use local rules in Fast mode, or classify bookmarks with AI in Complete mode. Faster providers can plan a global taxonomy first; slow providers skip that extra request and can fall back locally on timeout.
 6. Rebuild the bookmark bar root in one final pass.
 
 ## What v3.0 Focuses On
@@ -98,7 +98,7 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 | Popup mode switch | Fast/Complete can be changed directly in the popup, and any saved preview is invalidated when the mode changes. |
 | Setup | Missing provider, Base URL, or model routes the user to settings. Fast preview does not request model access; Complete requests it only when uncached bookmarks need AI classification. |
 | API settings | `Test & Save` validates the connection and stores the working configuration. |
-| Slow models | DeepSeek and DeepSeek-compatible runs skip the separate taxonomy-planning request, cap each runtime batch at 15 bookmarks, split model requests to 5 bookmarks each, and run up to three mini requests at a time. If the model still times out, Marko stops waiting for that run and finishes with local rules, cache, built-in rules, and manual review. |
+| Slow models | DeepSeek and DeepSeek-compatible runs skip the separate taxonomy-planning request, cap each runtime batch at 15 bookmarks, split model requests to 5 bookmarks each, and run up to three mini requests at a time. They stop waiting after a 10-second first-response stall or a 30-second full-response stall, then finish with local rules, cache, built-in rules, and manual review. |
 | Apply speed | Applying a ready preview reuses the saved plan and rebuilds locally without a second model run. |
 | Speed mode | Fast mode skips dead-link checks, the extra taxonomy-planning request, and model waiting; unmatched bookmarks go to manual review. Complete mode keeps link checks and AI classification, while slow providers skip the extra planning request and can fall back locally on timeout. |
 | Local reruns | Fast mode can preview without asking for an API key or model endpoint access, because custom rules, cached classifications, built-in domain rules, and manual-review fallback finish locally. |
@@ -154,7 +154,7 @@ Core files:
 - Bookmark metadata is sent only to the model provider you configured when Complete preview or enabled auto organize still needs model classification after local rules and cache reuse.
 - Applying a saved preview plan rebuilds locally and does not call the model again.
 - API keys are stored locally and are never sent to this project or its developer.
-- Complete mode connects directly to bookmarked websites for link checks and adds separate taxonomy-planning and model-classification requests; Fast mode skips those external requests.
+- Complete mode connects directly to bookmarked websites for link checks and uses model classification. Faster providers may add a separate taxonomy-planning request; slow providers skip that extra request. Fast mode skips those external requests.
 - Snapshot backups are local and can be restored or deleted from the settings page; restoring creates a fresh local snapshot first.
 
 Read the full policy in [PRIVACY.md](PRIVACY.md).

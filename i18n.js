@@ -165,7 +165,7 @@ Hard rules:
       popupSpeedModeFastAria:
         "Fast mode: finish locally without waiting for the model; unmatched bookmarks go to manual review",
       popupSpeedModeCompleteAria:
-        "Complete mode: check dead links and plan the global taxonomy before classification",
+        "Complete mode: check dead links and use AI classification; slow models skip extra planning",
       popupSavingSpeedModeStatus: "Saving mode…",
       popupSpeedModeSavedStatus: "Mode saved. Generate a new preview.",
       popupSpeedModeFailedStatus: "Failed to save mode.",
@@ -223,7 +223,7 @@ Hard rules:
       linkCheckFast: "Fast",
       linkCheckComplete: "Complete",
       hintLinkCheckMode:
-        "Fast finishes locally without waiting for the model and leaves unmatched bookmarks for review. Complete checks links, plans the taxonomy, and uses AI classification.",
+        "Fast finishes locally without waiting for the model and leaves unmatched bookmarks for review. Complete checks links and uses AI; slow models skip extra planning.",
       labelWhitelistDomains: "Whitelist Websites",
       labelProtectedRootFolders: "Protected Root Folders",
       labelDomainFolderRules: "Domain Folder Rules",
@@ -398,7 +398,7 @@ Hard rules:
         "Only when Complete preview or enabled auto organize still needs model classification, bookmark titles, URLs, current paths, and your custom prompt are sent to the model provider you chose. Applying a saved preview does not call the model again.",
       privacyDeadLinkTitle: "Dead-link checks",
       privacyDeadLinkDesc:
-        "When Complete mode is enabled, preview and organize runs can send direct HEAD / GET requests to bookmarked websites and keep the separate taxonomy-planning and model-classification requests. Fast mode skips those external requests.",
+        "When Complete mode is enabled, preview and organize runs can send direct HEAD / GET requests to bookmarked websites and use model classification. Faster providers may also use a separate taxonomy-planning request; slow providers skip that extra request. Fast mode skips those external requests.",
       privacyStorageTitle: "Local storage",
       privacyStorageDesc:
         "API keys, provider settings, model names, whitelist rules, and backup snapshots are stored locally in browser storage and IndexedDB.",
@@ -446,7 +446,7 @@ Hard rules:
       popupCancellingStatus: "正在取消任务…",
       popupSpeedModeLabel: "模式",
       popupSpeedModeFastAria: "快速模式：本地完成，不等待模型；未命中书签进入待手动分类",
-      popupSpeedModeCompleteAria: "完整模式：分类前检测失效链接并规划全局目录",
+      popupSpeedModeCompleteAria: "完整模式：检测失效链接并使用 AI 分类，慢模型会跳过额外规划",
       popupSavingSpeedModeStatus: "正在保存模式…",
       popupSpeedModeSavedStatus: "模式已保存，请重新生成预览。",
       popupSpeedModeFailedStatus: "保存模式失败。",
@@ -503,7 +503,7 @@ Hard rules:
       labelLinkCheckMode: "速度模式",
       linkCheckFast: "快速",
       linkCheckComplete: "完整",
-      hintLinkCheckMode: "快速模式本地完成，不等待模型，未命中书签留给人工查看；完整模式会检查链接、规划目录并使用 AI 分类。",
+      hintLinkCheckMode: "快速模式本地完成，不等待模型，未命中书签留给人工查看；完整模式会检查链接并使用 AI，慢模型会跳过额外目录规划。",
       labelWhitelistDomains: "白名单网站",
       labelProtectedRootFolders: "受保护根目录",
       labelDomainFolderRules: "域名目录规则",
@@ -669,7 +669,7 @@ Hard rules:
       privacyThirdPartyDesc:
         "只有在完整模式预览或已开启自动整理且仍需要模型分类时，书签标题、URL、现有路径和自定义 Prompt 才会发送到你选择的模型服务商。应用已保存预览不会再次请求模型。",
       privacyDeadLinkTitle: "失效链接检测",
-      privacyDeadLinkDesc: "开启完整模式时，预览和整理流程会直接向书签对应的网站发送 HEAD / GET 请求，并保留单独目录规划和模型分类请求；快速模式会跳过这些外部请求。",
+      privacyDeadLinkDesc: "开启完整模式时，预览和整理流程会直接向书签对应的网站发送 HEAD / GET 请求，并使用模型分类；较快服务商可能会额外请求目录规划，慢模型会跳过这一步。快速模式会跳过这些外部请求。",
       privacyStorageTitle: "本地存储",
       privacyStorageDesc: "API Key、服务商设置、模型名、白名单和备份快照都保存在你的浏览器本地存储与 IndexedDB 中。",
       privacyControlEyebrow: "控制项",
