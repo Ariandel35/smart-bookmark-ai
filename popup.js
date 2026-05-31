@@ -48,6 +48,12 @@ function setButtonLabel(button, label) {
   button.setAttribute("aria-label", safeLabel);
 }
 
+function setButtonAccessibleLabel(button, label) {
+  const safeLabel = String(label || "").trim();
+  button.title = safeLabel;
+  button.setAttribute("aria-label", safeLabel);
+}
+
 function getOptionsSectionUrl(sectionId = "connection") {
   const safeSection = ["connection", "organize", "automation", "backup"].includes(sectionId)
     ? sectionId
@@ -331,8 +337,13 @@ function renderConfig(config) {
   const activeMode = normalizeLinkCheckMode(config?.linkCheckMode);
   speedModeButtons.forEach((button) => {
     const isActive = button.dataset.popupSpeedMode === activeMode;
+    const modeLabel =
+      button.dataset.popupSpeedMode === LINK_CHECK_MODE_COMPLETE
+        ? t("popupSpeedModeCompleteAria")
+        : t("popupSpeedModeFastAria");
     button.classList.toggle("is-active", isActive);
     button.setAttribute("aria-checked", String(isActive));
+    setButtonAccessibleLabel(button, modeLabel);
     button.tabIndex = isActive ? 0 : -1;
   });
   syncActionButtons();

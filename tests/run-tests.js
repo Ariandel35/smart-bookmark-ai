@@ -586,6 +586,9 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /function setButtonLabel\(button, label\)/);
   assert.match(popupSource, /button\.title = safeLabel/);
   assert.match(popupSource, /button\.setAttribute\("aria-label", safeLabel\)/);
+  assert.match(popupSource, /function setButtonAccessibleLabel\(button, label\)/);
+  assert.match(popupSource, /button\.dataset\.popupSpeedMode === LINK_CHECK_MODE_COMPLETE[\s\S]*popupSpeedModeCompleteAria[\s\S]*popupSpeedModeFastAria/);
+  assert.match(popupSource, /setButtonAccessibleLabel\(button, modeLabel\)/);
   assert.match(popupSource, /startButton\.disabled = popupActionInFlight \|\| isRunning/);
   assert.match(popupSource, /backupButton\.disabled = popupActionInFlight \|\| isRunning/);
   assert.match(popupSource, /button\.disabled = popupActionInFlight \|\| isRunning/);
@@ -684,6 +687,8 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /cancelRequestedButton/);
   assert.match(i18nSource, /settingsShortcutButton/);
   assert.match(i18nSource, /popupSpeedModeLabel/);
+  assert.match(i18nSource, /popupSpeedModeFastAria/);
+  assert.match(i18nSource, /popupSpeedModeCompleteAria/);
   assert.match(i18nSource, /popupSpeedModeSavedStatus/);
   assert.match(i18nSource, /detailPanelAriaLabel/);
   assert.match(i18nSource, /keepBookmarkAria/);
@@ -1096,6 +1101,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Popup unprocessed-item keep\/delete controls/);
   assert.match(changelog, /Popup primary, settings, backup, cancel, and apply-confirmation buttons/);
   assert.match(changelog, /Settings save, reset, privacy, API test, access, and manual backup buttons/);
+  assert.match(changelog, /Popup Fast and Complete mode toggles/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);

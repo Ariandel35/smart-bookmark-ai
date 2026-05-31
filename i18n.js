@@ -162,6 +162,10 @@ Hard rules:
       popupResolvingItemStatus: "Updating unprocessed item…",
       popupCancellingStatus: "Cancelling task…",
       popupSpeedModeLabel: "Mode",
+      popupSpeedModeFastAria:
+        "Fast mode: skip dead-link checks and the separate taxonomy plan for quicker previews",
+      popupSpeedModeCompleteAria:
+        "Complete mode: check dead links and plan the global taxonomy before classification",
       popupSavingSpeedModeStatus: "Saving mode…",
       popupSpeedModeSavedStatus: "Mode saved. Generate a new preview.",
       popupSpeedModeFailedStatus: "Failed to save mode.",
@@ -436,6 +440,8 @@ Hard rules:
       popupResolvingItemStatus: "正在更新未处理项…",
       popupCancellingStatus: "正在取消任务…",
       popupSpeedModeLabel: "模式",
+      popupSpeedModeFastAria: "快速模式：跳过失效链接检测和单独目录规划，更快生成预览",
+      popupSpeedModeCompleteAria: "完整模式：分类前检测失效链接并规划全局目录",
       popupSavingSpeedModeStatus: "正在保存模式…",
       popupSpeedModeSavedStatus: "模式已保存，请重新生成预览。",
       popupSpeedModeFailedStatus: "保存模式失败。",
