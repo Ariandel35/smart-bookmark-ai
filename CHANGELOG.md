@@ -71,6 +71,7 @@
 - Invalid settings action buttons now show the same visible error treatment as invalid fields
 - Settings buttons, speed-mode hints, and whitelist status text are now explicitly associated with their related controls
 - Batch size and automation interval fields now include persistent range hints that are preserved alongside validation errors
+- Settings validation now clears stale field error highlights when fields are edited or revalidated
 - Whitelist domain toggle buttons now expose selected state, and selected chips announce their remove action
 - Fast mode now finishes locally when custom rules, the classification cache, and built-in fast rules cover every bookmark, skipping model calls and batch scheduling
 - Preview now checks local rule/cache coverage before asking for API keys or model endpoint access

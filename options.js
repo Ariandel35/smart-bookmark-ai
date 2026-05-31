@@ -433,6 +433,16 @@ function clearSettingsFieldIssues() {
   });
 }
 
+function clearSettingsFieldIssue(fieldId) {
+  const field = fieldId ? document.getElementById(fieldId) : null;
+  if (!field) {
+    return;
+  }
+
+  field.removeAttribute("aria-invalid");
+  removeDescribedByTokens(field, [settingsActionStatus.id, apiTestStatus.id]);
+}
+
 function updateSettingsOperationControls() {
   const granted = grantAccessButton.dataset.granted === "true";
   settingsFields.forEach((field) => {
@@ -1102,6 +1112,7 @@ async function saveConfig(event) {
     return;
   }
 
+  clearSettingsFieldIssues();
   const config = collectFormData();
   const defaults = getDefaults(config.provider);
 
@@ -1179,6 +1190,7 @@ async function testApiConnection() {
     return;
   }
 
+  clearSettingsFieldIssues();
   const config = collectFormData();
   const defaults = getDefaults(config.provider);
 
@@ -1423,6 +1435,8 @@ function handleFormMutation(event) {
   if (!targetId || ["provider", "whitelistSearch"].includes(targetId)) {
     return;
   }
+
+  clearSettingsFieldIssue(targetId);
 
   if (["baseUrl", "apiKey", "model"].includes(targetId)) {
     clearApiTestStatus();

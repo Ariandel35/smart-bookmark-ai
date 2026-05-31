@@ -786,6 +786,10 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /button\.setAttribute\("aria-pressed", String\(isSelected\)\)/);
   assert.match(optionsSource, /const isSelected = selectedSet\.has\(item\.domain\)/);
   assert.match(optionsSource, /clearSettingsFieldIssues/);
+  assert.match(optionsSource, /function clearSettingsFieldIssue\(fieldId\)/);
+  assert.match(optionsSource, /clearSettingsFieldIssue\(targetId\)/);
+  assert.match(optionsSource, /async function saveConfig\(event\) \{[\s\S]*clearSettingsFieldIssues\(\);[\s\S]*const config = collectFormData\(\)/);
+  assert.match(optionsSource, /async function testApiConnection\(\) \{[\s\S]*clearSettingsFieldIssues\(\);[\s\S]*const config = collectFormData\(\)/);
   assert.match(optionsSource, /form\.querySelectorAll\("\[aria-invalid\]"\)/);
   assert.doesNotMatch(optionsSource, /querySelectorAll\("\[aria-invalid\], \[aria-describedby\]"\)/);
   assert.match(optionsSource, /getDescribedByTokens/);
