@@ -675,7 +675,11 @@ function testPreviewApplySurface() {
   assert.match(popupHtml, /id="detailPanel"[\s\S]*role="region"[\s\S]*data-i18n-aria-label="detailPanelAriaLabel"/);
   assert.doesNotMatch(popupHtml, /id="processedValue"/);
   assert.match(popupSource, /if \(phaseBadge\.textContent !== phaseLabel\)/);
-  assert.match(popupSource, /progressTrack\.setAttribute\("aria-valuetext", `\$\{progress\}%, \$\{progressSummaryText\}`\)/);
+  assert.match(popupSource, /function formatDuration\(milliseconds\)/);
+  assert.match(popupSource, /function buildElapsedMeta\(status, phase\)/);
+  assert.match(popupSource, /phase !== "running" \|\| !status\?\.startedAt/);
+  assert.match(popupSource, /metaParts\.push\(elapsedMeta\)/);
+  assert.match(popupSource, /progressTrack\.setAttribute\("aria-valuetext", `\$\{progress\}%, \$\{progressSummaryText\}, \$\{progressMetaText\}`\)/);
   assert.doesNotMatch(popupSource, /processedValue/);
   assert.match(popupSource, /title\.id = "folderSummaryTitle"/);
   assert.match(popupSource, /table\.setAttribute\("aria-labelledby", title\.id\)/);
@@ -700,6 +704,7 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /popupSpeedModeCompleteAria/);
   assert.match(i18nSource, /popupSpeedModeSavedStatus/);
   assert.match(i18nSource, /logModelTimeoutFallback/);
+  assert.match(i18nSource, /elapsedMeta/);
   assert.match(i18nSource, /detailPanelAriaLabel/);
   assert.match(i18nSource, /keepBookmarkAria/);
   assert.match(i18nSource, /deleteBookmarkAria/);
@@ -1245,6 +1250,14 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /Backup action successes stay visible/);
   assert.match(storeListing, /Popup inline apply confirmation/);
   assert.match(storeListing, /Backup management with inline restore confirmation/);
+
+  const storeAssetRenderer = fs.readFileSync(
+    path.join(ROOT_DIR, "webstore/render_store_assets.mjs"),
+    "utf8"
+  );
+  assert.match(storeAssetRenderer, /batchSize: 12/);
+  assert.match(storeAssetRenderer, /currentBatch: 18/);
+  assert.match(storeAssetRenderer, /totalBatches: 18/);
 
   const reviewNotes = fs.readFileSync(path.join(ROOT_DIR, "webstore/REVIEW_NOTES.md"), "utf8");
   assert.match(reviewNotes, /复用已保存方案/);

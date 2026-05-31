@@ -208,6 +208,46 @@ function formatDate(dateString) {
   return I18N.formatDate(dateString);
 }
 
+function formatDuration(milliseconds) {
+  const totalSeconds = Math.max(0, Math.floor(Number(milliseconds || 0) / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (I18N.locale === "zh_CN") {
+    if (hours > 0) {
+      return `${hours} 小时 ${minutes} 分`;
+    }
+    if (minutes > 0) {
+      return `${minutes} 分 ${String(seconds).padStart(2, "0")} 秒`;
+    }
+    return `${seconds} 秒`;
+  }
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  if (minutes > 0) {
+    return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
+  }
+  return `${seconds}s`;
+}
+
+function buildElapsedMeta(status, phase) {
+  if (phase !== "running" || !status?.startedAt) {
+    return "";
+  }
+
+  const startedAtMs = new Date(status.startedAt).getTime();
+  if (!Number.isFinite(startedAtMs)) {
+    return "";
+  }
+
+  return t("elapsedMeta", {
+    duration: formatDuration(Date.now() - startedAtMs)
+  });
+}
+
 function getHostname(urlString) {
   if (!urlString) {
     return "";
@@ -375,7 +415,6 @@ function renderStatus(status) {
   const deleted = Number(status?.deleted || 0);
   const warnings = Number(status?.warningCount || 0);
   const progress = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : 0;
-  const isRunning = phase === "running";
 
   const phaseLabel = titleCasePhase(phase);
   if (phaseBadge.textContent !== phaseLabel) {
@@ -398,7 +437,6 @@ function renderStatus(status) {
   progressPercent.textContent = `${progress}%`;
   const progressSummaryText = total > 0 ? `${processed} / ${total}` : "0 / 0";
   progressSummary.textContent = progressSummaryText;
-  progressTrack.setAttribute("aria-valuetext", `${progress}%, ${progressSummaryText}`);
 
   const metaParts = [];
   if (status?.currentBatch && status?.totalBatches) {
@@ -407,10 +445,16 @@ function renderStatus(status) {
   if (status?.batchSize) {
     metaParts.push(t("batchSizeMeta", { count: status.batchSize }));
   }
+  const elapsedMeta = buildElapsedMeta(status, phase);
+  if (elapsedMeta) {
+    metaParts.push(elapsedMeta);
+  }
   if (status?.updatedAt) {
     metaParts.push(t("updatedMeta", { time: formatDate(status.updatedAt) }));
   }
-  progressMeta.textContent = metaParts.join(" · ") || t("progressWaiting");
+  const progressMetaText = metaParts.join(" · ") || t("progressWaiting");
+  progressMeta.textContent = progressMetaText;
+  progressTrack.setAttribute("aria-valuetext", `${progress}%, ${progressSummaryText}, ${progressMetaText}`);
 
   totalValue.textContent = String(total);
   movedValue.textContent = String(moved);

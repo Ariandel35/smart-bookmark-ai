@@ -65,6 +65,7 @@
 - Popup setup and permission errors now include an inline settings shortcut instead of only relying on the header button
 - Popup settings shortcuts now deep-link directly to the connection section when setup fixes are needed
 - Popup progress now exposes standard progressbar state for assistive technologies
+- Popup running progress now shows elapsed time and includes the live status text in the progressbar announcement
 - Popup phase, progress, and detail regions now expose clearer assistive-technology semantics without repeating unchanged phase text
 - Popup folder summary tables now expose linked titles and scoped column headers
 - Popup legacy result-view DOM and unused result-navigation styles were removed so the shipped UI surface stays smaller and easier to maintain
