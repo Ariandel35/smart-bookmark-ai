@@ -41,6 +41,13 @@ I18N.applyDocument(document);
 
 const DEFAULT_STATUS_DETAIL = t("defaultStatusDetail");
 
+function setButtonLabel(button, label) {
+  const safeLabel = String(label || "").trim();
+  button.textContent = safeLabel;
+  button.title = safeLabel;
+  button.setAttribute("aria-label", safeLabel);
+}
+
 function getOptionsSectionUrl(sectionId = "connection") {
   const safeSection = ["connection", "organize", "automation", "backup"].includes(sectionId)
     ? sectionId
@@ -283,6 +290,13 @@ function syncActionButtons() {
   const isRunning = currentStatus?.phase === "running";
   const isCancelling = Boolean(currentStatus?.cancelRequested);
   const isConfigured = hasPreviewAttemptConfig(currentConfig);
+  const startLabel = !isConfigured
+    ? t("setupButton")
+    : canApplyPreviewPlan()
+      ? t("confirmOrganizeButton")
+      : t("previewButton");
+  const cancelLabel = isCancelling ? t("cancelRequestedButton") : t("cancelButton");
+
   startButton.disabled = popupActionInFlight || isRunning;
   backupButton.disabled = popupActionInFlight || isRunning;
   cancelButton.disabled = popupActionInFlight || !isRunning || isCancelling;
@@ -294,12 +308,10 @@ function syncActionButtons() {
   startButton.setAttribute("aria-busy", String(popupActionInFlight));
   backupButton.setAttribute("aria-busy", String(popupActionInFlight));
   cancelButton.setAttribute("aria-busy", String(popupActionInFlight));
-  cancelButton.textContent = isCancelling ? t("cancelRequestedButton") : t("cancelButton");
-  startButton.textContent = !isConfigured
-    ? t("setupButton")
-    : canApplyPreviewPlan()
-      ? t("confirmOrganizeButton")
-      : t("previewButton");
+  setButtonLabel(optionsButton, t("optionsButton"));
+  setButtonLabel(startButton, startLabel);
+  setButtonLabel(backupButton, t("backupButton"));
+  setButtonLabel(cancelButton, cancelLabel);
 }
 
 function setPopupActionStatus(message = "", options = {}) {
@@ -466,7 +478,8 @@ function createApplyConfirmationState() {
   applyButton.className = "button button--primary button--compact";
   applyButton.setAttribute("aria-describedby", popupActionStatus.id);
   applyButton.dataset.applyConfirmationPrimary = "true";
-  applyButton.textContent = t("applyConfirmPrimary");
+  const applyLabel = t("applyConfirmPrimary");
+  setButtonLabel(applyButton, applyLabel);
   applyButton.addEventListener("click", () => {
     applyButton.disabled = true;
     cancelButton.disabled = true;
@@ -486,7 +499,8 @@ function createApplyConfirmationState() {
   const confirmationCancelButton = document.createElement("button");
   confirmationCancelButton.type = "button";
   confirmationCancelButton.className = "button button--secondary button--compact";
-  confirmationCancelButton.textContent = t("applyConfirmSecondary");
+  const cancelApplyLabel = t("applyConfirmSecondary");
+  setButtonLabel(confirmationCancelButton, cancelApplyLabel);
   confirmationCancelButton.addEventListener("click", () => {
     applyConfirmationVisible = false;
     renderDetailPanelContent();
