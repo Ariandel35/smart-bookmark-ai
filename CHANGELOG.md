@@ -7,6 +7,8 @@
 - Switching Fast/Complete in the popup now actively clears stale saved previews before the popup refreshes
 - Fast mode now applies conservative built-in domain rules for common developer, learning, productivity, design, community, shopping, media, and life sites after custom rules and cache reuse, before calling the model
 - Reduced popup and settings permission requests in Fast mode to the configured model API origin
+- DeepSeek and DeepSeek-compatible endpoints now use the slow-model profile automatically, cap runtime batches at 15, split actual model requests to 5 bookmarks, and run up to three mini requests at once
+- Running legacy organize jobs are normalized before the next batch so stale large batches cannot continue after an update
 - Applying a saved preview plan now reuses the stored plan and rebuilds locally without a second model request
 - Removed the legacy direct organize message path so manual runs must go through Preview -> Apply Plan
 - If applying a saved preview hits a recoverable failure, the popup now keeps the Apply Plan path available so users can retry without generating the model plan again
@@ -15,10 +17,10 @@
 - Applying a stale preview now shows specific guidance when settings or bookmarks changed
 - Saved previews are now invalidated automatically when settings or bookmarks change
 - Popup summary details now stay visible for non-error status messages such as invalidated previews
-- New and reset DeepSeek configurations now start at batch size ten so they use the split mini-request path immediately
-- DeepSeek runtime batches are capped to ten bookmarks, then split into five-bookmark model requests with shorter response timeouts before timeout retries shrink again
+- New and reset DeepSeek configurations now start at batch size fifteen so they use the split mini-request path immediately
+- DeepSeek runtime batches are capped to fifteen bookmarks, then split into five-bookmark model requests with shorter response timeouts before timeout retries shrink again
 - Slow-provider model calls are now split again right before the request is sent, so stale large batches cannot submit one oversized request
-- Slow-provider split requests now run with a small provider-specific concurrency cap, so DeepSeek can process two mini requests at a time instead of waiting on one long serial queue
+- Slow-provider split requests now run with a small provider-specific concurrency cap, so DeepSeek can process up to three mini requests at a time instead of waiting on one long serial queue
 - Slow-provider mini-request timeouts now keep completed mini results and only split/retry the failed block, avoiding whole-batch restarts after one stalled request
 - Cancellation requests are now checked before each split slow-provider model request and preserved before batch results are written back
 - Slow-model timeout retries can now split the current run below the saved batch size down to one-bookmark mini-batches, and DeepSeek uses a tighter output budget to reduce response latency

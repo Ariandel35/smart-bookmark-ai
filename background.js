@@ -32,13 +32,13 @@ const MIN_BATCH_SIZE = 5;
 const MIN_AUTO_RETRY_BATCH_SIZE = 1;
 const MAX_AUTO_RETRY_BATCH_SIZE = 20;
 const RUNTIME_BATCH_SIZE_CAPS = {
-  deepseek: 10
+  deepseek: 15
 };
 const MODEL_REQUEST_BATCH_SIZE_CAPS = {
   deepseek: 5
 };
 const MODEL_REQUEST_CONCURRENCY_CAPS = {
-  deepseek: 2
+  deepseek: 3
 };
 const DEFAULT_DEAD_SCAN_BATCH_SIZE = 20;
 const DEFAULT_TAXONOMY_SAMPLE_SIZE = 160;
@@ -613,21 +613,55 @@ function getProviderLabel(provider) {
 }
 
 function getDefaultBatchSize(provider) {
-  return provider === "deepseek" ? 10 : DEFAULT_BATCH_SIZE;
+  return provider === "deepseek" ? 15 : DEFAULT_BATCH_SIZE;
+}
+
+function getProviderPerformanceProfile(configOrProvider = {}) {
+  const provider =
+    typeof configOrProvider === "string"
+      ? configOrProvider
+      : String(configOrProvider?.provider || "");
+  const baseUrl =
+    typeof configOrProvider === "string" ? "" : String(configOrProvider?.baseUrl || "");
+  const model =
+    typeof configOrProvider === "string" ? "" : String(configOrProvider?.model || "");
+  const normalizedProvider = provider.trim().toLowerCase();
+  const normalizedBaseUrl = baseUrl.trim().toLowerCase();
+  const normalizedModel = model.trim().toLowerCase();
+
+  if (
+    normalizedProvider === "deepseek" ||
+    normalizedBaseUrl.includes("deepseek") ||
+    normalizedModel.includes("deepseek")
+  ) {
+    return "deepseek";
+  }
+
+  return normalizedProvider;
+}
+
+function getRuntimeProviderLabel(config = {}) {
+  const profile = getProviderPerformanceProfile(config);
+  if (profile === "deepseek" && config.provider !== "deepseek") {
+    return "DeepSeek-compatible";
+  }
+
+  return getProviderLabel(config.provider);
 }
 
 function getRuntimeBatchSize(config = {}) {
   const configuredBatchSize = normalizeBatchSize(config.batchSize);
-  const cap = RUNTIME_BATCH_SIZE_CAPS[config.provider] || 0;
+  const profile = getProviderPerformanceProfile(config);
+  const cap = RUNTIME_BATCH_SIZE_CAPS[profile] || 0;
   return cap ? Math.min(configuredBatchSize, cap) : configuredBatchSize;
 }
 
 function getModelRequestBatchSizeCap(config = {}) {
-  return MODEL_REQUEST_BATCH_SIZE_CAPS[config.provider] || 0;
+  return MODEL_REQUEST_BATCH_SIZE_CAPS[getProviderPerformanceProfile(config)] || 0;
 }
 
 function getModelRequestConcurrency(config = {}) {
-  const rawConcurrency = MODEL_REQUEST_CONCURRENCY_CAPS[config.provider] || 1;
+  const rawConcurrency = MODEL_REQUEST_CONCURRENCY_CAPS[getProviderPerformanceProfile(config)] || 1;
   const parsedConcurrency = Number.parseInt(String(rawConcurrency), 10);
   return Math.max(1, Number.isInteger(parsedConcurrency) ? parsedConcurrency : 1);
 }
@@ -664,18 +698,18 @@ function buildRuntimeBatchAdjustmentNote(config = {}, runtimeBatchSize) {
   }
 
   return ux(
-    `${getProviderLabel(config.provider)} 本次运行已自动把批大小从 ${configuredBatchSize} 压到 ${runtimeBatchSize}，减少慢模型长时间等待。`,
-    `${getProviderLabel(config.provider)} automatically capped this run from batch size ${configuredBatchSize} to ${runtimeBatchSize} to reduce slow-model stalls.`
+    `${getRuntimeProviderLabel(config)} 本次运行已自动把批大小从 ${configuredBatchSize} 压到 ${runtimeBatchSize}，减少慢模型长时间等待。`,
+    `${getRuntimeProviderLabel(config)} automatically capped this run from batch size ${configuredBatchSize} to ${runtimeBatchSize} to reduce slow-model stalls.`
   );
 }
 
 function getFirstResponseTimeoutMs(config = {}) {
-  const cap = FIRST_RESPONSE_TIMEOUT_CAPS_MS[config.provider] || 0;
+  const cap = FIRST_RESPONSE_TIMEOUT_CAPS_MS[getProviderPerformanceProfile(config)] || 0;
   return cap ? Math.min(FIRST_RESPONSE_TIMEOUT_MS, cap) : FIRST_RESPONSE_TIMEOUT_MS;
 }
 
 function getRequestTimeoutMs(config = {}) {
-  const cap = REQUEST_TIMEOUT_CAPS_MS[config.provider] || 0;
+  const cap = REQUEST_TIMEOUT_CAPS_MS[getProviderPerformanceProfile(config)] || 0;
   return cap ? Math.min(REQUEST_TIMEOUT_MS, cap) : REQUEST_TIMEOUT_MS;
 }
 
@@ -684,24 +718,24 @@ function formatTimeoutSeconds(milliseconds) {
 }
 
 function getTaxonomyPlanningSampleSize(config = {}) {
-  return TAXONOMY_SAMPLE_SIZE_CAPS[config.provider] || DEFAULT_TAXONOMY_SAMPLE_SIZE;
+  return TAXONOMY_SAMPLE_SIZE_CAPS[getProviderPerformanceProfile(config)] || DEFAULT_TAXONOMY_SAMPLE_SIZE;
 }
 
 function getTaxonomyPlanningTimeoutMs(config = {}) {
-  return TAXONOMY_TIMEOUT_CAPS_MS[config.provider] || DEFAULT_TAXONOMY_TIMEOUT_MS;
+  return TAXONOMY_TIMEOUT_CAPS_MS[getProviderPerformanceProfile(config)] || DEFAULT_TAXONOMY_TIMEOUT_MS;
 }
 
-function getClassificationOutputBudgetProfile(provider) {
-  return CLASSIFICATION_OUTPUT_BUDGET_PROFILES[provider] || {
+function getClassificationOutputBudgetProfile(configOrProvider) {
+  return CLASSIFICATION_OUTPUT_BUDGET_PROFILES[getProviderPerformanceProfile(configOrProvider)] || {
     base: CLASSIFICATION_OUTPUT_TOKEN_BASE,
     perBookmark: CLASSIFICATION_OUTPUT_TOKENS_PER_BOOKMARK,
     max: CLASSIFICATION_OUTPUT_TOKEN_MAX
   };
 }
 
-function getClassificationOutputTokenBudget(batchLength, provider = "") {
+function getClassificationOutputTokenBudget(batchLength, configOrProvider = "") {
   const safeBatchLength = Math.max(1, Number.parseInt(String(batchLength || 1), 10) || 1);
-  const profile = getClassificationOutputBudgetProfile(provider);
+  const profile = getClassificationOutputBudgetProfile(configOrProvider);
   return Math.min(
     profile.max,
     profile.base + safeBatchLength * profile.perBookmark
@@ -1767,7 +1801,7 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
         `${jobMode === "preview" ? "已创建整理预览队列" : "已创建整理队列"}，共 ${bookmarks.length} 条书签，准备开始第 1 批。`,
         `${jobMode === "preview" ? "Created a preview queue" : "Created an organize queue"} for ${bookmarks.length} bookmarks. Preparing batch 1.`
       ),
-      provider: getProviderLabel(config.provider),
+      provider: getRuntimeProviderLabel(runtimeConfig),
       model: config.model,
       total: bookmarks.length,
       processed: 0,
@@ -2181,10 +2215,18 @@ async function processNextBatch() {
 
   try {
     const stored = await chrome.storage.local.get(STORAGE_KEYS.job);
-    const job = stored[STORAGE_KEYS.job];
+    let job = stored[STORAGE_KEYS.job];
 
     if (!job || job.phase !== "running") {
       return;
+    }
+
+    const normalizedRuntimeJob = normalizeRunningOrganizeJobRuntime(job);
+    if (normalizedRuntimeJob.changed) {
+      job = normalizedRuntimeJob.job;
+      await chrome.storage.local.set({
+        [STORAGE_KEYS.job]: job
+      });
     }
 
     if (job.cancelRequested) {
@@ -4426,8 +4468,8 @@ async function classifyAdaptiveModelRequestBatch(
     const retryBatches = splitIntoFixedSizeChunks(requestBatch, nextBatchSize);
     await reportStage({
       message: ux(
-        `${getProviderLabel(config.provider)} 小请求仍然过慢，正在只拆分重试失败的 ${requestBatch.length} 条。`,
-        `${getProviderLabel(config.provider)} mini request is still slow, so only the failed ${requestBatch.length} bookmarks are being split and retried.`
+        `${getRuntimeProviderLabel(config)} 小请求仍然过慢，正在只拆分重试失败的 ${requestBatch.length} 条。`,
+        `${getRuntimeProviderLabel(config)} mini request is still slow, so only the failed ${requestBatch.length} bookmarks are being split and retried.`
       ),
       detail: ux(
         `已完成的小请求结果会保留；这次把慢块拆成 ${retryBatches.length} 个更小请求，每个最多 ${nextBatchSize} 条。`,
@@ -4476,7 +4518,7 @@ async function classifySingleModelRequest(
     taxonomyLocks,
     taxonomyTopFolders
   );
-  const outputTokenBudget = getClassificationOutputTokenBudget(batch.length, config.provider);
+  const outputTokenBudget = getClassificationOutputTokenBudget(batch.length, config);
   const requestSpec = Providers.buildRequest(config, messages, {
     mode: "organize",
     outputTokenBudget
@@ -5216,8 +5258,8 @@ async function retryCurrentBatchWithSmallerBatch(job, error) {
 
   await updateBatchStatus(nextJob, currentBatch, {
     message: ux(
-      `${getProviderLabel(nextJob.config.provider)} 响应过慢，已自动把批大小从 ${oldBatchSize} 降到 ${nextBatchSize} 并重试当前批次。`,
-      `${getProviderLabel(nextJob.config.provider)} was too slow, so the batch size was automatically reduced from ${oldBatchSize} to ${nextBatchSize} and the current batch will retry.`
+      `${getRuntimeProviderLabel(nextJob.config)} 响应过慢，已自动把批大小从 ${oldBatchSize} 降到 ${nextBatchSize} 并重试当前批次。`,
+      `${getRuntimeProviderLabel(nextJob.config)} was too slow, so the batch size was automatically reduced from ${oldBatchSize} to ${nextBatchSize} and the current batch will retry.`
     ),
     detail: ux(
       "这次重试不会丢失已经完成的批次，也不会改动原书签结构；如果 2 条仍然慢，会继续拆成 1 条的临时小批次后再停止。",
@@ -5261,6 +5303,45 @@ function normalizePreviewPlanBatchSize(rawValue, fallback = DEFAULT_BATCH_SIZE) 
   }
 
   return Math.min(100, Math.max(MIN_AUTO_RETRY_BATCH_SIZE, parsed));
+}
+
+function normalizeRunningOrganizeJobRuntime(job) {
+  if (!job || job.jobType !== "organize" || !job.config) {
+    return {
+      job,
+      changed: false
+    };
+  }
+
+  const cappedRuntimeBatchSize = getRuntimeBatchSize(job.config);
+  const storedBatchSize = normalizeRetryBatchSize(job.batchSize, cappedRuntimeBatchSize);
+  const runtimeBatchSize = Math.min(storedBatchSize, cappedRuntimeBatchSize);
+  const total = Math.max(0, Number(job.total || 0));
+  const totalBatches = total ? Math.ceil(total / runtimeBatchSize) : Number(job.totalBatches || 0);
+  const changed =
+    storedBatchSize !== runtimeBatchSize ||
+    Number(job.config.batchSize || 0) !== runtimeBatchSize ||
+    Number(job.totalBatches || 0) !== totalBatches;
+
+  if (!changed) {
+    return {
+      job,
+      changed: false
+    };
+  }
+
+  return {
+    job: {
+      ...job,
+      batchSize: runtimeBatchSize,
+      totalBatches,
+      config: {
+        ...job.config,
+        batchSize: runtimeBatchSize
+      }
+    },
+    changed: true
+  };
 }
 
 function normalizeLinkCheckMode(rawValue) {
@@ -5464,7 +5545,7 @@ async function updateBatchStatus(job, currentBatch, patch) {
   return updateStatus({
     phase: "running",
     cancelRequested: Boolean(job.cancelRequested),
-    provider: job.jobType === "dead_scan" ? "" : getProviderLabel(job.config.provider),
+    provider: job.jobType === "dead_scan" ? "" : getRuntimeProviderLabel(job.config),
     model: job.jobType === "dead_scan" ? "" : job.config.model,
     total: job.total,
     processed: job.processed,
@@ -5511,7 +5592,7 @@ async function withKeepAlive(task, onHeartbeatStart = null) {
 }
 
 function buildRequestAbortError(reason, config, batchLength) {
-  const providerLabel = getProviderLabel(config.provider);
+  const providerLabel = getRuntimeProviderLabel(config);
   const firstResponseTimeoutSeconds = formatTimeoutSeconds(getFirstResponseTimeoutMs(config));
   const requestTimeoutSeconds = formatTimeoutSeconds(getRequestTimeoutMs(config));
 
@@ -5522,8 +5603,8 @@ function buildRequestAbortError(reason, config, batchLength) {
         `${providerLabel} did not return a response within ${firstResponseTimeoutSeconds} seconds, so the task was stopped early.`
       ),
       ux(
-        `这通常意味着模型首包太慢，容易撞到 Chrome Manifest V3 后台生命周期限制。建议先把批大小调小到 5-10，再检查网络、Base URL 和模型负载。当前批量：${batchLength}。`,
-        `This usually means the first token was too slow and may hit Chrome Manifest V3 service worker lifetime limits. Try reducing the batch size to 5-10 first, then check the network, Base URL, and model load. Current batch size: ${batchLength}.`
+        `这通常意味着模型首包太慢，容易撞到 Chrome Manifest V3 后台生命周期限制。Marko 已按慢模型策略拆小请求；如果仍然超时，请换更快模型或检查接口排队。当前模型请求批量：${batchLength}。`,
+        `This usually means the first token was too slow and may hit Chrome Manifest V3 service worker lifetime limits. Marko already split the work with the slow-model profile; if it still times out, switch to a faster model or check endpoint queueing. Current model-request batch size: ${batchLength}.`
       ),
       reason
     );
@@ -5538,8 +5619,8 @@ function buildRequestAbortError(reason, config, batchLength) {
         `${providerLabel} did not finish within ${requestTimeoutSeconds} seconds, so the task was stopped.`
       ),
       ux(
-        `模型虽然可能已经开始处理，但完整响应仍然过慢。建议减小批大小、换更快的模型，或确认接口没有卡在排队状态。当前批量：${batchLength}。`,
-        `The model may have started working, but the full response was still too slow. Reduce the batch size, switch to a faster model, or confirm the endpoint is not stuck in queue. Current batch size: ${batchLength}.`
+        `模型虽然可能已经开始处理，但完整响应仍然过慢。Marko 已按慢模型策略拆小请求；如果仍然超时，请换更快模型或确认接口没有卡在排队状态。当前模型请求批量：${batchLength}。`,
+        `The model may have started working, but the full response was still too slow. Marko already split the work with the slow-model profile; if it still times out, switch to a faster model or confirm the endpoint is not stuck in queue. Current model-request batch size: ${batchLength}.`
       ),
       reason
     );

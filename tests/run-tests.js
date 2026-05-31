@@ -686,14 +686,21 @@ function testPreviewApplySurface() {
 function testSlowModelResilienceSurface() {
   const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSource, /RUNTIME_BATCH_SIZE_CAPS/);
-  assert.match(backgroundSource, /RUNTIME_BATCH_SIZE_CAPS[\s\S]*deepseek: 10/);
-  assert.match(backgroundSource, /return provider === "deepseek" \? 10 : DEFAULT_BATCH_SIZE/);
+  assert.match(backgroundSource, /RUNTIME_BATCH_SIZE_CAPS[\s\S]*deepseek: 15/);
+  assert.match(backgroundSource, /return provider === "deepseek" \? 15 : DEFAULT_BATCH_SIZE/);
   assert.match(backgroundSource, /MODEL_REQUEST_BATCH_SIZE_CAPS/);
   assert.match(backgroundSource, /MODEL_REQUEST_BATCH_SIZE_CAPS[\s\S]*deepseek: 5/);
   assert.match(backgroundSource, /MODEL_REQUEST_CONCURRENCY_CAPS/);
+  assert.match(backgroundSource, /MODEL_REQUEST_CONCURRENCY_CAPS[\s\S]*deepseek: 3/);
+  assert.match(backgroundSource, /getProviderPerformanceProfile/);
+  assert.match(backgroundSource, /normalizedBaseUrl\.includes\("deepseek"\)/);
+  assert.match(backgroundSource, /normalizedModel\.includes\("deepseek"\)/);
+  assert.match(backgroundSource, /getRuntimeProviderLabel/);
   assert.match(backgroundSource, /getModelRequestConcurrency/);
   assert.match(backgroundSource, /getRuntimeBatchSize/);
   assert.match(backgroundSource, /getModelRequestBatchSizeCap/);
+  assert.match(backgroundSource, /normalizeRunningOrganizeJobRuntime/);
+  assert.match(backgroundSource, /Math\.min\(storedBatchSize, cappedRuntimeBatchSize\)/);
   assert.match(backgroundSource, /splitIntoModelRequestBatches/);
   assert.match(backgroundSource, /splitIntoFixedSizeChunks/);
   assert.match(backgroundSource, /getAdaptiveRetryBatchSize/);
@@ -721,7 +728,8 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /CLASSIFICATION_OUTPUT_BUDGET_PROFILES/);
   assert.match(backgroundSource, /getClassificationOutputBudgetProfile/);
   assert.match(backgroundSource, /getClassificationOutputTokenBudget/);
-  assert.match(backgroundSource, /getClassificationOutputTokenBudget\(batch\.length, config\.provider\)/);
+  assert.match(backgroundSource, /getClassificationOutputTokenBudget\(batch\.length, config\)/);
+  assert.match(backgroundSource, /Current model-request batch size/);
   assert.match(backgroundSource, /buildModelBookmarkInputPayload/);
   assert.match(backgroundSource, /compactModelUrl/);
   assert.match(backgroundSource, /outputTokenBudget/);
@@ -781,7 +789,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="saveButton"/);
 
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
-  assert.match(optionsSource, /return provider === "deepseek" \? 10 : DEFAULT_BATCH_SIZE/);
+  assert.match(optionsSource, /return provider === "deepseek" \? 15 : DEFAULT_BATCH_SIZE/);
   assert.match(optionsSource, /showSettingsIssue/);
   assert.match(optionsSource, /isValidHttpUrl/);
   assert.match(optionsSource, /const providerKnown = Boolean\(raw\.provider && Providers\.hasProvider\(raw\.provider\)\)/);
@@ -990,8 +998,10 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /built-in domain rules/);
   assert.match(changelog, /Backup failures before applying a saved preview/);
   assert.match(changelog, /only for explicit preview-apply failures/);
-  assert.match(changelog, /runtime batches are capped to ten bookmarks/);
+  assert.match(changelog, /runtime batches are capped to fifteen bookmarks/);
   assert.match(changelog, /five-bookmark model requests/);
+  assert.match(changelog, /DeepSeek-compatible endpoints/);
+  assert.match(changelog, /up to three mini requests/);
   assert.match(changelog, /mini-request timeouts now keep completed mini results/);
   assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
   assert.match(changelog, /inline confirmations and status messages/);
@@ -1007,7 +1017,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /Popup mode switch/);
   assert.match(readme, /built-in domain rules/);
   assert.match(readme, /restoring creates a fresh local snapshot first/);
-  assert.match(readmeZh, /请求前再次拆分/);
+  assert.match(readmeZh, /DeepSeek 兼容接口/);
   assert.match(readmeZh, /npm test/);
   assert.match(readmeZh, /npm run package:webstore/);
   assert.match(readmeZh, /弹窗模式切换/);
@@ -1024,9 +1034,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Backup failures before applying a saved preview/);
   assert.match(releaseNotes, /only for preview-apply failures/);
   assert.match(releaseNotes, /re-split large batches before each request/);
-  assert.match(releaseNotes, /cap runtime batches at 10 bookmarks/);
+  assert.match(releaseNotes, /cap runtime batches at 15 bookmarks/);
   assert.match(releaseNotes, /cap each model request at 5 bookmarks/);
-  assert.match(releaseNotes, /limited mini-request concurrency/);
+  assert.match(releaseNotes, /run up to three mini requests at a time/);
   assert.match(releaseNotes, /completed mini results are kept/);
   assert.match(releaseNotes, /shorter built-in/);
   assert.match(releaseNotes, /inline confirmations and status messages/);
@@ -1052,9 +1062,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /Backup failures before applying a saved preview/);
   assert.match(storeListing, /only after a preview-apply failure/);
   assert.match(storeListing, /re-split large batches before each request/);
-  assert.match(storeListing, /cap runtime batches at 10 bookmarks/);
+  assert.match(storeListing, /cap runtime batches at 15 bookmarks/);
   assert.match(storeListing, /cap each model request at 5 bookmarks/);
-  assert.match(storeListing, /limited mini-request concurrency/);
+  assert.match(storeListing, /run up to three mini requests at a time/);
   assert.match(storeListing, /completed mini results are kept/);
   assert.match(storeListing, /shorter built-in/);
   assert.match(storeListing, /OpenAI、DeepSeek、MiniMax、Anthropic/);

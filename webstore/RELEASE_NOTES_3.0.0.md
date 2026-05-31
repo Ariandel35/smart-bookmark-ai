@@ -8,7 +8,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 应用已生成的预览方案时会复用保存的方案，本地重建，不会再次请求模型
 - 如果应用预览时遇到可恢复失败，弹窗会保留应用入口，修复后可直接重试保存方案
 - 配置不完整时，弹窗主按钮会直接进入设置页
-- DeepSeek 等慢响应模型会在请求前再次拆分大批量，运行批次最多 10 条、单个模型请求最多 5 条，并使用受控小并发、更短的请求超时、更短的内置请求提示和更紧的输出预算；单个小请求超时后会保留已完成结果，只把失败小块继续拆到 1 条重试
+- DeepSeek 和 DeepSeek 兼容接口会在请求前再次拆分大批量，运行批次最多 15 条、单个模型请求最多 5 条，并最多 3 个小请求并发处理，同时使用更短的请求超时、更短的内置请求提示和更紧的输出预算；单个小请求超时后会保留已完成结果，只把失败小块继续拆到 1 条重试
 - 新增快速/完整速度模式：快速模式跳过失效链接检测和额外目录规划请求，完整模式保留链接检查和全局规划
 - 快速模式在规则和分类缓存覆盖全部书签时会直接本地完成，不再调模型或等待批次调度
 - 预览会先检查本地规则和缓存覆盖情况，只有未缓存书签需要模型时才要求 API Key 或模型接口授权
@@ -27,7 +27,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 
 适合商店后台的简短版本：
 
-3.0.0 优化了核心使用路径：先预览，再应用方案。应用预览不会再次跑模型；快速模式默认更快且权限更少，并少一次单独目录规划请求，规则和缓存覆盖全部书签时还会直接本地完成，未命中缓存时才要求模型访问；设置页使用内联确认和校验提示，API 检测成功后会保存连接配置，DeepSeek 等慢模型会在请求前再次拆分大批量，运行批次最多 10 条、单请求最多 5 条，并使用受控小并发、更短请求超时、更短内置提示和更紧输出预算；单个小请求超时后会保留已完成结果，只把失败小块继续拆到 1 条重试。
+3.0.0 优化了核心使用路径：先预览，再应用方案。应用预览不会再次跑模型；快速模式默认更快且权限更少，并少一次单独目录规划请求，规则和缓存覆盖全部书签时还会直接本地完成，未命中缓存时才要求模型访问；设置页使用内联确认和校验提示，API 检测成功后会保存连接配置，DeepSeek 和 DeepSeek 兼容接口会在请求前再次拆分大批量，运行批次最多 15 条、单请求最多 5 条，并最多 3 个小请求并发处理，同时使用更短请求超时、更短内置提示和更紧输出预算；单个小请求超时后会保留已完成结果，只把失败小块继续拆到 1 条重试。
 
 ## English
 
@@ -40,7 +40,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Backup failures before applying a saved preview also keep the saved preview retry path available
 - Apply Plan retry is shown only for preview-apply failures, not unrelated error states that merely still have a saved preview
 - Incomplete setup routes directly from the popup to settings
-- Slow providers such as DeepSeek re-split large batches before each request, cap runtime batches at 10 bookmarks, cap each model request at 5 bookmarks, use limited mini-request concurrency, shorter request timeouts, a shorter built-in request prompt, and a tighter output budget; when one mini request times out, completed mini results are kept and only the failed block shrinks down to one-bookmark retries
+- Slow providers such as DeepSeek and DeepSeek-compatible endpoints re-split large batches before each request, cap runtime batches at 15 bookmarks, cap each model request at 5 bookmarks, run up to three mini requests at a time, use shorter request timeouts, a shorter built-in request prompt, and a tighter output budget; when one mini request times out, completed mini results are kept and only the failed block shrinks down to one-bookmark retries
 - Added Fast and Complete speed modes: Fast skips dead-link checks and the extra taxonomy-planning request, while Complete keeps link checks and global planning
 - Fast mode now uses conservative built-in domain rules after custom rules and cache reuse, before model calls, and can finish locally when local rules cover every bookmark
 - Preview checks local rule/cache coverage first, then asks for an API key or model endpoint access only when uncached bookmarks need the model
@@ -59,4 +59,4 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 
 Short version for store release notes:
 
-3.0.0 streamlines the core workflow: preview first, switch Fast/Complete directly in the popup when needed, then apply the plan without a second model run. Fast mode skips dead-link checks and the extra taxonomy-planning request, applies conservative built-in domain rules after custom rules and cache reuse, finishes locally when local rules cover every bookmark, and asks for model access only when uncached bookmarks need it. Settings use inline confirmations and validation feedback, successful API tests save the connection, and slow providers such as DeepSeek re-split large batches before each request, cap runtime batches at 10 bookmarks, cap each model request at 5 bookmarks, use limited mini-request concurrency, shorter request timeouts, shorter built-in prompts, and tighter output budgets. When one mini request times out, completed mini results are kept and only the failed block shrinks down to one-bookmark retries.
+3.0.0 streamlines the core workflow: preview first, switch Fast/Complete directly in the popup when needed, then apply the plan without a second model run. Fast mode skips dead-link checks and the extra taxonomy-planning request, applies conservative built-in domain rules after custom rules and cache reuse, finishes locally when local rules cover every bookmark, and asks for model access only when uncached bookmarks need it. Settings use inline confirmations and validation feedback, successful API tests save the connection, and slow providers such as DeepSeek and DeepSeek-compatible endpoints re-split large batches before each request, cap runtime batches at 15 bookmarks, cap each model request at 5 bookmarks, run up to three mini requests at a time, use shorter request timeouts, shorter built-in prompts, and tighter output budgets. When one mini request times out, completed mini results are kept and only the failed block shrinks down to one-bookmark retries.
