@@ -1066,6 +1066,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /function shouldRequireModelAccess\(config\)/);
   assert.match(optionsSource, /if \(configToSave\.autoOrganizeEnabled\) \{[\s\S]*const granted = shouldRequireBroadHostAccess\(configToSave\)[\s\S]*ensureBroadHostAccess\(\)[\s\S]*shouldRequireModelAccess\(configToSave\)[\s\S]*ensureOriginAccess\(configToSave\.baseUrl\)[\s\S]*: true/);
   assert.match(optionsSource, /showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
+  assert.match(optionsSource, /setSettingsActionStatus\(t\("hostAccessGranted"\)\)/);
   assert.match(optionsSource, /targetId === "baseUrl" \|\| targetId === "linkCheckMode"/);
   assert.match(optionsSource, /Base URL change/);
   assert.match(optionsSource, /speed mode change/);
@@ -1214,6 +1215,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /reuses the popup preflight local coverage check after runtime batch caps/);
   assert.match(changelog, /warn inline before saving when a DeepSeek-compatible batch size will be capped/);
   assert.match(changelog, /auto-organize permission impact inline/);
+  assert.match(changelog, /explicit granted status after permission approval succeeds/);
   assert.match(changelog, /API test succeeded but auto-organize permission was not granted/);
   assert.match(changelog, /store release materials now describe the slow-batch/);
   assert.match(changelog, /DeepSeek-compatible endpoints/);
@@ -1286,6 +1288,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /auto organize access is not granted/);
   assert.match(releaseNotes, /warn before capping slow-model batch sizes/);
   assert.match(releaseNotes, /auto-organize mode's permission impact inline/);
+  assert.match(releaseNotes, /explicit granted status/);
   assert.match(releaseNotes, /Backup failures before applying a saved preview/);
   assert.match(releaseNotes, /only for preview-apply failures/);
   assert.match(releaseNotes, /re-split large batches before each request/);

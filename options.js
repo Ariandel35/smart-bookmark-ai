@@ -1634,6 +1634,8 @@ async function requestHostAccess() {
     await refreshHostAccessStatus();
     if (!granted) {
       showSettingsIssue(t("hostAccessMissingAlert"), "connection", "grantAccessButton");
+    } else {
+      setSettingsActionStatus(t("hostAccessGranted"));
     }
   } finally {
     setSettingsActionInFlight(false);

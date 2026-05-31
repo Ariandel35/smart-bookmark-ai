@@ -18,6 +18,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - API 检测成功后自动保存当前连接配置
 - API 检测成功但自动整理权限未授权时，会明确显示该权限问题
 - 设置页会在保存前提示 DeepSeek 兼容慢模型批大小将被压低，并实时说明自动整理当前需要的权限
+- 设置页授权访问成功后会明确显示已授权状态，不再停留在等待授权的文案
 - 弹窗应用方案、备份恢复/删除和设置校验都改成页面内确认与状态提示，不再弹出浏览器原生对话框
 - 预览阶段的未处理项保持只读，不会在点击“应用方案”前显示保留/删除操作
 - 未处理项保留/删除期间会锁定整组操作按钮，避免重复点击造成并发请求
@@ -56,6 +57,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Successful API tests now save the verified connection settings
 - If an API test succeeds but auto organize access is not granted, the settings page reports that permission issue inline
 - Settings warn before capping slow-model batch sizes and explain the selected auto-organize mode's permission impact inline
+- After access approval succeeds, settings now show an explicit granted status instead of leaving the waiting message in place
 - Popup apply, backup restore/delete, and settings validation now use inline confirmations and status messages instead of browser dialogs
 - Unprocessed items stay read-only until an organize/apply run completes, so preview and error states cannot mutate bookmarks
 - Unprocessed item keep/delete actions lock the whole action group while one item is being handled

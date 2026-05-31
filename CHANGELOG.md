@@ -20,6 +20,7 @@
 - Preview startup now reuses the popup preflight local coverage check after runtime batch caps, avoiding a second bookmark scan for capped slow-model configs
 - Settings now warn inline before saving when a DeepSeek-compatible batch size will be capped for faster previews
 - Settings now show the auto-organize permission impact inline as users switch automation and speed modes
+- Settings now replace the access-request waiting message with an explicit granted status after permission approval succeeds
 - Test & Save now reports when the API test succeeded but auto-organize permission was not granted
 - README and store release materials now describe the slow-batch, automation permission, API access, and unprocessed-action safeguards consistently
 - Running legacy organize jobs are normalized before the next batch so stale large batches cannot continue after an update
