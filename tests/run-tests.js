@@ -1204,6 +1204,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /warn inline before saving when a DeepSeek-compatible batch size will be capped/);
   assert.match(changelog, /auto-organize permission impact inline/);
   assert.match(changelog, /API test succeeded but auto-organize permission was not granted/);
+  assert.match(changelog, /store release materials now describe the slow-batch/);
   assert.match(changelog, /DeepSeek-compatible endpoints/);
   assert.match(changelog, /up to three mini requests/);
   assert.match(changelog, /preview-time model calls, local Apply Plan rebuilds, and auto organize data flow/);
@@ -1243,6 +1244,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /unless Balanced\/Complete preview or enabled auto organize needs external access/);
   assert.match(readme, /manual-review fallback finish locally/);
   assert.match(readme, /Fast automatic organize can run locally without an API key/);
+  assert.match(readme, /automation access still needs approval/);
+  assert.match(readme, /impact shown inline before saving/);
+  assert.match(readme, /Settings warn inline before a slow-model batch cap/);
   assert.doesNotMatch(readme, /unless you start an organize run/);
   assert.match(readme, /restoring creates a fresh local snapshot first/);
   assert.match(readmeZh, /DeepSeek 兼容接口/);
@@ -1252,6 +1256,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /内置域名规则/);
   assert.match(readmeZh, /待手动分类兜底会在本地完成/);
   assert.match(readmeZh, /快速自动整理可以不填 API Key 本地运行/);
+  assert.match(readmeZh, /自动整理权限仍未授权时明确提示/);
+  assert.match(readmeZh, /保存前会在页面内显示影响/);
+  assert.match(readmeZh, /慢模型批量被压低前先提示/);
   assert.match(readmeZh, /恢复前会先创建新的本地快照/);
 
   const releaseNotes = fs.readFileSync(
@@ -1265,6 +1272,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /unmatched bookmarks go to manual review/);
   assert.match(releaseNotes, /Fast automatic organize can now run locally without an API key/);
   assert.match(releaseNotes, /Balanced automatic organize requires model credentials/);
+  assert.match(releaseNotes, /auto organize access is not granted/);
+  assert.match(releaseNotes, /warn before capping slow-model batch sizes/);
+  assert.match(releaseNotes, /auto-organize mode's permission impact inline/);
   assert.match(releaseNotes, /Backup failures before applying a saved preview/);
   assert.match(releaseNotes, /only for preview-apply failures/);
   assert.match(releaseNotes, /re-split large batches before each request/);
@@ -1275,6 +1285,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /finishes with local fallback/);
   assert.match(releaseNotes, /inline confirmations and status messages/);
   assert.match(releaseNotes, /preview and error states cannot mutate bookmarks/);
+  assert.match(releaseNotes, /lock the whole action group while one item is being handled/);
   assert.match(releaseNotes, /creates a fresh local snapshot/);
   assert.match(releaseNotes, /keeps the saved connection visible/);
   assert.match(releaseNotes, /Access-status refresh failures now restore controls/);
@@ -1300,12 +1311,16 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /cap runtime batches at 9 bookmarks/);
   assert.match(storeListing, /cap each model request at 3 bookmarks/);
   assert.match(storeListing, /run up to three mini requests at a time/);
+  assert.match(storeListing, /auto organize access is not granted/);
+  assert.match(storeListing, /slow-model batch sizes are capped/);
   assert.match(storeListing, /skip the separate taxonomy-planning request/);
   assert.match(storeListing, /finishes with local fallback/);
   assert.match(storeListing, /OpenAI、DeepSeek、MiniMax、Anthropic/);
   assert.match(storeListing, /OpenAI, DeepSeek, MiniMax, Anthropic/);
   assert.match(storeListing, /inline confirmations and validation feedback/);
   assert.match(storeListing, /read-only until an organize\/apply run completes/);
+  assert.match(storeListing, /lock the whole action group while one item is being kept or deleted/);
+  assert.match(storeListing, /runs locally, needs model endpoint access, or needs website access/);
   assert.match(storeListing, /fresh pre-restore snapshot/);
   assert.match(storeListing, /keeps saved connection fields visible/);
   assert.match(storeListing, /Access-status refresh failures restore controls/);

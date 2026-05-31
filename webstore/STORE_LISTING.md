@@ -17,12 +17,16 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 支持 OpenAI、DeepSeek、MiniMax、Anthropic、Gemini、OpenRouter、Groq、xAI、Moonshot AI、Ollama，以及兼容 OpenAI 的自定义接口
 - 支持自定义 Base URL、API Key、模型名和 Prompt
 - API 检测成功后自动保存当前连接配置
+- API 检测成功但自动整理权限未授权时，会明确显示该权限问题
 - 快速模式不需要模型接口访问即可本地完成；平衡模式保留 AI 分类但跳过网站检测；完整模式才会检测书签链接并使用 AI 分类，且会先用内置域名规则减少模型请求
 - DeepSeek 和 DeepSeek 兼容接口会在请求前再次拆分大批量，运行批次最多 9 条、单个模型请求最多 3 条，并最多 3 个小请求并发处理；如果 6 秒无首包或 14 秒未完整返回，本轮会停止等待模型，改用本地规则、缓存、内置规则和待手动分类兜底完成
+- 慢模型批大小将被压低时，设置页会在保存前给出页面内提示
 - 应用已生成预览时复用保存的方案，本地重建，不会再次请求模型
 - 应用预览遇到可恢复失败时，可修复后直接重试保存方案
 - 预览阶段的未处理项保持只读，应用方案前不会出现保留/删除操作
+- 处理未处理项时会锁定整组操作按钮，避免重复点击造成并发请求
 - 弹窗和设置页使用页面内确认与错误提示，避免浏览器原生弹窗打断流程
+- 自动整理开关会实时说明当前模式需要本地运行、模型接口权限还是网站访问权限
 - 设置页会把连接配置加载和备份/权限状态刷新分开处理，局部刷新失败不会覆盖已保存配置
 - 权限状态刷新失败时会恢复控件并给出页面内提示
 - 备份列表恢复加载后会清除过期错误提示，状态显示更一致
@@ -62,17 +66,21 @@ Key features:
 - Works with OpenAI, DeepSeek, MiniMax, Anthropic, Gemini, OpenRouter, Groq, xAI, Moonshot AI, Ollama, and generic OpenAI-compatible endpoints
 - Custom Base URL, API key, model name, and prompt
 - Successful API tests save the current connection settings
+- If an API test succeeds but auto organize access is not granted, Marko reports that permission issue inline
 - Fast/Balanced/Complete mode can be changed directly in the popup before preview
 - Fast mode finishes locally without model endpoint access; Balanced keeps AI classification without website scans; Complete mode adds link checks and AI classification but uses built-in domain rules before AI, while slow providers skip the extra taxonomy-planning request
 - Fast local reruns use built-in domain rules, cached classifications, and manual-review fallback to skip model calls and batch scheduling
 - Fast automatic organize can run locally without an API key; Balanced automatic organize requires model credentials; Complete automatic organize also requires website access
 - Slow providers such as DeepSeek and DeepSeek-compatible endpoints re-split large batches before each request, cap runtime batches at 9 bookmarks, cap each model request at 3 bookmarks, and run up to three mini requests at a time; if the model has no first response in 6 seconds or no full response in 14 seconds, the run stops waiting and finishes with local fallback instead of failing the whole flow
+- Settings warn inline before slow-model batch sizes are capped for faster previews
 - Applying a generated preview reuses the saved plan and rebuilds locally without another model request
 - Recoverable apply failures keep the saved preview retry path available after the issue is fixed
 - Backup failures before applying a saved preview keep the same retry path available
 - Apply Plan retry appears only after a preview-apply failure, not after unrelated errors
 - Unprocessed items stay read-only until an organize/apply run completes, with keep/delete actions shown only for actionable items
+- Unprocessed item actions lock the whole action group while one item is being kept or deleted
 - Popup and settings actions use inline confirmations and validation feedback instead of browser dialogs
+- Auto organize settings explain inline whether the selected mode runs locally, needs model endpoint access, or needs website access
 - Settings load keeps saved connection fields visible even when backup or permission status refreshes fail
 - Access-status refresh failures restore controls and show inline feedback
 - Recovered backup-list refreshes clear stale error text for more consistent status feedback

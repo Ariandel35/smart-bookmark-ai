@@ -18,6 +18,7 @@
 - Settings now warn inline before saving when a DeepSeek-compatible batch size will be capped for faster previews
 - Settings now show the auto-organize permission impact inline as users switch automation and speed modes
 - Test & Save now reports when the API test succeeded but auto-organize permission was not granted
+- README and store release materials now describe the slow-batch, automation permission, API access, and unprocessed-action safeguards consistently
 - Running legacy organize jobs are normalized before the next batch so stale large batches cannot continue after an update
 - Privacy, README, and store disclosures now describe preview-time model calls, local Apply Plan rebuilds, and auto organize data flow consistently
 - Remaining README, privacy page, and review checklist wording now uses the same preview-first data-flow language
