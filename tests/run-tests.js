@@ -1050,6 +1050,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /if \(!granted\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*setApiTestStatus\(t\("currentApiAccessMissing"\), true\)/);
   assert.match(optionsSource, /if \(!response\?\.ok\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*setApiTestStatus\(/);
   assert.match(optionsSource, /if \(!granted\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
+  assert.match(optionsSource, /if \(!autoAccessGranted\) \{[\s\S]*setApiTestStatus\([\s\S]*apiTestAutoAccessFailed[\s\S]*true[\s\S]*showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
   assert.match(optionsSource, /function shouldRequireModelAccess\(config\)/);
   assert.match(optionsSource, /if \(configToSave\.autoOrganizeEnabled\) \{[\s\S]*const granted = shouldRequireBroadHostAccess\(configToSave\)[\s\S]*ensureBroadHostAccess\(\)[\s\S]*shouldRequireModelAccess\(configToSave\)[\s\S]*ensureOriginAccess\(configToSave\.baseUrl\)[\s\S]*: true/);
   assert.match(optionsSource, /showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
@@ -1144,6 +1145,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(i18nSource, /settingsLoadException/);
   assert.match(i18nSource, /settingsSaveException/);
   assert.match(i18nSource, /apiTestSaveFailed/);
+  assert.match(i18nSource, /apiTestAutoAccessFailed/);
   assert.match(i18nSource, /settingsAccessRequestingStatus/);
   assert.match(i18nSource, /hostAccessChecking/);
   assert.match(i18nSource, /autoOrganizeDisabledHint/);
@@ -1197,6 +1199,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /older 48-item settings/);
   assert.match(changelog, /warn inline before saving when a DeepSeek-compatible batch size will be capped/);
   assert.match(changelog, /auto-organize permission impact inline/);
+  assert.match(changelog, /API test succeeded but auto-organize permission was not granted/);
   assert.match(changelog, /DeepSeek-compatible endpoints/);
   assert.match(changelog, /up to three mini requests/);
   assert.match(changelog, /preview-time model calls, local Apply Plan rebuilds, and auto organize data flow/);

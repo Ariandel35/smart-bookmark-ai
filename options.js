@@ -1450,6 +1450,12 @@ async function testApiConnection() {
       await refreshHostAccessStatus();
       if (!autoAccessGranted) {
         setSaveBadge(t("saveBadgeFailed"), "danger");
+        setApiTestStatus(
+          [response.message || t("apiTestSucceeded"), response.detail, t("apiTestAutoAccessFailed")]
+            .filter(Boolean)
+            .join(" "),
+          true
+        );
         showSettingsIssue(t("autoOrganizePermission"), "automation", "autoOrganizeEnabled");
         return;
       }
