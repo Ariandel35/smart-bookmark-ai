@@ -2780,7 +2780,7 @@ async function applyPreviewPlan() {
         "正在应用预览方案，已跳过模型分类。",
         "Applying the preview plan. Model classification is skipped."
       ),
-      provider: getProviderLabel(config.provider),
+      provider: getRuntimeProviderLabel(config),
       model: config.model,
       total,
       processed: total,
@@ -3009,7 +3009,7 @@ async function finishJob(phase, message, job, overrides = {}) {
     provider:
       job?.jobType === "dead_scan"
         ? ""
-        : getProviderLabel(job?.config?.provider || "") || currentStatus.provider || "",
+        : getRuntimeProviderLabel(job?.config || {}) || currentStatus.provider || "",
     model: job?.jobType === "dead_scan" ? "" : job?.config?.model || currentStatus.model || "",
     total: job?.total ?? currentStatus.total ?? 0,
     processed,

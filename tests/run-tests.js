@@ -705,6 +705,8 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /normalizedBaseUrl\.includes\("deepseek"\)/);
   assert.match(backgroundSource, /normalizedModel\.includes\("deepseek"\)/);
   assert.match(backgroundSource, /getRuntimeProviderLabel/);
+  assert.match(backgroundSource, /provider: getRuntimeProviderLabel\(config\)/);
+  assert.match(backgroundSource, /getRuntimeProviderLabel\(job\?\.config \|\| \{\}\)/);
   assert.match(backgroundSource, /getModelRequestConcurrency/);
   assert.match(backgroundSource, /getRuntimeBatchSize/);
   assert.match(backgroundSource, /getModelRequestBatchSizeCap/);
@@ -1014,6 +1016,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /preview-time model calls, local Apply Plan rebuilds, and auto organize data flow/);
   assert.match(changelog, /same preview-first data-flow language/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
+  assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /mini-request timeouts now keep completed mini results/);
   assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
   assert.match(changelog, /inline confirmations and status messages/);
