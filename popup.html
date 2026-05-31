@@ -66,6 +66,34 @@
         </button>
       </section>
 
+      <section class="popup-mode-bar" aria-labelledby="popupSpeedModeLabel">
+        <span class="popup-mode-bar__label" id="popupSpeedModeLabel" data-i18n="popupSpeedModeLabel">Mode</span>
+        <div class="segmented-control" role="radiogroup" aria-labelledby="popupSpeedModeLabel">
+          <button
+            class="segmented-control__button"
+            id="speedModeFastButton"
+            type="button"
+            role="radio"
+            data-popup-speed-mode="fast"
+            aria-checked="true"
+            data-i18n="linkCheckFast"
+          >
+            Fast
+          </button>
+          <button
+            class="segmented-control__button"
+            id="speedModeCompleteButton"
+            type="button"
+            role="radio"
+            data-popup-speed-mode="complete"
+            aria-checked="false"
+            data-i18n="linkCheckComplete"
+          >
+            Complete
+          </button>
+        </div>
+      </section>
+
       <div class="popup-action-status status-text" id="popupActionStatus" role="status" aria-live="polite" hidden></div>
 
       <section class="section-block">

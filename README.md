@@ -95,6 +95,7 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 | Area | v3.0 behavior |
 | --- | --- |
 | Main action | `Preview` is the first step. `Apply Plan` appears only when a plan is ready. |
+| Popup mode switch | Fast/Complete can be changed directly in the popup, and any saved preview is invalidated when the mode changes. |
 | Setup | Missing provider, Base URL, or model routes the user to settings. API access is requested only when uncached bookmarks still need a model call after local rules. |
 | API settings | `Test & Save` validates the connection and stores the working configuration. |
 | Slow models | DeepSeek runs cap each runtime batch at 10 bookmarks, split model requests to 5 bookmarks each, run two mini requests at a time, and still use shorter provider-specific timeouts, compact model input, tighter output budgets, and adaptive mini-retries that keep completed results while only shrinking the failed block down to one bookmark. |

@@ -4,6 +4,7 @@ const PREVIEW_PLAN_KEY = "smartBookmarkPreviewPlan";
 const MANAGED_FOLDER_IDS_KEY = "smartBookmarkManagedFolderIds";
 const MANAGED_ROOT_BOOKMARK_IDS_KEY = "smartBookmarkManagedRootBookmarkIds";
 const HOST_ACCESS_ORIGINS = ["https://*/*", "http://*/*"];
+const LINK_CHECK_MODE_FAST = "fast";
 const LINK_CHECK_MODE_COMPLETE = "complete";
 const I18N = globalThis.SmartBookmarkI18n;
 const Providers = globalThis.SmartBookmarkProviders;
@@ -25,6 +26,7 @@ const backupButton = document.getElementById("backupButton");
 const cancelButton = document.getElementById("cancelButton");
 const optionsButton = document.getElementById("optionsButton");
 const popupActionStatus = document.getElementById("popupActionStatus");
+const speedModeButtons = Array.from(document.querySelectorAll("[data-popup-speed-mode]"));
 
 let refreshTimer = null;
 let currentConfig = null;
@@ -134,6 +136,10 @@ async function ensureOriginAccess(rawUrl) {
 
 function shouldRequireBroadHostAccess(config) {
   return config?.linkCheckMode === LINK_CHECK_MODE_COMPLETE;
+}
+
+function normalizeLinkCheckMode(rawValue) {
+  return rawValue === LINK_CHECK_MODE_COMPLETE ? LINK_CHECK_MODE_COMPLETE : LINK_CHECK_MODE_FAST;
 }
 
 async function ensureOrganizeAccess(config) {
@@ -259,6 +265,10 @@ function syncActionButtons() {
   startButton.disabled = popupActionInFlight || isRunning;
   backupButton.disabled = popupActionInFlight || isRunning;
   cancelButton.disabled = popupActionInFlight || !isRunning || isCancelling;
+  speedModeButtons.forEach((button) => {
+    button.disabled = popupActionInFlight || isRunning;
+    button.setAttribute("aria-busy", String(popupActionInFlight));
+  });
   cancelButton.hidden = !isRunning;
   startButton.setAttribute("aria-busy", String(popupActionInFlight));
   backupButton.setAttribute("aria-busy", String(popupActionInFlight));
@@ -271,10 +281,11 @@ function syncActionButtons() {
       : t("previewButton");
 }
 
-function setPopupActionStatus(message = "") {
+function setPopupActionStatus(message = "", options = {}) {
   const text = String(message || "").trim();
   popupActionStatus.textContent = text;
   popupActionStatus.hidden = !text;
+  popupActionStatus.classList.toggle("is-error", Boolean(text && options.isError));
 }
 
 function setPopupActionInFlight(inFlight, message = "") {
@@ -283,7 +294,14 @@ function setPopupActionInFlight(inFlight, message = "") {
   syncActionButtons();
 }
 
-function renderConfig(_config) {
+function renderConfig(config) {
+  const activeMode = normalizeLinkCheckMode(config?.linkCheckMode);
+  speedModeButtons.forEach((button) => {
+    const isActive = button.dataset.popupSpeedMode === activeMode;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-checked", String(isActive));
+    button.tabIndex = isActive ? 0 : -1;
+  });
   syncActionButtons();
 }
 
@@ -837,6 +855,46 @@ async function refreshAll() {
   await refreshDetailPanel();
 }
 
+async function updatePopupSpeedMode(rawMode) {
+  const nextMode = normalizeLinkCheckMode(rawMode);
+  const currentMode = normalizeLinkCheckMode(currentConfig?.linkCheckMode);
+
+  if (nextMode === currentMode || popupActionInFlight || currentStatus?.phase === "running") {
+    return;
+  }
+
+  popupActionInFlight = true;
+  setPopupActionStatus(t("popupSavingSpeedModeStatus"));
+  syncActionButtons();
+
+  try {
+    const stored = await chrome.storage.local.get(CONFIG_KEY);
+    const storedConfig = stored[CONFIG_KEY] || currentConfig;
+    if (!storedConfig) {
+      setPopupActionStatus("");
+      await openOptionsSection("organize");
+      return;
+    }
+
+    const nextConfig = {
+      ...storedConfig,
+      linkCheckMode: nextMode
+    };
+    await chrome.storage.local.set({ [CONFIG_KEY]: nextConfig });
+    currentConfig = nextConfig;
+    currentPreviewPlan = null;
+    renderConfig(currentConfig);
+    await refreshAll();
+    setPopupActionStatus(t("popupSpeedModeSavedStatus"));
+  } catch (error) {
+    console.error("Failed to update speed mode:", error);
+    setPopupActionStatus(t("popupSpeedModeFailedStatus"), { isError: true });
+  } finally {
+    popupActionInFlight = false;
+    syncActionButtons();
+  }
+}
+
 async function startJob() {
   setPopupActionInFlight(true, t("popupApplyingPlanStatus"));
 
@@ -995,6 +1053,31 @@ chrome.runtime.onMessage.addListener((message) => {
 
 optionsButton.addEventListener("click", () => {
   void openOptionsSection("connection");
+});
+
+speedModeButtons.forEach((button, index) => {
+  button.addEventListener("click", () => {
+    updatePopupSpeedMode(button.dataset.popupSpeedMode).catch((error) => {
+      console.error("Failed to switch speed mode:", error);
+      setPopupActionStatus(t("popupSpeedModeFailedStatus"), { isError: true });
+    });
+  });
+
+  button.addEventListener("keydown", (event) => {
+    if (!["ArrowLeft", "ArrowRight"].includes(event.key)) {
+      return;
+    }
+
+    event.preventDefault();
+    const direction = event.key === "ArrowRight" ? 1 : -1;
+    const nextIndex = (index + direction + speedModeButtons.length) % speedModeButtons.length;
+    const nextButton = speedModeButtons[nextIndex];
+    nextButton.focus();
+    updatePopupSpeedMode(nextButton.dataset.popupSpeedMode).catch((error) => {
+      console.error("Failed to switch speed mode from keyboard:", error);
+      setPopupActionStatus(t("popupSpeedModeFailedStatus"), { isError: true });
+    });
+  });
 });
 
 startButton.addEventListener("click", () => {

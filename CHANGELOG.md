@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added Fast and Complete speed modes so users can choose quicker organizing that skips extra checks and taxonomy planning, or full dead-link checks with global planning
+- Popup now includes a Fast/Complete mode switch so speed and quality can be adjusted without opening settings
 - Fast mode now applies conservative built-in domain rules for common developer, learning, productivity, design, community, shopping, media, and life sites after custom rules and cache reuse, before calling the model
 - Reduced popup and settings permission requests in Fast mode to the configured model API origin
 - Applying a saved preview plan now reuses the stored plan and rebuilds locally without a second model request

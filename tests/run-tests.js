@@ -547,8 +547,16 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /popupCreatingBackupStatus/);
   assert.match(popupSource, /popupResolvingItemStatus/);
   assert.match(popupSource, /popupCancellingStatus/);
+  assert.match(popupSource, /speedModeButtons/);
+  assert.match(popupSource, /normalizeLinkCheckMode/);
+  assert.match(popupSource, /async function updatePopupSpeedMode/);
+  assert.match(popupSource, /chrome\.storage\.local\.set\(\{ \[CONFIG_KEY\]: nextConfig \}\)/);
+  assert.match(popupSource, /popupSavingSpeedModeStatus/);
+  assert.match(popupSource, /popupSpeedModeSavedStatus/);
+  assert.match(popupSource, /button\.setAttribute\("aria-checked", String\(isActive\)\)/);
   assert.match(popupSource, /startButton\.disabled = popupActionInFlight \|\| isRunning/);
   assert.match(popupSource, /backupButton\.disabled = popupActionInFlight \|\| isRunning/);
+  assert.match(popupSource, /button\.disabled = popupActionInFlight \|\| isRunning/);
   assert.match(popupSource, /const isCancelling = Boolean\(currentStatus\?\.cancelRequested\)/);
   assert.match(popupSource, /cancelButton\.disabled = popupActionInFlight \|\| !isRunning \|\| isCancelling/);
   assert.match(popupSource, /cancelButton\.textContent = isCancelling \? t\("cancelRequestedButton"\) : t\("cancelButton"\)/);
@@ -594,6 +602,10 @@ function testPreviewApplySurface() {
   assert.match(popupHtml, /id="startButton"[\s\S]*aria-describedby="popupActionStatus"/);
   assert.match(popupHtml, /id="backupButton"[\s\S]*aria-describedby="popupActionStatus"/);
   assert.match(popupHtml, /id="cancelButton"[\s\S]*aria-describedby="popupActionStatus"/);
+  assert.match(popupHtml, /class="popup-mode-bar"[\s\S]*aria-labelledby="popupSpeedModeLabel"/);
+  assert.match(popupHtml, /role="radiogroup"[\s\S]*aria-labelledby="popupSpeedModeLabel"/);
+  assert.match(popupHtml, /id="speedModeFastButton"[\s\S]*role="radio"[\s\S]*data-popup-speed-mode="fast"/);
+  assert.match(popupHtml, /id="speedModeCompleteButton"[\s\S]*role="radio"[\s\S]*data-popup-speed-mode="complete"/);
   assert.match(popupHtml, /id="phaseBadge"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*aria-atomic="true"/);
   assert.match(popupHtml, /id="popupActionStatus"/);
   assert.match(popupHtml, /role="status"/);
@@ -614,12 +626,17 @@ function testPreviewApplySurface() {
   const stylesSource = fs.readFileSync(path.join(ROOT_DIR, "styles.css"), "utf8");
   assert.match(stylesSource, /\.confirm-strip/);
   assert.match(stylesSource, /\.popup-action-status/);
+  assert.match(stylesSource, /\.popup-mode-bar/);
+  assert.match(stylesSource, /\.segmented-control/);
+  assert.match(stylesSource, /\.segmented-control__button\.is-active/);
   assert.doesNotMatch(stylesSource, /\.result-nav/);
   assert.doesNotMatch(stylesSource, /\.results-workspace/);
 
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
   assert.match(i18nSource, /cancelRequestedButton/);
   assert.match(i18nSource, /settingsShortcutButton/);
+  assert.match(i18nSource, /popupSpeedModeLabel/);
+  assert.match(i18nSource, /popupSpeedModeSavedStatus/);
   assert.match(i18nSource, /detailPanelAriaLabel/);
   assert.match(i18nSource, /keepBookmarkAria/);
   assert.match(i18nSource, /deleteBookmarkAria/);
@@ -952,6 +969,7 @@ function testReleaseMaterialsCurrent() {
   const readme = fs.readFileSync(path.join(ROOT_DIR, "README.md"), "utf8");
   const readmeZh = fs.readFileSync(path.join(ROOT_DIR, "README.zh-CN.md"), "utf8");
   assert.match(changelog, /without a second model request/);
+  assert.match(changelog, /Fast\/Complete mode switch/);
   assert.match(changelog, /built-in domain rules/);
   assert.match(changelog, /Backup failures before applying a saved preview/);
   assert.match(changelog, /only for explicit preview-apply failures/);
@@ -969,11 +987,13 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Backup actions now preserve the completed action message/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run package:webstore/);
+  assert.match(readme, /Popup mode switch/);
   assert.match(readme, /built-in domain rules/);
   assert.match(readme, /restoring creates a fresh local snapshot first/);
   assert.match(readmeZh, /请求前再次拆分/);
   assert.match(readmeZh, /npm test/);
   assert.match(readmeZh, /npm run package:webstore/);
+  assert.match(readmeZh, /弹窗模式切换/);
   assert.match(readmeZh, /内置域名规则/);
   assert.match(readmeZh, /恢复前会先创建新的本地快照/);
 
@@ -982,6 +1002,7 @@ function testReleaseMaterialsCurrent() {
     "utf8"
   );
   assert.match(releaseNotes, /without another model request/);
+  assert.match(releaseNotes, /Fast\/Complete mode switch/);
   assert.match(releaseNotes, /built-in domain rules/);
   assert.match(releaseNotes, /Backup failures before applying a saved preview/);
   assert.match(releaseNotes, /only for preview-apply failures/);
@@ -1009,6 +1030,7 @@ function testReleaseMaterialsCurrent() {
 
   const storeListing = fs.readFileSync(path.join(ROOT_DIR, "webstore/STORE_LISTING.md"), "utf8");
   assert.match(storeListing, /without calling the model again/);
+  assert.match(storeListing, /changed directly in the popup/);
   assert.match(storeListing, /built-in domain rules/);
   assert.match(storeListing, /Backup failures before applying a saved preview/);
   assert.match(storeListing, /only after a preview-apply failure/);

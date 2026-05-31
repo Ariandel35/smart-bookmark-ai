@@ -160,6 +160,64 @@ textarea {
   flex: 1 1 auto;
 }
 
+.popup-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: -2px 0 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.popup-mode-bar__label {
+  flex: 0 0 auto;
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.segmented-control {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(74px, 1fr));
+  min-width: 170px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.segmented-control__button {
+  min-height: 30px;
+  padding: 6px 10px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+
+.segmented-control__button:last-child {
+  border-right: 0;
+}
+
+.segmented-control__button:hover {
+  color: var(--accent);
+}
+
+.segmented-control__button.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.segmented-control__button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .popup-action-status {
   padding: 0 0 10px;
   border-bottom: 1px solid var(--line);
@@ -550,7 +608,8 @@ textarea {
 .field select:focus,
 .field textarea:focus,
 .button:focus,
-.nav-button:focus {
+.nav-button:focus,
+.segmented-control__button:focus {
   outline: none;
   border-color: rgba(31, 109, 83, 0.4);
   box-shadow: 0 0 0 4px rgba(31, 109, 83, 0.08);
