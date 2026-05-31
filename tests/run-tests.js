@@ -1042,6 +1042,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /preview-time model calls, local Apply Plan rebuilds, and auto organize data flow/);
   assert.match(changelog, /same preview-first data-flow language/);
   assert.match(changelog, /Privacy page breadcrumb and section eyebrow labels/);
+  assert.match(changelog, /i18n document applier now sets page language reliably/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);
@@ -1163,6 +1164,61 @@ function testI18nCoverage() {
   }
 }
 
+function testI18nApplyDocumentRobustness() {
+  const zhI18n = loadI18nForLanguage("zh-CN");
+  assert.doesNotThrow(() => zhI18n.applyDocument());
+
+  const textNode = {
+    dataset: { i18n: "privacyMainTitle" },
+    textContent: ""
+  };
+  const placeholderNode = {
+    dataset: { i18nPlaceholder: "placeholderModel" },
+    placeholder: ""
+  };
+  const ariaNode = {
+    dataset: { i18nAriaLabel: "progressAriaLabel" },
+    attributes: {},
+    setAttribute(name, value) {
+      this.attributes[name] = value;
+    }
+  };
+  const titleNode = {
+    dataset: { i18n: "privacyPageTitle" },
+    textContent: ""
+  };
+  const fakeDocument = {
+    documentElement: { lang: "en" },
+    querySelectorAll(selector) {
+      return {
+        "[data-i18n]": [textNode],
+        "[data-i18n-placeholder]": [placeholderNode],
+        "[data-i18n-aria-label]": [ariaNode]
+      }[selector] || [];
+    },
+    querySelector(selector) {
+      return selector === "title[data-i18n]" ? titleNode : null;
+    }
+  };
+
+  zhI18n.applyDocument(fakeDocument);
+  assert.equal(fakeDocument.documentElement.lang, "zh-CN");
+  assert.equal(textNode.textContent, "隐私说明");
+  assert.equal(placeholderNode.placeholder, "例如：gpt-4.1-mini");
+  assert.equal(ariaNode.attributes["aria-label"], "整理进度");
+  assert.equal(titleNode.textContent, "Marko - 隐私说明");
+
+  const ownerDocument = { documentElement: { lang: "en" } };
+  const partialRoot = {
+    ownerDocument,
+    querySelectorAll() {
+      return [];
+    }
+  };
+  assert.doesNotThrow(() => zhI18n.applyDocument(partialRoot));
+  assert.equal(ownerDocument.documentElement.lang, "zh-CN");
+}
+
 function main() {
   testJavaScriptSyntax();
   testJsonUtils();
@@ -1179,6 +1235,7 @@ function main() {
   testResponsiveTextHardeningSurface();
   testReleaseMaterialsCurrent();
   testI18nCoverage();
+  testI18nApplyDocumentRobustness();
   console.log("All tests passed.");
 }
 

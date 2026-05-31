@@ -700,15 +700,20 @@ Hard rules:
   }
 
   function applyDocument(root) {
-    const target = root || document;
+    const fallbackDocument =
+      globalScope.document && typeof globalScope.document.querySelectorAll === "function"
+        ? globalScope.document
+        : null;
+    const target = root || fallbackDocument;
     if (!target || typeof target.querySelectorAll !== "function") {
       return;
     }
 
-    if (target.documentElement) {
-      target.documentElement.lang = langTag;
-    } else if (document && document.documentElement) {
-      document.documentElement.lang = langTag;
+    const targetDocument = target.documentElement
+      ? target
+      : target.ownerDocument || fallbackDocument;
+    if (targetDocument?.documentElement) {
+      targetDocument.documentElement.lang = langTag;
     }
 
     target.querySelectorAll("[data-i18n]").forEach((node) => {
@@ -723,7 +728,10 @@ Hard rules:
       node.setAttribute("aria-label", t(node.dataset.i18nAriaLabel));
     });
 
-    const titleNode = target.querySelector("title[data-i18n]");
+    const titleNode =
+      typeof target.querySelector === "function"
+        ? target.querySelector("title[data-i18n]")
+        : null;
     if (titleNode) {
       titleNode.textContent = t(titleNode.dataset.i18n);
     }
