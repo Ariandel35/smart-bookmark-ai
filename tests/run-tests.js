@@ -828,6 +828,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="settings-panel-backup"[\s\S]*role="tabpanel"[\s\S]*aria-labelledby="settings-tab-backup"/);
   assert.match(optionsHtml, /id="settingsActionStatus"/);
   assert.match(optionsHtml, /id="backupActionStatus"/);
+  assert.match(optionsHtml, /id="saveBadge"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*aria-atomic="true"/);
+  assert.match(optionsHtml, /id="backupStatusBadge"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*aria-atomic="true"/);
   assert.match(optionsHtml, /id="settingsActionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.match(optionsHtml, /id="backupActionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.match(optionsHtml, /id="saveButton"[\s\S]*aria-describedby="settingsActionStatus"/);
@@ -1107,6 +1109,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings save, reset, privacy, API test, access, and manual backup buttons/);
   assert.match(changelog, /Popup Fast and Complete mode toggles/);
   assert.match(changelog, /Settings navigation tabs now expose localized hover tooltips/);
+  assert.match(changelog, /Settings save and backup status badges/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);

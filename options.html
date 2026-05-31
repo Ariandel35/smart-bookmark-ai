@@ -15,7 +15,16 @@
           </div>
 
           <div class="topbar__actions topbar__actions--page">
-            <span class="pill pill--accent" id="saveBadge" data-i18n="saveBadgeUnsaved">Unsaved</span>
+            <span
+              class="pill pill--accent"
+              id="saveBadge"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              data-i18n="saveBadgeUnsaved"
+            >
+              Unsaved
+            </span>
             <button
               class="button button--primary button--compact"
               type="submit"
@@ -392,7 +401,16 @@
                   <div>
                     <h2 class="panel__title" data-i18n="backupTitle">Backup Management</h2>
                   </div>
-                  <span class="pill" id="backupStatusBadge" data-i18n="backupLoading">Loading</span>
+                  <span
+                    class="pill"
+                    id="backupStatusBadge"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                    data-i18n="backupLoading"
+                  >
+                    Loading
+                  </span>
                 </div>
 
                 <div class="form-grid">
