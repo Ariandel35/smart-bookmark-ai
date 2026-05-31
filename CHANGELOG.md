@@ -11,6 +11,7 @@
 - Running legacy organize jobs are normalized before the next batch so stale large batches cannot continue after an update
 - Privacy, README, and store disclosures now describe preview-time model calls, local Apply Plan rebuilds, and auto organize data flow consistently
 - Remaining README, privacy page, and review checklist wording now uses the same preview-first data-flow language
+- Privacy page breadcrumb and section eyebrow labels are now localized in English and Chinese
 - Complete-mode site-access errors and duplicate cleanup suggestions now refer to preview-first setup instead of the removed direct organize flow
 - DeepSeek-compatible runs now keep the same runtime provider label through preview apply and final completion statuses
 - Popup preview checks now merge provider defaults before deciding setup is incomplete, so legacy or partial configs do not block local-rule previews unnecessarily

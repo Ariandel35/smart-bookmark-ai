@@ -483,6 +483,14 @@ function testSpeedModeSurface() {
   assert.match(privacyHtml, /Fast mode skips both extras/);
   assert.match(privacyHtml, /Applying a saved preview does not call the model again/);
   assert.match(privacyHtml, /before restoring an older backup/);
+  assert.match(privacyHtml, /data-i18n="privacyMeta"/);
+  assert.match(privacyHtml, /data-i18n="privacyDataUseEyebrow"/);
+  assert.match(privacyHtml, /data-i18n="privacyControlEyebrow"/);
+
+  const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
+  assert.match(i18nSource, /privacyMeta: "Marko \/ 隐私说明"/);
+  assert.match(i18nSource, /privacyDataUseEyebrow: "数据使用"/);
+  assert.match(i18nSource, /privacyControlEyebrow: "控制项"/);
 }
 
 function testPreviewApplySurface() {
@@ -1033,6 +1041,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /up to three mini requests/);
   assert.match(changelog, /preview-time model calls, local Apply Plan rebuilds, and auto organize data flow/);
   assert.match(changelog, /same preview-first data-flow language/);
+  assert.match(changelog, /Privacy page breadcrumb and section eyebrow labels/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);
