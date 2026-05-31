@@ -862,6 +862,7 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /LOCAL_REQUIREMENT_CHECK_TTL_MS/);
   assert.match(backgroundSource, /lastLocalRequirementCheck/);
   assert.match(backgroundSource, /takeReusableLocalRequirementCheck/);
+  assert.match(backgroundSource, /const reusableLocalCheck = takeReusableLocalRequirementCheck\(runtimeConfig, runContext\)/);
   assert.match(backgroundSource, /localRequirementCheckId: message\.localRequirementCheckId \|\| ""/);
   assert.match(backgroundSource, /reusableLocalCheck\?\.bookmarkState \|\| await collectBookmarkPlanningState/);
   assert.match(backgroundSource, /validateConfig\(config, \{ requireModelAccess: false \}\)/);
@@ -1210,6 +1211,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /older 48-item settings/);
   assert.match(changelog, /writes normalized batch-size settings back to storage only when no run or saved preview is active/);
   assert.match(changelog, /full normalized config instead of using retry-batch rules/);
+  assert.match(changelog, /reuses the popup preflight local coverage check after runtime batch caps/);
   assert.match(changelog, /warn inline before saving when a DeepSeek-compatible batch size will be capped/);
   assert.match(changelog, /auto-organize permission impact inline/);
   assert.match(changelog, /API test succeeded but auto-organize permission was not granted/);
@@ -1292,6 +1294,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /run up to three mini requests at a time/);
   assert.match(releaseNotes, /skip the separate taxonomy-planning request/);
   assert.match(releaseNotes, /finishes with local fallback/);
+  assert.match(releaseNotes, /reuses the popup preflight coverage result/);
   assert.match(releaseNotes, /inline confirmations and status messages/);
   assert.match(releaseNotes, /preview and error states cannot mutate bookmarks/);
   assert.match(releaseNotes, /lock the whole action group while one item is being handled/);

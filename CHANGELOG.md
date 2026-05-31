@@ -17,6 +17,7 @@
 - DeepSeek and DeepSeek-compatible batch-size settings are capped when loaded or saved, so older 48-item settings cannot keep driving slow previews
 - Startup now writes normalized batch-size settings back to storage only when no run or saved preview is active
 - Startup config normalization now compares the stored config with the full normalized config instead of using retry-batch rules
+- Preview startup now reuses the popup preflight local coverage check after runtime batch caps, avoiding a second bookmark scan for capped slow-model configs
 - Settings now warn inline before saving when a DeepSeek-compatible batch size will be capped for faster previews
 - Settings now show the auto-organize permission impact inline as users switch automation and speed modes
 - Test & Save now reports when the API test succeeded but auto-organize permission was not granted

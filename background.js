@@ -1779,7 +1779,7 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
     batchSize: runtimeBatchSize
   };
   const runtimeBatchAdjustmentNote = buildRuntimeBatchAdjustmentNote(config, runtimeBatchSize);
-  const reusableLocalCheck = takeReusableLocalRequirementCheck(config, runContext);
+  const reusableLocalCheck = takeReusableLocalRequirementCheck(runtimeConfig, runContext);
 
   const bookmarkState = reusableLocalCheck?.bookmarkState || await collectBookmarkPlanningState(config);
   const {
