@@ -886,6 +886,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="linkCheckModeHint"[\s\S]*data-i18n="hintLinkCheckMode"/);
   assert.match(optionsHtml, /id="batchSize"[\s\S]*aria-describedby="batchSizeHint"/);
   assert.match(optionsHtml, /id="batchSizeHint"[\s\S]*data-i18n="hintBatchSize"/);
+  assert.match(optionsHtml, /id="batchSizeCapHint"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*hidden/);
   assert.match(optionsHtml, /id="autoOrganizeIntervalHours"[\s\S]*aria-describedby="autoOrganizeIntervalHint"/);
   assert.match(optionsHtml, /id="autoOrganizeIntervalHint"[\s\S]*data-i18n="hintAutoOrganizeInterval"/);
   assert.match(optionsHtml, /id="whitelistSelectionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
@@ -900,6 +901,12 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /getRuntimeBatchSizeCap/);
   assert.match(optionsSource, /normalizeConfigBatchSize/);
   assert.match(optionsSource, /capConfigBatchSize/);
+  assert.match(optionsSource, /batchSizeCapHint/);
+  assert.match(optionsSource, /function updateBatchSizeCapHint\(\)/);
+  assert.match(optionsSource, /getCurrentBatchProfileConfig/);
+  assert.match(optionsSource, /t\("batchSizeCapHint", \{ count: cap \}\)/);
+  assert.match(optionsSource, /addDescribedByToken\(batchSizeInput, batchSizeCapHint\.id\)/);
+  assert.match(optionsSource, /removeDescribedByTokens\(batchSizeInput, \[batchSizeCapHint\.id\]\)/);
   assert.match(optionsSource, /settingsSlowBatchAdjustedStatus/);
   assert.match(optionsSource, /showSettingsIssue/);
   assert.match(optionsSource, /isValidHttpUrl/);
@@ -1109,6 +1116,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   const stylesSource = fs.readFileSync(path.join(ROOT_DIR, "styles.css"), "utf8");
   assert.match(stylesSource, /\.settings-action-status/);
   assert.match(stylesSource, /\.backup-confirm/);
+  assert.match(stylesSource, /\.field__hint--warm/);
+  assert.match(stylesSource, /\.field__hint\[hidden\]/);
   assert.match(stylesSource, /\.field input\[aria-invalid="true"\]/);
   assert.match(stylesSource, /\.field select\[aria-invalid="true"\]/);
   assert.match(stylesSource, /\.field textarea\[aria-invalid="true"\]/);
@@ -1173,6 +1182,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /runtime batches are capped to nine bookmarks/);
   assert.match(changelog, /three-bookmark model requests/);
   assert.match(changelog, /older 48-item settings/);
+  assert.match(changelog, /warn inline before saving when a DeepSeek-compatible batch size will be capped/);
   assert.match(changelog, /DeepSeek-compatible endpoints/);
   assert.match(changelog, /up to three mini requests/);
   assert.match(changelog, /preview-time model calls, local Apply Plan rebuilds, and auto organize data flow/);

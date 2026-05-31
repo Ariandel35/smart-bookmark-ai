@@ -627,6 +627,15 @@ textarea {
   line-height: 1.6;
 }
 
+.field__hint--warm {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+.field__hint[hidden] {
+  display: none;
+}
+
 .meta-list {
   display: grid;
   gap: 8px;

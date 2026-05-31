@@ -22,6 +22,7 @@ const baseUrlInput = document.getElementById("baseUrl");
 const apiKeyInput = document.getElementById("apiKey");
 const modelInput = document.getElementById("model");
 const batchSizeInput = document.getElementById("batchSize");
+const batchSizeCapHint = document.getElementById("batchSizeCapHint");
 const linkCheckModeSelect = document.getElementById("linkCheckMode");
 const autoOrganizeEnabledInput = document.getElementById("autoOrganizeEnabled");
 const autoOrganizeIntervalInput = document.getElementById("autoOrganizeIntervalHours");
@@ -798,6 +799,7 @@ function populateForm(config) {
   customPromptInput.value = config.customPrompt;
   lastProvider = config.provider;
   updateProviderHints(config.provider);
+  updateBatchSizeCapHint();
 }
 
 function collectFormData() {
@@ -817,6 +819,29 @@ function collectFormData() {
     domainFolderRules: domainFolderRulesInput.value.trim(),
     customPrompt: customPromptInput.value.trim() || DEFAULT_PROMPT
   };
+}
+
+function getCurrentBatchProfileConfig() {
+  return {
+    provider: providerSelect.value,
+    baseUrl: baseUrlInput.value.trim(),
+    model: modelInput.value.trim()
+  };
+}
+
+function updateBatchSizeCapHint() {
+  const cap = getRuntimeBatchSizeCap(getCurrentBatchProfileConfig());
+  const batchSize = parseIntegerInput(batchSizeInput.value);
+  const shouldShow = Boolean(cap && Number.isInteger(batchSize) && batchSize > cap);
+
+  batchSizeCapHint.hidden = !shouldShow;
+  batchSizeCapHint.textContent = shouldShow ? t("batchSizeCapHint", { count: cap }) : "";
+
+  if (shouldShow) {
+    addDescribedByToken(batchSizeInput, batchSizeCapHint.id);
+  } else {
+    removeDescribedByTokens(batchSizeInput, [batchSizeCapHint.id]);
+  }
 }
 
 function capConfigBatchSize(config) {
@@ -1285,6 +1310,7 @@ async function saveConfig(event) {
   const configToSave = cappedBatch.config;
   if (cappedBatch.changed) {
     batchSizeInput.value = String(configToSave.batchSize);
+    updateBatchSizeCapHint();
   }
 
   setSettingsActionInFlight(true);
@@ -1394,6 +1420,7 @@ async function testApiConnection() {
     const configToSave = cappedBatch.config;
     if (cappedBatch.changed) {
       batchSizeInput.value = String(configToSave.batchSize);
+      updateBatchSizeCapHint();
     }
 
     if (configToSave.autoOrganizeEnabled) {
@@ -1603,6 +1630,10 @@ function handleFormMutation(event) {
     clearApiTestStatus();
   }
 
+  if (["baseUrl", "model", "batchSize"].includes(targetId)) {
+    updateBatchSizeCapHint();
+  }
+
   if (targetId === "baseUrl" || targetId === "linkCheckMode") {
     scheduleHostAccessStatusRefresh(targetId === "baseUrl" ? "Base URL change" : "speed mode change");
   }
@@ -1639,6 +1670,7 @@ providerSelect.addEventListener("change", () => {
   }
 
   updateProviderHints(nextProvider);
+  updateBatchSizeCapHint();
   lastProvider = nextProvider;
   if (shouldClearApiKey) {
     setApiTestStatus(t("apiKeyClearedOnProviderChange"));
