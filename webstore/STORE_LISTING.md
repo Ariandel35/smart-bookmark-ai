@@ -18,7 +18,7 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 支持自定义 Base URL、API Key、模型名和 Prompt
 - API 检测成功后自动保存当前连接配置
 - 快速模式只需要访问你配置的模型接口，并跳过额外目录规划；完整模式才会检测书签链接和规划全局目录
-- DeepSeek 和 DeepSeek 兼容接口会在请求前再次拆分大批量，运行批次最多 15 条、单个模型请求最多 5 条，并最多 3 个小请求并发处理，同时使用更短的请求超时、更短的内置请求提示和更紧的输出预算；单个小请求超时后会保留已完成结果，只把失败小块继续拆到 1 条重试
+- DeepSeek 和 DeepSeek 兼容接口会在请求前再次拆分大批量，运行批次最多 15 条、单个模型请求最多 5 条，并最多 3 个小请求并发处理，同时使用更短的请求超时、更短的内置请求提示、短字段输入输出和更紧的输出预算；单个小请求超时后会保留已完成结果，只把失败小块继续拆到 1 条重试
 - 应用已生成预览时复用保存的方案，本地重建，不会再次请求模型
 - 应用预览遇到可恢复失败时，可修复后直接重试保存方案
 - 预览阶段的未处理项保持只读，应用方案前不会出现保留/删除操作
@@ -65,7 +65,7 @@ Key features:
 - Fast/Complete mode can be changed directly in the popup before preview
 - Fast mode asks for model endpoint access only when uncached bookmarks need the model; Complete mode adds link checks and global planning
 - Fast local reruns can use built-in domain rules and cached classifications to reduce or skip model calls and batch scheduling
-- Slow providers such as DeepSeek and DeepSeek-compatible endpoints re-split large batches before each request, cap runtime batches at 15 bookmarks, cap each model request at 5 bookmarks, run up to three mini requests at a time, use shorter request timeouts, shorter built-in prompts, and tighter output budgets; when one mini request times out, completed mini results are kept and only the failed block shrinks down to one-bookmark retries
+- Slow providers such as DeepSeek and DeepSeek-compatible endpoints re-split large batches before each request, cap runtime batches at 15 bookmarks, cap each model request at 5 bookmarks, run up to three mini requests at a time, use shorter request timeouts, shorter built-in prompts, compact request/response keys, and tighter output budgets; when one mini request times out, completed mini results are kept and only the failed block shrinks down to one-bookmark retries
 - Applying a generated preview reuses the saved plan and rebuilds locally without another model request
 - Recoverable apply failures keep the saved preview retry path available after the issue is fixed
 - Backup failures before applying a saved preview keep the same retry path available

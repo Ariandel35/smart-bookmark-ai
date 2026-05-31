@@ -745,6 +745,17 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /getClassificationOutputBudgetProfile/);
   assert.match(backgroundSource, /getClassificationOutputTokenBudget/);
   assert.match(backgroundSource, /getClassificationOutputTokenBudget\(batch\.length, config\)/);
+  assert.match(backgroundSource, /shouldUseCompactModelProtocol/);
+  assert.match(backgroundSource, /COMPACT_MODEL_INPUT_TITLE_MAX_LENGTH/);
+  assert.match(backgroundSource, /compactKeys: useCompactProtocol/);
+  assert.match(backgroundSource, /i: id/);
+  assert.match(backgroundSource, /u: url/);
+  assert.match(backgroundSource, /"a": "k or d"/);
+  assert.match(backgroundSource, /entry\?\.id \?\? entry\?\.i/);
+  assert.match(backgroundSource, /entry\.action \?\? entry\.a/);
+  assert.match(backgroundSource, /entry\.folderPath \?\? entry\.path \?\? entry\.category \?\? entry\.p/);
+  assert.match(backgroundSource, /entry\.duplicateOf \?\? entry\.d/);
+  assert.match(backgroundSource, /delete_duplicate\|delete-duplicate\|delete duplicate/);
   assert.match(backgroundSource, /Current model-request batch size/);
   assert.match(backgroundSource, /buildModelBookmarkInputPayload/);
   assert.match(backgroundSource, /compactModelUrl/);
@@ -1029,6 +1040,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /missing job config no longer falls back to an OpenAI provider label/);
   assert.match(changelog, /mini-request timeouts now keep completed mini results/);
   assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
+  assert.match(changelog, /compact request\/output keys and a lower token budget/);
   assert.match(changelog, /inline confirmations and status messages/);
   assert.match(changelog, /preview and error states cannot mutate bookmarks/);
   assert.match(changelog, /raw numeric input/);
@@ -1064,6 +1076,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /cap runtime batches at 15 bookmarks/);
   assert.match(releaseNotes, /cap each model request at 5 bookmarks/);
   assert.match(releaseNotes, /run up to three mini requests at a time/);
+  assert.match(releaseNotes, /compact request\/response keys/);
   assert.match(releaseNotes, /completed mini results are kept/);
   assert.match(releaseNotes, /shorter built-in/);
   assert.match(releaseNotes, /inline confirmations and status messages/);
@@ -1092,6 +1105,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /cap runtime batches at 15 bookmarks/);
   assert.match(storeListing, /cap each model request at 5 bookmarks/);
   assert.match(storeListing, /run up to three mini requests at a time/);
+  assert.match(storeListing, /compact request\/response keys/);
   assert.match(storeListing, /completed mini results are kept/);
   assert.match(storeListing, /shorter built-in/);
   assert.match(storeListing, /OpenAI、DeepSeek、MiniMax、Anthropic/);

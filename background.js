@@ -230,15 +230,18 @@ const NEXT_BATCH_DELAY_MS = 150;
 const MODEL_INPUT_TITLE_MAX_LENGTH = 120;
 const MODEL_INPUT_URL_MAX_LENGTH = 260;
 const MODEL_INPUT_PATH_MAX_LENGTH = 140;
+const COMPACT_MODEL_INPUT_TITLE_MAX_LENGTH = 90;
+const COMPACT_MODEL_INPUT_URL_MAX_LENGTH = 180;
+const COMPACT_MODEL_INPUT_PATH_MAX_LENGTH = 90;
 const TAXONOMY_OUTPUT_TOKEN_BUDGET = 384;
 const CLASSIFICATION_OUTPUT_TOKEN_BASE = 256;
 const CLASSIFICATION_OUTPUT_TOKENS_PER_BOOKMARK = 80;
 const CLASSIFICATION_OUTPUT_TOKEN_MAX = 4096;
 const CLASSIFICATION_OUTPUT_BUDGET_PROFILES = {
   deepseek: {
-    base: 160,
-    perBookmark: 48,
-    max: 768
+    base: 96,
+    perBookmark: 40,
+    max: 512
   }
 };
 const LOCAL_REQUIREMENT_CHECK_TTL_MS = 15_000;
@@ -742,6 +745,10 @@ function getClassificationOutputTokenBudget(batchLength, configOrProvider = "") 
   );
 }
 
+function shouldUseCompactModelProtocol(configOrProvider = {}) {
+  return getProviderPerformanceProfile(configOrProvider) === "deepseek";
+}
+
 function buildModelStrategyPrompt(customPrompt) {
   const promptValue = typeof customPrompt === "string" ? customPrompt.trim() : "";
   if (
@@ -1116,7 +1123,7 @@ function buildTaxonomyPlanningMessages(bookmarks, customPrompt, sampleSize = DEF
 6. 只输出合法 JSON 对象。
 
 书签样本：
-${JSON.stringify(sample, null, 2)}`
+${JSON.stringify(sample)}`
         : `${strategyPrompt}
 
 Plan a global top-level taxonomy for the whole bookmark set first.
@@ -1135,7 +1142,7 @@ Hard rules:
 6. Output valid JSON only.
 
 Bookmark sample:
-${JSON.stringify(sample, null, 2)}`
+${JSON.stringify(sample)}`
     }
   ];
 }
@@ -4514,7 +4521,7 @@ async function classifySingleModelRequest(
 ) {
   const messages = buildClassificationMessages(
     batch,
-    config.customPrompt,
+    config,
     taxonomyLocks,
     taxonomyTopFolders
   );
@@ -4671,16 +4678,41 @@ async function classifySingleModelRequest(
   }
 }
 
-function buildModelBookmarkInputPayload(batch) {
-  return (Array.isArray(batch) ? batch : []).map((item) => ({
-    id: String(item?.id || ""),
-    title: compactModelText(item?.title || t("untitledBookmark"), MODEL_INPUT_TITLE_MAX_LENGTH),
-    url: compactModelUrl(item?.url || ""),
-    currentPath: compactModelText(
+function buildModelBookmarkInputPayload(batch, options = {}) {
+  const compactKeys = Boolean(options.compactKeys);
+  const titleMaxLength = compactKeys
+    ? COMPACT_MODEL_INPUT_TITLE_MAX_LENGTH
+    : MODEL_INPUT_TITLE_MAX_LENGTH;
+  const urlMaxLength = compactKeys
+    ? COMPACT_MODEL_INPUT_URL_MAX_LENGTH
+    : MODEL_INPUT_URL_MAX_LENGTH;
+  const pathMaxLength = compactKeys
+    ? COMPACT_MODEL_INPUT_PATH_MAX_LENGTH
+    : MODEL_INPUT_PATH_MAX_LENGTH;
+
+  return (Array.isArray(batch) ? batch : []).map((item) => {
+    const id = String(item?.id || "");
+    const title = compactModelText(item?.title || t("untitledBookmark"), titleMaxLength);
+    const url = compactModelUrl(item?.url || "", urlMaxLength);
+    const currentPath = compactModelText(
       Array.isArray(item?.currentPath) ? item.currentPath.join(" / ") : item?.currentPath || ROOT_DIRECT_FOLDER_TITLE,
-      MODEL_INPUT_PATH_MAX_LENGTH
-    )
-  }));
+      pathMaxLength
+    );
+
+    return compactKeys
+      ? {
+          i: id,
+          t: title,
+          u: url,
+          c: currentPath
+        }
+      : {
+          id,
+          title,
+          url,
+          currentPath
+        };
+  });
 }
 
 function compactModelText(value, maxLength) {
@@ -4692,7 +4724,7 @@ function compactModelText(value, maxLength) {
   );
 }
 
-function compactModelUrl(rawUrl) {
+function compactModelUrl(rawUrl, maxLength = MODEL_INPUT_URL_MAX_LENGTH) {
   if (typeof rawUrl !== "string" || !rawUrl.trim()) {
     return "";
   }
@@ -4717,26 +4749,30 @@ function compactModelUrl(rawUrl) {
       url.searchParams.append(key, value);
     }
 
-    return truncate(url.toString(), MODEL_INPUT_URL_MAX_LENGTH);
+    return truncate(url.toString(), maxLength);
   } catch (error) {
-    return compactModelText(rawUrl, MODEL_INPUT_URL_MAX_LENGTH);
+    return compactModelText(rawUrl, maxLength);
   }
 }
 
 function buildClassificationMessages(
   batch,
-  customPrompt,
+  config = {},
   taxonomyLocks = {},
   taxonomyTopFolders = []
 ) {
-  const strategyPrompt = buildModelStrategyPrompt(customPrompt || DEFAULT_PROMPT);
+  const safeConfig = config && typeof config === "object" ? config : { customPrompt: config };
+  const strategyPrompt = buildModelStrategyPrompt(safeConfig.customPrompt || DEFAULT_PROMPT);
   const isZh = I18N.locale === "zh_CN";
+  const useCompactProtocol = shouldUseCompactModelProtocol(safeConfig);
   const allowedTopFolders = normalizeTopLevelFolderList(
     Array.isArray(taxonomyTopFolders) && taxonomyTopFolders.length
       ? taxonomyTopFolders
       : buildTaxonomyFallbackTopFolders()
   );
-  const inputPayload = buildModelBookmarkInputPayload(batch);
+  const inputPayload = buildModelBookmarkInputPayload(batch, {
+    compactKeys: useCompactProtocol
+  });
   const lockLines = Object.entries(taxonomyLocks)
     .sort(([a], [b]) => a.localeCompare(b, "zh-CN"))
     .slice(0, 80)
@@ -4744,13 +4780,61 @@ function buildClassificationMessages(
       isZh ? `- ${subfolder} 必须放到 ${topLevel}` : `- ${subfolder} must stay under ${topLevel}`
     )
     .join("\n");
+  const outputSchemaZh = useCompactProtocol
+    ? `[
+  {
+    "i": "输入 i",
+    "a": "k 或 d",
+    "p": ["一级目录", "二级目录可选"],
+    "d": "如果 a 是 d，则填写被保留书签的 i；否则省略或留空字符串"
+  }
+]`
+    : `[
+  {
+    "id": "书签ID",
+    "action": "keep 或 delete_duplicate",
+    "folderPath": ["一级目录", "二级目录可选"],
+    "duplicateOf": "如果 action 是 delete_duplicate，则填写被保留书签的 id，否则留空字符串"
+  }
+]`;
+  const outputSchemaEn = useCompactProtocol
+    ? `[
+  {
+    "i": "input i",
+    "a": "k or d",
+    "p": ["top level", "optional second level"],
+    "d": "If a is d, fill in the kept bookmark i; otherwise omit it or use an empty string"
+  }
+]`
+    : `[
+  {
+    "id": "bookmark id",
+    "action": "keep or delete_duplicate",
+    "folderPath": ["top level", "optional second level"],
+    "duplicateOf": "If action is delete_duplicate, fill in the kept bookmark id, otherwise use an empty string"
+  }
+]`;
+  const idFieldZh = useCompactProtocol ? "i" : "id";
+  const idFieldEn = useCompactProtocol ? "i" : "id";
+  const pathFieldZh = useCompactProtocol ? "p" : "folderPath";
+  const pathFieldEn = useCompactProtocol ? "p" : "folderPath";
+  const duplicateActionZh = useCompactProtocol ? "a 是 d" : "action 是 delete_duplicate";
+  const duplicateActionEn = useCompactProtocol ? "a is d" : "action is delete_duplicate";
+  const keepActionZh = useCompactProtocol ? "a 必须返回 k" : "action 必须返回 keep";
+  const keepActionEn = useCompactProtocol ? "a must be k" : "action must be keep";
+  const inputRuleZh = useCompactProtocol
+    ? "输入字段 i=书签ID、t=标题、u=压缩URL、c=当前路径；用它们判断主题即可，不要在输出中复写 URL。"
+    : "输入中的 url 和 currentPath 已经压缩过，用它们判断主题即可，不要在输出中复写 URL。";
+  const inputRuleEn = useCompactProtocol
+    ? "Input fields are i=bookmark id, t=title, u=compacted URL, and c=current path. Use them to infer the topic, but do not copy URLs into the output."
+    : "The input url and currentPath fields are compacted for speed. Use them to infer the topic, but do not copy URLs into the output.";
 
   return [
     {
       role: "system",
       content: isZh
-        ? "你是一个非常严格的书签整理助手。你只能输出合法 JSON，不能输出解释、Markdown、注释或额外文本。"
-        : "You are a very strict bookmark organizer. You must output valid JSON only. Do not output explanations, Markdown, comments, or extra text."
+        ? "你是一个非常严格的书签整理助手。你只能输出最短合法 JSON，不能输出解释、Markdown、注释或额外文本。"
+        : "You are a very strict bookmark organizer. You must output the shortest valid JSON only. Do not output explanations, Markdown, comments, or extra text."
     },
     {
       role: "user",
@@ -4759,25 +4843,18 @@ function buildClassificationMessages(
 
 请严格遵守下面的输出约束：
 1. 你只能输出 JSON 数组，不要输出 \`\`\`json、说明文字或开场白。
-2. 数组里必须覆盖所有输入 id，且每个 id 恰好出现一次。
+2. 数组里必须覆盖所有输入 ${idFieldZh}，且每个 ${idFieldZh} 恰好出现一次。
 3. 输出结构必须是：
-[
-  {
-    "id": "书签ID",
-    "action": "keep 或 delete_duplicate",
-    "folderPath": ["一级目录", "二级目录可选"],
-    "duplicateOf": "如果 action 是 delete_duplicate，则填写被保留书签的 id，否则留空字符串"
-  }
-]
-4. folderPath 必须是 1 到 2 层字符串数组；如果 action 是 delete_duplicate，也仍然要返回一个简短 folderPath，建议填 ["重复书签"]。
+${outputSchemaZh}
+4. ${pathFieldZh} 必须是 1 到 2 层字符串数组；如果 ${duplicateActionZh}，也仍然要返回一个简短 ${pathFieldZh}，建议填 ["重复书签"]。
 5. 先做去重判断，再做分类。请比较当前整批输入，优先识别重复入口。
 6. 以下情况优先视为重复：规范化后 URL 相同；只差 http/https、www、结尾斜杠、锚点、明显追踪参数；或同一网站的移动版/桌面版、短链接/长链接但实际落到同一内容页。
 7. 选择保留项时，优先保留 https、标题更完整清晰、参数更少、非移动版、非短链接、可读性更好的 URL。
-8. 搜索结果页、列表页、登录后页面、带会话参数页面要保守；如果无法确认重复，不要删除，action 必须返回 keep。
+8. 搜索结果页、列表页、登录后页面、带会话参数页面要保守；如果无法确认重复，不要删除，${keepActionZh}。
 9. 一级目录必须只从这个全局目录方案中选择：${allowedTopFolders.join("、")}。
 10. 如果同一个二级目录名已经被固定归属到某个一级目录，你必须复用该归属，不能换父目录。
 11. 信息不足时统一归入 ["${MANUAL_FOLDER_TITLE}"]。
-12. 输入中的 url 和 currentPath 已经压缩过，用它们判断主题即可，不要在输出中复写 URL。
+12. ${inputRuleZh}
 
 已有固定归属：
 ${lockLines || "- 当前还没有已锁定的二级目录归属"}
@@ -4788,25 +4865,18 @@ ${JSON.stringify(inputPayload)}`
 
 Follow these output rules exactly:
 1. Output a JSON array only. Do not output \`\`\`json, explanations, or introductions.
-2. The array must cover every input id exactly once.
+2. The array must cover every input ${idFieldEn} exactly once.
 3. The schema must be:
-[
-  {
-    "id": "bookmark id",
-    "action": "keep or delete_duplicate",
-    "folderPath": ["top level", "optional second level"],
-    "duplicateOf": "If action is delete_duplicate, fill in the kept bookmark id, otherwise use an empty string"
-  }
-]
-4. folderPath must be a string array with 1 or 2 levels. If action is delete_duplicate, still return a short folderPath, for example ["Duplicate Bookmarks"].
+${outputSchemaEn}
+4. ${pathFieldEn} must be a string array with 1 or 2 levels. If ${duplicateActionEn}, still return a short ${pathFieldEn}, for example ["Duplicate Bookmarks"].
 5. Decide duplicates before classification. Compare the whole current batch first and prioritize identifying duplicate entries.
 6. Treat bookmarks as duplicates first when the normalized URL is the same, when the only differences are http/https, www, trailing slash, fragment, or obvious tracking parameters, or when mobile/desktop or short/long links clearly land on the same content page.
 7. When choosing the kept bookmark, prefer https, clearer titles, fewer parameters, non-mobile pages, non-short links, and the more canonical-looking URL.
-8. Be conservative with search pages, listing pages, logged-in pages, or session-specific URLs. If duplicate status is uncertain, do not delete it. action must be keep.
+8. Be conservative with search pages, listing pages, logged-in pages, or session-specific URLs. If duplicate status is uncertain, do not delete it. ${keepActionEn}.
 9. The top-level folder must be chosen only from this global taxonomy: ${allowedTopFolders.join(", ")}.
 10. If a second-level folder has already been locked under a top-level folder, you must reuse that parent and not move it elsewhere.
 11. If information is insufficient, place the bookmark in ["${MANUAL_FOLDER_TITLE}"].
-12. The input url and currentPath fields are compacted for speed. Use them to infer the topic, but do not copy URLs into the output.
+12. ${inputRuleEn}
 
 Locked mappings:
 ${lockLines || "- No locked second-level mappings yet"}
@@ -4822,14 +4892,16 @@ function normalizeClassificationResults(results, batch) {
   const batchIdSet = new Set(batch.map((item) => item.id));
 
   for (const entry of Array.isArray(results) ? results : []) {
-    if (!entry || !batchIdSet.has(String(entry.id))) {
+    const entryId = String(entry?.id ?? entry?.i ?? "").trim();
+    if (!entry || !batchIdSet.has(entryId)) {
       continue;
     }
 
-    resultMap.set(String(entry.id), {
-      action: normalizeAction(entry.action),
-      folderPath: normalizeFolderPath(entry.folderPath ?? entry.path ?? entry.category),
-      duplicateOf: typeof entry.duplicateOf === "string" ? entry.duplicateOf.trim() : ""
+    const duplicateOf = entry.duplicateOf ?? entry.d ?? "";
+    resultMap.set(entryId, {
+      action: normalizeAction(entry.action ?? entry.a),
+      folderPath: normalizeFolderPath(entry.folderPath ?? entry.path ?? entry.category ?? entry.p),
+      duplicateOf: typeof duplicateOf === "string" ? duplicateOf.trim() : ""
     });
   }
 
@@ -5655,7 +5727,10 @@ function buildUserFacingError(message, detail = "", abortReason = "") {
 }
 
 function normalizeAction(value) {
-  return value === "delete_duplicate" ? "delete_duplicate" : "keep";
+  const normalized = String(value || "").trim().toLowerCase();
+  return /^(d|delete|duplicate|delete_duplicate|delete-duplicate|delete duplicate)$/.test(normalized)
+    ? "delete_duplicate"
+    : "keep";
 }
 
 function buildExactDuplicatePlans(batch) {
