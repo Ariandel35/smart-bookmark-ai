@@ -701,19 +701,23 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
       const actions = document.createElement("div");
       actions.className = "record-item__actions";
 
+      const keepLabel = t("keepBookmarkAria", { title: recordTitle });
       const keepButton = document.createElement("button");
       keepButton.type = "button";
       keepButton.className = "button button--secondary button--compact";
       keepButton.textContent = t("keepButton");
-      keepButton.setAttribute("aria-label", t("keepBookmarkAria", { title: recordTitle }));
+      keepButton.title = keepLabel;
+      keepButton.setAttribute("aria-label", keepLabel);
       keepButton.setAttribute("aria-describedby", popupActionStatus.id);
       keepButton.disabled = popupActionInFlight;
 
+      const deleteLabel = t("deleteBookmarkAria", { title: recordTitle });
       const deleteButton = document.createElement("button");
       deleteButton.type = "button";
       deleteButton.className = "button button--danger button--compact";
       deleteButton.textContent = t("deleteButton");
-      deleteButton.setAttribute("aria-label", t("deleteBookmarkAria", { title: recordTitle }));
+      deleteButton.title = deleteLabel;
+      deleteButton.setAttribute("aria-label", deleteLabel);
       deleteButton.setAttribute("aria-describedby", popupActionStatus.id);
       deleteButton.disabled = popupActionInFlight;
 

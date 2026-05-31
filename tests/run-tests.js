@@ -621,8 +621,12 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /async function createManualBackup\(\) \{\n  setPopupActionInFlight\(true, t\("popupCreatingBackupStatus"\)\);/);
   assert.match(popupSource, /async function cancelJob\(\) \{\n  setPopupActionInFlight\(true, t\("popupCancellingStatus"\)\);/);
   assert.match(popupSource, /const recordTitle = entry\.title \|\| t\("untitledBookmark"\)/);
-  assert.match(popupSource, /keepButton\.setAttribute\("aria-label", t\("keepBookmarkAria", \{ title: recordTitle \}\)\)/);
-  assert.match(popupSource, /deleteButton\.setAttribute\("aria-label", t\("deleteBookmarkAria", \{ title: recordTitle \}\)\)/);
+  assert.match(popupSource, /const keepLabel = t\("keepBookmarkAria", \{ title: recordTitle \}\)/);
+  assert.match(popupSource, /keepButton\.title = keepLabel/);
+  assert.match(popupSource, /keepButton\.setAttribute\("aria-label", keepLabel\)/);
+  assert.match(popupSource, /const deleteLabel = t\("deleteBookmarkAria", \{ title: recordTitle \}\)/);
+  assert.match(popupSource, /deleteButton\.title = deleteLabel/);
+  assert.match(popupSource, /deleteButton\.setAttribute\("aria-label", deleteLabel\)/);
   assert.match(popupSource, /keepButton\.setAttribute\("aria-describedby", popupActionStatus\.id\)/);
   assert.match(popupSource, /deleteButton\.setAttribute\("aria-describedby", popupActionStatus\.id\)/);
   assert.match(popupSource, /const lockEntryActions = \(\) => \{\n        keepButton\.disabled = true;\n        deleteButton\.disabled = true;/);
@@ -1062,6 +1066,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /i18n document applier now sets page language reliably/);
   assert.match(changelog, /Whitelist domain chips and catalog options/);
   assert.match(changelog, /Backup restore, delete, confirm, and cancel controls/);
+  assert.match(changelog, /Popup unprocessed-item keep\/delete controls/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);
