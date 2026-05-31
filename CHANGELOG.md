@@ -10,6 +10,7 @@
 - DeepSeek and DeepSeek-compatible endpoints now use the slow-model profile automatically, cap runtime batches at 15, split actual model requests to 5 bookmarks, and run up to three mini requests at once
 - Running legacy organize jobs are normalized before the next batch so stale large batches cannot continue after an update
 - Privacy, README, and store disclosures now describe preview-time model calls, local Apply Plan rebuilds, and auto organize data flow consistently
+- Remaining README, privacy page, and review checklist wording now uses the same preview-first data-flow language
 - Applying a saved preview plan now reuses the stored plan and rebuilds locally without a second model request
 - Removed the legacy direct organize message path so manual runs must go through Preview -> Apply Plan
 - If applying a saved preview hits a recoverable failure, the popup now keeps the Apply Plan path available so users can retry without generating the model plan again

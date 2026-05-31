@@ -476,6 +476,7 @@ function testSpeedModeSurface() {
 
   const privacyHtml = fs.readFileSync(path.join(ROOT_DIR, "privacy.html"), "utf8");
   assert.match(privacyHtml, /separate taxonomy-planning request/);
+  assert.match(privacyHtml, /preview and organize runs can send direct HEAD \/ GET requests/);
   assert.match(privacyHtml, /Fast mode skips both extras/);
   assert.match(privacyHtml, /Applying a saved preview does not call the model again/);
   assert.match(privacyHtml, /before restoring an older backup/);
@@ -1006,6 +1007,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /DeepSeek-compatible endpoints/);
   assert.match(changelog, /up to three mini requests/);
   assert.match(changelog, /preview-time model calls, local Apply Plan rebuilds, and auto organize data flow/);
+  assert.match(changelog, /same preview-first data-flow language/);
   assert.match(changelog, /mini-request timeouts now keep completed mini results/);
   assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
   assert.match(changelog, /inline confirmations and status messages/);
@@ -1020,6 +1022,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /npm run package:webstore/);
   assert.match(readme, /Popup mode switch/);
   assert.match(readme, /built-in domain rules/);
+  assert.match(readme, /unless a preview or enabled auto organize run needs external access/);
+  assert.doesNotMatch(readme, /unless you start an organize run/);
   assert.match(readme, /restoring creates a fresh local snapshot first/);
   assert.match(readmeZh, /DeepSeek 兼容接口/);
   assert.match(readmeZh, /npm test/);
@@ -1085,6 +1089,7 @@ function testReleaseMaterialsCurrent() {
 
   const reviewNotes = fs.readFileSync(path.join(ROOT_DIR, "webstore/REVIEW_NOTES.md"), "utf8");
   assert.match(reviewNotes, /复用已保存方案/);
+  assert.match(reviewNotes, /生成预览或已开启自动整理且本地规则、缓存无法覆盖/);
 
   const webstorePrivacyPolicy = fs.readFileSync(
     path.join(ROOT_DIR, "webstore/PRIVACY_POLICY.md"),
@@ -1103,6 +1108,7 @@ function testReleaseMaterialsCurrent() {
     "utf8"
   );
   assert.match(publishChecklist, /不会再次请求模型/);
+  assert.match(publishChecklist, /自动整理重建前都会自动备份/);
   assert.match(publishChecklist, /页面内确认/);
 }
 

@@ -149,7 +149,7 @@ Core files:
 
 ## Privacy Boundaries
 
-- Bookmark titles, URLs, current paths, prompts, API settings, caches, and backups stay in local browser storage unless you start an organize run.
+- Bookmark titles, URLs, current paths, prompts, API settings, caches, and backups stay in local browser storage unless a preview or enabled auto organize run needs external access.
 - Bookmark metadata is sent only to the model provider you configured when a preview or enabled auto organize run still needs model classification after local rules and cache reuse.
 - Applying a saved preview plan rebuilds locally and does not call the model again.
 - API keys are stored locally and are never sent to this project or its developer.

@@ -385,7 +385,7 @@ Hard rules:
         "Only when a preview or enabled auto organize run still needs model classification, bookmark titles, URLs, current paths, and your custom prompt are sent to the model provider you chose. Applying a saved preview does not call the model again.",
       privacyDeadLinkTitle: "Dead-link checks",
       privacyDeadLinkDesc:
-        "When complete link checks are enabled, organize sends direct HEAD / GET requests to bookmarked websites and keeps the separate taxonomy-planning request. Fast mode skips both extras.",
+        "When complete link checks are enabled, preview and organize runs can send direct HEAD / GET requests to bookmarked websites and keep the separate taxonomy-planning request. Fast mode skips both extras.",
       privacyStorageTitle: "Local storage",
       privacyStorageDesc:
         "API keys, provider settings, model names, whitelist rules, and backup snapshots are stored locally in browser storage and IndexedDB.",
