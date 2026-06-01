@@ -446,15 +446,40 @@ function coreFlowExpression() {
       "smartBookmarkBackupRecords"
     ]);
 
-    const finalChildren = await chrome.bookmarks.getChildren(bar.id);
-    const finalBookmarks = [];
-    for (const child of finalChildren) {
-      finalBookmarks.push(...(await flattenBookmarks(child)));
+    const applyChildren = await chrome.bookmarks.getChildren(bar.id);
+    const applyBookmarks = [];
+    for (const child of applyChildren) {
+      applyBookmarks.push(...(await flattenBookmarks(child)));
     }
-    const finalUrlCounts = finalBookmarks.reduce((counts, bookmark) => {
+    const applyUrlCounts = applyBookmarks.reduce((counts, bookmark) => {
       counts[bookmark.url] = (counts[bookmark.url] || 0) + 1;
       return counts;
     }, {});
+    const backupRecordsAfterApply = afterApply.smartBookmarkBackupRecords || [];
+    const restoreSourceRecord = backupRecordsAfterApply.at(-1) || null;
+    const restore = restoreSourceRecord
+      ? await sendMessage({ type: "RESTORE_BACKUP_ENTRY", backupId: restoreSourceRecord.id })
+      : { ok: false, error: "No backup record was available to restore." };
+    const afterRestore = await chrome.storage.local.get([
+      "smartBookmarkJobStatus",
+      "smartBookmarkBackupRecords"
+    ]);
+    const restoredChildren = await chrome.bookmarks.getChildren(bar.id);
+    const restoredBookmarks = [];
+    for (const child of restoredChildren) {
+      restoredBookmarks.push(...(await flattenBookmarks(child)));
+    }
+    const restoredUrlCounts = restoredBookmarks.reduce((counts, bookmark) => {
+      counts[bookmark.url] = (counts[bookmark.url] || 0) + 1;
+      return counts;
+    }, {});
+    const deleteBackup = restoreSourceRecord
+      ? await sendMessage({ type: "DELETE_BACKUP_ENTRY", backupId: restoreSourceRecord.id })
+      : { ok: false, error: "No backup record was available to delete." };
+    const afterDelete = await chrome.storage.local.get([
+      "smartBookmarkJobStatus",
+      "smartBookmarkBackupRecords"
+    ]);
 
     return {
       manualBackup,
@@ -465,11 +490,21 @@ function coreFlowExpression() {
       apply,
       finalStatus: deepClone(afterApply.smartBookmarkJobStatus || {}),
       previewPlanAfterApply: Boolean(afterApply.smartBookmarkPreviewPlan),
-      backupRecordCount: (afterApply.smartBookmarkBackupRecords || []).length,
-      normalRootTitles: finalChildren.map((child) => child.title),
-      finalBookmarkCount: finalBookmarks.length,
-      finalUrlCounts,
-      finalBookmarks
+      backupRecordCount: backupRecordsAfterApply.length,
+      normalRootTitles: applyChildren.map((child) => child.title),
+      finalBookmarkCount: applyBookmarks.length,
+      finalUrlCounts: applyUrlCounts,
+      finalBookmarks: applyBookmarks,
+      restoreSourceId: restoreSourceRecord?.id || "",
+      restore,
+      restoreStatus: deepClone(afterRestore.smartBookmarkJobStatus || {}),
+      backupRecordCountAfterRestore: (afterRestore.smartBookmarkBackupRecords || []).length,
+      restoredBookmarkCount: restoredBookmarks.length,
+      restoredUrlCounts,
+      restoredBookmarks,
+      deleteBackup,
+      deleteStatus: deepClone(afterDelete.smartBookmarkJobStatus || {}),
+      backupRecordCountAfterDelete: (afterDelete.smartBookmarkBackupRecords || []).length
     };
   })()`;
 }
@@ -524,6 +559,30 @@ function formatCoreFlowFailures(result) {
   }
   if (Number(result.finalBookmarkCount || 0) !== 3) {
     failures.push(`expected 3 normal bookmarks after duplicate cleanup, got ${result.finalBookmarkCount}`);
+  }
+  if (!result?.restore?.ok || result.restoreStatus?.phase !== "completed") {
+    failures.push("restoring the original manual backup did not complete");
+  }
+  if (Number(result.backupRecordCountAfterRestore || 0) < 3) {
+    failures.push("restore did not create and preserve a pre-restore backup record");
+  }
+  if (Number(result.restoredBookmarkCount || 0) !== 4) {
+    failures.push(`expected 4 bookmarks after restoring the original backup, got ${result.restoredBookmarkCount}`);
+  }
+  if (Number(result.restoredUrlCounts?.["https://github.com/Ariandel35/marko"] || 0) !== 2) {
+    failures.push("restored backup did not bring back both original duplicate GitHub bookmarks");
+  }
+  if (Number(result.restoredUrlCounts?.["https://openai.com/"] || 0) !== 1) {
+    failures.push("restored backup did not bring back the original OpenAI bookmark");
+  }
+  if (Number(result.restoredUrlCounts?.["https://example.invalid/manual-review"] || 0) !== 1) {
+    failures.push("restored backup did not bring back the original manual-review bookmark");
+  }
+  if (!result?.deleteBackup?.ok) {
+    failures.push("deleting the restored backup record did not complete");
+  }
+  if (Number(result.backupRecordCountAfterDelete || 0) !== Number(result.backupRecordCountAfterRestore || 0) - 1) {
+    failures.push("backup delete did not remove exactly one backup record");
   }
 
   return failures;
@@ -799,8 +858,11 @@ async function main() {
           `manualBackup=${Boolean(coreFlow.manualBackup?.created)}`,
           `preview=${coreFlow.previewStatus?.phase || ""}`,
           `apply=${coreFlow.finalStatus?.phase || ""}`,
+          `restore=${coreFlow.restoreStatus?.phase || ""}`,
           `normalBookmarks=${coreFlow.finalBookmarkCount}`,
+          `restoredBookmarks=${coreFlow.restoredBookmarkCount}`,
           `backupRecords=${coreFlow.backupRecordCount}`,
+          `backupRecordsAfterDelete=${coreFlow.backupRecordCountAfterDelete}`,
           `duplicateGithub=${coreFlow.finalUrlCounts?.["https://github.com/Ariandel35/marko"] || 0}`
         ].join(" | ")
       );

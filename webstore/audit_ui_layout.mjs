@@ -252,6 +252,34 @@ async function resolveExecutablePath() {
   throw new Error(`Unable to find Chrome. Checked: ${chromeCandidates.join(", ")}`);
 }
 
+async function waitForProcessExit(childProcess, timeoutMs = 3000) {
+  if (childProcess.exitCode !== null || childProcess.signalCode) {
+    return;
+  }
+
+  await new Promise((resolve) => {
+    const timeout = setTimeout(resolve, timeoutMs);
+    childProcess.once("exit", () => {
+      clearTimeout(timeout);
+      resolve();
+    });
+  });
+}
+
+async function removeDirectoryWithRetry(directoryPath) {
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    try {
+      await fs.rm(directoryPath, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      if (attempt === 5) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
+}
+
 function buildMockInitSource(payload) {
   return `(() => {
     const payload = ${JSON.stringify(payload)};
@@ -773,7 +801,8 @@ async function main() {
     }
   } finally {
     browser.kill();
-    await fs.rm(profileDir, { recursive: true, force: true });
+    await waitForProcessExit(browser);
+    await removeDirectoryWithRetry(profileDir);
   }
 }
 
