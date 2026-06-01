@@ -11,6 +11,7 @@
 - Fast mode no longer asks for model endpoint access during preview because it does not call the model
 - Fast mode no longer blocks preview or settings save when Base URL or model name are blank because the local path does not call the model
 - Settings connection now explains which modes need model fields or website access, so Fast mode no longer looks like mandatory API setup
+- Settings connection fields now expose the selected mode requirement hint to assistive technologies while preserving inline validation messages
 - Popup setup copy and shortcut logic now avoid implying Fast mode needs API credentials when local preview can run without a model call
 - Popup speed-mode changes now save against merged provider defaults so legacy partial configs do not keep stale missing connection fields
 - Fast automatic organize can now run locally without an API key; Balanced requires model credentials, and Complete still requires model credentials plus website access

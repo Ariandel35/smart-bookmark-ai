@@ -905,6 +905,10 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="testApiButton"[\s\S]*aria-describedby="apiTestStatus"/);
   assert.match(optionsHtml, /id="grantAccessButton"[\s\S]*aria-describedby="hostAccessStatus"/);
   assert.match(optionsHtml, /id="connectionModeHint"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*data-i18n="connectionModeFastHint"/);
+  assert.match(optionsHtml, /id="provider"[\s\S]*aria-describedby="connectionModeHint"/);
+  assert.match(optionsHtml, /id="model"[\s\S]*aria-describedby="connectionModeHint"/);
+  assert.match(optionsHtml, /id="baseUrl"[\s\S]*aria-describedby="connectionModeHint"/);
+  assert.match(optionsHtml, /id="apiKey"[\s\S]*aria-describedby="connectionModeHint"/);
   assert.match(optionsHtml, /id="autoOrganizeAccessHint"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*hidden/);
   assert.match(optionsHtml, /id="linkCheckMode"[\s\S]*aria-describedby="linkCheckModeHint"/);
   assert.match(optionsHtml, /id="linkCheckModeHint"[\s\S]*data-i18n="hintLinkCheckMode"/);
@@ -1258,6 +1262,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Fast mode now finishes locally without waiting for the model/);
   assert.match(changelog, /Fast mode no longer blocks preview or settings save when Base URL or model name are blank/);
   assert.match(changelog, /Settings connection now explains which modes need model fields or website access/);
+  assert.match(changelog, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
@@ -1310,6 +1315,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /unmatched bookmarks go to manual review/);
   assert.match(releaseNotes, /Fast mode no longer blocks preview or settings save when Base URL or model name are blank/);
   assert.match(releaseNotes, /Settings connection now explains which modes need model fields or website access/);
+  assert.match(releaseNotes, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(releaseNotes, /Fast mode needs API credentials/);
   assert.match(releaseNotes, /speed-mode changes now save against merged provider defaults/);
   assert.match(releaseNotes, /Fast automatic organize can now run locally without an API key/);

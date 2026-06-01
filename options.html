@@ -162,7 +162,7 @@
                   <div class="field-grid">
                     <div class="field">
                       <label for="provider" data-i18n="labelProvider">API Provider</label>
-                      <select id="provider" name="provider"></select>
+                      <select id="provider" name="provider" aria-describedby="connectionModeHint"></select>
                     </div>
 
                     <div class="field">
@@ -173,6 +173,7 @@
                         type="text"
                         data-i18n-placeholder="placeholderModel"
                         placeholder="e.g. gpt-4.1-mini"
+                        aria-describedby="connectionModeHint"
                         spellcheck="false"
                       />
                     </div>
@@ -187,6 +188,7 @@
                       placeholder="https://api.openai.com/v1"
                       spellcheck="false"
                       inputmode="url"
+                      aria-describedby="connectionModeHint"
                     />
                   </div>
 
@@ -199,6 +201,7 @@
                       data-i18n-placeholder="placeholderApiKey"
                       placeholder="Enter API key"
                       autocomplete="new-password"
+                      aria-describedby="connectionModeHint"
                       spellcheck="false"
                     />
                   </div>
