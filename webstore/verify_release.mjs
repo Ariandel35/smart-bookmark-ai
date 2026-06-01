@@ -33,9 +33,24 @@ const EXACT_IMAGE_DIMENSIONS = {
   "icons/icon-48.png": [48, 48],
   "icons/icon-128.png": [128, 128]
 };
+const CHROME_SHORT_DESCRIPTION_MAX_LENGTH = 132;
+const STORE_LISTING_REQUIRED_HEADINGS = [
+  "### 单一用途",
+  "### 简短描述",
+  "### 产品详情",
+  "隐私说明：",
+  "### Single purpose",
+  "### Short description",
+  "### Detailed description",
+  "Privacy summary:"
+];
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function readText(relativePath) {
+  return fs.readFileSync(path.join(ROOT_DIR, relativePath), "utf8");
 }
 
 function runStep(label, command, args) {
@@ -44,6 +59,50 @@ function runStep(label, command, args) {
     cwd: ROOT_DIR,
     stdio: "inherit"
   });
+}
+
+function assertTextIncludes(source, snippet, label) {
+  if (!source.includes(snippet)) {
+    throw new Error(`${label} is missing required text: ${snippet}`);
+  }
+}
+
+function assertTextIncludesAll(source, snippets, label) {
+  for (const snippet of snippets) {
+    assertTextIncludes(source, snippet, label);
+  }
+  console.log(`OK ${label}`);
+}
+
+function getSectionBody(source, heading) {
+  const headingStart = source.indexOf(`${heading}\n`);
+  if (headingStart === -1) {
+    throw new Error(`Missing markdown heading: ${heading}`);
+  }
+
+  const bodyStart = headingStart + heading.length + 1;
+  const remaining = source.slice(bodyStart);
+  const nextHeadingIndex = remaining.search(/\n#{1,6}\s/);
+  return (nextHeadingIndex === -1 ? remaining : remaining.slice(0, nextHeadingIndex)).trim();
+}
+
+function getSectionFirstLine(source, heading) {
+  const body = getSectionBody(source, heading);
+  const line = body.split(/\r?\n/).find((candidate) => candidate.trim());
+  if (!line) {
+    throw new Error(`Markdown heading has no body text: ${heading}`);
+  }
+  return line.trim();
+}
+
+function assertShortDescription(source, heading, label) {
+  const shortDescription = getSectionFirstLine(source, heading);
+  if (shortDescription.length > CHROME_SHORT_DESCRIPTION_MAX_LENGTH) {
+    throw new Error(
+      `${label} short description must be ${CHROME_SHORT_DESCRIPTION_MAX_LENGTH} characters or fewer, got ${shortDescription.length}.`
+    );
+  }
+  console.log(`OK ${label} short description ${shortDescription.length}/${CHROME_SHORT_DESCRIPTION_MAX_LENGTH}`);
 }
 
 function readPngDimensions(filePath) {
@@ -121,6 +180,84 @@ function verifyStoreAssets() {
   }
 }
 
+function verifyStoreTextMaterials() {
+  console.log("\n== Store text materials ==");
+  const storeListing = readText("webstore/STORE_LISTING.md");
+  const reviewNotes = readText("webstore/REVIEW_NOTES.md");
+  const privacyPolicy = readText("webstore/PRIVACY_POLICY.md");
+  const publishChecklist = readText("webstore/PUBLISH_CHECKLIST.md");
+  const githubLinks = readText("webstore/GITHUB_LINKS_TEMPLATE.md");
+
+  assertTextIncludesAll(storeListing, STORE_LISTING_REQUIRED_HEADINGS, "store listing sections");
+  assertShortDescription(storeListing, "### 简短描述", "Chinese store listing");
+  assertShortDescription(storeListing, "### Short description", "English store listing");
+  assertTextIncludesAll(
+    storeListing,
+    [
+      "模型服务商",
+      "应用已保存的预览方案会直接本地重建，不会再次请求模型",
+      "API Key、备份快照、分类缓存和死链缓存保存在浏览器本地",
+      "只有完整模式会直接访问书签对应的网站",
+      "扩展开发者不会接收你的书签数据",
+      "model provider chosen by the user",
+      "Applying a saved preview rebuilds locally without another model request",
+      "API keys, backups, and caches are stored locally in the browser",
+      "only Complete mode sends requests directly to bookmarked websites",
+      "The extension developer does not receive bookmark data"
+    ],
+    "store listing privacy and data flow"
+  );
+
+  assertTextIncludesAll(
+    reviewNotes,
+    [
+      "复用已保存方案",
+      "快速模式",
+      "平衡模式",
+      "完整模式",
+      "隐私披露",
+      "权限说明",
+      "不会把数据发送到开发者自有服务器"
+    ],
+    "review notes"
+  );
+
+  assertTextIncludesAll(
+    privacyPolicy,
+    [
+      "最后更新：2026-05-31",
+      "模型服务商、Base URL、模型名",
+      "应用已保存的预览方案会直接本地重建，不会再次请求模型",
+      "恢复旧备份前也会先为当前书签状态创建本地快照",
+      "扩展开发者不会将这些数据上传到自有服务器"
+    ],
+    "webstore privacy policy"
+  );
+
+  assertTextIncludesAll(
+    publishChecklist,
+    [
+      "npm run verify:release",
+      "chrome://extensions",
+      "Chrome for Testing 或 Chromium",
+      "隐私披露",
+      "权限说明",
+      "商店文案、隐私政策、审核备注、发布清单"
+    ],
+    "publish checklist"
+  );
+
+  assertTextIncludesAll(
+    githubLinks,
+    [
+      "https://github.com/Ariandel35/marko",
+      "https://github.com/Ariandel35/marko/issues",
+      "https://github.com/Ariandel35/marko/blob/main/PRIVACY.md"
+    ],
+    "GitHub store links"
+  );
+}
+
 function assertPackageList(packageFiles) {
   const seen = new Set();
   for (const filePath of packageFiles) {
@@ -177,6 +314,7 @@ function verifyPackage() {
 function main() {
   runStep("Static and unit tests", process.execPath, ["tests/run-tests.js"]);
   runStep("Responsive UI audit", process.execPath, ["webstore/audit_ui_layout.mjs"]);
+  verifyStoreTextMaterials();
   verifyStoreAssets();
   runStep("Build Web Store package", process.execPath, ["webstore/build_extension_package.mjs"]);
   verifyPackage();

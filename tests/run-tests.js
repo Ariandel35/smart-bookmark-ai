@@ -1527,7 +1527,28 @@ function testReleaseMaterialsCurrent() {
   assert.doesNotMatch(historicalReleaseNotes, /Smart Bookmark AI/);
 
   const storeListing = fs.readFileSync(path.join(ROOT_DIR, "webstore/STORE_LISTING.md"), "utf8");
+  const zhShortDescription = storeListing.match(/### 简短描述\n([^\n]+)/)?.[1] || "";
+  const enShortDescription = storeListing.match(/### Short description\n([^\n]+)/)?.[1] || "";
+  assert.ok(zhShortDescription.length > 0, "Chinese store short description is missing");
+  assert.ok(enShortDescription.length > 0, "English store short description is missing");
+  assert.ok(zhShortDescription.length <= 132, "Chinese store short description is too long");
+  assert.ok(enShortDescription.length <= 132, "English store short description is too long");
+  assert.match(storeListing, /### 单一用途/);
+  assert.match(storeListing, /### 产品详情/);
+  assert.match(storeListing, /隐私说明：/);
+  assert.match(storeListing, /### Single purpose/);
+  assert.match(storeListing, /### Detailed description/);
+  assert.match(storeListing, /Privacy summary:/);
   assert.match(storeListing, /without calling the model again/);
+  assert.match(storeListing, /模型服务商/);
+  assert.match(storeListing, /应用已保存的预览方案会直接本地重建，不会再次请求模型/);
+  assert.match(storeListing, /API Key、备份快照、分类缓存和死链缓存保存在浏览器本地/);
+  assert.match(storeListing, /只有完整模式会直接访问书签对应的网站/);
+  assert.match(storeListing, /扩展开发者不会接收你的书签数据/);
+  assert.match(storeListing, /model provider chosen by the user/);
+  assert.match(storeListing, /API keys, backups, and caches are stored locally in the browser/);
+  assert.match(storeListing, /only Complete mode sends requests directly to bookmarked websites/);
+  assert.match(storeListing, /The extension developer does not receive bookmark data/);
   assert.match(storeListing, /changed directly in the popup/);
   assert.match(storeListing, /Balanced keeps AI classification without website scans/);
   assert.match(storeListing, /built-in domain rules/);
@@ -1600,6 +1621,15 @@ function testReleaseMaterialsCurrent() {
   );
   assert.match(releaseVerifier, /tests\/run-tests\.js/);
   assert.match(releaseVerifier, /webstore\/audit_ui_layout\.mjs/);
+  assert.match(releaseVerifier, /verifyStoreTextMaterials/);
+  assert.match(releaseVerifier, /Store text materials/);
+  assert.match(releaseVerifier, /CHROME_SHORT_DESCRIPTION_MAX_LENGTH = 132/);
+  assert.match(releaseVerifier, /STORE_LISTING_REQUIRED_HEADINGS/);
+  assert.match(releaseVerifier, /webstore\/STORE_LISTING\.md/);
+  assert.match(releaseVerifier, /webstore\/REVIEW_NOTES\.md/);
+  assert.match(releaseVerifier, /webstore\/PRIVACY_POLICY\.md/);
+  assert.match(releaseVerifier, /webstore\/PUBLISH_CHECKLIST\.md/);
+  assert.match(releaseVerifier, /webstore\/GITHUB_LINKS_TEMPLATE\.md/);
   assert.match(releaseVerifier, /verifyStoreAssets/);
   assert.match(releaseVerifier, /README_SCREENSHOTS/);
   assert.match(releaseVerifier, /EXACT_IMAGE_DIMENSIONS/);
@@ -1614,6 +1644,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(reviewNotes, /复用已保存方案/);
   assert.match(reviewNotes, /平衡\/完整模式预览或已开启自动整理且本地规则、缓存无法覆盖/);
   assert.match(reviewNotes, /平衡模式会跳过失效链接检测和单独目录规划请求，但保留 AI 分类/);
+  assert.match(reviewNotes, /完整模式才会请求更广的网站访问权限/);
+  assert.match(reviewNotes, /隐私披露/);
+  assert.match(reviewNotes, /权限说明/);
 
   const webstorePrivacyPolicy = fs.readFileSync(
     path.join(ROOT_DIR, "webstore/PRIVACY_POLICY.md"),
@@ -1636,6 +1669,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /自动整理重建前都会自动备份/);
   assert.match(publishChecklist, /页面内确认/);
   assert.match(publishChecklist, /截图、宣传图和图标尺寸/);
+  assert.match(publishChecklist, /商店文案、隐私政策、审核备注、发布清单/);
+  assert.match(publishChecklist, /隐私披露/);
+  assert.match(publishChecklist, /权限说明/);
   assert.match(publishChecklist, /npm run audit:ui/);
   assert.match(publishChecklist, /npm run verify:release/);
   assert.match(publishChecklist, /--load-extension is not allowed in Google Chrome, ignoring/);
