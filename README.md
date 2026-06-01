@@ -141,6 +141,8 @@ Run a real unpacked-extension smoke test with Chrome for Testing or Chromium:
 npm run e2e:extension
 ```
 
+Set `MARKO_EXTENSION_SCREENSHOT_DIR=/tmp/marko-e2e` to keep popup and options screenshots from that run.
+
 Run the full release gate before uploading a package:
 
 ```bash

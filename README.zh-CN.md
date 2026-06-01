@@ -141,6 +141,8 @@ npm run audit:ui
 npm run e2e:extension
 ```
 
+设置 `MARKO_EXTENSION_SCREENSHOT_DIR=/tmp/marko-e2e` 可以保留该次运行的弹窗和设置页截图。
+
 上传前运行完整发布门禁：
 
 ```bash

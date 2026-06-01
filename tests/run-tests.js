@@ -1433,6 +1433,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run audit:ui/);
   assert.match(readme, /npm run e2e:extension/);
+  assert.match(readme, /MARKO_EXTENSION_SCREENSHOT_DIR=\/tmp\/marko-e2e/);
   assert.match(readme, /npm run verify:release/);
   assert.match(readme, /npm run verify:release:full/);
   assert.match(readme, /npm run package:webstore/);
@@ -1451,6 +1452,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /npm test/);
   assert.match(readmeZh, /npm run audit:ui/);
   assert.match(readmeZh, /npm run e2e:extension/);
+  assert.match(readmeZh, /MARKO_EXTENSION_SCREENSHOT_DIR=\/tmp\/marko-e2e/);
   assert.match(readmeZh, /npm run verify:release/);
   assert.match(readmeZh, /npm run verify:release:full/);
   assert.match(readmeZh, /npm run package:webstore/);
@@ -1632,6 +1634,7 @@ function testReleaseMaterialsCurrent() {
     "utf8"
   );
   assert.match(extensionE2e, /MARKO_EXTENSION_BROWSER/);
+  assert.match(extensionE2e, /MARKO_EXTENSION_SCREENSHOT_DIR/);
   assert.match(extensionE2e, /Google Chrome for Testing/);
   assert.match(extensionE2e, /--disable-extensions-except/);
   assert.match(extensionE2e, /--load-extension/);
@@ -1639,6 +1642,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /background\.js/);
   assert.match(extensionE2e, /chrome-extension:\/\/\$\{extensionId\}\/popup\.html/);
   assert.match(extensionE2e, /chrome-extension:\/\/\$\{extensionId\}\/options\.html#connection/);
+  assert.match(extensionE2e, /Page\.captureScreenshot/);
   assert.match(extensionE2e, /speedModeBalancedButton/);
   assert.match(extensionE2e, /settings-tab-backup/);
 

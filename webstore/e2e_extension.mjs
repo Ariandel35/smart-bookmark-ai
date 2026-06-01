@@ -11,6 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const REQUIRED_BACKGROUND_PATH = "background.js";
+const screenshotDir = process.env.MARKO_EXTENSION_SCREENSHOT_DIR || "";
 const BROWSER_HINT =
   "Install Chrome for Testing or Chromium, or set MARKO_EXTENSION_BROWSER to a browser executable that allows --load-extension.";
 const browserCandidates = [
@@ -431,6 +432,16 @@ async function auditExtensionPage(port, page) {
     }
 
     const metrics = await evaluate(client, pageAuditExpression(page.kind));
+    let screenshotPath = "";
+    if (screenshotDir) {
+      await fs.mkdir(screenshotDir, { recursive: true });
+      const screenshot = await client.send("Page.captureScreenshot", {
+        format: "png",
+        captureBeyondViewport: false
+      });
+      screenshotPath = path.join(screenshotDir, `${page.label.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.png`);
+      await fs.writeFile(screenshotPath, Buffer.from(screenshot.data, "base64"));
+    }
     const exceptions = client.events
       .filter((event) => event.method === "Runtime.exceptionThrown")
       .map((event) => event.params?.exceptionDetails?.exception?.description || "Runtime exception");
@@ -447,6 +458,7 @@ async function auditExtensionPage(port, page) {
       label: page.label,
       viewport: `${page.width}x${page.height}`,
       metrics,
+      screenshotPath,
       exceptions,
       consoleErrors
     };
@@ -570,6 +582,9 @@ async function main() {
             `buttons ${metrics.clippedButtons.length}`
           ].join(" | ")
         );
+        if (result.screenshotPath) {
+          console.log(`OK screenshot ${result.screenshotPath}`);
+        }
       }
 
       if (failures.length) {
