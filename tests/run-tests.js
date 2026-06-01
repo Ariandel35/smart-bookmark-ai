@@ -630,11 +630,14 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /function focusApplyConfirmationPrimary/);
   assert.match(popupSource, /focusApplyConfirmationPrimary\(\)/);
   assert.match(popupSource, /startButton\.focus\(\)/);
+  assert.match(popupSource, /renderPopupActionError\(t\("startJobException"\)\)/);
   assert.match(popupSource, /renderResponseError/);
+  assert.match(popupSource, /function renderPopupActionError\(message, detail = ""\)/);
   assert.match(popupSource, /setPopupActionStatus\(message, \{ isError: true \}\)/);
+  assert.match(popupSource, /renderPopupActionError\(response\?\.error \|\| fallbackMessage, response\?\.detail \|\| ""\)/);
   assert.match(popupSource, /preserveActionStatus = true/);
   assert.match(popupSource, /setPopupActionInFlight\(false, "", \{ preserveStatus: preserveActionStatus \}\)/);
-  assert.match(popupSource, /detail: response\?\.detail \|\| ""/);
+  assert.match(popupSource, /phase: "error",\n    message,\n    detail/);
   assert.match(popupSource, /progressTrack\.setAttribute\("aria-valuenow", String\(progress\)\)/);
   assert.match(popupSource, /currentStatus\?\.detail \|\|/);
   assert.match(popupSource, /applyButton\.disabled = true/);
@@ -676,6 +679,8 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /const lockEntryActions = \(\) => \{\n        keepButton\.disabled = true;\n        deleteButton\.disabled = true;/);
   assert.match(popupSource, /keepButton\.addEventListener\("click", \(\) => \{\n        if \(popupActionInFlight\) \{/);
   assert.match(popupSource, /deleteButton\.addEventListener\("click", \(\) => \{\n        if \(popupActionInFlight\) \{/);
+  assert.match(popupSource, /renderPopupActionError\(t\("keepError"\)\)/);
+  assert.match(popupSource, /renderPopupActionError\(t\("deleteUnprocessedError"\)\)/);
   assert.doesNotMatch(popupSource, /START_ORGANIZE/);
   assert.doesNotMatch(popupSource, /window\.confirm/);
 

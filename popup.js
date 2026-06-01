@@ -574,12 +574,7 @@ function createApplyConfirmationState() {
     renderDetailPanelContent();
     startJob().catch((error) => {
       console.error("Failed to apply preview plan:", error);
-      renderStatus({
-        ...(currentStatus || {}),
-        phase: "error",
-        message: t("startJobException")
-      });
-      renderDetailPanelContent();
+      renderPopupActionError(t("startJobException"));
     });
   });
 
@@ -837,12 +832,7 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
         lockEntryActions();
         resolveUnprocessedEntry(entry.id, "keep").catch((error) => {
           console.error("Failed to keep unprocessed bookmark:", error);
-          renderStatus({
-            ...(currentStatus || {}),
-            phase: "error",
-            message: t("keepError")
-          });
-          renderDetailPanelContent();
+          renderPopupActionError(t("keepError"));
         });
       });
 
@@ -854,12 +844,7 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
         lockEntryActions();
         resolveUnprocessedEntry(entry.id, "delete").catch((error) => {
           console.error("Failed to delete unprocessed bookmark:", error);
-          renderStatus({
-            ...(currentStatus || {}),
-            phase: "error",
-            message: t("deleteUnprocessedError")
-          });
-          renderDetailPanelContent();
+          renderPopupActionError(t("deleteUnprocessedError"));
         });
       });
 
@@ -951,16 +936,19 @@ function renderDetailPanelContent() {
   detailPanel.replaceChildren(renderMainDetail());
 }
 
-function renderResponseError(response, fallbackMessage) {
-  const message = response?.error || fallbackMessage;
+function renderPopupActionError(message, detail = "") {
   renderStatus({
     ...(currentStatus || {}),
     phase: "error",
     message,
-    detail: response?.detail || ""
+    detail
   });
   setPopupActionStatus(message, { isError: true });
   renderDetailPanelContent();
+}
+
+function renderResponseError(response, fallbackMessage) {
+  renderPopupActionError(response?.error || fallbackMessage, response?.detail || "");
 }
 
 async function refreshDetailPanel() {
@@ -1245,41 +1233,21 @@ startButton.addEventListener("click", () => {
   handlePrimaryAction().catch((error) => {
     console.error("Failed to run primary action:", error);
     const message = canApplyPreviewPlan() ? t("startJobException") : t("previewStartException");
-    renderStatus({
-      ...(currentStatus || {}),
-      phase: "error",
-      message
-    });
-    setPopupActionStatus(message, { isError: true });
-    renderDetailPanelContent();
+    renderPopupActionError(message);
   });
 });
 
 backupButton.addEventListener("click", () => {
   createManualBackup().catch((error) => {
     console.error("Failed to create manual backup:", error);
-    const message = t("createBackupException");
-    renderStatus({
-      ...(currentStatus || {}),
-      phase: "error",
-      message
-    });
-    setPopupActionStatus(message, { isError: true });
-    renderDetailPanelContent();
+    renderPopupActionError(t("createBackupException"));
   });
 });
 
 cancelButton.addEventListener("click", () => {
   cancelJob().catch((error) => {
     console.error("Failed to cancel job:", error);
-    const message = t("cancelJobFailed");
-    renderStatus({
-      ...(currentStatus || {}),
-      phase: "error",
-      message
-    });
-    setPopupActionStatus(message, { isError: true });
-    renderDetailPanelContent();
+    renderPopupActionError(t("cancelJobFailed"));
   });
 });
 
