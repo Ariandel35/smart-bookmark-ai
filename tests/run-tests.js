@@ -576,6 +576,11 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /popupRefreshFailedStatus/);
   assert.match(popupSource, /renderPopupRefreshFailure/);
   assert.match(popupSource, /async function refreshAllSafely\(reason = "refresh"\)/);
+  assert.match(popupSource, /async function refreshAllBeforeActionFeedback\(reason = "action feedback"\)/);
+  assert.match(popupSource, /renderPopupRefreshFailure\(error, reason\)/);
+  assert.match(popupSource, /refreshAllBeforeActionFeedback\("apply preview error"\)/);
+  assert.match(popupSource, /refreshAllBeforeActionFeedback\("preview permission denial"\)/);
+  assert.match(popupSource, /refreshAllBeforeActionFeedback\("manual backup error"\)/);
   assert.match(popupSource, /if \(popupRefreshFailureVisible\) \{\n      setPopupActionStatus\(""\)/);
   assert.match(popupSource, /void refreshAllSafely\("visibilitychange"\)/);
   assert.match(popupSource, /refreshAllSafely\("initial load"\)\.then/);
@@ -1372,6 +1377,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /show how many uncached bookmarks require model classification/);
   assert.match(changelog, /Popup action failures now keep their inline error visible/);
+  assert.match(changelog, /Popup action error responses now keep their specific failure message/);
   assert.match(changelog, /startup controls now stay disabled/);
   assert.match(changelog, /Long settings status and hint text now wraps safely/);
   assert.match(changelog, /Popup state refresh failures now show an inline error/);
@@ -1443,6 +1449,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Popup Settings shortcuts now show an inline error if both tab creation and the options-page fallback fail/);
   assert.match(releaseNotes, /show how many uncached bookmarks require model classification/);
   assert.match(releaseNotes, /Popup action failures now keep their inline error visible/);
+  assert.match(releaseNotes, /Popup action error responses now keep their specific failure message/);
   assert.match(releaseNotes, /startup controls now stay disabled/);
   assert.match(releaseNotes, /Long settings status and hint text now wraps safely/);
   assert.match(releaseNotes, /Popup state refresh failures now show an inline error/);
@@ -1512,6 +1519,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /OpenAI, DeepSeek, MiniMax, Anthropic/);
   assert.match(storeListing, /inline confirmations and validation feedback/);
   assert.match(storeListing, /Popup Settings shortcuts show inline feedback if both opening paths fail/);
+  assert.match(storeListing, /Popup action errors keep their specific failure message/);
   assert.match(storeListing, /startup controls stay disabled/);
   assert.match(storeListing, /Long settings status and hint text wraps safely/);
   assert.match(storeListing, /Settings Privacy falls back from tab creation to window opening/);

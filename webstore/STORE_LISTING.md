@@ -90,6 +90,7 @@ Key features:
 - Popup folder-summary load failures show an inline detail message instead of a silently empty result area
 - Whitelist website catalog load failures show a distinct inline error instead of looking like an empty bookmark-site list
 - Popup Settings shortcuts show inline feedback if both opening paths fail
+- Popup action errors keep their specific failure message even if the follow-up popup refresh also fails
 - Popup and settings startup controls stay disabled until saved state is loaded or a recoverable load failure is shown
 - Long settings status and hint text wraps safely on narrow screens, with clearer muted disabled buttons
 - Popup and settings actions use inline confirmations and validation feedback instead of browser dialogs

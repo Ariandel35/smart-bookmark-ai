@@ -1051,6 +1051,14 @@ async function refreshAllSafely(reason = "refresh") {
   }
 }
 
+async function refreshAllBeforeActionFeedback(reason = "action feedback") {
+  try {
+    await refreshAll();
+  } catch (error) {
+    renderPopupRefreshFailure(error, reason);
+  }
+}
+
 async function updatePopupSpeedMode(rawMode) {
   const nextMode = normalizeLinkCheckMode(rawMode);
   const currentMode = normalizeLinkCheckMode(currentConfig?.linkCheckMode);
@@ -1100,7 +1108,7 @@ async function startJob() {
     const response = await chrome.runtime.sendMessage({ type: "APPLY_PREVIEW_PLAN" });
 
     if (!response?.ok) {
-      await refreshAll();
+      await refreshAllBeforeActionFeedback("apply preview error");
       renderResponseError(response, t("startJobFailed"));
       preserveActionStatus = true;
       return;
@@ -1120,7 +1128,7 @@ async function startPreview() {
     const requirement = await chrome.runtime.sendMessage({ type: "CHECK_LOCAL_MODEL_REQUIREMENT" });
 
     if (!requirement?.ok) {
-      await refreshAll();
+      await refreshAllBeforeActionFeedback("preview requirement error");
       renderResponseError(requirement, t("previewStartFailed"));
       preserveActionStatus = true;
       return;
@@ -1128,7 +1136,7 @@ async function startPreview() {
 
     if (requirement.needsModel && !hasModelAccessConfig(currentConfig)) {
       const aiCandidateCount = Number(requirement.aiCandidateCount || 0);
-      await refreshAll();
+      await refreshAllBeforeActionFeedback("preview setup requirement");
       renderResponseError(
         {
           error: getSetupProblem(currentConfig),
@@ -1149,7 +1157,7 @@ async function startPreview() {
     const granted = shouldRequestAccess ? await ensureOrganizeAccess(currentConfig) : true;
 
     if (!granted) {
-      await refreshAll();
+      await refreshAllBeforeActionFeedback("preview permission denial");
       renderResponseError(
         { error: t("hostPermissionRequiredTitle"), detail: t("hostPermissionRequiredDetail") },
         t("hostPermissionRequiredTitle")
@@ -1165,7 +1173,7 @@ async function startPreview() {
     });
 
     if (!response?.ok) {
-      await refreshAll();
+      await refreshAllBeforeActionFeedback("preview start error");
       renderResponseError(response, t("previewStartFailed"));
       preserveActionStatus = true;
       return;
@@ -1201,7 +1209,7 @@ async function createManualBackup() {
     const response = await chrome.runtime.sendMessage({ type: "CREATE_MANUAL_BACKUP" });
 
     if (!response?.ok) {
-      await refreshAll();
+      await refreshAllBeforeActionFeedback("manual backup error");
       renderResponseError(response, t("createBackupFailed"));
       preserveActionStatus = true;
       return;
@@ -1225,7 +1233,7 @@ async function resolveUnprocessedEntry(entryId, action) {
     });
 
     if (!response?.ok) {
-      await refreshAll();
+      await refreshAllBeforeActionFeedback("unprocessed item error");
       renderResponseError(response, t("resolveUnprocessedFailed"));
       preserveActionStatus = true;
       return;
@@ -1245,7 +1253,7 @@ async function cancelJob() {
     const response = await chrome.runtime.sendMessage({ type: "CANCEL_JOB" });
 
     if (!response?.ok) {
-      await refreshAll();
+      await refreshAllBeforeActionFeedback("cancel job error");
       renderResponseError(response, t("cancelJobFailed"));
       preserveActionStatus = true;
       return;
