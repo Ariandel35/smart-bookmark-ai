@@ -1243,8 +1243,11 @@ function testResponsiveTextHardeningSurface() {
   assert.match(stylesSource, /\.popup-mode-bar[\s\S]*flex-wrap: wrap/);
   assert.match(stylesSource, /\.segmented-control[\s\S]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(stylesSource, /\.segmented-control__button[\s\S]*min-width: 0/);
+  assert.match(stylesSource, /\.popup-shell \.topbar__actions--popup[\s\S]*flex-wrap: wrap[\s\S]*max-width: 132px/);
+  assert.match(stylesSource, /\.popup-shell \.topbar__actions--popup \.pill[\s\S]*white-space: normal[\s\S]*overflow-wrap: anywhere/);
   assert.match(stylesSource, /@media \(max-width: 360px\)/);
   assert.match(stylesSource, /\.popup-shell \.topbar__actions--popup[\s\S]*position: static/);
+  assert.match(stylesSource, /\.popup-shell \.topbar__actions--popup[\s\S]*max-width: 100%/);
   assert.match(stylesSource, /\.progress-head__summary,[\s\S]*\.progress-head__meta[\s\S]*overflow-wrap: anywhere/);
   assert.match(stylesSource, /\.bookmark-item__title[\s\S]*overflow-wrap: anywhere/);
   assert.match(stylesSource, /\.bookmark-item__meta[\s\S]*overflow-wrap: anywhere/);
@@ -1299,6 +1302,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /show how many uncached bookmarks require model classification/);
   assert.match(changelog, /Popup action failures now keep their inline error visible/);
+  assert.match(changelog, /Popup header actions and the phase badge now wrap/);
   assert.match(changelog, /Saved preview validation now includes whitelist-preserved bookmarks/);
   assert.match(changelog, /Backup restore now preserves existing backup folders/);
   assert.match(changelog, /local fallback now keeps and caches completed mini-request classifications/);
@@ -1358,6 +1362,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(releaseNotes, /show how many uncached bookmarks require model classification/);
   assert.match(releaseNotes, /Popup action failures now keep their inline error visible/);
+  assert.match(releaseNotes, /Popup header actions and the phase badge now wrap/);
   assert.match(releaseNotes, /Saved preview validation now includes whitelist-preserved bookmarks/);
   assert.match(releaseNotes, /Backup restore now preserves existing backup folders/);
   assert.match(releaseNotes, /keeps and caches any completed mini-request classifications/);

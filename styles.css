@@ -144,7 +144,16 @@ textarea {
   position: absolute;
   top: 0;
   right: 0;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  max-width: 132px;
+}
+
+.popup-shell .topbar__actions--popup .pill {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .popup-toolbar {
@@ -1322,6 +1331,7 @@ textarea {
   .popup-shell .topbar__actions--popup {
     position: static;
     justify-content: flex-start;
+    max-width: 100%;
   }
 
   .popup-mode-bar {
