@@ -896,8 +896,13 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /outputTokenBudget/);
   assert.match(backgroundSource, /JSON\.stringify\(inputPayload\)/);
   assert.match(backgroundSource, /TAXONOMY_SAMPLE_SIZE_CAPS/);
+  assert.match(backgroundSource, /MIN_TAXONOMY_AI_CANDIDATES = 25/);
   assert.match(backgroundSource, /getTaxonomyPlanningTimeoutMs/);
   assert.match(backgroundSource, /shouldPlanGlobalTaxonomy/);
+  assert.match(backgroundSource, /shouldPlanGlobalTaxonomy\(runtimeConfig, startupAiCandidateCount\)/);
+  assert.match(backgroundSource, /Only \$\{startupAiCandidateCount\} bookmarks need AI classification/);
+  assert.match(backgroundSource, /taxonomyPlanned: planTaxonomy/);
+  assert.match(backgroundSource, /const previewTaxonomyDetailZh = job\.taxonomyPlanned/);
   assert.match(backgroundSource, /shouldUseAiClassification/);
   assert.match(backgroundSource, /shouldUseModelTimeoutFallback/);
   assert.match(backgroundSource, /shouldRetryModelTimeout/);
@@ -1346,6 +1351,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Popup header actions and the phase badge now wrap/);
   assert.match(changelog, /Saved preview validation now includes whitelist-preserved bookmarks/);
   assert.match(changelog, /Backup restore now preserves existing backup folders/);
+  assert.match(changelog, /fewer than 25 AI candidates/);
   assert.match(changelog, /local fallback now keeps and caches completed mini-request classifications/);
   assert.match(changelog, /fallback status now distinguishes partial AI results/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
@@ -1413,6 +1419,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Whitelist website catalog load failures now show a distinct inline error/);
   assert.match(releaseNotes, /Popup header actions and the phase badge now wrap/);
   assert.match(releaseNotes, /Complete-mode dead-link checks now scan up to eight links/);
+  assert.match(releaseNotes, /fewer than 25 AI candidates/);
   assert.match(releaseNotes, /Saved preview validation now includes whitelist-preserved bookmarks/);
   assert.match(releaseNotes, /Backup restore now preserves existing backup folders/);
   assert.match(releaseNotes, /keeps and caches any completed mini-request classifications/);
@@ -1467,6 +1474,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /slow-model batch sizes are capped/);
   assert.match(storeListing, /Complete-mode link checks scan up to 8 links/);
   assert.match(storeListing, /skip the separate taxonomy-planning request/);
+  assert.match(storeListing, /fewer than 25 bookmarks still need AI/);
   assert.match(storeListing, /finishes with local fallback/);
   assert.match(storeListing, /OpenAI、DeepSeek、MiniMax、Anthropic/);
   assert.match(storeListing, /OpenAI, DeepSeek, MiniMax, Anthropic/);

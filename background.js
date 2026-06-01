@@ -44,6 +44,7 @@ const MODEL_REQUEST_CONCURRENCY_CAPS = {
 };
 const DEFAULT_DEAD_SCAN_BATCH_SIZE = 20;
 const DEFAULT_TAXONOMY_SAMPLE_SIZE = 160;
+const MIN_TAXONOMY_AI_CANDIDATES = 25;
 const TAXONOMY_SAMPLE_SIZE_CAPS = {
   deepseek: 80
 };
@@ -1866,7 +1867,7 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
     await assertApiOriginAccess(config.baseUrl);
   }
 
-  const planTaxonomy = shouldPlanGlobalTaxonomy(runtimeConfig);
+  const planTaxonomy = shouldPlanGlobalTaxonomy(runtimeConfig, startupAiCandidateCount);
   if (startupAiCandidateCount && planTaxonomy) {
     try {
       taxonomyTopFolders = await withKeepAlive(() => planGlobalTaxonomy(bookmarks, runtimeConfig));
@@ -1877,10 +1878,15 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
         "Global taxonomy planning failed, so the extension fell back to the default stable folders."
       );
     }
-  } else if (startupAiCandidateCount && shouldCheckDeadLinks(runtimeConfig)) {
+  } else if (startupAiCandidateCount && shouldCheckDeadLinks(runtimeConfig) && shouldUseModelTimeoutFallback(runtimeConfig)) {
     taxonomyPlanningNote = ux(
       `${getRuntimeProviderLabel(runtimeConfig)} 会跳过单独的全局目录规划请求，先使用内置稳定大类；如果分类请求过慢，本次会继续本地兜底完成。`,
       `${getRuntimeProviderLabel(runtimeConfig)} skips the separate global taxonomy request and starts with stable folders; if classification is too slow, this run will finish with the local fallback.`
+    );
+  } else if (startupAiCandidateCount && shouldCheckDeadLinks(runtimeConfig)) {
+    taxonomyPlanningNote = ux(
+      `本轮只有 ${startupAiCandidateCount} 条书签需要 AI 分类，已跳过单独的全局目录规划请求以减少一次模型等待。`,
+      `Only ${startupAiCandidateCount} bookmarks need AI classification this time, so Marko skipped the separate global taxonomy request to avoid one extra model wait.`
     );
   } else if (startupAiCandidateCount && useAiClassification) {
     taxonomyPlanningNote = ux(
@@ -1911,10 +1917,15 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
           "Complete mode plans a global taxonomy first, then classifies in batches."
         )
       : shouldCheckDeadLinks(runtimeConfig)
-        ? ux(
-            "完整模式会先用本地规则减少模型请求；慢模型会跳过单独目录规划，并在模型超时时切到本地兜底继续完成。",
-            "Complete mode reduces model requests with local rules first; slow models skip the separate taxonomy request and switch to the local fallback if the model times out."
-          )
+        ? shouldUseModelTimeoutFallback(runtimeConfig)
+          ? ux(
+              "完整模式会先用本地规则减少模型请求；慢模型会跳过单独目录规划，并在模型超时时切到本地兜底继续完成。",
+              "Complete mode reduces model requests with local rules first; slow models skip the separate taxonomy request and switch to the local fallback if the model times out."
+            )
+          : ux(
+              "完整模式会先用本地规则减少模型请求；当剩余 AI 分类量较小时会跳过单独目录规划以更快进入分类。",
+              "Complete mode reduces model requests with local rules first; when only a small AI classification set remains, it skips the separate taxonomy request and starts classification sooner."
+            )
         : useAiClassification
           ? ux(
               "平衡模式会跳过失效链接扫描和单独目录规划，只把本地规则、缓存与内置规则无法覆盖的书签交给 AI。",
@@ -1930,10 +1941,15 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
           "完整模式会在分类前检测失效链接，并保留额外的全局目录规划。",
           "Complete mode checks dead links before classification and keeps the extra global taxonomy planning step."
         )
-      : ux(
-          "完整模式会检测失效链接；慢模型会跳过单独目录规划，并在模型超时时本地兜底。",
-          "Complete mode checks dead links; slow models skip the separate taxonomy request and fall back locally on model timeout."
-        )
+      : shouldUseModelTimeoutFallback(runtimeConfig)
+        ? ux(
+            "完整模式会检测失效链接；慢模型会跳过单独目录规划，并在模型超时时本地兜底。",
+            "Complete mode checks dead links; slow models skip the separate taxonomy request and fall back locally on model timeout."
+          )
+        : ux(
+            "完整模式会检测失效链接；如果本地规则和缓存已把待 AI 分类量压得较小，会跳过额外目录规划请求。",
+            "Complete mode checks dead links; if local rules and cache reduce the AI classification set enough, it skips the extra taxonomy-planning request."
+          )
     : useAiClassification
       ? ux(
           "平衡模式会跳过失效链接检测和单独目录规划，但保留 AI 分类；只需要模型接口权限，不需要完整网站访问权限。",
@@ -1978,6 +1994,7 @@ async function startOrganizeJob(runContext = { trigger: "manual", mode: "organiz
     exactDuplicateSeenByUrl: {},
     modelFallbackToManual: false,
     taxonomyLocks: {},
+    taxonomyPlanned: planTaxonomy,
     taxonomyTopFolders,
     classificationSignature,
     domainFolderRules,
@@ -2731,10 +2748,10 @@ async function processNextBatch() {
           [...(job.preservedBookmarks || []), ...(job.plannedBookmarks || [])],
           job.pendingWarnings
         );
-        const previewTaxonomyDetailZh = shouldPlanGlobalTaxonomy(job.config)
+        const previewTaxonomyDetailZh = job.taxonomyPlanned
           ? "本次预览生成了全局目录方案。"
           : "本次预览使用内置稳定大类，跳过了单独的目录规划请求。";
-        const previewTaxonomyDetailEn = shouldPlanGlobalTaxonomy(job.config)
+        const previewTaxonomyDetailEn = job.taxonomyPlanned
           ? "This preview generated a global taxonomy plan."
           : "This preview used the built-in stable folders and skipped the separate taxonomy-planning request.";
         job.previewFolders = previewFolders;
@@ -5839,10 +5856,11 @@ function shouldUseAiClassification(config = {}) {
   return normalizeLinkCheckMode(config.linkCheckMode) !== LINK_CHECK_MODE_FAST;
 }
 
-function shouldPlanGlobalTaxonomy(config = {}) {
+function shouldPlanGlobalTaxonomy(config = {}, aiCandidateCount = Number.POSITIVE_INFINITY) {
   return (
     normalizeLinkCheckMode(config.linkCheckMode) === LINK_CHECK_MODE_COMPLETE &&
-    !shouldUseModelTimeoutFallback(config)
+    !shouldUseModelTimeoutFallback(config) &&
+    Number(aiCandidateCount || 0) >= MIN_TAXONOMY_AI_CANDIDATES
   );
 }
 

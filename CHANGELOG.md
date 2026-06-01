@@ -19,6 +19,7 @@
 - Popup folder-summary load failures now render an inline detail message instead of silently showing an empty result area
 - Popup header actions and the phase badge now wrap inside their reserved width, avoiding cramped or overlapping text in narrow localized popups
 - Complete-mode dead-link checks now scan up to eight links in parallel and leave links that take longer than six seconds for review instead of letting one slow batch hold up the preview
+- Complete mode now skips the separate taxonomy-planning model request when local rules, cache, and built-in rules leave fewer than 25 AI candidates, avoiding an extra model wait on small previews
 - Saved preview validation now includes whitelist-preserved bookmarks so Apply Plan cannot restore stale whitelisted content after bookmarks change
 - Backup restore now preserves existing backup folders while replacing normal bookmark content, matching the pre-restore snapshot scope
 - Popup speed-mode changes now save against merged provider defaults so legacy partial configs do not keep stale missing connection fields
