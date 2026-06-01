@@ -456,6 +456,27 @@ function coreFlowExpression() {
       return counts;
     }, {});
     const backupRecordsAfterApply = afterApply.smartBookmarkBackupRecords || [];
+    const unprocessedEntry = (afterApply.smartBookmarkJobStatus?.warnings || [])[0] || null;
+    const resolveUnprocessed = unprocessedEntry
+      ? await sendMessage({
+          type: "RESOLVE_UNPROCESSED_ENTRY",
+          entryId: unprocessedEntry.id,
+          action: "delete"
+        })
+      : { ok: false, error: "No unprocessed entry was available to delete." };
+    const afterResolve = await chrome.storage.local.get([
+      "smartBookmarkJobStatus",
+      "smartBookmarkBackupRecords"
+    ]);
+    const resolvedChildren = await chrome.bookmarks.getChildren(bar.id);
+    const resolvedBookmarks = [];
+    for (const child of resolvedChildren) {
+      resolvedBookmarks.push(...(await flattenBookmarks(child)));
+    }
+    const resolvedUrlCounts = resolvedBookmarks.reduce((counts, bookmark) => {
+      counts[bookmark.url] = (counts[bookmark.url] || 0) + 1;
+      return counts;
+    }, {});
     const restoreSourceRecord = backupRecordsAfterApply.at(-1) || null;
     const restore = restoreSourceRecord
       ? await sendMessage({ type: "RESTORE_BACKUP_ENTRY", backupId: restoreSourceRecord.id })
@@ -495,6 +516,12 @@ function coreFlowExpression() {
       finalBookmarkCount: applyBookmarks.length,
       finalUrlCounts: applyUrlCounts,
       finalBookmarks: applyBookmarks,
+      unprocessedEntryId: unprocessedEntry?.id || "",
+      resolveUnprocessed,
+      resolveStatus: deepClone(afterResolve.smartBookmarkJobStatus || {}),
+      resolvedBookmarkCount: resolvedBookmarks.length,
+      resolvedUrlCounts,
+      resolvedBookmarks,
       restoreSourceId: restoreSourceRecord?.id || "",
       restore,
       restoreStatus: deepClone(afterRestore.smartBookmarkJobStatus || {}),
@@ -559,6 +586,18 @@ function formatCoreFlowFailures(result) {
   }
   if (Number(result.finalBookmarkCount || 0) !== 3) {
     failures.push(`expected 3 normal bookmarks after duplicate cleanup, got ${result.finalBookmarkCount}`);
+  }
+  if (!result.unprocessedEntryId || !result?.resolveUnprocessed?.ok || result.resolveStatus?.phase !== "completed") {
+    failures.push("deleting the generated unprocessed entry did not complete");
+  }
+  if (Number(result.resolveStatus?.warningCount || 0) !== 0) {
+    failures.push(`expected zero unprocessed warnings after delete, got ${result.resolveStatus?.warningCount}`);
+  }
+  if (Number(result.resolvedUrlCounts?.["https://example.invalid/manual-review"] || 0) !== 0) {
+    failures.push("unprocessed delete did not remove the manual-review bookmark from the live bookmark tree");
+  }
+  if (Number(result.resolvedBookmarkCount || 0) !== 2) {
+    failures.push(`expected 2 bookmarks after deleting the unprocessed item, got ${result.resolvedBookmarkCount}`);
   }
   if (!result?.restore?.ok || result.restoreStatus?.phase !== "completed") {
     failures.push("restoring the original manual backup did not complete");
@@ -858,8 +897,10 @@ async function main() {
           `manualBackup=${Boolean(coreFlow.manualBackup?.created)}`,
           `preview=${coreFlow.previewStatus?.phase || ""}`,
           `apply=${coreFlow.finalStatus?.phase || ""}`,
+          `resolve=${coreFlow.resolveStatus?.phase || ""}`,
           `restore=${coreFlow.restoreStatus?.phase || ""}`,
           `normalBookmarks=${coreFlow.finalBookmarkCount}`,
+          `resolvedBookmarks=${coreFlow.resolvedBookmarkCount}`,
           `restoredBookmarks=${coreFlow.restoredBookmarkCount}`,
           `backupRecords=${coreFlow.backupRecordCount}`,
           `backupRecordsAfterDelete=${coreFlow.backupRecordCountAfterDelete}`,
