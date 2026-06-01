@@ -733,6 +733,9 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /connectionTitle: "模型连接"/);
   assert.match(i18nSource, /labelProvider: "服务商"/);
   assert.match(i18nSource, /labelModel: "模型名称"/);
+  assert.match(i18nSource, /connectionModeFastHint:[\s\S]*"快速模式会本地生成预览。只选服务商即可；Base URL、模型、API Key 和授权检测可以等切到 AI 分类时再配置。"/);
+  assert.match(i18nSource, /connectionModeBalancedHint:[\s\S]*"平衡模式会跳过网站检测，但未缓存书签需要 AI 分类时，要填写 Base URL、模型、API Key 并授权模型接口。"/);
+  assert.match(i18nSource, /connectionModeCompleteHint:[\s\S]*"完整模式需要模型连接做 AI 分类，也需要网站访问权限来检测失效链接。"/);
   assert.match(i18nSource, /automationTitle: "自动整理"/);
   assert.match(i18nSource, /settingsStepAccess: "快速自动整理可本地运行；平衡模式需要模型接口权限；完整模式还需要网站访问权限。"/);
   assert.match(i18nSource, /autoOrganizePermission: "快速自动整理会在本地运行；平衡自动整理需要模型接口权限，完整自动整理还需要网站访问权限。"/);
@@ -901,6 +904,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="createBackupButton"[\s\S]*aria-describedby="backupActionStatus"/);
   assert.match(optionsHtml, /id="testApiButton"[\s\S]*aria-describedby="apiTestStatus"/);
   assert.match(optionsHtml, /id="grantAccessButton"[\s\S]*aria-describedby="hostAccessStatus"/);
+  assert.match(optionsHtml, /id="connectionModeHint"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*data-i18n="connectionModeFastHint"/);
   assert.match(optionsHtml, /id="autoOrganizeAccessHint"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*hidden/);
   assert.match(optionsHtml, /id="linkCheckMode"[\s\S]*aria-describedby="linkCheckModeHint"/);
   assert.match(optionsHtml, /id="linkCheckModeHint"[\s\S]*data-i18n="hintLinkCheckMode"/);
@@ -922,7 +926,13 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /normalizeConfigBatchSize/);
   assert.match(optionsSource, /capConfigBatchSize/);
   assert.match(optionsSource, /batchSizeCapHint/);
+  assert.match(optionsSource, /connectionModeHint/);
   assert.match(optionsSource, /function updateBatchSizeCapHint\(\)/);
+  assert.match(optionsSource, /function updateConnectionModeHint\(\)/);
+  assert.match(optionsSource, /connectionModeCompleteHint/);
+  assert.match(optionsSource, /connectionModeBalancedHint/);
+  assert.match(optionsSource, /connectionModeFastHint/);
+  assert.match(optionsSource, /connectionModeHint\.className = requiresAccess \? "field__hint panel__hint field__hint--warm" : "field__hint panel__hint"/);
   assert.match(optionsSource, /getCurrentBatchProfileConfig/);
   assert.match(optionsSource, /t\("batchSizeCapHint", \{ count: cap \}\)/);
   assert.match(optionsSource, /addDescribedByToken\(batchSizeInput, batchSizeCapHint\.id\)/);
@@ -935,6 +945,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /autoOrganizeBalancedHint/);
   assert.match(optionsSource, /autoOrganizeCompleteHint/);
   assert.match(optionsSource, /addDescribedByToken\(autoOrganizeEnabledInput, autoOrganizeAccessHint\.id\)/);
+  assert.match(optionsSource, /updateConnectionModeHint\(\)/);
   assert.match(optionsSource, /updateAutoOrganizeAccessHint\(\)/);
   assert.match(optionsSource, /showSettingsIssue/);
   assert.match(optionsSource, /isValidHttpUrl/);
@@ -1148,6 +1159,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   const stylesSource = fs.readFileSync(path.join(ROOT_DIR, "styles.css"), "utf8");
   assert.match(stylesSource, /\.settings-action-status/);
   assert.match(stylesSource, /\.backup-confirm/);
+  assert.match(stylesSource, /\.panel__hint/);
   assert.match(stylesSource, /\.field__hint--warm/);
   assert.match(stylesSource, /\.field__hint\[hidden\]/);
   assert.match(stylesSource, /\.field input\[aria-invalid="true"\]/);
@@ -1245,6 +1257,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings save and backup status badges/);
   assert.match(changelog, /Fast mode now finishes locally without waiting for the model/);
   assert.match(changelog, /Fast mode no longer blocks preview or settings save when Base URL or model name are blank/);
+  assert.match(changelog, /Settings connection now explains which modes need model fields or website access/);
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
@@ -1296,6 +1309,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /built-in domain rules/);
   assert.match(releaseNotes, /unmatched bookmarks go to manual review/);
   assert.match(releaseNotes, /Fast mode no longer blocks preview or settings save when Base URL or model name are blank/);
+  assert.match(releaseNotes, /Settings connection now explains which modes need model fields or website access/);
   assert.match(releaseNotes, /Fast mode needs API credentials/);
   assert.match(releaseNotes, /speed-mode changes now save against merged provider defaults/);
   assert.match(releaseNotes, /Fast automatic organize can now run locally without an API key/);

@@ -218,6 +218,12 @@ Hard rules:
       hostAccessButton: "Grant Access",
       hostAccessGrantedButton: "Granted",
       hostAccessNotNeededButton: "Not needed",
+      connectionModeFastHint:
+        "Fast mode previews locally. Provider is enough; Base URL, model, API key, and access checks are optional until you switch to AI classification.",
+      connectionModeBalancedHint:
+        "Balanced mode skips website checks but needs Base URL, model, API key, and model endpoint access when uncached bookmarks need AI classification.",
+      connectionModeCompleteHint:
+        "Complete mode needs the model connection for AI classification and website access for dead-link checks.",
       organizeEyebrow: "Organization",
       organizeTitle: "Rules",
       labelBatchSize: "Batch size",
@@ -509,6 +515,12 @@ Hard rules:
       hostAccessButton: "授权访问",
       hostAccessGrantedButton: "已授权",
       hostAccessNotNeededButton: "无需授权",
+      connectionModeFastHint:
+        "快速模式会本地生成预览。只选服务商即可；Base URL、模型、API Key 和授权检测可以等切到 AI 分类时再配置。",
+      connectionModeBalancedHint:
+        "平衡模式会跳过网站检测，但未缓存书签需要 AI 分类时，要填写 Base URL、模型、API Key 并授权模型接口。",
+      connectionModeCompleteHint:
+        "完整模式需要模型连接做 AI 分类，也需要网站访问权限来检测失效链接。",
       organizeEyebrow: "整理",
       organizeTitle: "规则",
       labelBatchSize: "批大小",

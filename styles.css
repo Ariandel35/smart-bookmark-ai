@@ -338,6 +338,11 @@ textarea {
   line-height: 1.6;
 }
 
+.panel__hint {
+  margin: 6px 0 0;
+  max-width: 620px;
+}
+
 .pill {
   display: inline-flex;
   align-items: center;

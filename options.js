@@ -24,6 +24,7 @@ const modelInput = document.getElementById("model");
 const batchSizeInput = document.getElementById("batchSize");
 const batchSizeCapHint = document.getElementById("batchSizeCapHint");
 const linkCheckModeSelect = document.getElementById("linkCheckMode");
+const connectionModeHint = document.getElementById("connectionModeHint");
 const autoOrganizeEnabledInput = document.getElementById("autoOrganizeEnabled");
 const autoOrganizeAccessHint = document.getElementById("autoOrganizeAccessHint");
 const autoOrganizeIntervalInput = document.getElementById("autoOrganizeIntervalHours");
@@ -800,6 +801,7 @@ function populateForm(config) {
   customPromptInput.value = config.customPrompt;
   lastProvider = config.provider;
   updateProviderHints(config.provider);
+  updateConnectionModeHint();
   updateBatchSizeCapHint();
   updateAutoOrganizeAccessHint();
 }
@@ -844,6 +846,21 @@ function updateBatchSizeCapHint() {
   } else {
     removeDescribedByTokens(batchSizeInput, [batchSizeCapHint.id]);
   }
+}
+
+function updateConnectionModeHint() {
+  const mode = normalizeLinkCheckMode(linkCheckModeSelect.value);
+  const key =
+    mode === LINK_CHECK_MODE_COMPLETE
+      ? "connectionModeCompleteHint"
+      : mode === LINK_CHECK_MODE_BALANCED
+        ? "connectionModeBalancedHint"
+        : "connectionModeFastHint";
+  const requiresAccess = mode !== LINK_CHECK_MODE_FAST;
+
+  connectionModeHint.hidden = false;
+  connectionModeHint.textContent = t(key);
+  connectionModeHint.className = requiresAccess ? "field__hint panel__hint field__hint--warm" : "field__hint panel__hint";
 }
 
 function updateAutoOrganizeAccessHint() {
@@ -1664,6 +1681,9 @@ function handleFormMutation(event) {
   }
 
   if (targetId === "autoOrganizeEnabled" || targetId === "linkCheckMode") {
+    if (targetId === "linkCheckMode") {
+      updateConnectionModeHint();
+    }
     updateAutoOrganizeAccessHint();
   }
 
@@ -1703,6 +1723,7 @@ providerSelect.addEventListener("change", () => {
   }
 
   updateProviderHints(nextProvider);
+  updateConnectionModeHint();
   updateBatchSizeCapHint();
   updateAutoOrganizeAccessHint();
   lastProvider = nextProvider;
