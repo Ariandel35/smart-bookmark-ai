@@ -20,6 +20,7 @@
 - The publish checklist now separates real `chrome://extensions` Load unpacked validation from Google Chrome CLI launches that ignore `--load-extension`, and adds narrow-width popup/settings UI audit gates
 - Added `npm run audit:ui` to render popup and settings pages with Chrome API mocks across Chinese preview and English long-error states, failing on horizontal overflow, clipped buttons, or runtime exceptions
 - Added `npm run e2e:extension` and `npm run verify:release:full` for a real unpacked-extension smoke test with Chrome for Testing or Chromium
+- The real extension smoke test now clicks through the real popup Preview -> Apply Plan -> Backup and Apply path before checking the live bookmark tree
 - The real extension smoke test now seeds a temporary bookmark profile and verifies manual backup, Fast preview, Apply Plan, duplicate cleanup, backup records, and screenshots
 - The real extension smoke test now deletes a generated unprocessed item and verifies the live bookmark tree and warning count update before backup restore
 - The real extension smoke test now also restores the original manual backup, verifies the duplicate returns, deletes that backup record, and confirms the backup list shrinks

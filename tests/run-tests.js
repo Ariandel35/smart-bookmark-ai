@@ -1437,7 +1437,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run audit:ui/);
   assert.match(readme, /npm run e2e:extension/);
-  assert.match(readme, /seeds real bookmarks, then verifies manual backup, Fast preview, Apply Plan/);
+  assert.match(readme, /real popup Preview -> Apply Plan confirmation click flow/);
+  assert.match(readme, /manual backup, Fast preview, duplicate cleanup/);
   assert.match(readme, /unprocessed-item delete/);
   assert.match(readme, /backup restore\/delete/);
   assert.match(readme, /real options UI save/);
@@ -1461,7 +1462,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /npm test/);
   assert.match(readmeZh, /npm run audit:ui/);
   assert.match(readmeZh, /npm run e2e:extension/);
-  assert.match(readmeZh, /写入真实书签，然后验证手动备份、快速预览、应用方案/);
+  assert.match(readmeZh, /真实弹窗“预览整理 -> 应用方案 -> 备份并应用”点击流/);
+  assert.match(readmeZh, /手动备份、快速预览、重复清理/);
   assert.match(readmeZh, /未处理项删除/);
   assert.match(readmeZh, /备份恢复\/删除/);
   assert.match(readmeZh, /真实设置页保存/);
@@ -1667,6 +1669,18 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /CHECK_LOCAL_MODEL_REQUIREMENT/);
   assert.match(extensionE2e, /START_PREVIEW/);
   assert.match(extensionE2e, /APPLY_PREVIEW_PLAN/);
+  assert.match(extensionE2e, /setupPopupUiFlowExpression/);
+  assert.match(extensionE2e, /popupUiFlowExpression/);
+  assert.match(extensionE2e, /runPopupUiFlow/);
+  assert.match(extensionE2e, /formatPopupUiFlowFailures/);
+  assert.match(extensionE2e, /document\.getElementById\("startButton"\)/);
+  assert.match(extensionE2e, /\[data-apply-confirmation-primary\]/);
+  assert.match(extensionE2e, /clickButton\(previewButton\)/);
+  assert.match(extensionE2e, /clickButton\(applyPlanButton\)/);
+  assert.match(extensionE2e, /confirmationText/);
+  assert.match(extensionE2e, /finalWarningCount/);
+  assert.match(extensionE2e, /popup-ui-preview-apply-flow-400\.png/);
+  assert.match(extensionE2e, /OK popup UI flow/);
   assert.match(extensionE2e, /RESOLVE_UNPROCESSED_ENTRY/);
   assert.match(extensionE2e, /RESTORE_BACKUP_ENTRY/);
   assert.match(extensionE2e, /DELETE_BACKUP_ENTRY/);
@@ -1746,7 +1760,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /权限说明/);
   assert.match(publishChecklist, /npm run audit:ui/);
   assert.match(publishChecklist, /npm run e2e:extension/);
-  assert.match(publishChecklist, /临时书签可完成手动备份、快速预览、应用方案、重复清理、未处理项删除、备份恢复\/删除、备份记录、真实设置页保存和 DeepSeek 批量压低验证/);
+  assert.match(publishChecklist, /临时书签可完成真实弹窗预览\/应用点击流、手动备份、快速预览、应用方案、重复清理、未处理项删除、备份恢复\/删除、备份记录、真实设置页保存和 DeepSeek 批量压低验证/);
   assert.match(publishChecklist, /npm run verify:release/);
   assert.match(publishChecklist, /npm run verify:release:full/);
   assert.match(publishChecklist, /--load-extension is not allowed in Google Chrome, ignoring/);

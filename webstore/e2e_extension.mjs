@@ -699,6 +699,263 @@ async function evaluate(client, expression) {
   return result.result.value;
 }
 
+function setupPopupUiFlowExpression() {
+  return `(async () => {
+    if (!chrome?.runtime?.id || !chrome?.bookmarks || !chrome?.storage?.local) {
+      throw new Error("Required extension APIs are not available in the popup page.");
+    }
+
+    const tree = await chrome.bookmarks.getTree();
+    const bar = tree[0].children.find((node) => node.id === "1") || tree[0].children.find((node) => !node.url);
+    if (!bar) {
+      throw new Error("Bookmarks bar was not found in the temporary profile.");
+    }
+    for (const child of await chrome.bookmarks.getChildren(bar.id)) {
+      if (child.url) {
+        await chrome.bookmarks.remove(child.id);
+      } else {
+        await chrome.bookmarks.removeTree(child.id);
+      }
+    }
+    await chrome.storage.local.clear();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await chrome.bookmarks.create({
+      parentId: bar.id,
+      title: "Popup UI Marko Repo",
+      url: "https://github.com/Ariandel35/marko"
+    });
+    await chrome.bookmarks.create({
+      parentId: bar.id,
+      title: "Popup UI Marko Repo Duplicate",
+      url: "https://github.com/Ariandel35/marko"
+    });
+    await chrome.bookmarks.create({
+      parentId: bar.id,
+      title: "Popup UI OpenAI",
+      url: "https://openai.com/"
+    });
+    await chrome.bookmarks.create({
+      parentId: bar.id,
+      title: "Popup UI Manual Review",
+      url: "https://example.invalid/popup-ui-manual-review"
+    });
+    await chrome.storage.local.set({
+      smartBookmarkConfig: {
+        provider: "openai",
+        baseUrl: "https://api.openai.com/v1",
+        apiKey: "",
+        model: "gpt-4.1-mini",
+        batchSize: 9,
+        linkCheckMode: "fast",
+        autoOrganizeEnabled: false,
+        autoOrganizeIntervalHours: 24,
+        whitelistDomains: "",
+        protectedRootFolders: "",
+        domainFolderRules: "github.com => Code\\nopenai.com => AI",
+        customPrompt: "Keep this temporary popup UI E2E run local and compact."
+      }
+    });
+    return { ok: true };
+  })()`;
+}
+
+function popupUiFlowExpression() {
+  return `(async () => {
+    const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+    const waitFor = async (predicate, label) => {
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        const value = await predicate();
+        if (value) {
+          return value;
+        }
+        await wait(150);
+      }
+      throw new Error("Timed out waiting for " + label);
+    };
+    const flattenBookmarks = async (node) => {
+      if (node.url) {
+        return [{ title: node.title, url: node.url }];
+      }
+      const children = await chrome.bookmarks.getChildren(node.id).catch(() => []);
+      const nested = [];
+      for (const child of children) {
+        nested.push(...(await flattenBookmarks(child)));
+      }
+      return nested;
+    };
+    const clickButton = (button) => {
+      if (!button) {
+        throw new Error("Expected button was not found.");
+      }
+      if (button.disabled) {
+        throw new Error("Expected button is disabled: " + (button.textContent || button.id || "").trim());
+      }
+      button.click();
+    };
+
+    const previewButton = await waitFor(() => {
+      const button = document.getElementById("startButton");
+      return button && !button.disabled && /预览|Preview/.test(button.textContent || "") ? button : null;
+    }, "enabled Preview button");
+    const startButtonTextBefore = (previewButton.textContent || "").trim();
+
+    clickButton(previewButton);
+    const previewState = await waitFor(async () => {
+      const stored = await chrome.storage.local.get(["smartBookmarkJobStatus", "smartBookmarkPreviewPlan"]);
+      const status = stored.smartBookmarkJobStatus || {};
+      return status.phase === "preview" && stored.smartBookmarkPreviewPlan ? { status, plan: stored.smartBookmarkPreviewPlan } : null;
+    }, "popup preview completion");
+
+    const applyPlanButton = await waitFor(() => {
+      const button = document.getElementById("startButton");
+      return button && !button.disabled && /应用方案|Apply Plan/.test(button.textContent || "") ? button : null;
+    }, "enabled Apply Plan button");
+    const applyButtonText = (applyPlanButton.textContent || "").trim();
+    clickButton(applyPlanButton);
+
+    const confirmation = await waitFor(() => {
+      const button = document.querySelector("[data-apply-confirmation-primary]");
+      return button && !button.disabled ? button : null;
+    }, "inline apply confirmation");
+    const confirmationText = (document.getElementById("applyConfirmation")?.innerText || "").trim();
+    clickButton(confirmation);
+
+    const applyState = await waitFor(async () => {
+      const stored = await chrome.storage.local.get(["smartBookmarkJobStatus", "smartBookmarkPreviewPlan"]);
+      const status = stored.smartBookmarkJobStatus || {};
+      return status.phase === "completed" && !stored.smartBookmarkPreviewPlan ? status : null;
+    }, "popup Apply Plan completion");
+
+    const tree = await chrome.bookmarks.getTree();
+    const bar = tree[0].children.find((node) => node.id === "1") || tree[0].children.find((node) => !node.url);
+    const rootChildren = await chrome.bookmarks.getChildren(bar.id);
+    const bookmarks = [];
+    for (const child of rootChildren) {
+      bookmarks.push(...(await flattenBookmarks(child)));
+    }
+    const urlCounts = bookmarks.reduce((counts, bookmark) => {
+      counts[bookmark.url] = (counts[bookmark.url] || 0) + 1;
+      return counts;
+    }, {});
+    const storedAfterApply = await chrome.storage.local.get("smartBookmarkBackupRecords");
+
+    return {
+      startButtonTextBefore,
+      applyButtonText,
+      confirmationText,
+      previewPhase: previewState.status.phase,
+      previewDeleted: previewState.plan.deleted || 0,
+      previewWarningCount: previewState.status.warningCount || 0,
+      applyPhase: applyState.phase,
+      applyMessage: applyState.message || "",
+      finalWarningCount: applyState.warningCount || 0,
+      backupRecordCount: (storedAfterApply.smartBookmarkBackupRecords || []).length,
+      bookmarkCount: bookmarks.length,
+      urlCounts,
+      rootTitles: rootChildren.map((child) => child.title),
+      visibleText: document.body.innerText.trim().slice(0, 500)
+    };
+  })()`;
+}
+
+async function runPopupUiFlow(port, extensionId) {
+  const target = await createTarget(port);
+  const client = new CdpClient(target.webSocketDebuggerUrl);
+  try {
+    await client.send("Runtime.enable");
+    await client.send("Page.enable");
+    await client.send("Emulation.setDeviceMetricsOverride", {
+      width: 400,
+      height: 760,
+      deviceScaleFactor: 1,
+      mobile: false
+    });
+    await client.send("Page.navigate", { url: `chrome-extension://${extensionId}/popup.html` });
+    await sleep(1500);
+    await evaluate(client, setupPopupUiFlowExpression());
+    await client.send("Page.reload");
+    await sleep(1500);
+    const result = await evaluate(client, popupUiFlowExpression());
+    let screenshotPath = "";
+    if (screenshotDir) {
+      await fs.mkdir(screenshotDir, { recursive: true });
+      const screenshot = await client.send("Page.captureScreenshot", {
+        format: "png",
+        captureBeyondViewport: false
+      });
+      screenshotPath = path.join(screenshotDir, "popup-ui-preview-apply-flow-400.png");
+      await fs.writeFile(screenshotPath, Buffer.from(screenshot.data, "base64"));
+    }
+    const exceptions = client.events
+      .filter((event) => event.method === "Runtime.exceptionThrown")
+      .map((event) => event.params?.exceptionDetails?.exception?.description || "Runtime exception");
+    const consoleErrors = client.events
+      .filter((event) => event.method === "Runtime.consoleAPICalled" && event.params?.type === "error")
+      .map((event) =>
+        (event.params?.args || [])
+          .map((arg) => arg.value || arg.description || "")
+          .filter(Boolean)
+          .join(" ")
+      );
+    return {
+      ...result,
+      screenshotPath,
+      exceptions,
+      consoleErrors
+    };
+  } finally {
+    client.close();
+    await closeTarget(port, target.id);
+  }
+}
+
+function formatPopupUiFlowFailures(result) {
+  const failures = [];
+  if (result.previewPhase !== "preview") {
+    failures.push(`popup UI preview did not complete: ${result.previewPhase || "(missing)"}`);
+  }
+  if (Number(result.previewDeleted || 0) < 1) {
+    failures.push("popup UI preview did not detect the duplicate bookmark");
+  }
+  if (!/预览|Preview/.test(result.startButtonTextBefore || "")) {
+    failures.push(`popup UI did not click the Preview button first: ${result.startButtonTextBefore || "(missing)"}`);
+  }
+  if (!/应用方案|Apply Plan/.test(result.applyButtonText || "")) {
+    failures.push(`popup UI did not click the Apply Plan button second: ${result.applyButtonText || "(missing)"}`);
+  }
+  if (!/备份并应用|Apply|Backup/.test(result.confirmationText || "")) {
+    failures.push("popup UI inline apply confirmation was not visible before applying");
+  }
+  if (result.applyPhase !== "completed") {
+    failures.push(`popup UI Apply Plan did not complete: ${result.applyPhase || "(missing)"}`);
+  }
+  if (Number(result.finalWarningCount || 0) !== 1) {
+    failures.push(`expected 1 unprocessed warning after popup UI apply, got ${result.finalWarningCount}`);
+  }
+  if (Number(result.backupRecordCount || 0) < 1) {
+    failures.push("popup UI apply did not create a pre-apply backup record");
+  }
+  if (Number(result.bookmarkCount || 0) !== 3) {
+    failures.push(`expected 3 bookmarks after popup UI apply, got ${result.bookmarkCount}`);
+  }
+  if (Number(result.urlCounts?.["https://github.com/Ariandel35/marko"] || 0) !== 1) {
+    failures.push("popup UI apply did not reduce the duplicate GitHub bookmark to one");
+  }
+  if (Number(result.urlCounts?.["https://openai.com/"] || 0) !== 1) {
+    failures.push("popup UI apply did not preserve the OpenAI bookmark");
+  }
+  if (Number(result.urlCounts?.["https://example.invalid/popup-ui-manual-review"] || 0) !== 1) {
+    failures.push("popup UI apply did not preserve the manual-review bookmark");
+  }
+  if (result.exceptions?.length) {
+    failures.push(`popup UI runtime exceptions: ${result.exceptions.join(" | ")}`);
+  }
+  if (result.consoleErrors?.length) {
+    failures.push(`popup UI console errors: ${result.consoleErrors.join(" | ")}`);
+  }
+  return failures;
+}
+
 function optionsSaveExpression() {
   return `(async () => {
     const setValue = (id, value) => {
@@ -949,6 +1206,7 @@ async function main() {
       await browserClient.send("Target.setDiscoverTargets", { discover: true });
       const extensionId = await waitForExtensionId(browserClient, profileDir);
       const backgroundTarget = await waitForBackgroundTarget(browserClient, extensionId);
+      const popupUiFlow = await runPopupUiFlow(port, extensionId);
       const coreFlow = await runCoreFlow(port, extensionId);
       const pages = [
         {
@@ -974,6 +1232,7 @@ async function main() {
         results.push(result);
       }
       const failures = [
+        ...formatPopupUiFlowFailures(popupUiFlow).map((failure) => `popup UI flow: ${failure}`),
         ...formatCoreFlowFailures(coreFlow).map((failure) => `core flow: ${failure}`),
         ...results.flatMap((result) =>
           formatPageFailures(result, extensionId).map((failure) => `${result.label}: ${failure}`)
@@ -982,6 +1241,22 @@ async function main() {
 
       console.log(`OK extension id ${extensionId}`);
       console.log(`OK service worker ${backgroundTarget.url}`);
+      console.log(
+        [
+          "OK popup UI flow",
+          `preview=${popupUiFlow.previewPhase || ""}`,
+          `apply=${popupUiFlow.applyPhase || ""}`,
+          `previewButton=${popupUiFlow.startButtonTextBefore || ""}`,
+          `applyButton=${popupUiFlow.applyButtonText || ""}`,
+          `normalBookmarks=${popupUiFlow.bookmarkCount}`,
+          `warnings=${popupUiFlow.finalWarningCount}`,
+          `backupRecords=${popupUiFlow.backupRecordCount}`,
+          `duplicateGithub=${popupUiFlow.urlCounts?.["https://github.com/Ariandel35/marko"] || 0}`
+        ].join(" | ")
+      );
+      if (popupUiFlow.screenshotPath) {
+        console.log(`OK screenshot ${popupUiFlow.screenshotPath}`);
+      }
       console.log(
         [
           "OK core flow",
