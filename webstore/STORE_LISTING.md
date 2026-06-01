@@ -30,6 +30,7 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 弹窗操作已经成功但后续状态刷新失败时，会保留刷新失败提示，不再误报成操作失败
 - 发布前可运行 UI 审计脚本检查中英文窄屏布局，横向溢出、按钮裁切或脚本异常会直接失败
 - 发布前可用一条命令串联测试、UI 审计、打包、ZIP 校验和上传文件清单检查
+- 发布门禁会校验 README 截图、商店宣传图和图标尺寸，减少后台上传素材出错
 - 按钮和状态徽标会在容器内收缩和换行，减少长文案造成的挤压
 - 弹窗文件夹摘要读取失败时会在详情区提示，不会静默显示空白结果区
 - 白名单网站目录读取失败时会显示独立错误提示，不再误显示成没有可选网站
@@ -98,6 +99,7 @@ Key features:
 - Popup action successes keep refresh-failure feedback visible instead of clearing it or reporting the completed action as failed
 - A pre-release UI audit script checks bilingual narrow-screen layouts and fails on horizontal overflow, clipped buttons, or runtime exceptions
 - A single release gate runs tests, UI audit, package generation, ZIP validation, and upload file allowlist checks before publishing
+- The release gate validates README screenshots, store promo image dimensions, and icon sizes before upload
 - Buttons and status badges shrink and wrap inside their containers to reduce long-label overflow
 - Popup and settings startup controls stay disabled until saved state is loaded or a recoverable load failure is shown
 - Long settings status and hint text wraps safely on narrow screens, with clearer muted disabled buttons

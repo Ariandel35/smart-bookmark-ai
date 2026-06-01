@@ -20,6 +20,7 @@
 - The publish checklist now separates real `chrome://extensions` Load unpacked validation from Google Chrome CLI launches that ignore `--load-extension`, and adds narrow-width popup/settings UI audit gates
 - Added `npm run audit:ui` to render popup and settings pages with Chrome API mocks across Chinese preview and English long-error states, failing on horizontal overflow, clipped buttons, or runtime exceptions
 - Added `npm run verify:release` as a single release gate for tests, UI layout audit, Web Store package generation, ZIP validation, and package-file allowlist checks
+- The release gate now validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes before rebuilding the upload package
 - Buttons and status badges now shrink and wrap within their containers by default, hardening future long localized labels against overflow
 - Popup and settings startup controls now stay disabled until saved state is loaded or a recoverable load failure is shown, avoiding early mis-clicks on stale default UI
 - Long settings status and hint text now wraps safely on narrow screens, and disabled primary buttons use a muted disabled style instead of looking actionable

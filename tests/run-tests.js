@@ -1395,6 +1395,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Popup action successes now preserve refresh-failure feedback/);
   assert.match(changelog, /Added `npm run audit:ui`/);
   assert.match(changelog, /Added `npm run verify:release`/);
+  assert.match(changelog, /validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes/);
   assert.match(changelog, /Buttons and status badges now shrink and wrap/);
   assert.match(changelog, /startup controls now stay disabled/);
   assert.match(changelog, /Long settings status and hint text now wraps safely/);
@@ -1475,6 +1476,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Popup action successes now preserve refresh-failure feedback/);
   assert.match(releaseNotes, /Added `npm run audit:ui`/);
   assert.match(releaseNotes, /Added `npm run verify:release`/);
+  assert.match(releaseNotes, /validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes/);
   assert.match(releaseNotes, /Buttons and status badges now shrink and wrap/);
   assert.match(releaseNotes, /startup controls now stay disabled/);
   assert.match(releaseNotes, /Long settings status and hint text now wraps safely/);
@@ -1549,6 +1551,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /Popup action successes keep refresh-failure feedback visible/);
   assert.match(storeListing, /pre-release UI audit script checks bilingual narrow-screen layouts/);
   assert.match(storeListing, /single release gate runs tests, UI audit, package generation/);
+  assert.match(storeListing, /validates README screenshots, store promo image dimensions, and icon sizes/);
   assert.match(storeListing, /Buttons and status badges shrink and wrap/);
   assert.match(storeListing, /startup controls stay disabled/);
   assert.match(storeListing, /Long settings status and hint text wraps safely/);
@@ -1597,6 +1600,11 @@ function testReleaseMaterialsCurrent() {
   );
   assert.match(releaseVerifier, /tests\/run-tests\.js/);
   assert.match(releaseVerifier, /webstore\/audit_ui_layout\.mjs/);
+  assert.match(releaseVerifier, /verifyStoreAssets/);
+  assert.match(releaseVerifier, /README_SCREENSHOTS/);
+  assert.match(releaseVerifier, /EXACT_IMAGE_DIMENSIONS/);
+  assert.match(releaseVerifier, /chrome-web-store-screenshot-1280x800\.png/);
+  assert.match(releaseVerifier, /icons\/icon-128\.png/);
   assert.match(releaseVerifier, /webstore\/build_extension_package\.mjs/);
   assert.match(releaseVerifier, /Validate ZIP archive/);
   assert.match(releaseVerifier, /assertZipContents/);
@@ -1627,6 +1635,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /不会再次请求模型/);
   assert.match(publishChecklist, /自动整理重建前都会自动备份/);
   assert.match(publishChecklist, /页面内确认/);
+  assert.match(publishChecklist, /截图、宣传图和图标尺寸/);
   assert.match(publishChecklist, /npm run audit:ui/);
   assert.match(publishChecklist, /npm run verify:release/);
   assert.match(publishChecklist, /--load-extension is not allowed in Google Chrome, ignoring/);

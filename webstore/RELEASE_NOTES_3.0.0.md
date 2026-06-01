@@ -25,6 +25,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 弹窗操作已经成功但后续状态刷新失败时，会保留“状态刷新失败”提示，不再把已完成操作误报成失败或直接清空提示
 - 新增 `npm run audit:ui`，可用 Chrome API mock 渲染中英文弹窗和设置页，并在横向溢出、按钮裁切或脚本异常时失败
 - 新增 `npm run verify:release`，一键串联测试、UI 审计、商店包生成、ZIP 校验和上传文件清单检查
+- 发布门禁现在也会校验 README 截图、Chrome Web Store 宣传图和图标尺寸
 - 按钮和状态徽标现在默认会在容器内收缩和换行，降低长中英文文案造成挤压的风险
 - 弹窗文件夹摘要读取失败时会显示详情区提示，不再静默显示空白结果区
 - 白名单网站目录读取失败时会显示独立错误提示，不再误显示成没有可选网站
@@ -85,6 +86,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Popup action successes now preserve refresh-failure feedback instead of clearing it or misreporting the completed action as failed
 - Added `npm run audit:ui` to render popup and settings pages with Chrome API mocks across Chinese preview and English long-error states, failing on horizontal overflow, clipped buttons, or runtime exceptions
 - Added `npm run verify:release` as a single release gate for tests, UI layout audit, Web Store package generation, ZIP validation, and package-file allowlist checks
+- The release gate now validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes before rebuilding the upload package
 - Buttons and status badges now shrink and wrap inside their containers to reduce overflow risk with longer localized labels
 - Popup and settings startup controls now stay disabled until saved state is loaded or a recoverable load failure is shown, avoiding early mis-clicks on stale default UI
 - Long settings status and hint text now wraps safely on narrow screens, and disabled primary buttons use a muted disabled style instead of looking actionable

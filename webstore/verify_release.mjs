@@ -17,6 +17,22 @@ const DISALLOWED_PACKAGE_PATTERNS = [
   /^SUPPORT\.md$/,
   /^SECURITY\.md$/
 ];
+const README_SCREENSHOTS = [
+  "docs/screenshots/popup-store.png",
+  "docs/screenshots/popup-apply-store.png",
+  "docs/screenshots/options-connection-store.png",
+  "docs/screenshots/options-organization-store.png",
+  "docs/screenshots/options-backup-store.png"
+];
+const EXACT_IMAGE_DIMENSIONS = {
+  "webstore/assets/chrome-web-store-screenshot-1280x800.png": [1280, 800],
+  "webstore/assets/chrome-web-store-small-promo-440x280.png": [440, 280],
+  "webstore/assets/chrome-web-store-marquee-1400x560.png": [1400, 560],
+  "icons/icon-16.png": [16, 16],
+  "icons/icon-32.png": [32, 32],
+  "icons/icon-48.png": [48, 48],
+  "icons/icon-128.png": [128, 128]
+};
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -28,6 +44,28 @@ function runStep(label, command, args) {
     cwd: ROOT_DIR,
     stdio: "inherit"
   });
+}
+
+function readPngDimensions(filePath) {
+  const buffer = fs.readFileSync(filePath);
+  if (buffer.toString("ascii", 1, 4) !== "PNG") {
+    throw new Error(`${path.relative(ROOT_DIR, filePath)} is not a PNG file.`);
+  }
+
+  return {
+    width: buffer.readUInt32BE(16),
+    height: buffer.readUInt32BE(20)
+  };
+}
+
+function assertImageDimensions(filePath, expectedDimensions) {
+  const dimensions = readPngDimensions(filePath);
+  const relativePath = path.relative(ROOT_DIR, filePath);
+  if (dimensions.width !== expectedDimensions[0] || dimensions.height !== expectedDimensions[1]) {
+    throw new Error(
+      `${relativePath} must be ${expectedDimensions[0]}x${expectedDimensions[1]}, got ${dimensions.width}x${dimensions.height}.`
+    );
+  }
 }
 
 function findEndOfCentralDirectory(buffer) {
@@ -62,6 +100,25 @@ function readZipEntries(zipPath) {
   }
 
   return entries;
+}
+
+function verifyStoreAssets() {
+  console.log("\n== Store image assets ==");
+  for (const screenshotPath of README_SCREENSHOTS) {
+    const absolutePath = path.join(ROOT_DIR, screenshotPath);
+    const dimensions = readPngDimensions(absolutePath);
+    if (dimensions.width < 800 || dimensions.height < 600) {
+      throw new Error(
+        `${screenshotPath} must be at least 800x600, got ${dimensions.width}x${dimensions.height}.`
+      );
+    }
+    console.log(`OK ${screenshotPath} ${dimensions.width}x${dimensions.height}`);
+  }
+
+  for (const [assetPath, expectedDimensions] of Object.entries(EXACT_IMAGE_DIMENSIONS)) {
+    assertImageDimensions(path.join(ROOT_DIR, assetPath), expectedDimensions);
+    console.log(`OK ${assetPath} ${expectedDimensions[0]}x${expectedDimensions[1]}`);
+  }
 }
 
 function assertPackageList(packageFiles) {
@@ -120,6 +177,7 @@ function verifyPackage() {
 function main() {
   runStep("Static and unit tests", process.execPath, ["tests/run-tests.js"]);
   runStep("Responsive UI audit", process.execPath, ["webstore/audit_ui_layout.mjs"]);
+  verifyStoreAssets();
   runStep("Build Web Store package", process.execPath, ["webstore/build_extension_package.mjs"]);
   verifyPackage();
 }
