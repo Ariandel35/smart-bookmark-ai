@@ -141,6 +141,7 @@ Run a real unpacked-extension smoke test with Chrome for Testing or Chromium:
 npm run e2e:extension
 ```
 
+The script uses a temporary browser profile, seeds real bookmarks, then verifies manual backup, Fast preview, Apply Plan, duplicate cleanup, backup records, the popup, and the options page.
 Set `MARKO_EXTENSION_SCREENSHOT_DIR=/tmp/marko-e2e` to keep popup and options screenshots from that run.
 
 Run the full release gate before uploading a package:

@@ -1398,6 +1398,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Popup action successes now preserve refresh-failure feedback/);
   assert.match(changelog, /Added `npm run audit:ui`/);
   assert.match(changelog, /Added `npm run e2e:extension` and `npm run verify:release:full`/);
+  assert.match(changelog, /seeds a temporary bookmark profile and verifies manual backup, Fast preview, Apply Plan/);
   assert.match(changelog, /Added `npm run verify:release`/);
   assert.match(changelog, /validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes/);
   assert.match(changelog, /Buttons and status badges now shrink and wrap/);
@@ -1433,6 +1434,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run audit:ui/);
   assert.match(readme, /npm run e2e:extension/);
+  assert.match(readme, /seeds real bookmarks, then verifies manual backup, Fast preview, Apply Plan/);
   assert.match(readme, /MARKO_EXTENSION_SCREENSHOT_DIR=\/tmp\/marko-e2e/);
   assert.match(readme, /npm run verify:release/);
   assert.match(readme, /npm run verify:release:full/);
@@ -1452,6 +1454,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /npm test/);
   assert.match(readmeZh, /npm run audit:ui/);
   assert.match(readmeZh, /npm run e2e:extension/);
+  assert.match(readmeZh, /写入真实书签，然后验证手动备份、快速预览、应用方案/);
   assert.match(readmeZh, /MARKO_EXTENSION_SCREENSHOT_DIR=\/tmp\/marko-e2e/);
   assert.match(readmeZh, /npm run verify:release/);
   assert.match(readmeZh, /npm run verify:release:full/);
@@ -1486,6 +1489,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Popup action successes now preserve refresh-failure feedback/);
   assert.match(releaseNotes, /Added `npm run audit:ui`/);
   assert.match(releaseNotes, /Added `npm run e2e:extension` and `npm run verify:release:full`/);
+  assert.match(releaseNotes, /seeds temporary bookmarks and verifies manual backup, Fast preview, Apply Plan/);
   assert.match(releaseNotes, /Added `npm run verify:release`/);
   assert.match(releaseNotes, /validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes/);
   assert.match(releaseNotes, /Buttons and status badges now shrink and wrap/);
@@ -1643,6 +1647,15 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /chrome-extension:\/\/\$\{extensionId\}\/popup\.html/);
   assert.match(extensionE2e, /chrome-extension:\/\/\$\{extensionId\}\/options\.html#connection/);
   assert.match(extensionE2e, /Page\.captureScreenshot/);
+  assert.match(extensionE2e, /CREATE_MANUAL_BACKUP/);
+  assert.match(extensionE2e, /CHECK_LOCAL_MODEL_REQUIREMENT/);
+  assert.match(extensionE2e, /START_PREVIEW/);
+  assert.match(extensionE2e, /APPLY_PREVIEW_PLAN/);
+  assert.match(extensionE2e, /formatCoreFlowFailures/);
+  assert.match(extensionE2e, /duplicateGithub/);
+  assert.match(extensionE2e, /backupRecordCount/);
+  assert.match(extensionE2e, /popup completed flow 400/);
+  assert.match(extensionE2e, /phaseBadgeText/);
   assert.match(extensionE2e, /speedModeBalancedButton/);
   assert.match(extensionE2e, /settings-tab-backup/);
 
@@ -1705,6 +1718,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /权限说明/);
   assert.match(publishChecklist, /npm run audit:ui/);
   assert.match(publishChecklist, /npm run e2e:extension/);
+  assert.match(publishChecklist, /临时书签可完成手动备份、快速预览、应用方案、重复清理和备份记录验证/);
   assert.match(publishChecklist, /npm run verify:release/);
   assert.match(publishChecklist, /npm run verify:release:full/);
   assert.match(publishChecklist, /--load-extension is not allowed in Google Chrome, ignoring/);

@@ -34,6 +34,34 @@ async function pathExists(candidate) {
   }
 }
 
+async function waitForProcessExit(childProcess, timeoutMs = 3000) {
+  if (childProcess.exitCode !== null || childProcess.signalCode) {
+    return;
+  }
+
+  await new Promise((resolve) => {
+    const timeout = setTimeout(resolve, timeoutMs);
+    childProcess.once("exit", () => {
+      clearTimeout(timeout);
+      resolve();
+    });
+  });
+}
+
+async function removeDirectoryWithRetry(directoryPath) {
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    try {
+      await fs.rm(directoryPath, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      if (attempt === 5) {
+        throw error;
+      }
+      await sleep(250);
+    }
+  }
+}
+
 function isKnownUnsupportedChrome(executablePath) {
   return /\/Google Chrome\.app\/Contents\/MacOS\/Google Chrome$/.test(executablePath);
 }
@@ -209,11 +237,16 @@ class CdpClient {
     }
   }
 
-  async send(method, params = {}) {
+  async send(method, params = {}, sessionId = "") {
     await this.ready;
     const id = this.nextId;
     this.nextId += 1;
-    this.socket.write(createWebSocketFrame(JSON.stringify({ id, method, params })));
+    this.socket.write(createWebSocketFrame(JSON.stringify({
+      id,
+      method,
+      params,
+      ...(sessionId ? { sessionId } : {})
+    })));
 
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
@@ -322,6 +355,180 @@ async function waitForBackgroundTarget(browserClient, extensionId) {
   throw new Error(`Marko service worker ${REQUIRED_BACKGROUND_PATH} was not visible through CDP.`);
 }
 
+function coreFlowExpression() {
+  return `(async () => {
+    if (!chrome?.runtime?.id || !chrome?.bookmarks || !chrome?.storage?.local) {
+      throw new Error("Required extension APIs are not available in the extension page.");
+    }
+
+    const sendMessage = (message) => chrome.runtime.sendMessage(message);
+    const deepClone = (value) => JSON.parse(JSON.stringify(value));
+    const flattenBookmarks = async (node) => {
+      if (node.url) {
+        return [{ title: node.title, url: node.url }];
+      }
+      const children = await chrome.bookmarks.getChildren(node.id).catch(() => []);
+      const nested = [];
+      for (const child of children) {
+        nested.push(...(await flattenBookmarks(child)));
+      }
+      return nested;
+    };
+    const tree = await chrome.bookmarks.getTree();
+    const bar = tree[0].children.find((node) => node.id === "1") || tree[0].children.find((node) => !node.url);
+    if (!bar) {
+      throw new Error("Bookmarks bar was not found in the temporary profile.");
+    }
+
+    for (const child of await chrome.bookmarks.getChildren(bar.id)) {
+      if (child.url) {
+        await chrome.bookmarks.remove(child.id);
+      } else {
+        await chrome.bookmarks.removeTree(child.id);
+      }
+    }
+    await chrome.storage.local.clear();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
+    await chrome.bookmarks.create({
+      parentId: bar.id,
+      title: "Marko Repo",
+      url: "https://github.com/Ariandel35/marko"
+    });
+    await chrome.bookmarks.create({
+      parentId: bar.id,
+      title: "Marko Repo Duplicate",
+      url: "https://github.com/Ariandel35/marko"
+    });
+    await chrome.bookmarks.create({
+      parentId: bar.id,
+      title: "OpenAI",
+      url: "https://openai.com/"
+    });
+    await chrome.bookmarks.create({
+      parentId: bar.id,
+      title: "Needs Manual Review",
+      url: "https://example.invalid/manual-review"
+    });
+
+    await chrome.storage.local.set({
+      smartBookmarkConfig: {
+        provider: "openai",
+        baseUrl: "https://api.openai.com/v1",
+        apiKey: "",
+        model: "gpt-4.1-mini",
+        batchSize: 9,
+        linkCheckMode: "fast",
+        autoOrganizeEnabled: false,
+        autoOrganizeIntervalHours: 24,
+        whitelistDomains: "",
+        protectedRootFolders: "",
+        domainFolderRules: "github.com => Code\\nopenai.com => AI",
+        customPrompt: "Keep this temporary E2E run local and compact."
+      }
+    });
+
+    const manualBackup = await sendMessage({ type: "CREATE_MANUAL_BACKUP" });
+    const requirement = await sendMessage({ type: "CHECK_LOCAL_MODEL_REQUIREMENT" });
+    const preview = await sendMessage({
+      type: "START_PREVIEW",
+      localRequirementCheckId: requirement.checkId || ""
+    });
+    const afterPreview = await chrome.storage.local.get([
+      "smartBookmarkJobStatus",
+      "smartBookmarkPreviewPlan",
+      "smartBookmarkBackupRecords"
+    ]);
+    const apply = await sendMessage({ type: "APPLY_PREVIEW_PLAN" });
+    const afterApply = await chrome.storage.local.get([
+      "smartBookmarkJobStatus",
+      "smartBookmarkPreviewPlan",
+      "smartBookmarkBackupRecords"
+    ]);
+
+    const finalChildren = await chrome.bookmarks.getChildren(bar.id);
+    const finalBookmarks = [];
+    for (const child of finalChildren) {
+      finalBookmarks.push(...(await flattenBookmarks(child)));
+    }
+    const finalUrlCounts = finalBookmarks.reduce((counts, bookmark) => {
+      counts[bookmark.url] = (counts[bookmark.url] || 0) + 1;
+      return counts;
+    }, {});
+
+    return {
+      manualBackup,
+      requirement,
+      preview,
+      previewStatus: deepClone(afterPreview.smartBookmarkJobStatus || {}),
+      previewPlan: deepClone(afterPreview.smartBookmarkPreviewPlan || null),
+      apply,
+      finalStatus: deepClone(afterApply.smartBookmarkJobStatus || {}),
+      previewPlanAfterApply: Boolean(afterApply.smartBookmarkPreviewPlan),
+      backupRecordCount: (afterApply.smartBookmarkBackupRecords || []).length,
+      normalRootTitles: finalChildren.map((child) => child.title),
+      finalBookmarkCount: finalBookmarks.length,
+      finalUrlCounts,
+      finalBookmarks
+    };
+  })()`;
+}
+
+async function runCoreFlow(port, extensionId) {
+  const target = await createTarget(port);
+  const client = new CdpClient(target.webSocketDebuggerUrl);
+  try {
+    await client.send("Runtime.enable");
+    await client.send("Page.enable");
+    await client.send("Page.navigate", { url: `chrome-extension://${extensionId}/popup.html` });
+    await sleep(1500);
+    return await evaluate(client, coreFlowExpression());
+  } finally {
+    client.close();
+    await closeTarget(port, target.id);
+  }
+}
+
+function formatCoreFlowFailures(result) {
+  const failures = [];
+
+  if (!result?.manualBackup?.ok || !result.manualBackup.created) {
+    failures.push("manual backup did not create a real bookmark snapshot");
+  }
+  if (!result?.requirement?.ok || result.requirement.total !== 4 || result.requirement.needsModel) {
+    failures.push(`unexpected local requirement result: ${JSON.stringify(result?.requirement || {})}`);
+  }
+  if (!result?.preview?.ok || result.previewStatus?.phase !== "preview" || !result.previewPlan) {
+    failures.push("fast preview did not finish with a saved preview plan");
+  }
+  if (Number(result.previewPlan?.deleted || 0) < 1) {
+    failures.push("preview did not detect the duplicate bookmark");
+  }
+  if (!result?.apply?.ok || result.finalStatus?.phase !== "completed") {
+    failures.push("applying the saved preview did not complete");
+  }
+  if (result.previewPlanAfterApply) {
+    failures.push("preview plan was not cleared after apply");
+  }
+  if (Number(result.backupRecordCount || 0) < 2) {
+    failures.push("manual and pre-apply backup records were not both preserved");
+  }
+  if (Number(result.finalUrlCounts?.["https://github.com/Ariandel35/marko"] || 0) !== 1) {
+    failures.push("duplicate GitHub bookmark was not reduced to one normal bookmark");
+  }
+  if (Number(result.finalUrlCounts?.["https://openai.com/"] || 0) !== 1) {
+    failures.push("OpenAI bookmark was not preserved after apply");
+  }
+  if (Number(result.finalUrlCounts?.["https://example.invalid/manual-review"] || 0) !== 1) {
+    failures.push("unmatched bookmark was not preserved for manual review");
+  }
+  if (Number(result.finalBookmarkCount || 0) !== 3) {
+    failures.push(`expected 3 normal bookmarks after duplicate cleanup, got ${result.finalBookmarkCount}`);
+  }
+
+  return failures;
+}
+
 function pageAuditExpression(pageKind) {
   return `(() => {
     const pageKind = ${JSON.stringify(pageKind)};
@@ -366,7 +573,11 @@ function pageAuditExpression(pageKind) {
         fast: document.getElementById("speedModeFastButton")?.getAttribute("aria-checked") || "",
         balanced: document.getElementById("speedModeBalancedButton")?.getAttribute("aria-checked") || "",
         complete: document.getElementById("speedModeCompleteButton")?.getAttribute("aria-checked") || "",
-        balancedDisabled: Boolean(document.getElementById("speedModeBalancedButton")?.disabled)
+        balancedDisabled: Boolean(document.getElementById("speedModeBalancedButton")?.disabled),
+        phaseBadgeText: (document.getElementById("phaseBadge")?.textContent || "").trim(),
+        progressSummary: (document.getElementById("progressSummary")?.textContent || "").trim(),
+        deletedValue: (document.getElementById("deletedValue")?.textContent || "").trim(),
+        warningValue: (document.getElementById("warningValue")?.textContent || "").trim()
       } : null,
       optionsState: pageKind === "options" ? {
         activeTab: document.querySelector('[role="tab"][aria-selected="true"]')?.id || "",
@@ -405,7 +616,7 @@ async function auditExtensionPage(port, page) {
     await client.send("Page.navigate", { url: page.url });
     await sleep(1500);
 
-    if (page.kind === "popup") {
+    if (page.kind === "popup" && page.action === "switch-balanced") {
       await evaluate(
         client,
         `(() => {
@@ -498,7 +709,10 @@ function formatPageFailures(result, extensionId) {
   if (result.consoleErrors?.length) {
     failures.push(`console errors: ${result.consoleErrors.join(" | ")}`);
   }
-  if (metrics.pageKind === "popup" && metrics.popupMode?.balanced !== "true") {
+  if (metrics.pageKind === "popup" && !/^(Completed|已完成)$/.test(metrics.popupMode?.phaseBadgeText || "")) {
+    failures.push(`popup did not render the completed core-flow status: ${metrics.popupMode?.phaseBadgeText || "(missing)"}`);
+  }
+  if (metrics.pageKind === "popup" && pageActionWasBalanced(result) && metrics.popupMode?.balanced !== "true") {
     failures.push("popup Balanced interaction did not update aria-checked");
   }
   if (metrics.pageKind === "options" && metrics.optionsState?.activeTab !== "settings-tab-backup") {
@@ -509,6 +723,10 @@ function formatPageFailures(result, extensionId) {
   }
 
   return failures;
+}
+
+function pageActionWasBalanced(result) {
+  return result?.metrics?.pageKind === "popup" && result?.action === "switch-balanced";
 }
 
 async function main() {
@@ -542,10 +760,12 @@ async function main() {
     try {
       await browserClient.send("Target.setDiscoverTargets", { discover: true });
       const extensionId = await waitForExtensionId(browserClient, profileDir);
+      const backgroundTarget = await waitForBackgroundTarget(browserClient, extensionId);
+      const coreFlow = await runCoreFlow(port, extensionId);
       const pages = [
         {
           kind: "popup",
-          label: "popup real extension 400",
+          label: "popup completed flow 400",
           url: `chrome-extension://${extensionId}/popup.html`,
           width: 400,
           height: 760
@@ -560,15 +780,30 @@ async function main() {
       ];
       const results = [];
       for (const page of pages) {
-        results.push(await auditExtensionPage(port, page));
+        const result = await auditExtensionPage(port, page);
+        result.action = page.action || "";
+        results.push(result);
       }
-      const backgroundTarget = await waitForBackgroundTarget(browserClient, extensionId);
-      const failures = results.flatMap((result) =>
-        formatPageFailures(result, extensionId).map((failure) => `${result.label}: ${failure}`)
-      );
+      const failures = [
+        ...formatCoreFlowFailures(coreFlow).map((failure) => `core flow: ${failure}`),
+        ...results.flatMap((result) =>
+          formatPageFailures(result, extensionId).map((failure) => `${result.label}: ${failure}`)
+        )
+      ];
 
       console.log(`OK extension id ${extensionId}`);
       console.log(`OK service worker ${backgroundTarget.url}`);
+      console.log(
+        [
+          "OK core flow",
+          `manualBackup=${Boolean(coreFlow.manualBackup?.created)}`,
+          `preview=${coreFlow.previewStatus?.phase || ""}`,
+          `apply=${coreFlow.finalStatus?.phase || ""}`,
+          `normalBookmarks=${coreFlow.finalBookmarkCount}`,
+          `backupRecords=${coreFlow.backupRecordCount}`,
+          `duplicateGithub=${coreFlow.finalUrlCounts?.["https://github.com/Ariandel35/marko"] || 0}`
+        ].join(" | ")
+      );
       for (const result of results) {
         const metrics = result.metrics;
         console.log(
@@ -597,7 +832,8 @@ async function main() {
     }
   } finally {
     browser.kill();
-    await fs.rm(profileDir, { recursive: true, force: true });
+    await waitForProcessExit(browser);
+    await removeDirectoryWithRetry(profileDir);
   }
 }
 
