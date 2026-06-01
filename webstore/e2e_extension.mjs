@@ -699,6 +699,67 @@ async function evaluate(client, expression) {
   return result.result.value;
 }
 
+function optionsSaveExpression() {
+  return `(async () => {
+    const setValue = (id, value) => {
+      const element = document.getElementById(id);
+      if (!element) {
+        throw new Error(id + " was not found on the options page.");
+      }
+      element.value = value;
+      element.dispatchEvent(new Event("input", { bubbles: true }));
+      element.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+    const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+    const waitForSavedConfig = async () => {
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        const stored = await chrome.storage.local.get("smartBookmarkConfig");
+        const config = stored.smartBookmarkConfig || {};
+        if (
+          config.provider === "deepseek" &&
+          config.batchSize === 9 &&
+          config.linkCheckMode === "fast" &&
+          config.protectedRootFolders === "E2E Protected Root" &&
+          /openai\\.com => AI Saved/.test(config.domainFolderRules || "") &&
+          /E2E saved prompt/.test(config.customPrompt || "")
+        ) {
+          return config;
+        }
+        await wait(150);
+      }
+      throw new Error("Timed out waiting for options settings to be saved.");
+    };
+
+    setValue("provider", "deepseek");
+    await wait(100);
+    setValue("linkCheckMode", "fast");
+    setValue("autoOrganizeEnabled", "false");
+    setValue("baseUrl", "https://api.deepseek.com");
+    setValue("model", "deepseek-chat");
+    setValue("apiKey", "");
+    setValue("batchSize", "48");
+    setValue("autoOrganizeIntervalHours", "12");
+    setValue("protectedRootFolders", "E2E Protected Root");
+    setValue("domainFolderRules", "openai.com => AI Saved");
+    setValue("customPrompt", "E2E saved prompt from real options UI.");
+
+    const form = document.getElementById("settingsForm");
+    const saveButton = document.getElementById("saveButton");
+    if (!form || !saveButton) {
+      throw new Error("Options save form is not available.");
+    }
+    form.requestSubmit(saveButton);
+    const savedConfig = await waitForSavedConfig();
+
+    return {
+      savedConfig,
+      batchSizeInputValue: document.getElementById("batchSize")?.value || "",
+      saveBadgeText: (document.getElementById("saveBadge")?.textContent || "").trim(),
+      settingsActionText: (document.getElementById("settingsActionStatus")?.textContent || "").trim()
+    };
+  })()`;
+}
+
 async function auditExtensionPage(port, page) {
   const target = await createTarget(port);
   const client = new CdpClient(target.webSocketDebuggerUrl);
@@ -714,6 +775,7 @@ async function auditExtensionPage(port, page) {
     await client.send("Page.navigate", { url: page.url });
     await sleep(1500);
 
+    let optionsSave = null;
     if (page.kind === "popup" && page.action === "switch-balanced") {
       await evaluate(
         client,
@@ -727,6 +789,9 @@ async function auditExtensionPage(port, page) {
       );
       await sleep(500);
     } else if (page.kind === "options") {
+      if (page.action === "save-settings-and-backup") {
+        optionsSave = await evaluate(client, optionsSaveExpression());
+      }
       await evaluate(
         client,
         `(() => {
@@ -767,6 +832,7 @@ async function auditExtensionPage(port, page) {
       label: page.label,
       viewport: `${page.width}x${page.height}`,
       metrics,
+      optionsSave,
       screenshotPath,
       exceptions,
       consoleErrors
@@ -818,6 +884,30 @@ function formatPageFailures(result, extensionId) {
   }
   if (metrics.pageKind === "options" && Number(metrics.optionsState?.providerOptions || 0) < 3) {
     failures.push("options provider list did not render provider choices");
+  }
+  if (metrics.pageKind === "options" && result.action === "save-settings-and-backup") {
+    const config = result.optionsSave?.savedConfig || {};
+    if (config.provider !== "deepseek") {
+      failures.push(`options save did not persist provider=deepseek: ${config.provider || "(missing)"}`);
+    }
+    if (config.batchSize !== 9) {
+      failures.push(`options save did not cap DeepSeek batch size to 9: ${config.batchSize}`);
+    }
+    if (config.linkCheckMode !== "fast" || config.autoOrganizeEnabled !== false) {
+      failures.push("options save did not persist the safe Fast mode automation settings");
+    }
+    if (config.protectedRootFolders !== "E2E Protected Root") {
+      failures.push("options save did not persist protected root folders");
+    }
+    if (!/openai\.com => AI Saved/.test(config.domainFolderRules || "")) {
+      failures.push("options save did not persist domain folder rules");
+    }
+    if (!/E2E saved prompt/.test(config.customPrompt || "")) {
+      failures.push("options save did not persist the custom prompt");
+    }
+    if (!result.optionsSave?.saveBadgeText) {
+      failures.push("options save did not render visible save feedback");
+    }
   }
 
   return failures;
@@ -872,6 +962,7 @@ async function main() {
           kind: "options",
           label: "options real extension 1280",
           url: `chrome-extension://${extensionId}/options.html#connection`,
+          action: "save-settings-and-backup",
           width: 1280,
           height: 900
         }
@@ -920,6 +1011,17 @@ async function main() {
             `buttons ${metrics.clippedButtons.length}`
           ].join(" | ")
         );
+        if (result.optionsSave) {
+          console.log(
+            [
+              "OK options save",
+              `provider=${result.optionsSave.savedConfig?.provider || ""}`,
+              `batchSize=${result.optionsSave.savedConfig?.batchSize || ""}`,
+              `mode=${result.optionsSave.savedConfig?.linkCheckMode || ""}`,
+              `feedback=${result.optionsSave.saveBadgeText || ""}`
+            ].join(" | ")
+          );
+        }
         if (result.screenshotPath) {
           console.log(`OK screenshot ${result.screenshotPath}`);
         }

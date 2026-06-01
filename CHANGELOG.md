@@ -23,6 +23,7 @@
 - The real extension smoke test now seeds a temporary bookmark profile and verifies manual backup, Fast preview, Apply Plan, duplicate cleanup, backup records, and screenshots
 - The real extension smoke test now deletes a generated unprocessed item and verifies the live bookmark tree and warning count update before backup restore
 - The real extension smoke test now also restores the original manual backup, verifies the duplicate returns, deletes that backup record, and confirms the backup list shrinks
+- The real extension smoke test now saves settings through the real options UI and verifies DeepSeek batch-size capping, saved rules, prompt, and inline save feedback
 - Added `npm run verify:release` as a single release gate for tests, UI layout audit, Web Store package generation, ZIP validation, and package-file allowlist checks
 - The release gate now validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes before rebuilding the upload package
 - The release gate now validates store listing, privacy policy, review notes, publish checklist, and GitHub store links before packaging

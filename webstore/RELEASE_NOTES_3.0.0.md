@@ -28,6 +28,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 真实扩展冒烟测试会写入临时书签，并验证手动备份、快速预览、应用方案、重复清理、备份记录和截图
 - 真实扩展冒烟测试会删除生成的未处理项，并在恢复备份前验证真实书签树和未处理计数已经更新
 - 真实扩展冒烟测试还会恢复原始手动备份，确认重复书签回到原始状态，再删除该备份记录并验证列表减少
+- 真实扩展冒烟测试会通过真实设置页保存配置，并验证 DeepSeek 批量压低、规则、Prompt 和页面内保存反馈
 - 新增 `npm run verify:release`，一键串联测试、UI 审计、商店包生成、ZIP 校验和上传文件清单检查
 - 发布门禁现在也会校验 README 截图、Chrome Web Store 宣传图和图标尺寸
 - 发布门禁现在也会校验商店文案、隐私政策、审核备注、发布清单和 GitHub 商店链接
@@ -94,6 +95,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - The real extension smoke test seeds temporary bookmarks and verifies manual backup, Fast preview, Apply Plan, duplicate cleanup, backup records, and screenshots
 - The real extension smoke test deletes a generated unprocessed item and verifies the live bookmark tree and warning count update before backup restore
 - The real extension smoke test also restores the original manual backup, verifies the duplicate returns, deletes that backup record, and confirms the backup list shrinks
+- The real extension smoke test saves settings through the real options UI and verifies DeepSeek batch-size capping, rules, prompt, and inline save feedback
 - Added `npm run verify:release` as a single release gate for tests, UI layout audit, Web Store package generation, ZIP validation, and package-file allowlist checks
 - The release gate now validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes before rebuilding the upload package
 - The release gate now validates store listing, privacy policy, review notes, publish checklist, and GitHub store links before packaging

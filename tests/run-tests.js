@@ -1401,6 +1401,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /seeds a temporary bookmark profile and verifies manual backup, Fast preview, Apply Plan/);
   assert.match(changelog, /deletes a generated unprocessed item and verifies the live bookmark tree and warning count/);
   assert.match(changelog, /restores the original manual backup, verifies the duplicate returns, deletes that backup record/);
+  assert.match(changelog, /saves settings through the real options UI and verifies DeepSeek batch-size capping/);
   assert.match(changelog, /Added `npm run verify:release`/);
   assert.match(changelog, /validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes/);
   assert.match(changelog, /Buttons and status badges now shrink and wrap/);
@@ -1439,6 +1440,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /seeds real bookmarks, then verifies manual backup, Fast preview, Apply Plan/);
   assert.match(readme, /unprocessed-item delete/);
   assert.match(readme, /backup restore\/delete/);
+  assert.match(readme, /real options UI save/);
+  assert.match(readme, /DeepSeek batch-size capping/);
   assert.match(readme, /MARKO_EXTENSION_SCREENSHOT_DIR=\/tmp\/marko-e2e/);
   assert.match(readme, /npm run verify:release/);
   assert.match(readme, /npm run verify:release:full/);
@@ -1461,6 +1464,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /写入真实书签，然后验证手动备份、快速预览、应用方案/);
   assert.match(readmeZh, /未处理项删除/);
   assert.match(readmeZh, /备份恢复\/删除/);
+  assert.match(readmeZh, /真实设置页保存/);
+  assert.match(readmeZh, /DeepSeek 批量压低/);
   assert.match(readmeZh, /MARKO_EXTENSION_SCREENSHOT_DIR=\/tmp\/marko-e2e/);
   assert.match(readmeZh, /npm run verify:release/);
   assert.match(readmeZh, /npm run verify:release:full/);
@@ -1498,6 +1503,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /seeds temporary bookmarks and verifies manual backup, Fast preview, Apply Plan/);
   assert.match(releaseNotes, /deletes a generated unprocessed item and verifies the live bookmark tree and warning count/);
   assert.match(releaseNotes, /restores the original manual backup, verifies the duplicate returns, deletes that backup record/);
+  assert.match(releaseNotes, /saves settings through the real options UI and verifies DeepSeek batch-size capping/);
   assert.match(releaseNotes, /Added `npm run verify:release`/);
   assert.match(releaseNotes, /validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes/);
   assert.match(releaseNotes, /Buttons and status badges now shrink and wrap/);
@@ -1664,6 +1670,11 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /RESOLVE_UNPROCESSED_ENTRY/);
   assert.match(extensionE2e, /RESTORE_BACKUP_ENTRY/);
   assert.match(extensionE2e, /DELETE_BACKUP_ENTRY/);
+  assert.match(extensionE2e, /optionsSaveExpression/);
+  assert.match(extensionE2e, /config\.provider === "deepseek"/);
+  assert.match(extensionE2e, /config\.batchSize === 9/);
+  assert.match(extensionE2e, /E2E saved prompt/);
+  assert.match(extensionE2e, /openai\\.com => AI Saved/);
   assert.match(extensionE2e, /formatCoreFlowFailures/);
   assert.match(extensionE2e, /duplicateGithub/);
   assert.match(extensionE2e, /resolvedBookmarks/);
@@ -1735,7 +1746,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /权限说明/);
   assert.match(publishChecklist, /npm run audit:ui/);
   assert.match(publishChecklist, /npm run e2e:extension/);
-  assert.match(publishChecklist, /临时书签可完成手动备份、快速预览、应用方案、重复清理、未处理项删除、备份恢复\/删除和备份记录验证/);
+  assert.match(publishChecklist, /临时书签可完成手动备份、快速预览、应用方案、重复清理、未处理项删除、备份恢复\/删除、备份记录、真实设置页保存和 DeepSeek 批量压低验证/);
   assert.match(publishChecklist, /npm run verify:release/);
   assert.match(publishChecklist, /npm run verify:release:full/);
   assert.match(publishChecklist, /--load-extension is not allowed in Google Chrome, ignoring/);
