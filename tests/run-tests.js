@@ -566,6 +566,8 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /applyConfirmationVisible/);
   assert.match(popupSource, /popupActionInFlight/);
   assert.match(popupSource, /setPopupActionInFlight/);
+  assert.match(popupSource, /function setPopupActionInFlight\(inFlight, message = "", options = \{\}\)/);
+  assert.match(popupSource, /else if \(!options\.preserveStatus\) \{/);
   assert.match(popupSource, /setPopupActionStatus/);
   assert.match(popupSource, /getOptionsSectionUrl/);
   assert.match(popupSource, /options\.html#\$\{safeSection\}/);
@@ -629,6 +631,9 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /focusApplyConfirmationPrimary\(\)/);
   assert.match(popupSource, /startButton\.focus\(\)/);
   assert.match(popupSource, /renderResponseError/);
+  assert.match(popupSource, /setPopupActionStatus\(message, \{ isError: true \}\)/);
+  assert.match(popupSource, /preserveActionStatus = true/);
+  assert.match(popupSource, /setPopupActionInFlight\(false, "", \{ preserveStatus: preserveActionStatus \}\)/);
   assert.match(popupSource, /detail: response\?\.detail \|\| ""/);
   assert.match(popupSource, /progressTrack\.setAttribute\("aria-valuenow", String\(progress\)\)/);
   assert.match(popupSource, /currentStatus\?\.detail \|\|/);
@@ -1284,6 +1289,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /show how many uncached bookmarks require model classification/);
+  assert.match(changelog, /Popup action failures now keep their inline error visible/);
   assert.match(changelog, /Saved preview validation now includes whitelist-preserved bookmarks/);
   assert.match(changelog, /Backup restore now preserves existing backup folders/);
   assert.match(changelog, /local fallback now keeps and caches completed mini-request classifications/);
@@ -1341,6 +1347,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings connection now explains which modes need model fields or website access/);
   assert.match(releaseNotes, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(releaseNotes, /show how many uncached bookmarks require model classification/);
+  assert.match(releaseNotes, /Popup action failures now keep their inline error visible/);
   assert.match(releaseNotes, /Saved preview validation now includes whitelist-preserved bookmarks/);
   assert.match(releaseNotes, /Backup restore now preserves existing backup folders/);
   assert.match(releaseNotes, /keeps and caches any completed mini-request classifications/);

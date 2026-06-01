@@ -14,6 +14,7 @@
 - Settings connection fields now expose the selected mode requirement hint to assistive technologies while preserving inline validation messages
 - Popup setup copy and shortcut logic now avoid implying Fast mode needs API credentials when local preview can run without a model call
 - Popup setup errors now show how many uncached bookmarks require model classification before asking users to finish AI access setup
+- Popup action failures now keep their inline error visible after buttons unlock instead of clearing the message in the completion cleanup
 - Saved preview validation now includes whitelist-preserved bookmarks so Apply Plan cannot restore stale whitelisted content after bookmarks change
 - Backup restore now preserves existing backup folders while replacing normal bookmark content, matching the pre-restore snapshot scope
 - Popup speed-mode changes now save against merged provider defaults so legacy partial configs do not keep stale missing connection fields

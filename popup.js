@@ -390,9 +390,13 @@ function setPopupActionStatus(message = "", options = {}) {
   popupActionStatus.classList.toggle("is-error", Boolean(text && options.isError));
 }
 
-function setPopupActionInFlight(inFlight, message = "") {
+function setPopupActionInFlight(inFlight, message = "", options = {}) {
   popupActionInFlight = Boolean(inFlight);
-  setPopupActionStatus(popupActionInFlight ? message : "");
+  if (popupActionInFlight) {
+    setPopupActionStatus(message);
+  } else if (!options.preserveStatus) {
+    setPopupActionStatus("");
+  }
   syncActionButtons();
 }
 
@@ -948,12 +952,14 @@ function renderDetailPanelContent() {
 }
 
 function renderResponseError(response, fallbackMessage) {
+  const message = response?.error || fallbackMessage;
   renderStatus({
     ...(currentStatus || {}),
     phase: "error",
-    message: response?.error || fallbackMessage,
+    message,
     detail: response?.detail || ""
   });
+  setPopupActionStatus(message, { isError: true });
   renderDetailPanelContent();
 }
 
@@ -1030,6 +1036,7 @@ async function updatePopupSpeedMode(rawMode) {
 
 async function startJob() {
   setPopupActionInFlight(true, t("popupApplyingPlanStatus"));
+  let preserveActionStatus = false;
 
   try {
     const response = await chrome.runtime.sendMessage({ type: "APPLY_PREVIEW_PLAN" });
@@ -1037,17 +1044,19 @@ async function startJob() {
     if (!response?.ok) {
       await refreshAll();
       renderResponseError(response, t("startJobFailed"));
+      preserveActionStatus = true;
       return;
     }
 
     await refreshAll();
   } finally {
-    setPopupActionInFlight(false);
+    setPopupActionInFlight(false, "", { preserveStatus: preserveActionStatus });
   }
 }
 
 async function startPreview() {
   setPopupActionInFlight(true, t("popupCheckingCoverageStatus"));
+  let preserveActionStatus = false;
 
   try {
     const requirement = await chrome.runtime.sendMessage({ type: "CHECK_LOCAL_MODEL_REQUIREMENT" });
@@ -1055,6 +1064,7 @@ async function startPreview() {
     if (!requirement?.ok) {
       await refreshAll();
       renderResponseError(requirement, t("previewStartFailed"));
+      preserveActionStatus = true;
       return;
     }
 
@@ -1070,6 +1080,7 @@ async function startPreview() {
         },
         getSetupProblem(currentConfig)
       );
+      preserveActionStatus = true;
       return;
     }
 
@@ -1085,6 +1096,7 @@ async function startPreview() {
         { error: t("hostPermissionRequiredTitle"), detail: t("hostPermissionRequiredDetail") },
         t("hostPermissionRequiredTitle")
       );
+      preserveActionStatus = true;
       return;
     }
 
@@ -1097,12 +1109,13 @@ async function startPreview() {
     if (!response?.ok) {
       await refreshAll();
       renderResponseError(response, t("previewStartFailed"));
+      preserveActionStatus = true;
       return;
     }
 
     await refreshAll();
   } finally {
-    setPopupActionInFlight(false);
+    setPopupActionInFlight(false, "", { preserveStatus: preserveActionStatus });
   }
 }
 
@@ -1124,6 +1137,7 @@ async function handlePrimaryAction() {
 
 async function createManualBackup() {
   setPopupActionInFlight(true, t("popupCreatingBackupStatus"));
+  let preserveActionStatus = false;
 
   try {
     const response = await chrome.runtime.sendMessage({ type: "CREATE_MANUAL_BACKUP" });
@@ -1131,17 +1145,19 @@ async function createManualBackup() {
     if (!response?.ok) {
       await refreshAll();
       renderResponseError(response, t("createBackupFailed"));
+      preserveActionStatus = true;
       return;
     }
 
     await refreshAll();
   } finally {
-    setPopupActionInFlight(false);
+    setPopupActionInFlight(false, "", { preserveStatus: preserveActionStatus });
   }
 }
 
 async function resolveUnprocessedEntry(entryId, action) {
   setPopupActionInFlight(true, t("popupResolvingItemStatus"));
+  let preserveActionStatus = false;
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -1153,17 +1169,19 @@ async function resolveUnprocessedEntry(entryId, action) {
     if (!response?.ok) {
       await refreshAll();
       renderResponseError(response, t("resolveUnprocessedFailed"));
+      preserveActionStatus = true;
       return;
     }
 
     await refreshAll();
   } finally {
-    setPopupActionInFlight(false);
+    setPopupActionInFlight(false, "", { preserveStatus: preserveActionStatus });
   }
 }
 
 async function cancelJob() {
   setPopupActionInFlight(true, t("popupCancellingStatus"));
+  let preserveActionStatus = false;
 
   try {
     const response = await chrome.runtime.sendMessage({ type: "CANCEL_JOB" });
@@ -1171,12 +1189,13 @@ async function cancelJob() {
     if (!response?.ok) {
       await refreshAll();
       renderResponseError(response, t("cancelJobFailed"));
+      preserveActionStatus = true;
       return;
     }
 
     await refreshAll();
   } finally {
-    setPopupActionInFlight(false);
+    setPopupActionInFlight(false, "", { preserveStatus: preserveActionStatus });
   }
 }
 
@@ -1225,11 +1244,13 @@ speedModeButtons.forEach((button, index) => {
 startButton.addEventListener("click", () => {
   handlePrimaryAction().catch((error) => {
     console.error("Failed to run primary action:", error);
+    const message = canApplyPreviewPlan() ? t("startJobException") : t("previewStartException");
     renderStatus({
       ...(currentStatus || {}),
       phase: "error",
-      message: canApplyPreviewPlan() ? t("startJobException") : t("previewStartException")
+      message
     });
+    setPopupActionStatus(message, { isError: true });
     renderDetailPanelContent();
   });
 });
@@ -1237,11 +1258,13 @@ startButton.addEventListener("click", () => {
 backupButton.addEventListener("click", () => {
   createManualBackup().catch((error) => {
     console.error("Failed to create manual backup:", error);
+    const message = t("createBackupException");
     renderStatus({
       ...(currentStatus || {}),
       phase: "error",
-      message: t("createBackupException")
+      message
     });
+    setPopupActionStatus(message, { isError: true });
     renderDetailPanelContent();
   });
 });
@@ -1249,11 +1272,13 @@ backupButton.addEventListener("click", () => {
 cancelButton.addEventListener("click", () => {
   cancelJob().catch((error) => {
     console.error("Failed to cancel job:", error);
+    const message = t("cancelJobFailed");
     renderStatus({
       ...(currentStatus || {}),
       phase: "error",
-      message: t("cancelJobFailed")
+      message
     });
+    setPopupActionStatus(message, { isError: true });
     renderDetailPanelContent();
   });
 });
