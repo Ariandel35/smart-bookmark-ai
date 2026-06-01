@@ -129,6 +129,12 @@ Marko 支持 OpenAI、DeepSeek、MiniMax、Anthropic、Gemini、OpenRouter、Gro
 npm test
 ```
 
+审计弹窗和设置页在窄屏、宽屏下的自适应布局：
+
+```bash
+npm run audit:ui
+```
+
 生成 Chrome Web Store 上传包：
 
 ```bash

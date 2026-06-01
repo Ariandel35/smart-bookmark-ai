@@ -129,6 +129,12 @@ Run the static checks and extension tests:
 npm test
 ```
 
+Audit popup and settings layout across narrow and wide viewports:
+
+```bash
+npm run audit:ui
+```
+
 Build the Chrome Web Store upload package:
 
 ```bash

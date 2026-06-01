@@ -20,6 +20,7 @@ const JAVASCRIPT_SYNTAX_FILES = [
   "providers.js",
   "rules.js",
   "tests/run-tests.js",
+  "webstore/audit_ui_layout.mjs",
   "webstore/build_extension_package.mjs",
   "webstore/render_store_assets.mjs"
 ];
@@ -248,6 +249,7 @@ function testStaticExtensionAssets() {
   assert.equal(packageJson.version, manifest.version);
   assert.equal(packageJson.private, true);
   assert.equal(packageJson.scripts?.test, "node tests/run-tests.js");
+  assert.equal(packageJson.scripts?.["audit:ui"], "node webstore/audit_ui_layout.mjs");
   assert.equal(packageJson.scripts?.["package:webstore"], "node webstore/build_extension_package.mjs");
   assert.equal(packageJson.dependencies, undefined);
   assert.equal(packageJson.devDependencies, undefined);
@@ -1389,6 +1391,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Popup action failures now keep their inline error visible/);
   assert.match(changelog, /Popup action error responses now keep their specific failure message/);
   assert.match(changelog, /Popup action successes now preserve refresh-failure feedback/);
+  assert.match(changelog, /Added `npm run audit:ui`/);
   assert.match(changelog, /Buttons and status badges now shrink and wrap/);
   assert.match(changelog, /startup controls now stay disabled/);
   assert.match(changelog, /Long settings status and hint text now wraps safely/);
@@ -1420,6 +1423,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /clear stale backup error text/);
   assert.match(changelog, /Backup actions now preserve the completed action message/);
   assert.match(readme, /npm test/);
+  assert.match(readme, /npm run audit:ui/);
   assert.match(readme, /npm run package:webstore/);
   assert.match(readme, /Popup mode switch/);
   assert.match(readme, /built-in domain rules/);
@@ -1434,6 +1438,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /restoring creates a fresh local snapshot first/);
   assert.match(readmeZh, /DeepSeek 兼容接口/);
   assert.match(readmeZh, /npm test/);
+  assert.match(readmeZh, /npm run audit:ui/);
   assert.match(readmeZh, /npm run package:webstore/);
   assert.match(readmeZh, /弹窗模式切换/);
   assert.match(readmeZh, /内置域名规则/);
@@ -1463,6 +1468,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Popup action failures now keep their inline error visible/);
   assert.match(releaseNotes, /Popup action error responses now keep their specific failure message/);
   assert.match(releaseNotes, /Popup action successes now preserve refresh-failure feedback/);
+  assert.match(releaseNotes, /Added `npm run audit:ui`/);
   assert.match(releaseNotes, /Buttons and status badges now shrink and wrap/);
   assert.match(releaseNotes, /startup controls now stay disabled/);
   assert.match(releaseNotes, /Long settings status and hint text now wraps safely/);
@@ -1535,6 +1541,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /Popup Settings shortcuts show inline feedback if both opening paths fail/);
   assert.match(storeListing, /Popup action errors keep their specific failure message/);
   assert.match(storeListing, /Popup action successes keep refresh-failure feedback visible/);
+  assert.match(storeListing, /pre-release UI audit script checks bilingual narrow-screen layouts/);
   assert.match(storeListing, /Buttons and status badges shrink and wrap/);
   assert.match(storeListing, /startup controls stay disabled/);
   assert.match(storeListing, /Long settings status and hint text wraps safely/);
@@ -1562,6 +1569,21 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeAssetRenderer, /currentBatch: 18/);
   assert.match(storeAssetRenderer, /totalBatches: 18/);
 
+  const layoutAuditor = fs.readFileSync(
+    path.join(ROOT_DIR, "webstore/audit_ui_layout.mjs"),
+    "utf8"
+  );
+  assert.match(layoutAuditor, /const auditCases = \[/);
+  assert.match(layoutAuditor, /popup zh preview 320/);
+  assert.match(layoutAuditor, /popup en long error 320/);
+  assert.match(layoutAuditor, /settings en connection 390/);
+  assert.match(layoutAuditor, /settings zh backup 1280/);
+  assert.match(layoutAuditor, /overflowElements/);
+  assert.match(layoutAuditor, /scrollableControls/);
+  assert.match(layoutAuditor, /clippedButtons/);
+  assert.match(layoutAuditor, /Runtime\.exceptionThrown/);
+  assert.match(layoutAuditor, /Page\.addScriptToEvaluateOnNewDocument/);
+
   const reviewNotes = fs.readFileSync(path.join(ROOT_DIR, "webstore/REVIEW_NOTES.md"), "utf8");
   assert.match(reviewNotes, /复用已保存方案/);
   assert.match(reviewNotes, /平衡\/完整模式预览或已开启自动整理且本地规则、缓存无法覆盖/);
@@ -1587,6 +1609,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /不会再次请求模型/);
   assert.match(publishChecklist, /自动整理重建前都会自动备份/);
   assert.match(publishChecklist, /页面内确认/);
+  assert.match(publishChecklist, /npm run audit:ui/);
   assert.match(publishChecklist, /--load-extension is not allowed in Google Chrome, ignoring/);
   assert.match(publishChecklist, /Chrome for Testing 或 Chromium/);
   assert.match(publishChecklist, /弹窗在 320px、360px、400px 宽度下没有横向滚动/);

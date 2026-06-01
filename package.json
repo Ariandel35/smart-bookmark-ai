@@ -5,6 +5,7 @@
   "description": "Preview-first Chrome bookmark organizer with AI classification, backups, and optional dead-link checks.",
   "scripts": {
     "test": "node tests/run-tests.js",
+    "audit:ui": "node webstore/audit_ui_layout.mjs",
     "package:webstore": "node webstore/build_extension_package.mjs"
   },
   "engines": {
