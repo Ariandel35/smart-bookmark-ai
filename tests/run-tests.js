@@ -1034,6 +1034,10 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /const removeLabel = t\("whitelistRemoveDomain", \{ domain \}\)/);
   assert.match(optionsSource, /button\.title = removeLabel/);
   assert.match(optionsSource, /button\.setAttribute\("aria-label", removeLabel\)/);
+  assert.match(optionsSource, /whitelistCatalogLoadFailed/);
+  assert.match(optionsSource, /t\("whitelistCatalogLoadFailed"\)/);
+  assert.match(optionsSource, /whitelistCatalogLoadFailed = false/);
+  assert.match(optionsSource, /whitelistCatalogLoadFailed = true/);
   assert.match(optionsSource, /const actionLabel = t\(isSelected \? "whitelistRemoveDomainWithCount" : "whitelistAddDomainWithCount"/);
   assert.match(optionsSource, /button\.title = actionLabel/);
   assert.match(optionsSource, /button\.setAttribute\("aria-label", actionLabel\)/);
@@ -1227,6 +1231,7 @@ function testOptionsBackupInlineConfirmationSurface() {
 
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
   assert.match(i18nSource, /whitelistRemoveDomain/);
+  assert.match(i18nSource, /whitelistCatalogLoadFailed/);
   assert.match(i18nSource, /whitelistAddDomainWithCount/);
   assert.match(i18nSource, /whitelistRemoveDomainWithCount/);
   assert.match(i18nSource, /hintBatchSize/);
@@ -1307,6 +1312,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Privacy page breadcrumb and section eyebrow labels/);
   assert.match(changelog, /i18n document applier now sets page language reliably/);
   assert.match(changelog, /Whitelist domain chips and catalog options/);
+  assert.match(changelog, /Whitelist website catalog load failures now show a distinct inline error/);
   assert.match(changelog, /Backup restore, delete, confirm, and cancel controls/);
   assert.match(changelog, /Popup unprocessed-item keep\/delete controls/);
   assert.match(changelog, /unprocessed-item actions now lock the whole action group/);
@@ -1389,6 +1395,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Popup action failures now keep their inline error visible/);
   assert.match(releaseNotes, /Popup state refresh failures now show an inline error/);
   assert.match(releaseNotes, /Popup folder-summary load failures now render an inline detail message/);
+  assert.match(releaseNotes, /Whitelist website catalog load failures now show a distinct inline error/);
   assert.match(releaseNotes, /Popup header actions and the phase badge now wrap/);
   assert.match(releaseNotes, /Complete-mode dead-link checks now scan up to eight links/);
   assert.match(releaseNotes, /Saved preview validation now includes whitelist-preserved bookmarks/);
@@ -1451,6 +1458,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /inline confirmations and validation feedback/);
   assert.match(storeListing, /Popup state refresh failures show an inline error/);
   assert.match(storeListing, /folder-summary load failures show an inline detail message/);
+  assert.match(storeListing, /Whitelist website catalog load failures show a distinct inline error/);
   assert.match(storeListing, /read-only until an organize\/apply run completes/);
   assert.match(storeListing, /lock the whole action group while one item is being kept or deleted/);
   assert.match(storeListing, /runs locally, needs model endpoint access, or needs website access/);

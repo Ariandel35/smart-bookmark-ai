@@ -57,6 +57,7 @@ let lastProvider = "openai";
 let whitelistSelection = [];
 let whitelistCatalog = [];
 let whitelistCatalogLoaded = false;
+let whitelistCatalogLoadFailed = false;
 let currentBackupRecords = [];
 let pendingBackupAction = null;
 let backupActionInFlight = false;
@@ -337,6 +338,14 @@ function renderWhitelistDomainList() {
     return;
   }
 
+  if (whitelistCatalogLoadFailed) {
+    const error = document.createElement("div");
+    error.className = "empty-state";
+    error.textContent = t("whitelistCatalogLoadFailed");
+    whitelistDomainList.appendChild(error);
+    return;
+  }
+
   const keyword = whitelistSearchInput.value.trim().toLowerCase();
   const selectedSet = new Set(whitelistSelection);
   const filtered = whitelistCatalog
@@ -397,6 +406,7 @@ function renderWhitelistDomainList() {
 
 async function loadWhitelistDomainCatalog() {
   whitelistCatalogLoaded = false;
+  whitelistCatalogLoadFailed = false;
   renderWhitelistDomainList();
 
   try {
@@ -424,9 +434,11 @@ async function loadWhitelistDomainCatalog() {
     whitelistCatalog = Array.from(counts.entries())
       .map(([domain, count]) => ({ domain, count }))
       .sort((a, b) => b.count - a.count || a.domain.localeCompare(b.domain, "en"));
+    whitelistCatalogLoadFailed = false;
   } catch (error) {
     console.error("Failed to load whitelist domain catalog:", error);
     whitelistCatalog = [];
+    whitelistCatalogLoadFailed = true;
   } finally {
     whitelistCatalogLoaded = true;
     renderWhitelistDomainList();

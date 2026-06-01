@@ -45,6 +45,7 @@
 - Privacy page breadcrumb and section eyebrow labels are now localized in English and Chinese
 - The shared i18n document applier now sets page language reliably for full documents and partial roots without requiring a global document
 - Whitelist domain chips and catalog options now expose localized add/remove action labels in tooltips and accessible names
+- Whitelist website catalog load failures now show a distinct inline error instead of looking like an empty bookmark-site list
 - Backup restore, delete, confirm, and cancel controls now reuse their localized accessible names as hover tooltips
 - Popup unprocessed-item keep/delete controls now show localized bookmark-specific action tooltips
 - Popup unprocessed-item actions now lock the whole action group while one item is being kept or deleted
