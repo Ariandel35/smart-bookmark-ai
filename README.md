@@ -135,6 +135,12 @@ Audit popup and settings layout across narrow and wide viewports:
 npm run audit:ui
 ```
 
+Run the full release gate before uploading a package:
+
+```bash
+npm run verify:release
+```
+
 Build the Chrome Web Store upload package:
 
 ```bash

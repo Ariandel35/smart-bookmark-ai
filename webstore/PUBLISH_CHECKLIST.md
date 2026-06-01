@@ -40,6 +40,7 @@
 
 ## 打包建议
 - [ ] 提交前删除无关临时文件
+- [ ] 运行 `npm run verify:release`
 - [ ] 运行 `node webstore/build_extension_package.mjs`
 - [ ] 确认压缩包根目录直接包含 `manifest.json`
 - [ ] 只把 `webstore/EXTENSION_PACKAGE_FILES.json` 中列出的运行文件放入扩展上传包

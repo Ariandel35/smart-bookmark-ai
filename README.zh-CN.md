@@ -135,6 +135,12 @@ npm test
 npm run audit:ui
 ```
 
+上传前运行完整发布门禁：
+
+```bash
+npm run verify:release
+```
+
 生成 Chrome Web Store 上传包：
 
 ```bash

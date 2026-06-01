@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node tests/run-tests.js",
     "audit:ui": "node webstore/audit_ui_layout.mjs",
+    "verify:release": "node webstore/verify_release.mjs",
     "package:webstore": "node webstore/build_extension_package.mjs"
   },
   "engines": {
