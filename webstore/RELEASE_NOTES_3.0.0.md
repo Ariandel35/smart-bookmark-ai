@@ -8,6 +8,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 应用已生成的预览方案时会复用保存的方案，本地重建，不会再次请求模型
 - 如果应用预览时遇到可恢复失败，弹窗会保留应用入口，修复后可直接重试保存方案
 - 配置不完整时，弹窗主按钮会直接进入设置页
+- 批处理现在会优先即时唤醒下一批，并保留 Chrome alarm 兜底，减少不必要的排队等待
 - DeepSeek 和 DeepSeek 兼容接口会跳过单独目录规划请求，在请求前再次拆分大批量，运行批次最多 9 条、单个模型请求最多 3 条，并最多 3 个小请求并发处理；如果 6 秒无首包或 14 秒未完整返回，本轮会保留并缓存已完成的小请求分类，只把未返回的书签交给本地兜底和待手动分类，状态中会明确显示已保留和待处理数量
 - 完整模式也会先应用确定性的内置域名规则，常见网站不再占用模型分类请求
 - 新增快速/平衡/完整速度模式：快速模式跳过失效链接检测、额外目录规划请求和模型等待；平衡模式跳过失效链接检测但保留 AI 分类；完整模式保留链接检查和 AI 分类，并按服务商速度决定是否额外规划目录
@@ -76,6 +77,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Backup failures before applying a saved preview also keep the saved preview retry path available
 - Apply Plan retry is shown only for preview-apply failures, not unrelated error states that merely still have a saved preview
 - Incomplete setup routes directly from the popup to settings
+- Batch processing now wakes the next batch immediately while keeping a Chrome alarm fallback, reducing avoidable queue delay
 - Complete mode also applies deterministic built-in domain rules before AI classification, so common sites no longer spend model-request time
 - Slow providers such as DeepSeek and DeepSeek-compatible endpoints skip the separate taxonomy-planning request, re-split large batches before each request, cap runtime batches at 9 bookmarks, cap each model request at 3 bookmarks, and run up to three mini requests at a time; if there is no first response in 6 seconds or no full response in 14 seconds, Marko keeps and caches any completed mini-request classifications and sends only unfinished bookmarks to local fallback and manual review
 - Added Fast, Balanced, and Complete speed modes: Fast skips dead-link checks, the extra taxonomy-planning request, and model waiting; Balanced skips dead-link checks but keeps AI classification; Complete keeps link checks and AI classification with provider-aware planning

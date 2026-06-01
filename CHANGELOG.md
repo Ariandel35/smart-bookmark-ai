@@ -4,6 +4,7 @@
 
 - Added Fast, Balanced, and Complete speed modes so users can choose local-only organizing, AI classification without website scans, or full dead-link checks with provider-aware planning
 - Popup now includes a Fast/Balanced/Complete mode switch so speed and quality can be adjusted without opening settings
+- Batch processing now wakes the next batch immediately with a Chrome alarm fallback, reducing avoidable queue delay while keeping MV3 recovery intact
 - Switching Fast/Balanced/Complete in the popup now actively clears stale saved previews before the popup refreshes
 - Balanced mode now skips dead-link scans and separate taxonomy planning while keeping AI classification for bookmarks not covered by local rules or cache
 - Fast mode now applies conservative built-in domain rules for common developer, learning, productivity, design, community, shopping, media, and life sites after custom rules and cache reuse

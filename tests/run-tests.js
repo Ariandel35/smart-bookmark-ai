@@ -858,6 +858,14 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /getModelRequestConcurrency/);
   assert.match(backgroundSource, /getRuntimeBatchSize/);
   assert.match(backgroundSource, /getModelRequestBatchSizeCap/);
+  assert.match(backgroundSource, /let nextBatchTimerId = 0/);
+  assert.match(backgroundSource, /function clearImmediateBatchTimer/);
+  assert.match(backgroundSource, /function scheduleImmediateBatchProcessing/);
+  assert.match(backgroundSource, /nextBatchTimerId = setTimeout/);
+  assert.match(backgroundSource, /void processNextBatch\(\)/);
+  assert.match(backgroundSource, /async function scheduleNextBatch\(options = \{\}\)/);
+  assert.match(backgroundSource, /options\.immediate !== false/);
+  assert.match(backgroundSource, /clearImmediateBatchTimer\(\);\n  await chrome\.alarms\.clear\(ALARM_NAME\)/);
   assert.match(backgroundSource, /normalizeRunningOrganizeJobRuntime/);
   assert.match(backgroundSource, /Math\.min\(storedBatchSize, cappedRuntimeBatchSize\)/);
   assert.match(backgroundSource, /splitIntoModelRequestBatches/);
@@ -1353,6 +1361,7 @@ function testReleaseMaterialsCurrent() {
   const readmeZh = fs.readFileSync(path.join(ROOT_DIR, "README.zh-CN.md"), "utf8");
   assert.match(changelog, /without a second model request/);
   assert.match(changelog, /Fast\/Balanced\/Complete mode switch/);
+  assert.match(changelog, /wakes the next batch immediately with a Chrome alarm fallback/);
   assert.match(changelog, /Balanced mode now skips dead-link scans/);
   assert.match(changelog, /built-in domain rules/);
   assert.match(changelog, /Backup failures before applying a saved preview/);
@@ -1455,6 +1464,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /automation access still needs approval/);
   assert.match(readme, /impact shown inline before saving/);
   assert.match(readme, /Settings warn inline before a slow-model batch cap/);
+  assert.match(readme, /Batches wake immediately while a Chrome alarm remains as fallback/);
   assert.match(readme, /Complete mode checks up to 8 links at a time/);
   assert.doesNotMatch(readme, /unless you start an organize run/);
   assert.match(readme, /restoring creates a fresh local snapshot first/);
@@ -1468,6 +1478,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /备份恢复\/删除/);
   assert.match(readmeZh, /真实设置页保存/);
   assert.match(readmeZh, /DeepSeek 批量压低/);
+  assert.match(readmeZh, /批处理会优先即时唤醒，Chrome alarm 仅作为后台兜底/);
   assert.match(readmeZh, /MARKO_EXTENSION_SCREENSHOT_DIR=\/tmp\/marko-e2e/);
   assert.match(readmeZh, /npm run verify:release/);
   assert.match(readmeZh, /npm run verify:release:full/);
@@ -1531,6 +1542,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /explicit granted status/);
   assert.match(releaseNotes, /Backup failures before applying a saved preview/);
   assert.match(releaseNotes, /only for preview-apply failures/);
+  assert.match(releaseNotes, /wakes the next batch immediately while keeping a Chrome alarm fallback/);
   assert.match(releaseNotes, /re-split large batches before each request/);
   assert.match(releaseNotes, /cap runtime batches at 9 bookmarks/);
   assert.match(releaseNotes, /cap each model request at 3 bookmarks/);

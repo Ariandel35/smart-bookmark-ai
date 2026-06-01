@@ -276,6 +276,7 @@ const COMPACT_DEFAULT_PROMPT_EN = `Goal: organize bookmarks into a small, stable
 
 let currentStatus = buildIdleStatus();
 let batchLock = false;
+let nextBatchTimerId = 0;
 let activeAbortController = null;
 const activeModelAbortControllers = new Set();
 let lastLocalRequirementCheck = null;
@@ -2421,10 +2422,31 @@ async function resolveUnprocessedEntry(entryId, action) {
   };
 }
 
-async function scheduleNextBatch() {
+function clearImmediateBatchTimer() {
+  if (!nextBatchTimerId) {
+    return;
+  }
+
+  clearTimeout(nextBatchTimerId);
+  nextBatchTimerId = 0;
+}
+
+function scheduleImmediateBatchProcessing() {
+  clearImmediateBatchTimer();
+  nextBatchTimerId = setTimeout(() => {
+    nextBatchTimerId = 0;
+    void processNextBatch();
+  }, 0);
+}
+
+async function scheduleNextBatch(options = {}) {
   await chrome.alarms.create(ALARM_NAME, {
     when: Date.now() + NEXT_BATCH_DELAY_MS
   });
+
+  if (options.immediate !== false) {
+    scheduleImmediateBatchProcessing();
+  }
 }
 
 async function processNextBatch() {
@@ -3317,6 +3339,7 @@ function sanitizePreviewLogEntries(entries = []) {
 }
 
 async function finishJob(phase, message, job, overrides = {}) {
+  clearImmediateBatchTimer();
   await chrome.alarms.clear(ALARM_NAME);
   const storedManagedState = await chrome.storage.local.get([
     STORAGE_KEYS.managedFolderIds,
