@@ -2220,6 +2220,10 @@ async function restoreBackupEntry(backupId) {
   }
 
   for (const child of currentChildren) {
+    if (isBackupFolderNode(child)) {
+      continue;
+    }
+
     if (child.url) {
       await chrome.bookmarks.remove(child.id);
     } else {

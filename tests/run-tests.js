@@ -541,6 +541,7 @@ function testPreviewApplySurface() {
   assert.match(backgroundSource, /existingBookmark\.id/);
   assert.match(backgroundSource, /Pre-restore backup failed/);
   assert.match(backgroundSource, /createCurrentSnapshotBackup\(bookmarkBarNode, "manual", \{ preserveIds: \[backupId\] \}\)/);
+  assert.match(backgroundSource, /for \(const child of currentChildren\) \{[\s\S]*if \(isBackupFolderNode\(child\)\) \{[\s\S]*continue;[\s\S]*\}/);
   assert.match(backgroundSource, /limitBackupRecords\(records, maxRecords = MAX_BACKUP_RECORDS, options = \{\}\)/);
   assert.match(backgroundSource, /preserveIds/);
   assert.match(backgroundSource, /addBackupRecord\(record, source = "manual", options = \{\}\)/);
@@ -1274,6 +1275,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /show how many uncached bookmarks require model classification/);
   assert.match(changelog, /Saved preview validation now includes whitelist-preserved bookmarks/);
+  assert.match(changelog, /Backup restore now preserves existing backup folders/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);
@@ -1328,6 +1330,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(releaseNotes, /show how many uncached bookmarks require model classification/);
   assert.match(releaseNotes, /Saved preview validation now includes whitelist-preserved bookmarks/);
+  assert.match(releaseNotes, /Backup restore now preserves existing backup folders/);
   assert.match(releaseNotes, /Fast mode needs API credentials/);
   assert.match(releaseNotes, /speed-mode changes now save against merged provider defaults/);
   assert.match(releaseNotes, /Fast automatic organize can now run locally without an API key/);
