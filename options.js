@@ -25,6 +25,8 @@ const batchSizeInput = document.getElementById("batchSize");
 const batchSizeCapHint = document.getElementById("batchSizeCapHint");
 const linkCheckModeSelect = document.getElementById("linkCheckMode");
 const connectionModeHint = document.getElementById("connectionModeHint");
+const aiConnectionBlock = document.getElementById("aiConnectionBlock");
+const aiConnectionSummaryNote = document.getElementById("aiConnectionSummaryNote");
 const autoOrganizeEnabledInput = document.getElementById("autoOrganizeEnabled");
 const autoOrganizeAccessHint = document.getElementById("autoOrganizeAccessHint");
 const autoOrganizeIntervalInput = document.getElementById("autoOrganizeIntervalHours");
@@ -905,6 +907,29 @@ function updateConnectionModeHint() {
   connectionModeHint.hidden = false;
   connectionModeHint.textContent = t(key);
   connectionModeHint.className = requiresAccess ? "field__hint panel__hint field__hint--warm" : "field__hint panel__hint";
+  updateAiConnectionDisclosure(mode);
+}
+
+function updateAiConnectionDisclosure(mode = normalizeLinkCheckMode(linkCheckModeSelect.value)) {
+  const requiresConnection = mode !== LINK_CHECK_MODE_FAST;
+
+  if (aiConnectionSummaryNote) {
+    aiConnectionSummaryNote.textContent = t(
+      requiresConnection ? "aiConnectionRequiredSummary" : "aiConnectionFastSummary"
+    );
+    aiConnectionSummaryNote.classList.toggle("field__hint--warm", requiresConnection);
+  }
+
+  if (!aiConnectionBlock) {
+    return;
+  }
+
+  aiConnectionBlock.dataset.mode = mode;
+  if (requiresConnection) {
+    aiConnectionBlock.open = true;
+  } else if (!aiConnectionBlock.contains(document.activeElement)) {
+    aiConnectionBlock.open = false;
+  }
 }
 
 function updateAutoOrganizeAccessHint() {

@@ -968,6 +968,10 @@ textarea {
 }
 
 .advanced-block__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   cursor: pointer;
   list-style: none;
   font-size: 13px;
@@ -982,6 +986,15 @@ textarea {
   display: grid;
   gap: 12px;
   padding-top: 12px;
+}
+
+.advanced-block__summary-note {
+  min-width: 0;
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: right;
 }
 
 .detail-panel {

@@ -13,6 +13,7 @@ const rootDir = path.resolve(__dirname, "..");
 const REQUIRED_BACKGROUND_PATH = "background.js";
 const CDP_COMMAND_TIMEOUT_MS = 20_000;
 const screenshotDir = process.env.MARKO_EXTENSION_SCREENSHOT_DIR || "";
+const runHeadless = process.env.MARKO_SHOW_BROWSER !== "1" && process.env.MARKO_EXTENSION_HEADLESS !== "0";
 const BROWSER_HINT =
   "Install Chrome for Testing or Chromium, or set MARKO_EXTENSION_BROWSER to a browser executable that allows --load-extension.";
 const browserCandidates = [
@@ -1330,6 +1331,10 @@ function optionsBackupUiFlowExpression() {
     }, "restore inline confirmation");
     const restoreConfirmText = restoreConfirm.closest(".backup-confirm")?.innerText.trim() || "";
     clickButton(restoreConfirm, "Confirm Restore");
+    const restoreStatusText = await waitFor(() => {
+      const text = (document.getElementById("backupActionStatus")?.textContent || "").trim();
+      return /Backup restored|备份已恢复/.test(text) ? text : null;
+    }, "restore success feedback");
 
     const restoredState = await waitFor(async () => {
       const summary = await getBookmarkSummary();
@@ -1345,7 +1350,7 @@ function optionsBackupUiFlowExpression() {
           ...summary,
           backupRecordCount: records.length,
           statusPhase: stored.smartBookmarkJobStatus?.phase || "",
-          restoreStatusText: (document.getElementById("backupActionStatus")?.textContent || "").trim()
+          restoreStatusText
         };
       }
       return null;
@@ -1363,6 +1368,10 @@ function optionsBackupUiFlowExpression() {
     }, "delete inline confirmation");
     const deleteConfirmText = deleteConfirm.closest(".backup-confirm")?.innerText.trim() || "";
     clickButton(deleteConfirm, "Confirm Delete");
+    const deleteStatusText = await waitFor(() => {
+      const text = (document.getElementById("backupActionStatus")?.textContent || "").trim();
+      return /Backup deleted|备份已删除/.test(text) ? text : null;
+    }, "delete success feedback");
 
     const deletedState = await waitFor(async () => {
       const stored = await chrome.storage.local.get("smartBookmarkBackupRecords");
@@ -1371,7 +1380,7 @@ function optionsBackupUiFlowExpression() {
       if (!stillPresent && records.length === restoredState.backupRecordCount - 1) {
         return {
           backupRecordCount: records.length,
-          deleteStatusText: (document.getElementById("backupActionStatus")?.textContent || "").trim(),
+          deleteStatusText,
           backupBadgeText: (document.getElementById("backupStatusBadge")?.textContent || "").trim()
         };
       }
@@ -1529,7 +1538,14 @@ function optionsSaveExpression() {
 
     setValue("provider", "deepseek");
     await wait(100);
+    setValue("linkCheckMode", "balanced");
+    await wait(100);
+    const balancedConnectionOpen = Boolean(document.getElementById("aiConnectionBlock")?.open);
+    const balancedConnectionSummaryText = (document.getElementById("aiConnectionSummaryNote")?.textContent || "").trim();
     setValue("linkCheckMode", "fast");
+    await wait(100);
+    const fastConnectionOpen = Boolean(document.getElementById("aiConnectionBlock")?.open);
+    const fastConnectionSummaryText = (document.getElementById("aiConnectionSummaryNote")?.textContent || "").trim();
     setValue("autoOrganizeEnabled", "false");
     setValue("baseUrl", "https://api.deepseek.com");
     setValue("model", "deepseek-chat");
@@ -1551,6 +1567,10 @@ function optionsSaveExpression() {
     return {
       savedConfig,
       batchSizeInputValue: document.getElementById("batchSize")?.value || "",
+      balancedConnectionOpen,
+      balancedConnectionSummaryText,
+      fastConnectionOpen,
+      fastConnectionSummaryText,
       saveBadgeText: (document.getElementById("saveBadge")?.textContent || "").trim(),
       settingsActionText: (document.getElementById("settingsActionStatus")?.textContent || "").trim()
     };
@@ -1705,6 +1725,12 @@ function formatPageFailures(result, extensionId) {
     if (!result.optionsSave?.saveBadgeText) {
       failures.push("options save did not render visible save feedback");
     }
+    if (!result.optionsSave?.balancedConnectionOpen) {
+      failures.push("options save flow did not auto-open AI connection fields for Balanced mode");
+    }
+    if (result.optionsSave?.fastConnectionOpen) {
+      failures.push("options save flow did not collapse AI connection fields after returning to Fast mode");
+    }
   }
 
   return failures;
@@ -1719,18 +1745,20 @@ async function main() {
   const profileDir = await fs.mkdtemp(path.join(os.tmpdir(), "marko-extension-e2e-"));
   const port = 10456 + Math.floor(Math.random() * 1000);
   let stderrBuffer = "";
+  const browserArgs = [
+    `--user-data-dir=${profileDir}`,
+    `--remote-debugging-port=${port}`,
+    `--disable-extensions-except=${rootDir}`,
+    `--load-extension=${rootDir}`,
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--disable-background-networking",
+    ...(runHeadless ? ["--headless=new", "--disable-gpu"] : []),
+    "about:blank"
+  ];
   const browser = spawn(
     executablePath,
-    [
-      `--user-data-dir=${profileDir}`,
-      `--remote-debugging-port=${port}`,
-      `--disable-extensions-except=${rootDir}`,
-      `--load-extension=${rootDir}`,
-      "--no-first-run",
-      "--no-default-browser-check",
-      "--disable-background-networking",
-      "about:blank"
-    ],
+    browserArgs,
     { stdio: ["ignore", "ignore", "pipe"] }
   );
 
@@ -1865,6 +1893,8 @@ async function main() {
               `provider=${result.optionsSave.savedConfig?.provider || ""}`,
               `batchSize=${result.optionsSave.savedConfig?.batchSize || ""}`,
               `mode=${result.optionsSave.savedConfig?.linkCheckMode || ""}`,
+              `balancedConnectionOpen=${Boolean(result.optionsSave.balancedConnectionOpen)}`,
+              `fastConnectionOpen=${Boolean(result.optionsSave.fastConnectionOpen)}`,
               `feedback=${result.optionsSave.saveBadgeText || ""}`
             ].join(" | ")
           );

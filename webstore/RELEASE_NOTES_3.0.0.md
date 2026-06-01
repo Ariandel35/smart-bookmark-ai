@@ -16,6 +16,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 预览会先检查本地规则和缓存覆盖情况；快速模式不要求模型接口授权，平衡/完整模式只有未缓存书签需要 AI 分类时才要求 API Key 或模型接口授权
 - 快速模式现在也不会因为 Base URL 或模型名称为空而阻止预览或保存设置，因为本地路径不调用模型
 - 设置页连接区会随速度模式说明是否需要模型字段或网站权限，快速模式不再看起来像必须先配置 API
+- 快速模式下设置页会默认收起 AI 连接字段，只保留服务商选择；切到平衡或完整模式时会自动展开模型、Base URL、API Key 和授权检测
 - 设置页连接字段现在也会把当前速度模式要求提供给读屏等辅助技术，同时保留页面内校验提示
 - 设置页隐私按钮会优先新建标签页，失败时回退到窗口打开；如果两种方式都被浏览器拦截，会显示页面内错误
 - 弹窗设置提示不再把快速模式说成必须先接入 API，只有确实需要模型分类时才提示模型凭据
@@ -26,6 +27,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 弹窗操作已经成功但后续状态刷新失败时，会保留“状态刷新失败”提示，不再把已完成操作误报成失败或直接清空提示
 - 新增 `npm run audit:ui`，可用 Chrome API mock 渲染中英文弹窗和设置页，并在横向溢出、按钮裁切或脚本异常时失败
 - UI 审计遇到偶发 CDP 超时时会重试当前布局用例一次，真实扩展和 UI 审计的 CDP 命令也使用更长的具名超时，减少发布门禁误失败
+- 自动化 Chrome UI 审计和真实扩展测试默认 headless 后台运行，只有调试时才需要设置 `MARKO_SHOW_BROWSER=1` 打开可见窗口
 - 新增 `npm run e2e:extension` 和 `npm run verify:release:full`，可用 Chrome for Testing 或 Chromium 运行真实解压扩展冒烟测试
 - 真实扩展冒烟测试现在会点击真实弹窗“预览整理 -> 应用方案 -> 备份并应用”路径，再验证实际书签树
 - 真实扩展冒烟测试现在会点击真实弹窗未处理项删除按钮，并验证弹窗状态中的未处理计数清零
@@ -89,6 +91,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Preview checks local rule/cache coverage first; Fast mode does not ask for model endpoint access, and Balanced/Complete ask only when uncached bookmarks need AI classification
 - Fast mode no longer blocks preview or settings save when Base URL or model name are blank because the local path does not call the model
 - Settings connection now explains which modes need model fields or website access, so Fast mode no longer looks like mandatory API setup
+- In Fast mode, settings now keeps AI connection fields collapsed by default and automatically opens model, Base URL, API key, and access checks for Balanced or Complete mode
 - Settings connection fields now expose the selected mode requirement hint to assistive technologies while preserving inline validation messages
 - Settings Privacy now falls back from tab creation to window opening and shows an inline error if the browser blocks both paths
 - Popup setup copy no longer implies Fast mode needs API credentials; model credentials are shown only when classification actually needs the model
@@ -99,6 +102,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Popup action successes now preserve refresh-failure feedback instead of clearing it or misreporting the completed action as failed
 - Added `npm run audit:ui` to render popup and settings pages with Chrome API mocks across Chinese preview and English long-error states, failing on horizontal overflow, clipped buttons, or runtime exceptions
 - UI audit now retries the current layout case once after a transient CDP timeout, and real-extension/UI-audit CDP commands use a longer named timeout to reduce false-negative release gates
+- Automated Chrome UI and real-extension checks now run headless by default, with `MARKO_SHOW_BROWSER=1` reserved for visible debugging
 - Added `npm run e2e:extension` and `npm run verify:release:full` for a real unpacked-extension smoke test with Chrome for Testing or Chromium
 - The real extension smoke test now clicks through the real popup Preview -> Apply Plan -> Backup and Apply path before checking the live bookmark tree
 - The real extension smoke test now clicks the real popup unprocessed-item Delete button and verifies the warning disappears from the popup state

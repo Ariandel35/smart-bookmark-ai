@@ -12,6 +12,7 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const CDP_COMMAND_TIMEOUT_MS = 20_000;
 const AUDIT_PAGE_ATTEMPTS = 2;
+const runHeadless = process.env.MARKO_SHOW_BROWSER !== "1" && process.env.MARKO_AUDIT_HEADLESS !== "0";
 
 const chromeCandidates = [
   process.env.CHROME_EXECUTABLE,
@@ -779,16 +780,18 @@ async function main() {
   const executablePath = await resolveExecutablePath();
   const profileDir = await fs.mkdtemp(path.join(os.tmpdir(), "marko-layout-audit-"));
   const port = 9456 + Math.floor(Math.random() * 1000);
+  const browserArgs = [
+    `--user-data-dir=${profileDir}`,
+    `--remote-debugging-port=${port}`,
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--disable-background-networking",
+    ...(runHeadless ? ["--headless=new", "--disable-gpu"] : []),
+    "about:blank"
+  ];
   const browser = spawn(
     executablePath,
-    [
-      `--user-data-dir=${profileDir}`,
-      `--remote-debugging-port=${port}`,
-      "--no-first-run",
-      "--no-default-browser-check",
-      "--disable-background-networking",
-      "about:blank"
-    ],
+    browserArgs,
     { stdio: "ignore" }
   );
 

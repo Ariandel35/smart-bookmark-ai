@@ -96,7 +96,7 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
 | --- | --- |
 | Main action | `Preview` is the first step. `Apply Plan` appears only when a plan is ready. |
 | Popup mode switch | Fast/Balanced/Complete can be changed directly in the popup, and any saved preview is invalidated when the mode changes. |
-| Setup | Missing provider, Base URL, or model routes the user to settings. Fast preview does not request model access; Balanced and Complete request it only when uncached bookmarks need AI classification. |
+| Setup | Missing provider, Base URL, or model routes the user to settings. Fast preview does not request model access, so the settings page keeps AI connection fields collapsed until Balanced or Complete needs them. |
 | API settings | `Test & Save` validates the connection, stores the working configuration, and reports if automation access still needs approval. |
 | Slow models | DeepSeek and DeepSeek-compatible runs skip the separate taxonomy-planning request, cap each runtime batch at 9 bookmarks, split model requests to 3 bookmarks each, and run up to three mini requests at a time. Batches wake immediately while a Chrome alarm remains as fallback. They stop waiting after a 6-second first-response stall or a 14-second full-response stall, then finish with local rules, cache, built-in rules, and manual review. |
 | Apply speed | Applying a ready preview reuses the saved plan and rebuilds locally without a second model run. |
@@ -142,7 +142,7 @@ npm run e2e:extension
 ```
 
 The script uses a temporary browser profile, seeds real bookmarks, then verifies the real popup Preview -> Apply Plan confirmation click flow, the real popup unprocessed-item Delete button, the real settings Backup UI create/restore/delete flow, manual backup, Fast preview, duplicate cleanup, backup records, real options UI save, DeepSeek batch-size capping, the popup, and the options page.
-Set `MARKO_EXTENSION_SCREENSHOT_DIR=/tmp/marko-e2e` to keep popup and options screenshots from that run.
+Automated Chrome runs are headless by default, so they do not open visible browser windows. Set `MARKO_SHOW_BROWSER=1` only when you need to watch the run, and set `MARKO_EXTENSION_SCREENSHOT_DIR=/tmp/marko-e2e` to keep popup and options screenshots.
 
 Run the full release gate before uploading a package:
 

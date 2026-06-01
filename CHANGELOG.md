@@ -12,6 +12,7 @@
 - Fast mode no longer asks for model endpoint access during preview because it does not call the model
 - Fast mode no longer blocks preview or settings save when Base URL or model name are blank because the local path does not call the model
 - Settings connection now explains which modes need model fields or website access, so Fast mode no longer looks like mandatory API setup
+- Settings connection now collapses AI endpoint fields by default in Fast mode and opens them automatically for Balanced or Complete mode
 - Settings connection fields now expose the selected mode requirement hint to assistive technologies while preserving inline validation messages
 - Popup setup copy and shortcut logic now avoid implying Fast mode needs API credentials when local preview can run without a model call
 - Popup setup errors now show how many uncached bookmarks require model classification before asking users to finish AI access setup
@@ -21,6 +22,7 @@
 - The publish checklist now separates real `chrome://extensions` Load unpacked validation from Google Chrome CLI launches that ignore `--load-extension`, and adds narrow-width popup/settings UI audit gates
 - Added `npm run audit:ui` to render popup and settings pages with Chrome API mocks across Chinese preview and English long-error states, failing on horizontal overflow, clipped buttons, or runtime exceptions
 - UI audit now retries a layout case once after a transient CDP timeout, and CDP-based release checks use a longer named command timeout for fewer false-negative runs
+- Automated Chrome UI and extension checks now run headless by default, with `MARKO_SHOW_BROWSER=1` available only for visible debugging
 - Added `npm run e2e:extension` and `npm run verify:release:full` for a real unpacked-extension smoke test with Chrome for Testing or Chromium
 - The real extension smoke test now clicks through the real popup Preview -> Apply Plan -> Backup and Apply path before checking the live bookmark tree
 - The real extension smoke test now clicks the real popup unprocessed-item Delete button and verifies the warning disappears from the popup state

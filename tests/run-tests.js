@@ -803,6 +803,8 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /connectionTitle: "模型连接"/);
   assert.match(i18nSource, /labelProvider: "服务商"/);
   assert.match(i18nSource, /labelModel: "模型名称"/);
+  assert.match(i18nSource, /aiConnectionFastSummary: "快速模式可选"/);
+  assert.match(i18nSource, /aiConnectionRequiredSummary: "AI 模式需要"/);
   assert.match(i18nSource, /connectionModeFastHint:[\s\S]*"快速模式会本地生成预览。只选服务商即可；Base URL、模型、API Key 和授权检测可以等切到 AI 分类时再配置。"/);
   assert.match(i18nSource, /connectionModeBalancedHint:[\s\S]*"平衡模式会跳过网站检测，但未缓存书签需要 AI 分类时，要填写 Base URL、模型、API Key 并授权模型接口。"/);
   assert.match(i18nSource, /connectionModeCompleteHint:[\s\S]*"完整模式需要模型连接做 AI 分类，也需要网站访问权限来检测失效链接。"/);
@@ -1000,7 +1002,9 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="testApiButton"[\s\S]*aria-describedby="apiTestStatus"[\s\S]*disabled/);
   assert.match(optionsHtml, /id="grantAccessButton"[\s\S]*aria-describedby="hostAccessStatus"[\s\S]*disabled/);
   assert.match(optionsHtml, /id="connectionModeHint"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*data-i18n="connectionModeFastHint"/);
-  assert.match(optionsHtml, /id="provider"[\s\S]*aria-describedby="connectionModeHint"/);
+  assert.match(optionsHtml, /id="provider"[\s\S]*aria-describedby="connectionModeHint aiConnectionSummaryNote"/);
+  assert.match(optionsHtml, /id="aiConnectionBlock"/);
+  assert.match(optionsHtml, /id="aiConnectionSummaryNote"[\s\S]*data-i18n="aiConnectionFastSummary"/);
   assert.match(optionsHtml, /id="model"[\s\S]*aria-describedby="connectionModeHint"/);
   assert.match(optionsHtml, /id="baseUrl"[\s\S]*aria-describedby="connectionModeHint"/);
   assert.match(optionsHtml, /id="apiKey"[\s\S]*aria-describedby="connectionModeHint"/);
@@ -1032,6 +1036,11 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /connectionModeBalancedHint/);
   assert.match(optionsSource, /connectionModeFastHint/);
   assert.match(optionsSource, /connectionModeHint\.className = requiresAccess \? "field__hint panel__hint field__hint--warm" : "field__hint panel__hint"/);
+  assert.match(optionsSource, /function updateAiConnectionDisclosure/);
+  assert.match(optionsSource, /aiConnectionRequiredSummary/);
+  assert.match(optionsSource, /aiConnectionFastSummary/);
+  assert.match(optionsSource, /aiConnectionBlock\.open = true/);
+  assert.match(optionsSource, /aiConnectionBlock\.open = false/);
   assert.match(optionsSource, /getCurrentBatchProfileConfig/);
   assert.match(optionsSource, /t\("batchSizeCapHint", \{ count: cap \}\)/);
   assert.match(optionsSource, /addDescribedByToken\(batchSizeInput, batchSizeCapHint\.id\)/);
@@ -1356,6 +1365,8 @@ function testResponsiveTextHardeningSurface() {
   assert.match(stylesSource, /\.result-table[\s\S]*table-layout: fixed/);
   assert.match(stylesSource, /\.result-table th,[\s\S]*\.result-table td[\s\S]*overflow-wrap: anywhere/);
   assert.match(stylesSource, /\.confirm-strip__desc[\s\S]*overflow-wrap: anywhere/);
+  assert.match(stylesSource, /\.advanced-block__summary[\s\S]*justify-content: space-between/);
+  assert.match(stylesSource, /\.advanced-block__summary-note[\s\S]*text-align: right/);
 }
 
 function testReleaseMaterialsCurrent() {
@@ -1403,6 +1414,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Fast mode now finishes locally without waiting for the model/);
   assert.match(changelog, /Fast mode no longer blocks preview or settings save when Base URL or model name are blank/);
   assert.match(changelog, /Settings connection now explains which modes need model fields or website access/);
+  assert.match(changelog, /collapses AI endpoint fields by default in Fast mode/);
   assert.match(changelog, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /show how many uncached bookmarks require model classification/);
@@ -1459,11 +1471,14 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /Backup UI create\/restore\/delete/);
   assert.match(readme, /real options UI save/);
   assert.match(readme, /DeepSeek batch-size capping/);
+  assert.match(readme, /Automated Chrome runs are headless by default/);
+  assert.match(readme, /MARKO_SHOW_BROWSER=1/);
   assert.match(readme, /MARKO_EXTENSION_SCREENSHOT_DIR=\/tmp\/marko-e2e/);
   assert.match(readme, /npm run verify:release/);
   assert.match(readme, /npm run verify:release:full/);
   assert.match(readme, /npm run package:webstore/);
   assert.match(readme, /Popup mode switch/);
+  assert.match(readme, /keeps AI connection fields collapsed until Balanced or Complete needs them/);
   assert.match(readme, /built-in domain rules/);
   assert.match(readme, /unless Balanced\/Complete preview or enabled auto organize needs external access/);
   assert.match(readme, /manual-review fallback finish locally/);
@@ -1487,12 +1502,15 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /备份创建\/恢复\/删除点击流/);
   assert.match(readmeZh, /真实设置页保存/);
   assert.match(readmeZh, /DeepSeek 批量压低/);
+  assert.match(readmeZh, /headless 后台运行，不会打开可见浏览器窗口/);
+  assert.match(readmeZh, /MARKO_SHOW_BROWSER=1/);
   assert.match(readmeZh, /批处理会优先即时唤醒，Chrome alarm 仅作为后台兜底/);
   assert.match(readmeZh, /MARKO_EXTENSION_SCREENSHOT_DIR=\/tmp\/marko-e2e/);
   assert.match(readmeZh, /npm run verify:release/);
   assert.match(readmeZh, /npm run verify:release:full/);
   assert.match(readmeZh, /npm run package:webstore/);
   assert.match(readmeZh, /弹窗模式切换/);
+  assert.match(readmeZh, /AI 连接字段会在平衡或完整模式需要时再展开/);
   assert.match(readmeZh, /内置域名规则/);
   assert.match(readmeZh, /待手动分类兜底会在本地完成/);
   assert.match(readmeZh, /快速自动整理可以不填 API Key 本地运行/);
@@ -1513,6 +1531,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /unmatched bookmarks go to manual review/);
   assert.match(releaseNotes, /Fast mode no longer blocks preview or settings save when Base URL or model name are blank/);
   assert.match(releaseNotes, /Settings connection now explains which modes need model fields or website access/);
+  assert.match(releaseNotes, /keeps AI connection fields collapsed by default/);
   assert.match(releaseNotes, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(releaseNotes, /Settings Privacy now falls back from tab creation to window opening/);
   assert.match(releaseNotes, /Popup Settings shortcuts now show an inline error if both tab creation and the options-page fallback fail/);
@@ -1522,6 +1541,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Popup action successes now preserve refresh-failure feedback/);
   assert.match(releaseNotes, /Added `npm run audit:ui`/);
   assert.match(releaseNotes, /retries the current layout case once after a transient CDP timeout/);
+  assert.match(releaseNotes, /run headless by default/);
   assert.match(releaseNotes, /Added `npm run e2e:extension` and `npm run verify:release:full`/);
   assert.match(releaseNotes, /clicks the real popup unprocessed-item Delete button/);
   assert.match(releaseNotes, /settings Backup UI create, inline restore confirmation, and inline delete confirmation/);
@@ -1686,12 +1706,15 @@ function testReleaseMaterialsCurrent() {
     "utf8"
   );
   assert.match(extensionE2e, /MARKO_EXTENSION_BROWSER/);
+  assert.match(extensionE2e, /MARKO_SHOW_BROWSER/);
+  assert.match(extensionE2e, /MARKO_EXTENSION_HEADLESS/);
   assert.match(extensionE2e, /MARKO_EXTENSION_SCREENSHOT_DIR/);
   assert.match(extensionE2e, /CDP_COMMAND_TIMEOUT_MS = 20_000/);
   assert.match(extensionE2e, /Timed out waiting for CDP response to \$\{method\} after \$\{timeoutMs\}ms/);
   assert.match(extensionE2e, /Google Chrome for Testing/);
   assert.match(extensionE2e, /--disable-extensions-except/);
   assert.match(extensionE2e, /--load-extension/);
+  assert.match(extensionE2e, /--headless=new/);
   assert.match(extensionE2e, /service_worker/);
   assert.match(extensionE2e, /background\.js/);
   assert.match(extensionE2e, /chrome-extension:\/\/\$\{extensionId\}\/popup\.html/);
@@ -1736,6 +1759,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /optionsSaveExpression/);
   assert.match(extensionE2e, /config\.provider === "deepseek"/);
   assert.match(extensionE2e, /config\.batchSize === 9/);
+  assert.match(extensionE2e, /balancedConnectionOpen/);
+  assert.match(extensionE2e, /fastConnectionOpen/);
+  assert.match(extensionE2e, /auto-open AI connection fields for Balanced mode/);
   assert.match(extensionE2e, /E2E saved prompt/);
   assert.match(extensionE2e, /openai\\.com => AI Saved/);
   assert.match(extensionE2e, /formatCoreFlowFailures/);
@@ -1775,6 +1801,14 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseVerifier, /assertZipContents/);
   assert.match(releaseVerifier, /DISALLOWED_PACKAGE_PATTERNS/);
 
+  const layoutAuditorHeadless = fs.readFileSync(
+    path.join(ROOT_DIR, "webstore/audit_ui_layout.mjs"),
+    "utf8"
+  );
+  assert.match(layoutAuditorHeadless, /MARKO_SHOW_BROWSER/);
+  assert.match(layoutAuditorHeadless, /MARKO_AUDIT_HEADLESS/);
+  assert.match(layoutAuditorHeadless, /--headless=new/);
+
   const reviewNotes = fs.readFileSync(path.join(ROOT_DIR, "webstore/REVIEW_NOTES.md"), "utf8");
   assert.match(reviewNotes, /复用已保存方案/);
   assert.match(reviewNotes, /平衡\/完整模式预览或已开启自动整理且本地规则、缓存无法覆盖/);
@@ -1809,6 +1843,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /权限说明/);
   assert.match(publishChecklist, /npm run audit:ui/);
   assert.match(publishChecklist, /npm run e2e:extension/);
+  assert.match(publishChecklist, /自动化默认 headless 后台运行/);
+  assert.match(publishChecklist, /MARKO_SHOW_BROWSER=1/);
   assert.match(publishChecklist, /临时书签可完成真实弹窗预览\/应用点击流、真实弹窗未处理项删除点击流、真实设置页备份创建\/恢复\/删除点击流、手动备份、快速预览、应用方案、重复清理、备份记录、真实设置页保存和 DeepSeek 批量压低验证/);
   assert.match(publishChecklist, /npm run verify:release/);
   assert.match(publishChecklist, /npm run verify:release:full/);
