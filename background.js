@@ -2358,17 +2358,20 @@ async function resolveUnprocessedEntry(entryId, action) {
   let deletedItems = Array.isArray(currentStatus.deletedItems) ? [...currentStatus.deletedItems] : [];
   let message = "";
   let detail = "";
+  let shouldRemoveManualPreviewCount = !targetEntry.bookmarkId;
 
   if (targetEntry.bookmarkId) {
     const existingBookmark = await getBookmarkById(targetEntry.bookmarkId);
 
     if (!existingBookmark) {
+      shouldRemoveManualPreviewCount = true;
       message = ux("已移除过期未处理记录。", "Stale unprocessed record removed.");
       detail = ux(
         `书签《${targetEntry.title || targetEntry.url}》已经不存在，已从未处理列表移除。`,
         `"${targetEntry.title || targetEntry.url}" no longer exists, so it was removed from the unprocessed list.`
       );
     } else if (action === "delete") {
+      shouldRemoveManualPreviewCount = true;
       await removeBookmarkIfExists(existingBookmark.id);
       deletedItems = appendLimitedEntries(deletedItems, [
         buildLogEntry(
@@ -2411,6 +2414,9 @@ async function resolveUnprocessedEntry(entryId, action) {
     warnings: remainingWarnings,
     lastWarning: remainingWarnings.length ? remainingWarnings[remainingWarnings.length - 1].reason || "" : "",
     deletedItems,
+    previewFolders: shouldRemoveManualPreviewCount
+      ? adjustPreviewFoldersForResolvedUnprocessedEntry(currentStatus.previewFolders)
+      : currentStatus.previewFolders || [],
     message,
     detail,
     finishedAt: new Date().toISOString()
@@ -2420,6 +2426,29 @@ async function resolveUnprocessedEntry(entryId, action) {
     ok: true,
     message
   };
+}
+
+function adjustPreviewFoldersForResolvedUnprocessedEntry(previewFolders) {
+  if (!Array.isArray(previewFolders) || !previewFolders.length) {
+    return [];
+  }
+
+  return previewFolders.flatMap((folder) => {
+    const isManualFolder = folder?.title === MANUAL_FOLDER_TITLE || folder?.id === MANUAL_FOLDER_TITLE;
+    if (!isManualFolder) {
+      return [folder];
+    }
+
+    const nextCount = Math.max(0, Number(folder.totalBookmarks || 0) - 1);
+    return nextCount > 0
+      ? [
+          {
+            ...folder,
+            totalBookmarks: nextCount
+          }
+        ]
+      : [];
+  });
 }
 
 function clearImmediateBatchTimer() {

@@ -958,6 +958,224 @@ function formatPopupUiFlowFailures(result) {
   return failures;
 }
 
+function popupUnprocessedUiFlowExpression() {
+  return `(async () => {
+    const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+    const waitFor = async (predicate, label) => {
+      for (let attempt = 0; attempt < 90; attempt += 1) {
+        const value = await predicate();
+        if (value) {
+          return value;
+        }
+        await wait(150);
+      }
+      throw new Error("Timed out waiting for " + label);
+    };
+    const flattenBookmarks = async (node) => {
+      if (node.url) {
+        return [{ title: node.title, url: node.url }];
+      }
+      const children = await chrome.bookmarks.getChildren(node.id).catch(() => []);
+      const nested = [];
+      for (const child of children) {
+        nested.push(...(await flattenBookmarks(child)));
+      }
+      return nested;
+    };
+    const getBookmarkSummary = async () => {
+      const tree = await chrome.bookmarks.getTree();
+      const bar = tree[0].children.find((node) => node.id === "1") || tree[0].children.find((node) => !node.url);
+      const rootChildren = await chrome.bookmarks.getChildren(bar.id);
+      const bookmarks = [];
+      for (const child of rootChildren) {
+        bookmarks.push(...(await flattenBookmarks(child)));
+      }
+      return {
+        bookmarkCount: bookmarks.length,
+        rootTitles: rootChildren.map((child) => child.title),
+        urlCounts: bookmarks.reduce((counts, bookmark) => {
+          counts[bookmark.url] = (counts[bookmark.url] || 0) + 1;
+          return counts;
+        }, {})
+      };
+    };
+    const textFrom = (element) =>
+      (element?.textContent || element?.title || element?.getAttribute?.("aria-label") || "").trim();
+    const clickButton = (button, label) => {
+      if (!button) {
+        throw new Error(label + " button was not found.");
+      }
+      if (button.disabled) {
+        throw new Error(label + " button is disabled.");
+      }
+      button.click();
+    };
+
+    const previewButton = await waitFor(() => {
+      const button = document.getElementById("startButton");
+      return button && !button.disabled && /预览|Preview/.test(button.textContent || "") ? button : null;
+    }, "enabled Preview button for unprocessed flow");
+    clickButton(previewButton, "Preview");
+
+    await waitFor(async () => {
+      const stored = await chrome.storage.local.get(["smartBookmarkJobStatus", "smartBookmarkPreviewPlan"]);
+      const status = stored.smartBookmarkJobStatus || {};
+      return status.phase === "preview" && stored.smartBookmarkPreviewPlan ? status : null;
+    }, "popup preview completion before unprocessed flow");
+
+    const applyPlanButton = await waitFor(() => {
+      const button = document.getElementById("startButton");
+      return button && !button.disabled && /应用方案|Apply Plan/.test(button.textContent || "") ? button : null;
+    }, "enabled Apply Plan button for unprocessed flow");
+    clickButton(applyPlanButton, "Apply Plan");
+
+    const confirmation = await waitFor(() => {
+      const button = document.querySelector("[data-apply-confirmation-primary]");
+      return button && !button.disabled ? button : null;
+    }, "inline apply confirmation for unprocessed flow");
+    clickButton(confirmation, "Confirm Apply");
+
+    const applyState = await waitFor(async () => {
+      const stored = await chrome.storage.local.get(["smartBookmarkJobStatus", "smartBookmarkPreviewPlan"]);
+      const status = stored.smartBookmarkJobStatus || {};
+      const warningCount = Number(status.warningCount ?? (status.warnings || []).length);
+      return status.phase === "completed" && !stored.smartBookmarkPreviewPlan && warningCount === 1 ? status : null;
+    }, "completed popup apply with one unprocessed item");
+
+    const deleteButton = await waitFor(() => {
+      const button = document.querySelector('[data-unprocessed-action-button="delete"]');
+      return button && !button.disabled ? button : null;
+    }, "enabled unprocessed delete button");
+    const deleteButtonText = textFrom(deleteButton);
+    const unprocessedTextBeforeDelete = deleteButton.closest(".record-item")?.innerText.trim() || "";
+    clickButton(deleteButton, "Unprocessed Delete");
+
+    const resolvedState = await waitFor(async () => {
+      const stored = await chrome.storage.local.get("smartBookmarkJobStatus");
+      const status = stored.smartBookmarkJobStatus || {};
+      const warningCount = Number(status.warningCount ?? (status.warnings || []).length);
+      const summary = await getBookmarkSummary();
+      const manualReviewCount = Number(summary.urlCounts["https://example.invalid/popup-ui-manual-review"] || 0);
+      if (status.phase === "completed" && warningCount === 0 && manualReviewCount === 0 && summary.bookmarkCount === 2) {
+        return {
+          status,
+          summary,
+          actionStatusText: (document.getElementById("popupActionStatus")?.textContent || "").trim(),
+          remainingActionButtons: document.querySelectorAll("[data-unprocessed-action-button]").length,
+          visibleText: document.body.innerText.trim().slice(0, 500)
+        };
+      }
+      return null;
+    }, "unprocessed delete completion");
+
+    return {
+      applyPhase: applyState.phase,
+      warningCountBeforeDelete: Number(applyState.warningCount ?? (applyState.warnings || []).length),
+      deleteButtonText,
+      unprocessedTextBeforeDelete,
+      deleteStatusText: resolvedState.actionStatusText,
+      finalWarningCount: Number(resolvedState.status.warningCount ?? (resolvedState.status.warnings || []).length),
+      bookmarkCountAfterDelete: resolvedState.summary.bookmarkCount,
+      urlCountsAfterDelete: resolvedState.summary.urlCounts,
+      rootTitlesAfterDelete: resolvedState.summary.rootTitles,
+      remainingActionButtons: resolvedState.remainingActionButtons,
+      visibleText: resolvedState.visibleText
+    };
+  })()`;
+}
+
+async function runPopupUnprocessedUiFlow(port, extensionId) {
+  const target = await createTarget(port);
+  const client = new CdpClient(target.webSocketDebuggerUrl);
+  try {
+    await client.send("Runtime.enable");
+    await client.send("Page.enable");
+    await client.send("Emulation.setDeviceMetricsOverride", {
+      width: 400,
+      height: 760,
+      deviceScaleFactor: 1,
+      mobile: false
+    });
+    await client.send("Page.navigate", { url: `chrome-extension://${extensionId}/popup.html` });
+    await sleep(1500);
+    await evaluate(client, setupPopupUiFlowExpression());
+    await client.send("Page.reload");
+    await sleep(1500);
+    const result = await evaluate(client, popupUnprocessedUiFlowExpression());
+    let screenshotPath = "";
+    if (screenshotDir) {
+      await fs.mkdir(screenshotDir, { recursive: true });
+      const screenshot = await client.send("Page.captureScreenshot", {
+        format: "png",
+        captureBeyondViewport: false
+      });
+      screenshotPath = path.join(screenshotDir, "popup-unprocessed-delete-flow-400.png");
+      await fs.writeFile(screenshotPath, Buffer.from(screenshot.data, "base64"));
+    }
+    const exceptions = client.events
+      .filter((event) => event.method === "Runtime.exceptionThrown")
+      .map((event) => event.params?.exceptionDetails?.exception?.description || "Runtime exception");
+    const consoleErrors = client.events
+      .filter((event) => event.method === "Runtime.consoleAPICalled" && event.params?.type === "error")
+      .map((event) =>
+        (event.params?.args || [])
+          .map((arg) => arg.value || arg.description || "")
+          .filter(Boolean)
+          .join(" ")
+      );
+    return {
+      ...result,
+      screenshotPath,
+      exceptions,
+      consoleErrors
+    };
+  } finally {
+    client.close();
+    await closeTarget(port, target.id);
+  }
+}
+
+function formatPopupUnprocessedUiFlowFailures(result) {
+  const failures = [];
+  if (result.applyPhase !== "completed") {
+    failures.push(`popup unprocessed flow did not reach completed apply state: ${result.applyPhase || "(missing)"}`);
+  }
+  if (Number(result.warningCountBeforeDelete || 0) !== 1) {
+    failures.push(`expected 1 warning before deleting the unprocessed item, got ${result.warningCountBeforeDelete}`);
+  }
+  if (!/Delete|删除/.test(result.deleteButtonText || "")) {
+    failures.push(`popup unprocessed flow did not click a delete button: ${result.deleteButtonText || "(missing)"}`);
+  }
+  if (Number(result.finalWarningCount || 0) !== 0) {
+    failures.push(`expected zero unprocessed warnings after popup delete, got ${result.finalWarningCount}`);
+  }
+  if (Number(result.bookmarkCountAfterDelete || 0) !== 2) {
+    failures.push(`expected 2 bookmarks after popup unprocessed delete, got ${result.bookmarkCountAfterDelete}`);
+  }
+  if (Number(result.urlCountsAfterDelete?.["https://github.com/Ariandel35/marko"] || 0) !== 1) {
+    failures.push("popup unprocessed delete did not preserve the cleaned GitHub bookmark");
+  }
+  if (Number(result.urlCountsAfterDelete?.["https://openai.com/"] || 0) !== 1) {
+    failures.push("popup unprocessed delete did not preserve the OpenAI bookmark");
+  }
+  if (Number(result.urlCountsAfterDelete?.["https://example.invalid/popup-ui-manual-review"] || 0) !== 0) {
+    failures.push("popup unprocessed delete did not remove the manual-review bookmark");
+  }
+  if (Number(result.remainingActionButtons || 0) !== 0) {
+    failures.push(`popup still renders unprocessed action buttons after delete: ${result.remainingActionButtons}`);
+  }
+  if (/待手动分类\s+1|Manual Review\s+1/.test(result.visibleText || "")) {
+    failures.push("popup still shows one manual-review item in the folder summary after deleting the unprocessed bookmark");
+  }
+  if (result.exceptions?.length) {
+    failures.push(`popup unprocessed UI runtime exceptions: ${result.exceptions.join(" | ")}`);
+  }
+  if (result.consoleErrors?.length) {
+    failures.push(`popup unprocessed UI console errors: ${result.consoleErrors.join(" | ")}`);
+  }
+  return failures;
+}
+
 function setupOptionsBackupUiFlowExpression() {
   return `(async () => {
     if (!chrome?.runtime?.id || !chrome?.bookmarks || !chrome?.storage?.local) {
@@ -1529,6 +1747,7 @@ async function main() {
       const extensionId = await waitForExtensionId(browserClient, profileDir);
       const backgroundTarget = await waitForBackgroundTarget(browserClient, extensionId);
       const popupUiFlow = await runPopupUiFlow(port, extensionId);
+      const popupUnprocessedUiFlow = await runPopupUnprocessedUiFlow(port, extensionId);
       const optionsBackupUiFlow = await runOptionsBackupUiFlow(port, extensionId);
       const coreFlow = await runCoreFlow(port, extensionId);
       const pages = [
@@ -1556,6 +1775,9 @@ async function main() {
       }
       const failures = [
         ...formatPopupUiFlowFailures(popupUiFlow).map((failure) => `popup UI flow: ${failure}`),
+        ...formatPopupUnprocessedUiFlowFailures(popupUnprocessedUiFlow).map(
+          (failure) => `popup unprocessed UI flow: ${failure}`
+        ),
         ...formatOptionsBackupUiFlowFailures(optionsBackupUiFlow).map((failure) => `options backup UI flow: ${failure}`),
         ...formatCoreFlowFailures(coreFlow).map((failure) => `core flow: ${failure}`),
         ...results.flatMap((result) =>
@@ -1580,6 +1802,18 @@ async function main() {
       );
       if (popupUiFlow.screenshotPath) {
         console.log(`OK screenshot ${popupUiFlow.screenshotPath}`);
+      }
+      console.log(
+        [
+          "OK popup unprocessed UI flow",
+          `delete=${popupUnprocessedUiFlow.deleteButtonText || ""}`,
+          `warnings=${popupUnprocessedUiFlow.finalWarningCount}`,
+          `normalBookmarks=${popupUnprocessedUiFlow.bookmarkCountAfterDelete}`,
+          `manualReview=${popupUnprocessedUiFlow.urlCountsAfterDelete?.["https://example.invalid/popup-ui-manual-review"] || 0}`
+        ].join(" | ")
+      );
+      if (popupUnprocessedUiFlow.screenshotPath) {
+        console.log(`OK screenshot ${popupUnprocessedUiFlow.screenshotPath}`);
       }
       console.log(
         [

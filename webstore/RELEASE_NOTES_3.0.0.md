@@ -28,6 +28,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - UI 审计遇到偶发 CDP 超时时会重试当前布局用例一次，真实扩展和 UI 审计的 CDP 命令也使用更长的具名超时，减少发布门禁误失败
 - 新增 `npm run e2e:extension` 和 `npm run verify:release:full`，可用 Chrome for Testing 或 Chromium 运行真实解压扩展冒烟测试
 - 真实扩展冒烟测试现在会点击真实弹窗“预览整理 -> 应用方案 -> 备份并应用”路径，再验证实际书签树
+- 真实扩展冒烟测试现在会点击真实弹窗未处理项删除按钮，并验证弹窗状态中的未处理计数清零
 - 真实扩展冒烟测试现在也会点击真实设置页备份创建、页面内恢复确认和页面内删除确认，并校验实际书签树
 - 真实扩展冒烟测试会写入临时书签，并验证手动备份、快速预览、应用方案、重复清理、备份记录和截图
 - 真实扩展冒烟测试会删除生成的未处理项，并在恢复备份前验证真实书签树和未处理计数已经更新
@@ -54,6 +55,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 弹窗应用方案、备份恢复/删除和设置校验都改成页面内确认与状态提示，不再弹出浏览器原生对话框
 - 预览阶段的未处理项保持只读，不会在点击“应用方案”前显示保留/删除操作
 - 未处理项保留/删除期间会锁定整组操作按钮，避免重复点击造成并发请求
+- 删除未处理项后，弹窗分类摘要也会同步移除过期的待手动分类计数
 - 恢复备份前会先为当前书签创建新的本地快照，并在清理旧备份时保留正在恢复的备份记录
 - 设置页加载时，即使备份列表或权限状态刷新失败，也会保留已读取的连接配置并在对应区域提示错误
 - 权限状态刷新失败时会恢复按钮并显示页面内错误，避免访问检查一直卡住
@@ -99,6 +101,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - UI audit now retries the current layout case once after a transient CDP timeout, and real-extension/UI-audit CDP commands use a longer named timeout to reduce false-negative release gates
 - Added `npm run e2e:extension` and `npm run verify:release:full` for a real unpacked-extension smoke test with Chrome for Testing or Chromium
 - The real extension smoke test now clicks through the real popup Preview -> Apply Plan -> Backup and Apply path before checking the live bookmark tree
+- The real extension smoke test now clicks the real popup unprocessed-item Delete button and verifies the warning disappears from the popup state
 - The real extension smoke test now also clicks through the real settings Backup UI create, inline restore confirmation, and inline delete confirmation flows against the live bookmark tree
 - The real extension smoke test seeds temporary bookmarks and verifies manual backup, Fast preview, Apply Plan, duplicate cleanup, backup records, and screenshots
 - The real extension smoke test deletes a generated unprocessed item and verifies the live bookmark tree and warning count update before backup restore
@@ -130,6 +133,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Popup apply, backup restore/delete, and settings validation now use inline confirmations and status messages instead of browser dialogs
 - Unprocessed items stay read-only until an organize/apply run completes, so preview and error states cannot mutate bookmarks
 - Unprocessed item keep/delete actions lock the whole action group while one item is being handled
+- Deleting an unprocessed item now also removes the stale manual-review count from the popup folder summary
 - Backup restore now creates a fresh local snapshot of the current bookmarks first and preserves the selected backup while retention cleanup runs
 - Settings load keeps the saved connection visible even if backup-list or access-status refreshes fail, then reports those secondary failures inline
 - Access-status refresh failures now restore controls and show an inline permission-state error instead of leaving checks stuck

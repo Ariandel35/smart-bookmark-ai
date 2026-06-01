@@ -23,6 +23,7 @@
 - UI audit now retries a layout case once after a transient CDP timeout, and CDP-based release checks use a longer named command timeout for fewer false-negative runs
 - Added `npm run e2e:extension` and `npm run verify:release:full` for a real unpacked-extension smoke test with Chrome for Testing or Chromium
 - The real extension smoke test now clicks through the real popup Preview -> Apply Plan -> Backup and Apply path before checking the live bookmark tree
+- The real extension smoke test now clicks the real popup unprocessed-item Delete button and verifies the warning disappears from the popup state
 - The real extension smoke test now clicks through the real settings Backup UI create, inline restore confirmation, and inline delete confirmation flows against the live bookmark tree
 - The real extension smoke test now seeds a temporary bookmark profile and verifies manual backup, Fast preview, Apply Plan, duplicate cleanup, backup records, and screenshots
 - The real extension smoke test now deletes a generated unprocessed item and verifies the live bookmark tree and warning count update before backup restore
@@ -70,6 +71,7 @@
 - Backup restore, delete, confirm, and cancel controls now reuse their localized accessible names as hover tooltips
 - Popup unprocessed-item keep/delete controls now show localized bookmark-specific action tooltips
 - Popup unprocessed-item actions now lock the whole action group while one item is being kept or deleted
+- Popup unprocessed-item deletion now also removes the stale manual-review count from the folder summary
 - Popup primary, settings, backup, cancel, and apply-confirmation buttons now keep localized text, hover tooltips, and accessible names in sync
 - Popup Settings shortcuts now show an inline error if both tab creation and the options-page fallback fail
 - Settings save, reset, privacy, API test, access, and manual backup buttons now keep localized text, hover tooltips, and accessible names in sync

@@ -544,6 +544,9 @@ function testPreviewApplySurface() {
   assert.doesNotMatch(backgroundSource, /ux\("Model Name 不能为空。"/);
   assert.match(backgroundSource, /getBookmarkById/);
   assert.match(backgroundSource, /Stale unprocessed record removed/);
+  assert.match(backgroundSource, /adjustPreviewFoldersForResolvedUnprocessedEntry/);
+  assert.match(backgroundSource, /previewFolders: shouldRemoveManualPreviewCount/);
+  assert.match(backgroundSource, /folder\?\.title === MANUAL_FOLDER_TITLE/);
   assert.match(backgroundSource, /currentStatus\?\.phase !== "completed"/);
   assert.match(backgroundSource, /Apply and finish the organize plan before handling unprocessed items/);
   assert.match(backgroundSource, /before generating a preview/);
@@ -1389,6 +1392,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Backup restore, delete, confirm, and cancel controls/);
   assert.match(changelog, /Popup unprocessed-item keep\/delete controls/);
   assert.match(changelog, /unprocessed-item actions now lock the whole action group/);
+  assert.match(changelog, /stale manual-review count from the folder summary/);
   assert.match(changelog, /Popup primary, settings, backup, cancel, and apply-confirmation buttons/);
   assert.match(changelog, /Popup Settings shortcuts now show an inline error if both tab creation and the options-page fallback fail/);
   assert.match(changelog, /Settings save, reset, privacy, API test, access, and manual backup buttons/);
@@ -1449,9 +1453,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /npm run audit:ui/);
   assert.match(readme, /npm run e2e:extension/);
   assert.match(readme, /real popup Preview -> Apply Plan confirmation click flow/);
+  assert.match(readme, /real popup unprocessed-item Delete button/);
   assert.match(readme, /real settings Backup UI create\/restore\/delete flow/);
   assert.match(readme, /manual backup, Fast preview, duplicate cleanup/);
-  assert.match(readme, /unprocessed-item delete/);
   assert.match(readme, /Backup UI create\/restore\/delete/);
   assert.match(readme, /real options UI save/);
   assert.match(readme, /DeepSeek batch-size capping/);
@@ -1476,6 +1480,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /npm run audit:ui/);
   assert.match(readmeZh, /npm run e2e:extension/);
   assert.match(readmeZh, /真实弹窗“预览整理 -> 应用方案 -> 备份并应用”点击流/);
+  assert.match(readmeZh, /真实弹窗未处理项删除按钮/);
   assert.match(readmeZh, /真实设置页备份创建\/恢复\/删除点击流/);
   assert.match(readmeZh, /手动备份、快速预览、重复清理/);
   assert.match(readmeZh, /未处理项删除/);
@@ -1518,6 +1523,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Added `npm run audit:ui`/);
   assert.match(releaseNotes, /retries the current layout case once after a transient CDP timeout/);
   assert.match(releaseNotes, /Added `npm run e2e:extension` and `npm run verify:release:full`/);
+  assert.match(releaseNotes, /clicks the real popup unprocessed-item Delete button/);
   assert.match(releaseNotes, /settings Backup UI create, inline restore confirmation, and inline delete confirmation/);
   assert.match(releaseNotes, /seeds temporary bookmarks and verifies manual backup, Fast preview, Apply Plan/);
   assert.match(releaseNotes, /deletes a generated unprocessed item and verifies the live bookmark tree and warning count/);
@@ -1559,6 +1565,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /inline confirmations and status messages/);
   assert.match(releaseNotes, /preview and error states cannot mutate bookmarks/);
   assert.match(releaseNotes, /lock the whole action group while one item is being handled/);
+  assert.match(releaseNotes, /removes the stale manual-review count from the popup folder summary/);
   assert.match(releaseNotes, /creates a fresh local snapshot/);
   assert.match(releaseNotes, /keeps the saved connection visible/);
   assert.match(releaseNotes, /Access-status refresh failures now restore controls/);
@@ -1698,14 +1705,21 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /popupUiFlowExpression/);
   assert.match(extensionE2e, /runPopupUiFlow/);
   assert.match(extensionE2e, /formatPopupUiFlowFailures/);
+  assert.match(extensionE2e, /popupUnprocessedUiFlowExpression/);
+  assert.match(extensionE2e, /runPopupUnprocessedUiFlow/);
+  assert.match(extensionE2e, /formatPopupUnprocessedUiFlowFailures/);
   assert.match(extensionE2e, /document\.getElementById\("startButton"\)/);
   assert.match(extensionE2e, /\[data-apply-confirmation-primary\]/);
+  assert.match(extensionE2e, /\[data-unprocessed-action-button="delete"\]/);
   assert.match(extensionE2e, /clickButton\(previewButton\)/);
   assert.match(extensionE2e, /clickButton\(applyPlanButton\)/);
   assert.match(extensionE2e, /confirmationText/);
   assert.match(extensionE2e, /finalWarningCount/);
   assert.match(extensionE2e, /popup-ui-preview-apply-flow-400\.png/);
+  assert.match(extensionE2e, /popup-unprocessed-delete-flow-400\.png/);
+  assert.match(extensionE2e, /popup still shows one manual-review item/);
   assert.match(extensionE2e, /OK popup UI flow/);
+  assert.match(extensionE2e, /OK popup unprocessed UI flow/);
   assert.match(extensionE2e, /setupOptionsBackupUiFlowExpression/);
   assert.match(extensionE2e, /optionsBackupUiFlowExpression/);
   assert.match(extensionE2e, /runOptionsBackupUiFlow/);
@@ -1795,7 +1809,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /权限说明/);
   assert.match(publishChecklist, /npm run audit:ui/);
   assert.match(publishChecklist, /npm run e2e:extension/);
-  assert.match(publishChecklist, /临时书签可完成真实弹窗预览\/应用点击流、真实设置页备份创建\/恢复\/删除点击流、手动备份、快速预览、应用方案、重复清理、未处理项删除、备份记录、真实设置页保存和 DeepSeek 批量压低验证/);
+  assert.match(publishChecklist, /临时书签可完成真实弹窗预览\/应用点击流、真实弹窗未处理项删除点击流、真实设置页备份创建\/恢复\/删除点击流、手动备份、快速预览、应用方案、重复清理、备份记录、真实设置页保存和 DeepSeek 批量压低验证/);
   assert.match(publishChecklist, /npm run verify:release/);
   assert.match(publishChecklist, /npm run verify:release:full/);
   assert.match(publishChecklist, /--load-extension is not allowed in Google Chrome, ignoring/);
