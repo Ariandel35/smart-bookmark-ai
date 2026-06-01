@@ -25,6 +25,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 弹窗状态刷新失败时会显示页面内错误并继续重试，恢复后自动清除提示，避免用户一直看到过期状态却没有提示
 - 弹窗操作已经成功但后续状态刷新失败时，会保留“状态刷新失败”提示，不再把已完成操作误报成失败或直接清空提示
 - 新增 `npm run audit:ui`，可用 Chrome API mock 渲染中英文弹窗和设置页，并在横向溢出、按钮裁切或脚本异常时失败
+- UI 审计遇到偶发 CDP 超时时会重试当前布局用例一次，真实扩展和 UI 审计的 CDP 命令也使用更长的具名超时，减少发布门禁误失败
 - 新增 `npm run e2e:extension` 和 `npm run verify:release:full`，可用 Chrome for Testing 或 Chromium 运行真实解压扩展冒烟测试
 - 真实扩展冒烟测试现在会点击真实弹窗“预览整理 -> 应用方案 -> 备份并应用”路径，再验证实际书签树
 - 真实扩展冒烟测试会写入临时书签，并验证手动备份、快速预览、应用方案、重复清理、备份记录和截图
@@ -94,6 +95,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Popup action error responses now keep their specific failure message even if the follow-up popup refresh also fails
 - Popup action successes now preserve refresh-failure feedback instead of clearing it or misreporting the completed action as failed
 - Added `npm run audit:ui` to render popup and settings pages with Chrome API mocks across Chinese preview and English long-error states, failing on horizontal overflow, clipped buttons, or runtime exceptions
+- UI audit now retries the current layout case once after a transient CDP timeout, and real-extension/UI-audit CDP commands use a longer named timeout to reduce false-negative release gates
 - Added `npm run e2e:extension` and `npm run verify:release:full` for a real unpacked-extension smoke test with Chrome for Testing or Chromium
 - The real extension smoke test now clicks through the real popup Preview -> Apply Plan -> Backup and Apply path before checking the live bookmark tree
 - The real extension smoke test seeds temporary bookmarks and verifies manual backup, Fast preview, Apply Plan, duplicate cleanup, backup records, and screenshots

@@ -1406,6 +1406,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Popup action error responses now keep their specific failure message/);
   assert.match(changelog, /Popup action successes now preserve refresh-failure feedback/);
   assert.match(changelog, /Added `npm run audit:ui`/);
+  assert.match(changelog, /retries a layout case once after a transient CDP timeout/);
   assert.match(changelog, /Added `npm run e2e:extension` and `npm run verify:release:full`/);
   assert.match(changelog, /seeds a temporary bookmark profile and verifies manual backup, Fast preview, Apply Plan/);
   assert.match(changelog, /deletes a generated unprocessed item and verifies the live bookmark tree and warning count/);
@@ -1512,6 +1513,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Popup action error responses now keep their specific failure message/);
   assert.match(releaseNotes, /Popup action successes now preserve refresh-failure feedback/);
   assert.match(releaseNotes, /Added `npm run audit:ui`/);
+  assert.match(releaseNotes, /retries the current layout case once after a transient CDP timeout/);
   assert.match(releaseNotes, /Added `npm run e2e:extension` and `npm run verify:release:full`/);
   assert.match(releaseNotes, /seeds temporary bookmarks and verifies manual backup, Fast preview, Apply Plan/);
   assert.match(releaseNotes, /deletes a generated unprocessed item and verifies the live bookmark tree and warning count/);
@@ -1660,6 +1662,11 @@ function testReleaseMaterialsCurrent() {
   assert.match(layoutAuditor, /clippedButtons/);
   assert.match(layoutAuditor, /Runtime\.exceptionThrown/);
   assert.match(layoutAuditor, /Page\.addScriptToEvaluateOnNewDocument/);
+  assert.match(layoutAuditor, /CDP_COMMAND_TIMEOUT_MS = 20_000/);
+  assert.match(layoutAuditor, /AUDIT_PAGE_ATTEMPTS = 2/);
+  assert.match(layoutAuditor, /function isTransientCdpTimeout/);
+  assert.match(layoutAuditor, /async function auditPageWithRetry/);
+  assert.match(layoutAuditor, /Retrying \$\{auditCase\.label\} after transient CDP timeout/);
   assert.match(layoutAuditor, /waitForProcessExit/);
   assert.match(layoutAuditor, /removeDirectoryWithRetry/);
 
@@ -1669,6 +1676,8 @@ function testReleaseMaterialsCurrent() {
   );
   assert.match(extensionE2e, /MARKO_EXTENSION_BROWSER/);
   assert.match(extensionE2e, /MARKO_EXTENSION_SCREENSHOT_DIR/);
+  assert.match(extensionE2e, /CDP_COMMAND_TIMEOUT_MS = 20_000/);
+  assert.match(extensionE2e, /Timed out waiting for CDP response to \$\{method\} after \$\{timeoutMs\}ms/);
   assert.match(extensionE2e, /Google Chrome for Testing/);
   assert.match(extensionE2e, /--disable-extensions-except/);
   assert.match(extensionE2e, /--load-extension/);

@@ -10,6 +10,8 @@ import process from "node:process";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
+const CDP_COMMAND_TIMEOUT_MS = 20_000;
+const AUDIT_PAGE_ATTEMPTS = 2;
 
 const chromeCandidates = [
   process.env.CHROME_EXECUTABLE,
@@ -582,18 +584,19 @@ class CdpClient {
     }
   }
 
-  async send(method, params = {}) {
+  async send(method, params = {}, options = {}) {
     await this.ready;
     const id = this.nextId;
     this.nextId += 1;
     const payload = JSON.stringify({ id, method, params });
     this.socket.write(createWebSocketFrame(payload));
+    const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : CDP_COMMAND_TIMEOUT_MS;
 
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         this.pending.delete(id);
-        reject(new Error(`Timed out waiting for CDP response to ${method}`));
-      }, 10000);
+        reject(new Error(`Timed out waiting for CDP response to ${method} after ${timeoutMs}ms`));
+      }, timeoutMs);
       this.pending.set(id, { resolve, reject, timeout });
     });
   }
@@ -726,6 +729,27 @@ async function auditPage(port, auditCase) {
   }
 }
 
+function isTransientCdpTimeout(error) {
+  return /Timed out waiting for CDP response/i.test(String(error?.message || error || ""));
+}
+
+async function auditPageWithRetry(port, auditCase) {
+  let lastError;
+  for (let attempt = 1; attempt <= AUDIT_PAGE_ATTEMPTS; attempt += 1) {
+    try {
+      return await auditPage(port, auditCase);
+    } catch (error) {
+      lastError = error;
+      if (attempt >= AUDIT_PAGE_ATTEMPTS || !isTransientCdpTimeout(error)) {
+        throw error;
+      }
+      console.warn(`Retrying ${auditCase.label} after transient CDP timeout (${attempt}/${AUDIT_PAGE_ATTEMPTS}).`);
+    }
+  }
+
+  throw lastError;
+}
+
 function formatFailure(result) {
   const failures = [];
   const metrics = result.metrics || {};
@@ -772,7 +796,7 @@ async function main() {
     await waitForCdp(port);
     const results = [];
     for (const auditCase of auditCases) {
-      results.push(await auditPage(port, auditCase));
+      results.push(await auditPageWithRetry(port, auditCase));
     }
 
     const failures = results.flatMap((result) =>
