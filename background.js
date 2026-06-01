@@ -217,8 +217,8 @@ const FAST_LOCAL_FOLDER_RULES = [
     ]
   }
 ];
-const DEAD_LINK_CHECK_TIMEOUT_MS = 10_000;
-const DEAD_LINK_SCAN_CONCURRENCY = 6;
+const DEAD_LINK_CHECK_TIMEOUT_MS = 6_000;
+const DEAD_LINK_SCAN_CONCURRENCY = 8;
 const DEAD_LINK_DELETE_STATUS_CODES = new Set([404, 410, 451]);
 const KEEP_ALIVE_INTERVAL_MS = 25_000;
 const FIRST_RESPONSE_TIMEOUT_MS = 25_000;
@@ -4305,8 +4305,8 @@ async function scanDeadBookmarksBatch(batch, reportStage = () => {}, options = {
       `Checking ${safeBatch.length} links in parallel.`
     ),
     detail: ux(
-      `本批最多同时检测 ${scanConcurrency} 条链接；只有确认失效的链接才会自动删除或从重建方案中移除。`,
-      `Up to ${scanConcurrency} links are checked at the same time. Only confirmed dead links are removed or excluded from rebuild.`
+      `本批最多同时检测 ${scanConcurrency} 条链接；单条超过 ${formatTimeoutSeconds(DEAD_LINK_CHECK_TIMEOUT_MS)} 秒会标记为待确认，只有确认失效的链接才会自动删除或从重建方案中移除。`,
+      `Up to ${scanConcurrency} links are checked at the same time. A link that takes longer than ${formatTimeoutSeconds(DEAD_LINK_CHECK_TIMEOUT_MS)} seconds is left for review; only confirmed dead links are removed or excluded from rebuild.`
     )
   });
 

@@ -19,6 +19,7 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - API 检测成功后自动保存当前连接配置
 - API 检测成功但自动整理权限未授权时，会明确显示该权限问题
 - 快速模式不需要模型接口访问即可本地完成；平衡模式保留 AI 分类但跳过网站检测；完整模式才会检测书签链接并使用 AI 分类，且会先用内置域名规则减少模型请求
+- 完整模式链接检测最多并发 8 条，单条超过 6 秒会留给人工确认，避免慢网站拖住整批预览
 - DeepSeek 和 DeepSeek 兼容接口会在请求前再次拆分大批量，运行批次最多 9 条、单个模型请求最多 3 条，并最多 3 个小请求并发处理；如果 6 秒无首包或 14 秒未完整返回，本轮会停止等待模型，改用本地规则、缓存、内置规则和待手动分类兜底完成
 - 慢模型批大小将被压低时，设置页会在保存前给出页面内提示
 - 应用已生成预览时复用保存的方案，本地重建，不会再次请求模型
@@ -69,6 +70,7 @@ Key features:
 - If an API test succeeds but auto organize access is not granted, Marko reports that permission issue inline
 - Fast/Balanced/Complete mode can be changed directly in the popup before preview
 - Fast mode finishes locally without model endpoint access; Balanced keeps AI classification without website scans; Complete mode adds link checks and AI classification but uses built-in domain rules before AI, while slow providers skip the extra taxonomy-planning request
+- Complete-mode link checks scan up to 8 links at a time and leave links that take longer than 6 seconds for review, so slow sites do not hold up the whole preview
 - Fast local reruns use built-in domain rules, cached classifications, and manual-review fallback to skip model calls and batch scheduling
 - Fast automatic organize can run locally without an API key; Balanced automatic organize requires model credentials; Complete automatic organize also requires website access
 - Slow providers such as DeepSeek and DeepSeek-compatible endpoints re-split large batches before each request, cap runtime batches at 9 bookmarks, cap each model request at 3 bookmarks, and run up to three mini requests at a time; if the model has no first response in 6 seconds or no full response in 14 seconds, the run stops waiting and finishes with local fallback instead of failing the whole flow

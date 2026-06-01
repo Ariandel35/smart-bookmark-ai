@@ -20,6 +20,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 弹窗在要求完成 AI 访问配置前，会说明有多少条未缓存书签确实需要模型分类
 - 弹窗操作失败后会保留页面内错误提示，不会在按钮恢复可点时立刻清空失败原因
 - 弹窗顶部操作区和状态徽标会在窄宽度内自动换行，避免中文或较长状态挤压重叠
+- 完整模式失效链接检测现在最多并发 8 条，单条超过 6 秒会留给人工确认，避免慢网站拖住整批预览
 - 已保存预览的校验现在包含白名单保留书签，书签变化后不会把旧白名单内容重新应用回去
 - 备份恢复现在会保留现有备份文件夹，只替换普通书签内容，和恢复前快照范围保持一致
 - 弹窗切换速度模式时会先合并服务商默认值，旧版残缺配置不会继续保留缺失连接字段
@@ -70,6 +71,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Popup setup errors now show how many uncached bookmarks require model classification before asking users to finish AI access setup
 - Popup action failures now keep their inline error visible after buttons unlock instead of clearing the failure reason during cleanup
 - Popup header actions and the phase badge now wrap within their reserved width to avoid cramped or overlapping text in narrow localized popups
+- Complete-mode dead-link checks now scan up to eight links in parallel and leave links that take longer than six seconds for review, so slow sites do not hold up the whole preview
 - Saved preview validation now includes whitelist-preserved bookmarks so Apply Plan cannot restore stale whitelisted content after bookmarks change
 - Backup restore now preserves existing backup folders while replacing normal bookmark content, matching the pre-restore snapshot scope
 - Popup speed-mode changes now save against merged provider defaults, so legacy partial configs do not keep stale missing connection fields

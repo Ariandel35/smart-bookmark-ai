@@ -449,6 +449,9 @@ function testSpeedModeSurface() {
   const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(backgroundSource, /shouldCheckDeadLinks/);
   assert.match(backgroundSource, /buildSkippedDeadLinkScanResult/);
+  assert.match(backgroundSource, /DEAD_LINK_CHECK_TIMEOUT_MS = 6_000/);
+  assert.match(backgroundSource, /DEAD_LINK_SCAN_CONCURRENCY = 8/);
+  assert.match(backgroundSource, /left for review; only confirmed dead links/);
   assert.match(backgroundSource, /Cannot generate a Complete preview without site access/);
   assert.match(backgroundSource, /previewing Complete mode/);
   assert.doesNotMatch(backgroundSource, /Cannot start organizing without site access/);
@@ -1311,6 +1314,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);
   assert.match(changelog, /Complete-mode preview no longer asks for broad website access/);
+  assert.match(changelog, /Complete-mode dead-link checks now scan up to eight links/);
   assert.match(changelog, /missing job config no longer falls back to an OpenAI provider label/);
   assert.match(changelog, /mini-request timeouts now keep completed mini results/);
   assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
@@ -1334,6 +1338,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /automation access still needs approval/);
   assert.match(readme, /impact shown inline before saving/);
   assert.match(readme, /Settings warn inline before a slow-model batch cap/);
+  assert.match(readme, /Complete mode checks up to 8 links at a time/);
   assert.doesNotMatch(readme, /unless you start an organize run/);
   assert.match(readme, /restoring creates a fresh local snapshot first/);
   assert.match(readmeZh, /DeepSeek 兼容接口/);
@@ -1346,6 +1351,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /自动整理权限仍未授权时明确提示/);
   assert.match(readmeZh, /保存前会在页面内显示影响/);
   assert.match(readmeZh, /慢模型批量被压低前先提示/);
+  assert.match(readmeZh, /完整模式每次最多并发检测 8 条链接/);
   assert.match(readmeZh, /恢复前会先创建新的本地快照/);
 
   const releaseNotes = fs.readFileSync(
@@ -1363,6 +1369,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /show how many uncached bookmarks require model classification/);
   assert.match(releaseNotes, /Popup action failures now keep their inline error visible/);
   assert.match(releaseNotes, /Popup header actions and the phase badge now wrap/);
+  assert.match(releaseNotes, /Complete-mode dead-link checks now scan up to eight links/);
   assert.match(releaseNotes, /Saved preview validation now includes whitelist-preserved bookmarks/);
   assert.match(releaseNotes, /Backup restore now preserves existing backup folders/);
   assert.match(releaseNotes, /keeps and caches any completed mini-request classifications/);
@@ -1415,6 +1422,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /run up to three mini requests at a time/);
   assert.match(storeListing, /auto organize access is not granted/);
   assert.match(storeListing, /slow-model batch sizes are capped/);
+  assert.match(storeListing, /Complete-mode link checks scan up to 8 links/);
   assert.match(storeListing, /skip the separate taxonomy-planning request/);
   assert.match(storeListing, /finishes with local fallback/);
   assert.match(storeListing, /OpenAI、DeepSeek、MiniMax、Anthropic/);
