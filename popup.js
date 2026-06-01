@@ -37,6 +37,7 @@ let currentFolderViews = [];
 let detailRequestVersion = 0;
 let applyConfirmationVisible = false;
 let popupActionInFlight = false;
+let popupRefreshFailureVisible = false;
 
 I18N.applyDocument(document);
 
@@ -385,6 +386,9 @@ function syncActionButtons() {
 
 function setPopupActionStatus(message = "", options = {}) {
   const text = String(message || "").trim();
+  if (!options.isRefreshFailure) {
+    popupRefreshFailureVisible = false;
+  }
   popupActionStatus.textContent = text;
   popupActionStatus.hidden = !text;
   popupActionStatus.classList.toggle("is-error", Boolean(text && options.isError));
@@ -981,6 +985,35 @@ async function refreshAll() {
   await refreshDetailPanel();
 }
 
+function renderPopupRefreshFailure(error, reason = "refresh") {
+  console.error(`Failed to refresh popup state after ${reason}:`, error);
+  setPopupActionStatus(t("popupRefreshFailedStatus"), {
+    isError: true,
+    isRefreshFailure: true
+  });
+  popupRefreshFailureVisible = true;
+
+  if (!currentStatus) {
+    renderStatus({
+      phase: "error",
+      message: t("readStateFailed"),
+      detail: t("popupRefreshFailedStatus")
+    });
+    renderDetailPanelContent();
+  }
+}
+
+async function refreshAllSafely(reason = "refresh") {
+  try {
+    await refreshAll();
+    if (popupRefreshFailureVisible) {
+      setPopupActionStatus("");
+    }
+  } catch (error) {
+    renderPopupRefreshFailure(error, reason);
+  }
+}
+
 async function updatePopupSpeedMode(rawMode) {
   const nextMode = normalizeLinkCheckMode(rawMode);
   const currentMode = normalizeLinkCheckMode(currentConfig?.linkCheckMode);
@@ -1253,7 +1286,7 @@ cancelButton.addEventListener("click", () => {
 
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
-    refreshAll().catch(console.error);
+    void refreshAllSafely("visibilitychange");
   }
 });
 
@@ -1263,18 +1296,8 @@ window.addEventListener("unload", () => {
   }
 });
 
-refreshAll()
-  .then(() => {
-    refreshTimer = setInterval(() => {
-      refreshAll().catch(console.error);
-    }, 2000);
-  })
-  .catch((error) => {
-    console.error("Failed to load popup state:", error);
-    renderStatus({
-      ...(currentStatus || {}),
-      phase: "error",
-      message: t("readStateFailed")
-    });
-    renderDetailPanelContent();
-  });
+refreshAllSafely("initial load").then(() => {
+  refreshTimer = setInterval(() => {
+    void refreshAllSafely("timer");
+  }, 2000);
+});

@@ -572,6 +572,15 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /function setPopupActionInFlight\(inFlight, message = "", options = \{\}\)/);
   assert.match(popupSource, /else if \(!options\.preserveStatus\) \{/);
   assert.match(popupSource, /setPopupActionStatus/);
+  assert.match(popupSource, /popupRefreshFailureVisible/);
+  assert.match(popupSource, /popupRefreshFailedStatus/);
+  assert.match(popupSource, /renderPopupRefreshFailure/);
+  assert.match(popupSource, /async function refreshAllSafely\(reason = "refresh"\)/);
+  assert.match(popupSource, /if \(popupRefreshFailureVisible\) \{\n      setPopupActionStatus\(""\)/);
+  assert.match(popupSource, /void refreshAllSafely\("visibilitychange"\)/);
+  assert.match(popupSource, /refreshAllSafely\("initial load"\)\.then/);
+  assert.match(popupSource, /void refreshAllSafely\("timer"\)/);
+  assert.doesNotMatch(popupSource, /refreshAll\(\)\.catch\(console\.error\)/);
   assert.match(popupSource, /getOptionsSectionUrl/);
   assert.match(popupSource, /options\.html#\$\{safeSection\}/);
   assert.match(popupSource, /chrome\.tabs\?\.create/);
@@ -739,6 +748,7 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /popupSpeedModeBalancedAria/);
   assert.match(i18nSource, /popupSpeedModeCompleteAria/);
   assert.match(i18nSource, /popupSpeedModeSavedStatus/);
+  assert.match(i18nSource, /popupRefreshFailedStatus/);
   assert.match(i18nSource, /logModelTimeoutFallback/);
   assert.match(i18nSource, /elapsedMeta/);
   assert.match(i18nSource, /detailPanelAriaLabel/);
@@ -1305,6 +1315,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /show how many uncached bookmarks require model classification/);
   assert.match(changelog, /Popup action failures now keep their inline error visible/);
+  assert.match(changelog, /Popup state refresh failures now show an inline error/);
   assert.match(changelog, /Popup header actions and the phase badge now wrap/);
   assert.match(changelog, /Saved preview validation now includes whitelist-preserved bookmarks/);
   assert.match(changelog, /Backup restore now preserves existing backup folders/);
@@ -1368,6 +1379,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(releaseNotes, /show how many uncached bookmarks require model classification/);
   assert.match(releaseNotes, /Popup action failures now keep their inline error visible/);
+  assert.match(releaseNotes, /Popup state refresh failures now show an inline error/);
   assert.match(releaseNotes, /Popup header actions and the phase badge now wrap/);
   assert.match(releaseNotes, /Complete-mode dead-link checks now scan up to eight links/);
   assert.match(releaseNotes, /Saved preview validation now includes whitelist-preserved bookmarks/);
@@ -1428,6 +1440,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /OpenAI、DeepSeek、MiniMax、Anthropic/);
   assert.match(storeListing, /OpenAI, DeepSeek, MiniMax, Anthropic/);
   assert.match(storeListing, /inline confirmations and validation feedback/);
+  assert.match(storeListing, /Popup state refresh failures show an inline error/);
   assert.match(storeListing, /read-only until an organize\/apply run completes/);
   assert.match(storeListing, /lock the whole action group while one item is being kept or deleted/);
   assert.match(storeListing, /runs locally, needs model endpoint access, or needs website access/);
