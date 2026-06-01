@@ -18,6 +18,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 设置页连接字段现在也会把当前速度模式要求提供给读屏等辅助技术，同时保留页面内校验提示
 - 弹窗设置提示不再把快速模式说成必须先接入 API，只有确实需要模型分类时才提示模型凭据
 - 弹窗在要求完成 AI 访问配置前，会说明有多少条未缓存书签确实需要模型分类
+- 已保存预览的校验现在包含白名单保留书签，书签变化后不会把旧白名单内容重新应用回去
 - 弹窗切换速度模式时会先合并服务商默认值，旧版残缺配置不会继续保留缺失连接字段
 - 预览启动会复用弹窗预检的本地覆盖结果，即使慢模型运行批量被压低，也不会重复扫描同一批书签
 - 快速自动整理现在可以不填 API Key 本地运行；平衡自动整理需要模型凭据，完整自动整理还要求网站访问权限
@@ -63,6 +64,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Settings connection fields now expose the selected mode requirement hint to assistive technologies while preserving inline validation messages
 - Popup setup copy no longer implies Fast mode needs API credentials; model credentials are shown only when classification actually needs the model
 - Popup setup errors now show how many uncached bookmarks require model classification before asking users to finish AI access setup
+- Saved preview validation now includes whitelist-preserved bookmarks so Apply Plan cannot restore stale whitelisted content after bookmarks change
 - Popup speed-mode changes now save against merged provider defaults, so legacy partial configs do not keep stale missing connection fields
 - Preview startup reuses the popup preflight coverage result even after slow-model runtime batch caps, avoiding a duplicate bookmark scan before the run starts
 - Fast automatic organize can now run locally without an API key; Balanced automatic organize requires model credentials, and Complete automatic organize also requires website access

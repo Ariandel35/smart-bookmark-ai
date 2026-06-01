@@ -2957,7 +2957,10 @@ async function applyPreviewPlan() {
   }
 
   const bookmarkState = await collectBookmarkPlanningState(config);
-  const sourceBookmarkSignature = buildBookmarkSetSignature(bookmarkState.bookmarks);
+  const sourceBookmarkSignature = buildPreviewSourceBookmarkSignature(
+    bookmarkState.bookmarks,
+    bookmarkState.preservedBookmarks
+  );
   if (sourceBookmarkSignature !== previewPlan.sourceBookmarkSignature) {
     return rejectApplyPreviewPlan(
       ux(
@@ -2965,8 +2968,8 @@ async function applyPreviewPlan() {
         "Bookmarks changed since the preview was generated. Generate a new preview before applying it."
       ),
       ux(
-        "Marko 检测到当前待整理书签集合和预览时不同，为避免误删或错放，会要求重新生成方案。",
-        "Marko detected that the bookmark set no longer matches the preview. To avoid deleting or placing the wrong items, it requires a fresh plan."
+        "Marko 检测到当前待整理书签或白名单保留书签和预览时不同，为避免误删、错放或恢复旧白名单内容，会要求重新生成方案。",
+        "Marko detected that the bookmarks to organize or whitelist-preserved bookmarks no longer match the preview. To avoid deleting, placing, or restoring stale items, it requires a fresh plan."
       )
     );
   }
@@ -3149,7 +3152,7 @@ async function savePreviewPlan(job, previewFolders) {
       runId: job.runId || "",
       createdAt: new Date().toISOString(),
       configSignature: buildPreviewConfigSignature(job.config || {}),
-      sourceBookmarkSignature: buildBookmarkSetSignature(job.bookmarks),
+      sourceBookmarkSignature: buildPreviewSourceBookmarkSignature(job.bookmarks, job.preservedBookmarks),
       classificationSignature: job.classificationSignature || "",
       linkCheckMode: normalizeLinkCheckMode(job.config?.linkCheckMode),
       batchSize: job.batchSize,
@@ -3204,6 +3207,27 @@ function buildBookmarkSetSignature(bookmarks = []) {
     .sort((a, b) => a.join("\u001f").localeCompare(b.join("\u001f")));
 
   return JSON.stringify(rows);
+}
+
+function buildPreservedBookmarkSetSignature(bookmarks = []) {
+  const rows = (Array.isArray(bookmarks) ? bookmarks : [])
+    .map((bookmark) => [
+      String(bookmark?.title || "").trim(),
+      String(bookmark?.url || "").trim(),
+      ...(Array.isArray(bookmark?.folderPath)
+        ? bookmark.folderPath.map((segment) => String(segment || "").trim())
+        : [])
+    ])
+    .sort((a, b) => a.join("\u001f").localeCompare(b.join("\u001f")));
+
+  return JSON.stringify(rows);
+}
+
+function buildPreviewSourceBookmarkSignature(bookmarks = [], preservedBookmarks = []) {
+  return JSON.stringify({
+    bookmarks: buildBookmarkSetSignature(bookmarks),
+    preservedBookmarks: buildPreservedBookmarkSetSignature(preservedBookmarks)
+  });
 }
 
 function sanitizePreviewPlanEntries(entries = []) {

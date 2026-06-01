@@ -14,6 +14,7 @@
 - Settings connection fields now expose the selected mode requirement hint to assistive technologies while preserving inline validation messages
 - Popup setup copy and shortcut logic now avoid implying Fast mode needs API credentials when local preview can run without a model call
 - Popup setup errors now show how many uncached bookmarks require model classification before asking users to finish AI access setup
+- Saved preview validation now includes whitelist-preserved bookmarks so Apply Plan cannot restore stale whitelisted content after bookmarks change
 - Popup speed-mode changes now save against merged provider defaults so legacy partial configs do not keep stale missing connection fields
 - Fast automatic organize can now run locally without an API key; Balanced requires model credentials, and Complete still requires model credentials plus website access
 - Complete mode now applies deterministic built-in domain rules before AI classification too, so common sites do not need a model request after dead-link checks

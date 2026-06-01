@@ -512,6 +512,10 @@ function testPreviewApplySurface() {
   assert.match(backgroundSource, /return await keepPreviewApplyRetryAvailable\(error\)/);
   assert.match(backgroundSource, /savePreviewPlan/);
   assert.match(backgroundSource, /buildBookmarkSetSignature/);
+  assert.match(backgroundSource, /buildPreservedBookmarkSetSignature/);
+  assert.match(backgroundSource, /buildPreviewSourceBookmarkSignature/);
+  assert.match(backgroundSource, /buildPreviewSourceBookmarkSignature\(\s*bookmarkState\.bookmarks,\s*bookmarkState\.preservedBookmarks\s*\)/);
+  assert.match(backgroundSource, /sourceBookmarkSignature: buildPreviewSourceBookmarkSignature\(job\.bookmarks, job\.preservedBookmarks\)/);
   assert.match(backgroundSource, /does not call the model again/);
   assert.match(backgroundSource, /oldSignature === nextSignature/);
   assert.match(backgroundSource, /invalidatePreviewPlan/);
@@ -523,7 +527,7 @@ function testPreviewApplySurface() {
   assert.match(backgroundSource, /async function rejectApplyPreviewPlan\(error, detail\) \{\n  await chrome\.storage\.local\.remove\(STORAGE_KEYS\.previewPlan\)/);
   assert.match(backgroundSource, /Preview plans are tied to the provider/);
   assert.doesNotMatch(backgroundSource, /Preview plans are tied to the provider, batch size/);
-  assert.match(backgroundSource, /Marko detected that the bookmark set no longer matches the preview/);
+  assert.match(backgroundSource, /whitelist-preserved bookmarks no longer match the preview/);
   assert.match(backgroundSource, /normalizePreviewPlanBatchSize/);
   assert.match(backgroundSource, /const batchSize = normalizePreviewPlanBatchSize\(previewPlan\.batchSize, config\.batchSize\)/);
   assert.match(backgroundSource, /ux\("模型名称不能为空。", "Model Name is required\."\)/);
@@ -1269,6 +1273,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /show how many uncached bookmarks require model classification/);
+  assert.match(changelog, /Saved preview validation now includes whitelist-preserved bookmarks/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);
@@ -1322,6 +1327,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings connection now explains which modes need model fields or website access/);
   assert.match(releaseNotes, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(releaseNotes, /show how many uncached bookmarks require model classification/);
+  assert.match(releaseNotes, /Saved preview validation now includes whitelist-preserved bookmarks/);
   assert.match(releaseNotes, /Fast mode needs API credentials/);
   assert.match(releaseNotes, /speed-mode changes now save against merged provider defaults/);
   assert.match(releaseNotes, /Fast automatic organize can now run locally without an API key/);
