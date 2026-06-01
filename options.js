@@ -502,6 +502,26 @@ function clearApiTestStatus() {
   setApiTestStatus("");
 }
 
+async function openPrivacyPage() {
+  const privacyUrl = globalThis.chrome?.runtime?.getURL
+    ? chrome.runtime.getURL("privacy.html")
+    : "privacy.html";
+
+  try {
+    if (chrome.tabs?.create) {
+      await chrome.tabs.create({ url: privacyUrl });
+      return;
+    }
+  } catch (error) {
+    // Fall back to window.open when tab creation is not available in this context.
+  }
+
+  const openedWindow = window.open(privacyUrl, "_blank", "noopener");
+  if (!openedWindow) {
+    throw new Error(t("privacyOpenFailed"));
+  }
+}
+
 function getDescribedByTokens(field) {
   return String(field.getAttribute("aria-describedby") || "")
     .split(/\s+/)
@@ -1773,10 +1793,10 @@ grantAccessButton.addEventListener("click", () => {
 resetButton.addEventListener("click", resetCurrentProviderDefaults);
 createBackupButton.addEventListener("click", createManualBackup);
 privacyButton.addEventListener("click", () => {
-  const privacyUrl = globalThis.chrome?.runtime?.getURL
-    ? chrome.runtime.getURL("privacy.html")
-    : "privacy.html";
-  window.open(privacyUrl, "_blank", "noopener");
+  openPrivacyPage().catch((error) => {
+    console.error("Failed to open privacy page:", error);
+    setSettingsActionStatus(t("privacyOpenFailed"), true);
+  });
 });
 
 globalThis.chrome?.permissions?.onAdded?.addListener(() => {

@@ -947,6 +947,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="saveBadge"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*aria-atomic="true"/);
   assert.match(optionsHtml, /id="backupStatusBadge"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*aria-atomic="true"/);
   assert.match(optionsHtml, /id="settingsActionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
+  assert.match(optionsHtml, /id="privacyButton"[\s\S]*aria-describedby="settingsActionStatus"/);
   assert.match(optionsHtml, /id="backupActionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.match(optionsHtml, /id="saveButton"[\s\S]*aria-describedby="settingsActionStatus"/);
   assert.match(optionsHtml, /id="resetButton"[\s\S]*aria-describedby="settingsActionStatus"/);
@@ -1025,6 +1026,10 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /setButtonLabel\(privacyButton, t\("privacyButton"\)\)/);
   assert.match(optionsSource, /setButtonLabel\(testApiButton, t\("testApiButton"\)\)/);
   assert.match(optionsSource, /setButtonLabel\(createBackupButton, t\("createBackupNow"\)\)/);
+  assert.match(optionsSource, /async function openPrivacyPage\(\)/);
+  assert.match(optionsSource, /chrome\.tabs\?\.create/);
+  assert.match(optionsSource, /window\.open\(privacyUrl, "_blank", "noopener"\)/);
+  assert.match(optionsSource, /setSettingsActionStatus\(t\("privacyOpenFailed"\), true\)/);
   assert.match(optionsSource, /setGrantAccessButtonState\(grantAccessButton\.dataset\.granted === "true", \{/);
   assert.match(optionsSource, /accessNeeded: grantAccessButton\.dataset\.accessNeeded !== "false"/);
   assert.match(optionsSource, /function syncNavigationButtonLabels\(\)/);
@@ -1243,6 +1248,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(i18nSource, /apiTestSaveFailed/);
   assert.match(i18nSource, /apiTestAutoAccessFailed/);
   assert.match(i18nSource, /settingsAccessRequestingStatus/);
+  assert.match(i18nSource, /privacyOpenFailed/);
   assert.match(i18nSource, /hostAccessChecking/);
   assert.match(i18nSource, /autoOrganizeDisabledHint/);
   assert.match(i18nSource, /autoOrganizeFastHint/);
@@ -1318,6 +1324,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /unprocessed-item actions now lock the whole action group/);
   assert.match(changelog, /Popup primary, settings, backup, cancel, and apply-confirmation buttons/);
   assert.match(changelog, /Settings save, reset, privacy, API test, access, and manual backup buttons/);
+  assert.match(changelog, /Settings Privacy now falls back from tab creation to window opening/);
   assert.match(changelog, /Popup Fast, Balanced, and Complete mode toggles/);
   assert.match(changelog, /Settings navigation tabs now expose localized hover tooltips/);
   assert.match(changelog, /Settings save and backup status badges/);
@@ -1391,6 +1398,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Fast mode no longer blocks preview or settings save when Base URL or model name are blank/);
   assert.match(releaseNotes, /Settings connection now explains which modes need model fields or website access/);
   assert.match(releaseNotes, /Settings connection fields now expose the selected mode requirement hint/);
+  assert.match(releaseNotes, /Settings Privacy now falls back from tab creation to window opening/);
   assert.match(releaseNotes, /show how many uncached bookmarks require model classification/);
   assert.match(releaseNotes, /Popup action failures now keep their inline error visible/);
   assert.match(releaseNotes, /Popup state refresh failures now show an inline error/);
@@ -1456,6 +1464,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /OpenAI、DeepSeek、MiniMax、Anthropic/);
   assert.match(storeListing, /OpenAI, DeepSeek, MiniMax, Anthropic/);
   assert.match(storeListing, /inline confirmations and validation feedback/);
+  assert.match(storeListing, /Settings Privacy falls back from tab creation to window opening/);
   assert.match(storeListing, /Popup state refresh failures show an inline error/);
   assert.match(storeListing, /folder-summary load failures show an inline detail message/);
   assert.match(storeListing, /Whitelist website catalog load failures show a distinct inline error/);
