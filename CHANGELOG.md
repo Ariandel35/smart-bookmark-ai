@@ -15,6 +15,8 @@
 - Popup setup copy and shortcut logic now avoid implying Fast mode needs API credentials when local preview can run without a model call
 - Popup setup errors now show how many uncached bookmarks require model classification before asking users to finish AI access setup
 - Popup action failures now keep their inline error visible after buttons unlock instead of clearing the message in the completion cleanup
+- Popup and settings startup controls now stay disabled until saved state is loaded or a recoverable load failure is shown, avoiding early mis-clicks on stale default UI
+- Long settings status and hint text now wraps safely on narrow screens, and disabled primary buttons use a muted disabled style instead of looking actionable
 - Popup state refresh failures now show an inline error and keep retrying, then clear the warning after state refresh recovers
 - Popup folder-summary load failures now render an inline detail message instead of silently showing an empty result area
 - Popup header actions and the phase badge now wrap inside their reserved width, avoiding cramped or overlapping text in narrow localized popups

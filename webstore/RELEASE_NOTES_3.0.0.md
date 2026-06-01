@@ -77,6 +77,8 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Popup Settings shortcuts now show an inline error if both tab creation and the options-page fallback fail
 - Popup setup errors now show how many uncached bookmarks require model classification before asking users to finish AI access setup
 - Popup action failures now keep their inline error visible after buttons unlock instead of clearing the failure reason during cleanup
+- Popup and settings startup controls now stay disabled until saved state is loaded or a recoverable load failure is shown, avoiding early mis-clicks on stale default UI
+- Long settings status and hint text now wraps safely on narrow screens, and disabled primary buttons use a muted disabled style instead of looking actionable
 - Popup state refresh failures now show an inline error and keep retrying, then clear the warning after refresh recovers so users are not left with silently stale status
 - Popup folder-summary load failures now render an inline detail message instead of silently showing an empty result area
 - Whitelist website catalog load failures now show a distinct inline error instead of looking like an empty bookmark-site list

@@ -90,6 +90,8 @@ Key features:
 - Popup folder-summary load failures show an inline detail message instead of a silently empty result area
 - Whitelist website catalog load failures show a distinct inline error instead of looking like an empty bookmark-site list
 - Popup Settings shortcuts show inline feedback if both opening paths fail
+- Popup and settings startup controls stay disabled until saved state is loaded or a recoverable load failure is shown
+- Long settings status and hint text wraps safely on narrow screens, with clearer muted disabled buttons
 - Popup and settings actions use inline confirmations and validation feedback instead of browser dialogs
 - Settings Privacy falls back from tab creation to window opening and shows inline feedback if both paths are blocked
 - Auto organize settings explain inline whether the selected mode runs locally, needs model endpoint access, or needs website access

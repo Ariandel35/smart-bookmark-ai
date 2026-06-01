@@ -62,6 +62,7 @@ let currentBackupRecords = [];
 let pendingBackupAction = null;
 let backupActionInFlight = false;
 let settingsActionInFlight = false;
+let settingsReady = false;
 let hostAccessRefreshVersion = 0;
 let hostAccessCheckingInFlight = false;
 let hostAccessRefreshTimer = null;
@@ -572,15 +573,26 @@ function clearSettingsFieldIssue(fieldId) {
 }
 
 function updateSettingsOperationControls() {
+  const isLocked = !settingsReady || settingsActionInFlight;
   const granted = grantAccessButton.dataset.granted === "true";
   const accessNeeded = grantAccessButton.dataset.accessNeeded !== "false";
   settingsFields.forEach((field) => {
-    field.disabled = settingsActionInFlight;
+    field.disabled = isLocked;
   });
-  saveButton.disabled = settingsActionInFlight;
-  testApiButton.disabled = settingsActionInFlight;
-  resetButton.disabled = settingsActionInFlight;
-  grantAccessButton.disabled = settingsActionInFlight || !accessNeeded || granted || hostAccessCheckingInFlight;
+  saveButton.disabled = isLocked;
+  testApiButton.disabled = isLocked;
+  resetButton.disabled = isLocked;
+  grantAccessButton.disabled = isLocked || !accessNeeded || granted || hostAccessCheckingInFlight;
+}
+
+function updateBackupOperationControls() {
+  createBackupButton.disabled = !settingsReady || backupActionInFlight;
+}
+
+function setSettingsReady(isReady) {
+  settingsReady = Boolean(isReady);
+  updateSettingsOperationControls();
+  updateBackupOperationControls();
 }
 
 function setSettingsActionInFlight(isInFlight) {
@@ -1080,10 +1092,11 @@ async function loadConfig() {
     console.error("Failed to refresh host access status after config load:", error);
     renderHostAccessRefreshFailure();
   });
+  setSettingsReady(true);
 }
 
 async function refreshBackupStatus(reason = "manual refresh", options = {}) {
-  createBackupButton.disabled = backupActionInFlight;
+  updateBackupOperationControls();
   pendingBackupAction = null;
   backupList.replaceChildren();
 
@@ -1569,7 +1582,7 @@ async function createManualBackup() {
     setBackupActionStatus(t("backupCreateExceptionAlert"), true);
   } finally {
     backupActionInFlight = false;
-    createBackupButton.disabled = false;
+    updateBackupOperationControls();
     await refreshBackupStatus("manual backup", { preserveActionStatus: true });
   }
 }
@@ -1599,7 +1612,7 @@ async function restoreBackupEntry(backupId) {
     setBackupActionStatus(t("backupRestoreExceptionAlert"), true);
   } finally {
     backupActionInFlight = false;
-    createBackupButton.disabled = false;
+    updateBackupOperationControls();
     await refreshBackupStatus("backup restore", { preserveActionStatus: true });
   }
 }
@@ -1629,7 +1642,7 @@ async function deleteBackupEntry(backupId) {
     setBackupActionStatus(t("backupDeleteExceptionAlert"), true);
   } finally {
     backupActionInFlight = false;
-    createBackupButton.disabled = false;
+    updateBackupOperationControls();
     await refreshBackupStatus("backup delete", { preserveActionStatus: true });
   }
 }
@@ -1814,6 +1827,8 @@ globalThis.chrome?.permissions?.onRemoved?.addListener(() => {
 });
 
 initializeNavigation();
+setSaveBadge(t("saveBadgeLoading"), "accent");
+setSettingsReady(false);
 void loadWhitelistDomainCatalog();
 
 loadConfig().catch((error) => {
@@ -1828,4 +1843,5 @@ loadConfig().catch((error) => {
   clearApiTestStatus();
   setSaveBadge(t("saveBadgeLoadFailed"), "danger");
   setSettingsActionStatus(t("settingsLoadException"), true);
+  setSettingsReady(true);
 });

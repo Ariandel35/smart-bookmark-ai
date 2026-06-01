@@ -60,10 +60,12 @@ textarea {
 
 .page-shell,
 .popup-shell {
+  min-width: 0;
   padding: 20px;
 }
 
 .page-shell {
+  width: 100%;
   max-width: 1080px;
   margin: 0 auto;
 }
@@ -89,12 +91,14 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-width: 0;
 }
 
 .topbar__actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .topbar__actions--page {
@@ -245,6 +249,7 @@ textarea {
   grid-template-columns: 176px minmax(0, 1fr);
   gap: 0;
   align-items: start;
+  min-width: 0;
 }
 
 .sidebar {
@@ -259,9 +264,11 @@ textarea {
 .panel-stack {
   display: grid;
   gap: 0;
+  min-width: 0;
 }
 
 .content-stack {
+  min-width: 0;
   padding-left: 20px;
 }
 
@@ -311,6 +318,7 @@ textarea {
 }
 
 .panel__inner {
+  min-width: 0;
   padding: 0 0 18px;
 }
 
@@ -441,6 +449,7 @@ textarea {
 
 .settings-section {
   display: none;
+  min-width: 0;
   padding-bottom: 18px;
   border-bottom: 1px solid var(--line);
 }
@@ -453,6 +462,7 @@ textarea {
 .stack-sm {
   display: grid;
   gap: 12px;
+  min-width: 0;
 }
 
 .field-grid,
@@ -521,6 +531,7 @@ textarea {
 .field select,
 .field textarea {
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   padding: 11px 12px;
   border-radius: var(--radius-md);
@@ -639,6 +650,8 @@ textarea {
   color: var(--text-soft);
   font-size: 13px;
   line-height: 1.6;
+  overflow-wrap: anywhere;
+  line-break: anywhere;
 }
 
 .field__hint--warm {
@@ -712,7 +725,10 @@ textarea {
 }
 
 .button:disabled {
-  opacity: 0.55;
+  opacity: 1;
+  border-color: var(--line);
+  background: var(--surface-muted);
+  color: var(--text-soft);
   cursor: not-allowed;
   transform: none;
 }
@@ -771,6 +787,9 @@ textarea {
   color: var(--accent);
   font-size: 14px;
   font-weight: 700;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-break: anywhere;
 }
 
 .status-text.is-error {

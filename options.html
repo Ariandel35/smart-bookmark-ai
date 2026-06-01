@@ -21,9 +21,9 @@
               role="status"
               aria-live="polite"
               aria-atomic="true"
-              data-i18n="saveBadgeUnsaved"
+              data-i18n="saveBadgeLoading"
             >
-              Unsaved
+              Loading
             </span>
             <button
               class="button button--primary button--compact"
@@ -32,6 +32,7 @@
               id="saveButton"
               aria-describedby="settingsActionStatus"
               data-i18n="saveButton"
+              disabled
             >
               Save
             </button>
@@ -41,6 +42,7 @@
               id="resetButton"
               aria-describedby="settingsActionStatus"
               data-i18n="resetButton"
+              disabled
             >
               Reset
             </button>
@@ -214,6 +216,7 @@
                         type="button"
                         id="testApiButton"
                         aria-describedby="apiTestStatus"
+                        disabled
                       >
                         <span data-i18n="testApiButton">Test & Save</span>
                       </button>
@@ -228,6 +231,7 @@
                         type="button"
                         id="grantAccessButton"
                         aria-describedby="hostAccessStatus"
+                        disabled
                       >
                         <span data-i18n="hostAccessButton">Grant Access</span>
                       </button>
@@ -453,6 +457,7 @@
                       type="button"
                       id="createBackupButton"
                       aria-describedby="backupActionStatus"
+                      disabled
                     >
                       <span data-i18n="createBackupNow">Create Backup</span>
                     </button>

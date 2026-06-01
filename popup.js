@@ -39,6 +39,7 @@ let applyConfirmationVisible = false;
 let popupActionInFlight = false;
 let popupRefreshFailureVisible = false;
 let managedFolderLoadFailed = false;
+let popupReady = false;
 
 I18N.applyDocument(document);
 
@@ -372,6 +373,7 @@ function canApplyPreviewPlan() {
 }
 
 function syncActionButtons() {
+  const isInitializing = !popupReady;
   const isRunning = currentStatus?.phase === "running";
   const isCancelling = Boolean(currentStatus?.cancelRequested);
   const isConfigured = hasPreviewAttemptConfig(currentConfig);
@@ -382,11 +384,11 @@ function syncActionButtons() {
       : t("previewButton");
   const cancelLabel = isCancelling ? t("cancelRequestedButton") : t("cancelButton");
 
-  startButton.disabled = popupActionInFlight || isRunning;
-  backupButton.disabled = popupActionInFlight || isRunning;
-  cancelButton.disabled = popupActionInFlight || !isRunning || isCancelling;
+  startButton.disabled = isInitializing || popupActionInFlight || isRunning;
+  backupButton.disabled = isInitializing || popupActionInFlight || isRunning;
+  cancelButton.disabled = isInitializing || popupActionInFlight || !isRunning || isCancelling;
   speedModeButtons.forEach((button) => {
-    button.disabled = popupActionInFlight || isRunning;
+    button.disabled = isInitializing || popupActionInFlight || isRunning;
     button.setAttribute("aria-busy", String(popupActionInFlight));
   });
   cancelButton.hidden = !isRunning;
@@ -1014,6 +1016,7 @@ async function refreshAll() {
   const stored = await chrome.storage.local.get([CONFIG_KEY, STATUS_KEY, PREVIEW_PLAN_KEY]);
   currentConfig = mergePopupConfig(stored[CONFIG_KEY] || {});
   currentPreviewPlan = stored[PREVIEW_PLAN_KEY] || null;
+  popupReady = true;
   renderConfig(currentConfig);
   renderStatus(stored[STATUS_KEY]);
   await refreshDetailPanel();
