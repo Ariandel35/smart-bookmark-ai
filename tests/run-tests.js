@@ -808,6 +808,12 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /classifyAdaptiveModelRequestBatch/);
   assert.match(backgroundSource, /if \(requestBatchCap && batch\.length > requestBatchCap\)/);
   assert.match(backgroundSource, /Promise\.allSettled\(workers\)/);
+  assert.match(backgroundSource, /partialClassificationResults/);
+  assert.match(backgroundSource, /attachPartialClassificationResults/);
+  assert.match(backgroundSource, /filterBookmarksByClassificationResults/);
+  assert.match(backgroundSource, /modelCacheBookmarks/);
+  assert.match(backgroundSource, /Marko kept and cached \$\{partialModelBookmarks\.length\} classifications/);
+  assert.match(backgroundSource, /remaining \$\{fallbackBookmarks\.length\} bookmarks will stop waiting/);
   assert.match(backgroundSource, /activeModelAbortControllers/);
   assert.match(backgroundSource, /abortActiveModelRequests/);
   assert.match(backgroundSource, /Splitting slow-model request/);
@@ -1276,6 +1282,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /show how many uncached bookmarks require model classification/);
   assert.match(changelog, /Saved preview validation now includes whitelist-preserved bookmarks/);
   assert.match(changelog, /Backup restore now preserves existing backup folders/);
+  assert.match(changelog, /local fallback now keeps and caches completed mini-request classifications/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);
@@ -1331,6 +1338,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /show how many uncached bookmarks require model classification/);
   assert.match(releaseNotes, /Saved preview validation now includes whitelist-preserved bookmarks/);
   assert.match(releaseNotes, /Backup restore now preserves existing backup folders/);
+  assert.match(releaseNotes, /keeps and caches any completed mini-request classifications/);
   assert.match(releaseNotes, /Fast mode needs API credentials/);
   assert.match(releaseNotes, /speed-mode changes now save against merged provider defaults/);
   assert.match(releaseNotes, /Fast automatic organize can now run locally without an API key/);

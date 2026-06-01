@@ -2526,6 +2526,7 @@ async function processNextBatch() {
         : [];
     let bookmarksToClassify = useAiClassification && !job.modelFallbackToManual ? builtInFastPlans.remaining : [];
     let needsModelClassification = bookmarksToClassify.length > 0;
+    let modelCacheBookmarks = [];
     let normalized = {
       results: [],
       taxonomyLocks: job.taxonomyLocks
@@ -2558,43 +2559,64 @@ async function processNextBatch() {
           normalizeClassificationResults(classifications, bookmarksToClassify),
           job.taxonomyLocks
         );
+        modelCacheBookmarks = bookmarksToClassify;
       } catch (error) {
         if (!isModelTimeoutError(error) || !shouldUseModelTimeoutFallback(job.config)) {
           throw error;
         }
 
         job.modelFallbackToManual = true;
+        const partialModelResults = getPartialClassificationResults(error);
+        const partialModelBookmarks = filterBookmarksByClassificationResults(
+          bookmarksToClassify,
+          partialModelResults
+        );
+        normalized = partialModelBookmarks.length
+          ? applyTaxonomyLocks(
+              normalizeClassificationResults(partialModelResults, partialModelBookmarks),
+              job.taxonomyLocks
+            )
+          : {
+              results: [],
+              taxonomyLocks: job.taxonomyLocks
+            };
+        modelCacheBookmarks = partialModelBookmarks;
         builtInFastPlans = buildBuiltInFastFolderPlans(cachedPlans.remaining);
+        const locallyHandledModelIds = new Set(normalized.results.map((entry) => entry.id));
+        const fallbackBookmarks = builtInFastPlans.remaining.filter(
+          (bookmark) => !locallyHandledModelIds.has(bookmark.id)
+        );
         bookmarksToClassify = [];
         needsModelClassification = false;
         localFallbackPendingWarnings = buildModelTimeoutFallbackWarnings(
-          builtInFastPlans.remaining,
+          fallbackBookmarks,
           error,
           job.config
         );
-        normalized = {
-          results: [],
-          taxonomyLocks: job.taxonomyLocks
-        };
 
         await updateBatchStatus(job, currentBatch, {
           message: ux(
             `${getRuntimeProviderLabel(job.config)} 响应过慢，已切到本地兜底继续完成。`,
             `${getRuntimeProviderLabel(job.config)} was too slow, so this run switched to the local fallback.`
           ),
-          detail: ux(
-            `本批不再等待模型：已改用自定义规则、缓存、内置快速规则和 ${MANUAL_FOLDER_TITLE} 兜底，后续批次也会跳过模型请求。`,
-            `This batch will not keep waiting for the model: custom rules, cache, built-in fast rules, and "${MANUAL_FOLDER_TITLE}" will be used instead. Later batches will also skip model requests.`
-          )
+          detail: partialModelBookmarks.length
+            ? ux(
+                `已保留 ${partialModelBookmarks.length} 条已返回的小请求分类并写入缓存；剩余 ${fallbackBookmarks.length} 条不再等待模型，会进入 ${MANUAL_FOLDER_TITLE} 兜底，后续批次也会跳过模型请求。`,
+                `Marko kept and cached ${partialModelBookmarks.length} classifications that already returned from mini requests; the remaining ${fallbackBookmarks.length} bookmarks will stop waiting for the model and go to "${MANUAL_FOLDER_TITLE}". Later batches will also skip model requests.`
+              )
+            : ux(
+                `本批不再等待模型：已改用自定义规则、缓存、内置快速规则和 ${MANUAL_FOLDER_TITLE} 兜底，后续批次也会跳过模型请求。`,
+                `This batch will not keep waiting for the model: custom rules, cache, built-in fast rules, and "${MANUAL_FOLDER_TITLE}" will be used instead. Later batches will also skip model requests.`
+              )
         });
       }
     }
 
     job.taxonomyLocks = normalized.taxonomyLocks;
-    if (needsModelClassification) {
+    if (modelCacheBookmarks.length && normalized.results.length) {
       const nextClassificationCacheBucket = updateClassificationCacheBucket(
         classificationCacheBucket,
-        bookmarksToClassify,
+        modelCacheBookmarks,
         normalized.results
       );
       await saveClassificationCacheBucket(job.classificationSignature, nextClassificationCacheBucket);
@@ -4726,6 +4748,13 @@ async function classifySplitModelRequestBatches(
   await Promise.allSettled(workers);
 
   if (firstError) {
+    attachPartialClassificationResults(
+      firstError,
+      mergeClassificationResults(
+        resultsByIndex.flatMap((results) => results || []),
+        getPartialClassificationResults(firstError)
+      )
+    );
     throw firstError;
   }
 
@@ -4793,18 +4822,75 @@ async function classifyAdaptiveModelRequestBatch(
           `${retryBatch.length} bookmarks in this retry. If it still times out, it will keep shrinking down to one bookmark before stopping.`
         )
       });
-      const results = await classifyAdaptiveModelRequestBatch(
-        retryBatch,
-        config,
-        reportStage,
-        taxonomyLocks,
-        taxonomyTopFolders
-      );
-      retryResults.push(...results);
+      try {
+        const results = await classifyAdaptiveModelRequestBatch(
+          retryBatch,
+          config,
+          reportStage,
+          taxonomyLocks,
+          taxonomyTopFolders
+        );
+        retryResults.push(...results);
+      } catch (error) {
+        attachPartialClassificationResults(
+          error,
+          mergeClassificationResults(retryResults, getPartialClassificationResults(error))
+        );
+        throw error;
+      }
     }
 
     return retryResults;
   }
+}
+
+function getClassificationResultId(result) {
+  return String(result?.id ?? result?.i ?? "").trim();
+}
+
+function mergeClassificationResults(...resultGroups) {
+  const resultById = new Map();
+
+  for (const results of resultGroups) {
+    for (const result of Array.isArray(results) ? results : []) {
+      const id = getClassificationResultId(result);
+      if (!id || resultById.has(id)) {
+        continue;
+      }
+
+      resultById.set(id, result);
+    }
+  }
+
+  return Array.from(resultById.values());
+}
+
+function getPartialClassificationResults(error) {
+  return Array.isArray(error?.partialClassificationResults)
+    ? mergeClassificationResults(error.partialClassificationResults)
+    : [];
+}
+
+function attachPartialClassificationResults(error, partialResults) {
+  const mergedResults = mergeClassificationResults(partialResults);
+  if (error && typeof error === "object" && mergedResults.length) {
+    error.partialClassificationResults = mergedResults;
+  }
+
+  return error;
+}
+
+function filterBookmarksByClassificationResults(bookmarks, results) {
+  const resultIds = new Set(
+    mergeClassificationResults(results).map((result) => getClassificationResultId(result))
+  );
+  if (!resultIds.size) {
+    return [];
+  }
+
+  return (Array.isArray(bookmarks) ? bookmarks : []).filter((bookmark) =>
+    resultIds.has(String(bookmark?.id || ""))
+  );
 }
 
 async function classifySingleModelRequest(
