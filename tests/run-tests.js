@@ -583,6 +583,8 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /speedModeButtons/);
   assert.match(popupSource, /normalizeLinkCheckMode/);
   assert.match(popupSource, /async function updatePopupSpeedMode/);
+  assert.match(popupSource, /const storedConfig = mergePopupConfig\(stored\[CONFIG_KEY\] \|\| currentConfig \|\| \{\}\)/);
+  assert.doesNotMatch(popupSource, /const storedConfig = stored\[CONFIG_KEY\] \|\| currentConfig/);
   assert.match(popupSource, /chrome\.storage\.local\.set\(\{ \[CONFIG_KEY\]: nextConfig \}\)/);
   assert.match(popupSource, /chrome\.runtime\.sendMessage\(\{ type: "INVALIDATE_PREVIEW_PLAN" \}\)/);
   assert.match(popupSource, /applyConfirmationVisible = false/);
@@ -1219,6 +1221,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /warn inline before saving when a DeepSeek-compatible batch size will be capped/);
   assert.match(changelog, /auto-organize permission impact inline/);
   assert.match(changelog, /explicit granted status after permission approval succeeds/);
+  assert.match(changelog, /speed-mode changes now save against merged provider defaults/);
   assert.match(changelog, /API test succeeded but auto-organize permission was not granted/);
   assert.match(changelog, /store release materials now describe the slow-batch/);
   assert.match(changelog, /DeepSeek-compatible endpoints/);
@@ -1288,6 +1291,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /built-in domain rules/);
   assert.match(releaseNotes, /unmatched bookmarks go to manual review/);
   assert.match(releaseNotes, /Fast mode needs API credentials/);
+  assert.match(releaseNotes, /speed-mode changes now save against merged provider defaults/);
   assert.match(releaseNotes, /Fast automatic organize can now run locally without an API key/);
   assert.match(releaseNotes, /Balanced automatic organize requires model credentials/);
   assert.match(releaseNotes, /auto organize access is not granted/);

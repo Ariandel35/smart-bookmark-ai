@@ -10,6 +10,7 @@
 - Fast mode now finishes locally without waiting for the model; bookmarks that do not match rules or cache are moved to the manual review folder, while Complete mode keeps AI classification
 - Fast mode no longer asks for model endpoint access during preview because it does not call the model
 - Popup setup copy and shortcut logic now avoid implying Fast mode needs API credentials when local preview can run without a model call
+- Popup speed-mode changes now save against merged provider defaults so legacy partial configs do not keep stale missing connection fields
 - Fast automatic organize can now run locally without an API key; Balanced requires model credentials, and Complete still requires model credentials plus website access
 - Complete mode now applies deterministic built-in domain rules before AI classification too, so common sites do not need a model request after dead-link checks
 - DeepSeek and DeepSeek-compatible Complete runs now skip the separate taxonomy-planning request and fall back to local rules, cache, built-in rules, and manual review if model classification times out

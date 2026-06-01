@@ -993,12 +993,7 @@ async function updatePopupSpeedMode(rawMode) {
 
   try {
     const stored = await chrome.storage.local.get(CONFIG_KEY);
-    const storedConfig = stored[CONFIG_KEY] || currentConfig;
-    if (!storedConfig) {
-      setPopupActionStatus("");
-      await openOptionsSection("organize");
-      return;
-    }
+    const storedConfig = mergePopupConfig(stored[CONFIG_KEY] || currentConfig || {});
 
     const nextConfig = {
       ...storedConfig,
