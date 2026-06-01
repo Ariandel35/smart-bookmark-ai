@@ -584,7 +584,11 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /getOptionsSectionUrl/);
   assert.match(popupSource, /options\.html#\$\{safeSection\}/);
   assert.match(popupSource, /chrome\.tabs\?\.create/);
-  assert.match(popupSource, /openOptionsSection\("connection"\)/);
+  assert.match(popupSource, /chrome\.runtime\?\.openOptionsPage/);
+  assert.match(popupSource, /throw new Error\(t\("popupOpenSettingsFailed"\)\)/);
+  assert.match(popupSource, /async function openOptionsSectionSafely\(sectionId = "connection"\)/);
+  assert.match(popupSource, /setPopupActionStatus\(t\("popupOpenSettingsFailed"\), \{ isError: true \}\)/);
+  assert.match(popupSource, /openOptionsSectionSafely\("connection"\)/);
   assert.match(popupSource, /createSettingsShortcutButton/);
   assert.match(popupSource, /shouldShowSettingsShortcut/);
   assert.match(popupSource, /function canResolveUnprocessedEntries\(\) \{/);
@@ -754,6 +758,7 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /popupSpeedModeCompleteAria/);
   assert.match(i18nSource, /popupSpeedModeSavedStatus/);
   assert.match(i18nSource, /popupRefreshFailedStatus/);
+  assert.match(i18nSource, /popupOpenSettingsFailed/);
   assert.match(i18nSource, /logModelTimeoutFallback/);
   assert.match(i18nSource, /elapsedMeta/);
   assert.match(i18nSource, /detailPanelAriaLabel/);
@@ -1323,6 +1328,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Popup unprocessed-item keep\/delete controls/);
   assert.match(changelog, /unprocessed-item actions now lock the whole action group/);
   assert.match(changelog, /Popup primary, settings, backup, cancel, and apply-confirmation buttons/);
+  assert.match(changelog, /Popup Settings shortcuts now show an inline error if both tab creation and the options-page fallback fail/);
   assert.match(changelog, /Settings save, reset, privacy, API test, access, and manual backup buttons/);
   assert.match(changelog, /Settings Privacy now falls back from tab creation to window opening/);
   assert.match(changelog, /Popup Fast, Balanced, and Complete mode toggles/);
@@ -1399,6 +1405,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings connection now explains which modes need model fields or website access/);
   assert.match(releaseNotes, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(releaseNotes, /Settings Privacy now falls back from tab creation to window opening/);
+  assert.match(releaseNotes, /Popup Settings shortcuts now show an inline error if both tab creation and the options-page fallback fail/);
   assert.match(releaseNotes, /show how many uncached bookmarks require model classification/);
   assert.match(releaseNotes, /Popup action failures now keep their inline error visible/);
   assert.match(releaseNotes, /Popup state refresh failures now show an inline error/);
@@ -1464,6 +1471,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /OpenAI、DeepSeek、MiniMax、Anthropic/);
   assert.match(storeListing, /OpenAI, DeepSeek, MiniMax, Anthropic/);
   assert.match(storeListing, /inline confirmations and validation feedback/);
+  assert.match(storeListing, /Popup Settings shortcuts show inline feedback if both opening paths fail/);
   assert.match(storeListing, /Settings Privacy falls back from tab creation to window opening/);
   assert.match(storeListing, /Popup state refresh failures show an inline error/);
   assert.match(storeListing, /folder-summary load failures show an inline detail message/);

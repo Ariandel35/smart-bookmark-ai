@@ -50,6 +50,7 @@
 - Popup unprocessed-item keep/delete controls now show localized bookmark-specific action tooltips
 - Popup unprocessed-item actions now lock the whole action group while one item is being kept or deleted
 - Popup primary, settings, backup, cancel, and apply-confirmation buttons now keep localized text, hover tooltips, and accessible names in sync
+- Popup Settings shortcuts now show an inline error if both tab creation and the options-page fallback fail
 - Settings save, reset, privacy, API test, access, and manual backup buttons now keep localized text, hover tooltips, and accessible names in sync
 - Settings Privacy now falls back from tab creation to window opening and shows an inline error if the browser blocks both paths
 - Popup Fast, Balanced, and Complete mode toggles now expose localized tooltips and accessible names that explain the speed/quality tradeoff

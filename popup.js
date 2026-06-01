@@ -76,7 +76,25 @@ async function openOptionsSection(sectionId = "connection") {
     // Fall back to Chrome's options opener if tab creation is unavailable.
   }
 
-  chrome.runtime.openOptionsPage();
+  try {
+    if (chrome.runtime?.openOptionsPage) {
+      await chrome.runtime.openOptionsPage();
+      return;
+    }
+  } catch (error) {
+    // Surface a clear inline error if both settings-opening paths fail.
+  }
+
+  throw new Error(t("popupOpenSettingsFailed"));
+}
+
+async function openOptionsSectionSafely(sectionId = "connection") {
+  try {
+    await openOptionsSection(sectionId);
+  } catch (error) {
+    console.error("Failed to open settings page:", error);
+    setPopupActionStatus(t("popupOpenSettingsFailed"), { isError: true });
+  }
 }
 
 async function hasBroadHostAccess() {
@@ -520,7 +538,7 @@ function createSettingsShortcutButton() {
   action.className = "button button--primary button--compact";
   action.textContent = t("settingsShortcutButton");
   action.addEventListener("click", () => {
-    void openOptionsSection("connection");
+    void openOptionsSectionSafely("connection");
   });
 
   return action;
@@ -1158,7 +1176,7 @@ async function startPreview() {
 
 async function handlePrimaryAction() {
   if (!hasPreviewAttemptConfig(currentConfig)) {
-    await openOptionsSection("connection");
+    await openOptionsSectionSafely("connection");
     return;
   }
 
@@ -1244,7 +1262,7 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 optionsButton.addEventListener("click", () => {
-  void openOptionsSection("connection");
+  void openOptionsSectionSafely("connection");
 });
 
 speedModeButtons.forEach((button, index) => {

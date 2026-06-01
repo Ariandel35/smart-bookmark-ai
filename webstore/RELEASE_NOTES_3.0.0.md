@@ -18,6 +18,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 设置页连接字段现在也会把当前速度模式要求提供给读屏等辅助技术，同时保留页面内校验提示
 - 设置页隐私按钮会优先新建标签页，失败时回退到窗口打开；如果两种方式都被浏览器拦截，会显示页面内错误
 - 弹窗设置提示不再把快速模式说成必须先接入 API，只有确实需要模型分类时才提示模型凭据
+- 弹窗设置入口在新建标签页和扩展选项页回退都失败时，会显示页面内错误，不再表现为按钮无响应
 - 弹窗在要求完成 AI 访问配置前，会说明有多少条未缓存书签确实需要模型分类
 - 弹窗操作失败后会保留页面内错误提示，不会在按钮恢复可点时立刻清空失败原因
 - 弹窗状态刷新失败时会显示页面内错误并继续重试，恢复后自动清除提示，避免用户一直看到过期状态却没有提示
@@ -73,6 +74,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Settings connection fields now expose the selected mode requirement hint to assistive technologies while preserving inline validation messages
 - Settings Privacy now falls back from tab creation to window opening and shows an inline error if the browser blocks both paths
 - Popup setup copy no longer implies Fast mode needs API credentials; model credentials are shown only when classification actually needs the model
+- Popup Settings shortcuts now show an inline error if both tab creation and the options-page fallback fail
 - Popup setup errors now show how many uncached bookmarks require model classification before asking users to finish AI access setup
 - Popup action failures now keep their inline error visible after buttons unlock instead of clearing the failure reason during cleanup
 - Popup state refresh failures now show an inline error and keep retrying, then clear the warning after refresh recovers so users are not left with silently stale status
