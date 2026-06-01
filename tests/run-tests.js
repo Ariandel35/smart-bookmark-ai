@@ -22,6 +22,7 @@ const JAVASCRIPT_SYNTAX_FILES = [
   "tests/run-tests.js",
   "webstore/audit_ui_layout.mjs",
   "webstore/build_extension_package.mjs",
+  "webstore/e2e_extension.mjs",
   "webstore/render_store_assets.mjs",
   "webstore/verify_release.mjs"
 ];
@@ -251,7 +252,9 @@ function testStaticExtensionAssets() {
   assert.equal(packageJson.private, true);
   assert.equal(packageJson.scripts?.test, "node tests/run-tests.js");
   assert.equal(packageJson.scripts?.["audit:ui"], "node webstore/audit_ui_layout.mjs");
+  assert.equal(packageJson.scripts?.["e2e:extension"], "node webstore/e2e_extension.mjs");
   assert.equal(packageJson.scripts?.["verify:release"], "node webstore/verify_release.mjs");
+  assert.equal(packageJson.scripts?.["verify:release:full"], "npm run verify:release && npm run e2e:extension");
   assert.equal(packageJson.scripts?.["package:webstore"], "node webstore/build_extension_package.mjs");
   assert.equal(packageJson.dependencies, undefined);
   assert.equal(packageJson.devDependencies, undefined);
@@ -1394,6 +1397,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Popup action error responses now keep their specific failure message/);
   assert.match(changelog, /Popup action successes now preserve refresh-failure feedback/);
   assert.match(changelog, /Added `npm run audit:ui`/);
+  assert.match(changelog, /Added `npm run e2e:extension` and `npm run verify:release:full`/);
   assert.match(changelog, /Added `npm run verify:release`/);
   assert.match(changelog, /validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes/);
   assert.match(changelog, /Buttons and status badges now shrink and wrap/);
@@ -1428,7 +1432,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Backup actions now preserve the completed action message/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run audit:ui/);
+  assert.match(readme, /npm run e2e:extension/);
   assert.match(readme, /npm run verify:release/);
+  assert.match(readme, /npm run verify:release:full/);
   assert.match(readme, /npm run package:webstore/);
   assert.match(readme, /Popup mode switch/);
   assert.match(readme, /built-in domain rules/);
@@ -1444,7 +1450,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /DeepSeek 兼容接口/);
   assert.match(readmeZh, /npm test/);
   assert.match(readmeZh, /npm run audit:ui/);
+  assert.match(readmeZh, /npm run e2e:extension/);
   assert.match(readmeZh, /npm run verify:release/);
+  assert.match(readmeZh, /npm run verify:release:full/);
   assert.match(readmeZh, /npm run package:webstore/);
   assert.match(readmeZh, /弹窗模式切换/);
   assert.match(readmeZh, /内置域名规则/);
@@ -1475,6 +1483,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Popup action error responses now keep their specific failure message/);
   assert.match(releaseNotes, /Popup action successes now preserve refresh-failure feedback/);
   assert.match(releaseNotes, /Added `npm run audit:ui`/);
+  assert.match(releaseNotes, /Added `npm run e2e:extension` and `npm run verify:release:full`/);
   assert.match(releaseNotes, /Added `npm run verify:release`/);
   assert.match(releaseNotes, /validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes/);
   assert.match(releaseNotes, /Buttons and status badges now shrink and wrap/);
@@ -1573,6 +1582,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /pre-release UI audit script checks bilingual narrow-screen layouts/);
   assert.match(storeListing, /single release gate runs tests, UI audit, package generation/);
   assert.match(storeListing, /validates README screenshots, store promo image dimensions, and icon sizes/);
+  assert.match(storeListing, /真实解压扩展冒烟测试/);
+  assert.match(storeListing, /real unpacked-extension smoke test/);
+  assert.match(storeListing, /background\.js` service worker/);
   assert.match(storeListing, /Buttons and status badges shrink and wrap/);
   assert.match(storeListing, /startup controls stay disabled/);
   assert.match(storeListing, /Long settings status and hint text wraps safely/);
@@ -1614,6 +1626,21 @@ function testReleaseMaterialsCurrent() {
   assert.match(layoutAuditor, /clippedButtons/);
   assert.match(layoutAuditor, /Runtime\.exceptionThrown/);
   assert.match(layoutAuditor, /Page\.addScriptToEvaluateOnNewDocument/);
+
+  const extensionE2e = fs.readFileSync(
+    path.join(ROOT_DIR, "webstore/e2e_extension.mjs"),
+    "utf8"
+  );
+  assert.match(extensionE2e, /MARKO_EXTENSION_BROWSER/);
+  assert.match(extensionE2e, /Google Chrome for Testing/);
+  assert.match(extensionE2e, /--disable-extensions-except/);
+  assert.match(extensionE2e, /--load-extension/);
+  assert.match(extensionE2e, /service_worker/);
+  assert.match(extensionE2e, /background\.js/);
+  assert.match(extensionE2e, /chrome-extension:\/\/\$\{extensionId\}\/popup\.html/);
+  assert.match(extensionE2e, /chrome-extension:\/\/\$\{extensionId\}\/options\.html#connection/);
+  assert.match(extensionE2e, /speedModeBalancedButton/);
+  assert.match(extensionE2e, /settings-tab-backup/);
 
   const releaseVerifier = fs.readFileSync(
     path.join(ROOT_DIR, "webstore/verify_release.mjs"),
@@ -1673,7 +1700,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /隐私披露/);
   assert.match(publishChecklist, /权限说明/);
   assert.match(publishChecklist, /npm run audit:ui/);
+  assert.match(publishChecklist, /npm run e2e:extension/);
   assert.match(publishChecklist, /npm run verify:release/);
+  assert.match(publishChecklist, /npm run verify:release:full/);
   assert.match(publishChecklist, /--load-extension is not allowed in Google Chrome, ignoring/);
   assert.match(publishChecklist, /Chrome for Testing 或 Chromium/);
   assert.match(publishChecklist, /弹窗在 320px、360px、400px 宽度下没有横向滚动/);

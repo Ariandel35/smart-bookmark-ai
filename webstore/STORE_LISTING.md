@@ -29,6 +29,7 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 弹窗状态刷新失败时会显示页面内错误并继续重试，恢复后自动清除提示
 - 弹窗操作已经成功但后续状态刷新失败时，会保留刷新失败提示，不再误报成操作失败
 - 发布前可运行 UI 审计脚本检查中英文窄屏布局，横向溢出、按钮裁切或脚本异常会直接失败
+- 发布前可运行真实解压扩展冒烟测试，确认 Marko 的 `background.js` service worker、弹窗和设置页能在 Chrome for Testing 或 Chromium 中正常运行
 - 发布前可用一条命令串联测试、UI 审计、打包、ZIP 校验和上传文件清单检查
 - 发布门禁会校验 README 截图、商店宣传图和图标尺寸，减少后台上传素材出错
 - 发布门禁会校验商店文案、隐私政策、审核备注、发布清单和 GitHub 商店链接，减少后台填写遗漏
@@ -99,6 +100,7 @@ Key features:
 - Popup action errors keep their specific failure message even if the follow-up popup refresh also fails
 - Popup action successes keep refresh-failure feedback visible instead of clearing it or reporting the completed action as failed
 - A pre-release UI audit script checks bilingual narrow-screen layouts and fails on horizontal overflow, clipped buttons, or runtime exceptions
+- A real unpacked-extension smoke test can confirm Marko's `background.js` service worker, popup, and options page in Chrome for Testing or Chromium
 - A single release gate runs tests, UI audit, package generation, ZIP validation, and upload file allowlist checks before publishing
 - The release gate validates README screenshots, store promo image dimensions, and icon sizes before upload
 - The release gate validates store listing, privacy policy, review notes, publish checklist, and GitHub store links before packaging

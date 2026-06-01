@@ -135,10 +135,22 @@ npm test
 npm run audit:ui
 ```
 
+使用 Chrome for Testing 或 Chromium 运行真实解压扩展冒烟测试：
+
+```bash
+npm run e2e:extension
+```
+
 上传前运行完整发布门禁：
 
 ```bash
 npm run verify:release
+```
+
+运行发布门禁并追加真实扩展冒烟测试：
+
+```bash
+npm run verify:release:full
 ```
 
 生成 Chrome Web Store 上传包：

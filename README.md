@@ -135,10 +135,22 @@ Audit popup and settings layout across narrow and wide viewports:
 npm run audit:ui
 ```
 
+Run a real unpacked-extension smoke test with Chrome for Testing or Chromium:
+
+```bash
+npm run e2e:extension
+```
+
 Run the full release gate before uploading a package:
 
 ```bash
 npm run verify:release
+```
+
+Run the release gate plus the real extension smoke test:
+
+```bash
+npm run verify:release:full
 ```
 
 Build the Chrome Web Store upload package:
