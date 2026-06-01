@@ -38,6 +38,7 @@ let detailRequestVersion = 0;
 let applyConfirmationVisible = false;
 let popupActionInFlight = false;
 let popupRefreshFailureVisible = false;
+let managedFolderLoadFailed = false;
 
 I18N.applyDocument(document);
 
@@ -506,6 +507,13 @@ function createSetupRequiredState() {
   return empty;
 }
 
+function createManagedFolderLoadFailureState() {
+  return createEmptyState(
+    t("managedFoldersLoadFailedTitle"),
+    t("managedFoldersLoadFailedDesc")
+  );
+}
+
 function createSettingsShortcutButton() {
   const action = document.createElement("button");
   action.type = "button";
@@ -931,6 +939,8 @@ function renderMainDetail() {
 
   if (folderSummary) {
     wrapper.appendChild(folderSummary);
+  } else if (managedFolderLoadFailed) {
+    wrapper.appendChild(createManagedFolderLoadFailureState());
   }
 
   return wrapper;
@@ -960,17 +970,23 @@ async function refreshDetailPanel() {
 
   if (Array.isArray(currentStatus?.previewFolders) && currentStatus.previewFolders.length) {
     currentFolderViews = [];
+    managedFolderLoadFailed = false;
   } else {
+    let nextFolderViews = [];
+    let loadFailed = false;
     try {
-      currentFolderViews = await loadManagedFolderViews();
+      nextFolderViews = await loadManagedFolderViews();
     } catch (error) {
       console.error("Failed to load managed folders:", error);
-      currentFolderViews = [];
+      loadFailed = true;
     }
 
     if (requestVersion !== detailRequestVersion) {
       return;
     }
+
+    currentFolderViews = nextFolderViews;
+    managedFolderLoadFailed = loadFailed;
   }
 
   renderDetailPanelContent();

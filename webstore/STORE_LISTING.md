@@ -27,6 +27,7 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 预览阶段的未处理项保持只读，应用方案前不会出现保留/删除操作
 - 处理未处理项时会锁定整组操作按钮，避免重复点击造成并发请求
 - 弹窗状态刷新失败时会显示页面内错误并继续重试，恢复后自动清除提示
+- 弹窗文件夹摘要读取失败时会在详情区提示，不会静默显示空白结果区
 - 弹窗和设置页使用页面内确认与错误提示，避免浏览器原生弹窗打断流程
 - 自动整理开关会实时说明当前模式需要本地运行、模型接口权限还是网站访问权限
 - 设置页会把连接配置加载和备份/权限状态刷新分开处理，局部刷新失败不会覆盖已保存配置
@@ -83,6 +84,7 @@ Key features:
 - Unprocessed items stay read-only until an organize/apply run completes, with keep/delete actions shown only for actionable items
 - Unprocessed item actions lock the whole action group while one item is being kept or deleted
 - Popup state refresh failures show an inline error, keep retrying, and clear after refresh recovers
+- Popup folder-summary load failures show an inline detail message instead of a silently empty result area
 - Popup and settings actions use inline confirmations and validation feedback instead of browser dialogs
 - Auto organize settings explain inline whether the selected mode runs locally, needs model endpoint access, or needs website access
 - Settings load keeps saved connection fields visible even when backup or permission status refreshes fail

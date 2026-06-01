@@ -16,6 +16,7 @@
 - Popup setup errors now show how many uncached bookmarks require model classification before asking users to finish AI access setup
 - Popup action failures now keep their inline error visible after buttons unlock instead of clearing the message in the completion cleanup
 - Popup state refresh failures now show an inline error and keep retrying, then clear the warning after state refresh recovers
+- Popup folder-summary load failures now render an inline detail message instead of silently showing an empty result area
 - Popup header actions and the phase badge now wrap inside their reserved width, avoiding cramped or overlapping text in narrow localized popups
 - Complete-mode dead-link checks now scan up to eight links in parallel and leave links that take longer than six seconds for review instead of letting one slow batch hold up the preview
 - Saved preview validation now includes whitelist-preserved bookmarks so Apply Plan cannot restore stale whitelisted content after bookmarks change

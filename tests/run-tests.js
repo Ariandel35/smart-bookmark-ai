@@ -652,6 +652,11 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /phase: "error",\n    message,\n    detail/);
   assert.match(popupSource, /progressTrack\.setAttribute\("aria-valuenow", String\(progress\)\)/);
   assert.match(popupSource, /currentStatus\?\.detail \|\|/);
+  assert.match(popupSource, /managedFolderLoadFailed/);
+  assert.match(popupSource, /createManagedFolderLoadFailureState/);
+  assert.match(popupSource, /managedFolderLoadFailed = false/);
+  assert.match(popupSource, /managedFolderLoadFailed = loadFailed/);
+  assert.match(popupSource, /wrapper\.appendChild\(createManagedFolderLoadFailureState\(\)\)/);
   assert.match(popupSource, /applyButton\.disabled = true/);
   assert.match(popupSource, /cancelButton\.disabled = true/);
   assert.match(popupSource, /hasPreviewAttemptConfig/);
@@ -752,6 +757,8 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /logModelTimeoutFallback/);
   assert.match(i18nSource, /elapsedMeta/);
   assert.match(i18nSource, /detailPanelAriaLabel/);
+  assert.match(i18nSource, /managedFoldersLoadFailedTitle/);
+  assert.match(i18nSource, /managedFoldersLoadFailedDesc/);
   assert.match(i18nSource, /keepBookmarkAria/);
   assert.match(i18nSource, /deleteBookmarkAria/);
   assert.match(i18nSource, /optionsMeta: "Marko \/ Options"/);
@@ -1316,6 +1323,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /show how many uncached bookmarks require model classification/);
   assert.match(changelog, /Popup action failures now keep their inline error visible/);
   assert.match(changelog, /Popup state refresh failures now show an inline error/);
+  assert.match(changelog, /Popup folder-summary load failures now render an inline detail message/);
   assert.match(changelog, /Popup header actions and the phase badge now wrap/);
   assert.match(changelog, /Saved preview validation now includes whitelist-preserved bookmarks/);
   assert.match(changelog, /Backup restore now preserves existing backup folders/);
@@ -1380,6 +1388,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /show how many uncached bookmarks require model classification/);
   assert.match(releaseNotes, /Popup action failures now keep their inline error visible/);
   assert.match(releaseNotes, /Popup state refresh failures now show an inline error/);
+  assert.match(releaseNotes, /Popup folder-summary load failures now render an inline detail message/);
   assert.match(releaseNotes, /Popup header actions and the phase badge now wrap/);
   assert.match(releaseNotes, /Complete-mode dead-link checks now scan up to eight links/);
   assert.match(releaseNotes, /Saved preview validation now includes whitelist-preserved bookmarks/);
@@ -1441,6 +1450,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /OpenAI, DeepSeek, MiniMax, Anthropic/);
   assert.match(storeListing, /inline confirmations and validation feedback/);
   assert.match(storeListing, /Popup state refresh failures show an inline error/);
+  assert.match(storeListing, /folder-summary load failures show an inline detail message/);
   assert.match(storeListing, /read-only until an organize\/apply run completes/);
   assert.match(storeListing, /lock the whole action group while one item is being kept or deleted/);
   assert.match(storeListing, /runs locally, needs model endpoint access, or needs website access/);
