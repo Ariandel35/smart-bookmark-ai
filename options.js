@@ -1649,12 +1649,18 @@ async function requestHostAccess() {
     const granted = shouldRequireBroadHostAccess(config)
       ? await ensureBroadHostAccess()
       : await ensureOriginAccess(config.baseUrl);
-    await refreshHostAccessStatus();
+    await refreshHostAccessStatus().catch((error) => {
+      console.error("Failed to refresh host access status after access decision:", error);
+      renderHostAccessRefreshFailure();
+    });
     if (!granted) {
       showSettingsIssue(t("hostAccessMissingAlert"), "connection", "grantAccessButton");
     } else {
       setSettingsActionStatus(t("hostAccessGranted"));
     }
+  } catch (error) {
+    console.error("Failed to request host access:", error);
+    showSettingsIssue(t("hostAccessRequestException"), "connection", "grantAccessButton");
   } finally {
     setSettingsActionInFlight(false);
     await refreshHostAccessStatus().catch((error) => {
@@ -1747,7 +1753,7 @@ whitelistSearchInput.addEventListener("input", () => {
 });
 testApiButton.addEventListener("click", testApiConnection);
 grantAccessButton.addEventListener("click", () => {
-  requestHostAccess().catch((error) => {
+  void requestHostAccess().catch((error) => {
     console.error("Failed to request host access:", error);
     showSettingsIssue(t("hostAccessRequestException"), "connection", "grantAccessButton");
   });

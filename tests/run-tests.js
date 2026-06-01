@@ -1119,6 +1119,10 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /if \(configToSave\.autoOrganizeEnabled\) \{[\s\S]*const granted = shouldRequireBroadHostAccess\(configToSave\)[\s\S]*ensureBroadHostAccess\(\)[\s\S]*shouldRequireModelAccess\(configToSave\)[\s\S]*ensureOriginAccess\(configToSave\.baseUrl\)[\s\S]*: true/);
   assert.match(optionsSource, /showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
   assert.match(optionsSource, /setSettingsActionStatus\(t\("hostAccessGranted"\)\)/);
+  assert.match(optionsSource, /Failed to refresh host access status after access decision/);
+  assert.match(optionsSource, /renderHostAccessRefreshFailure\(\);[\s\S]*if \(!granted\)/);
+  assert.match(optionsSource, /catch \(error\) \{[\s\S]*Failed to request host access:[\s\S]*showSettingsIssue\(t\("hostAccessRequestException"\), "connection", "grantAccessButton"\)/);
+  assert.match(optionsSource, /void requestHostAccess\(\)\.catch/);
   assert.match(optionsSource, /targetId === "baseUrl" \|\| targetId === "linkCheckMode"/);
   assert.match(optionsSource, /Base URL change/);
   assert.match(optionsSource, /speed mode change/);
@@ -1313,6 +1317,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /fresh pre-restore snapshot/);
   assert.match(changelog, /keeps the saved configuration visible/);
   assert.match(changelog, /access-status refresh failures now restore controls/);
+  assert.match(changelog, /Settings access requests now keep the permission decision separate/);
   assert.match(changelog, /clear stale backup error text/);
   assert.match(changelog, /Backup actions now preserve the completed action message/);
   assert.match(readme, /npm test/);
@@ -1380,6 +1385,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /creates a fresh local snapshot/);
   assert.match(releaseNotes, /keeps the saved connection visible/);
   assert.match(releaseNotes, /Access-status refresh failures now restore controls/);
+  assert.match(releaseNotes, /separate the permission decision from follow-up status refresh failures/);
   assert.match(releaseNotes, /clear stale backup error text/);
   assert.match(releaseNotes, /preserve the completed action message/);
   assert.match(releaseNotes, /silently clamping invalid values/);
