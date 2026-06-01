@@ -1163,9 +1163,12 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /showApiTestIssue\(t\("requiredApiKey", \{ provider: defaults\.label \}\), "apiKey"\)/);
   assert.match(optionsSource, /setSaveBadge\(t\("saveBadgeUnsaved"\), "accent"\);\n  setApiTestStatus\(t\("apiTesting"\)\)/);
   assert.match(optionsSource, /if \(!granted\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*setApiTestStatus\(t\("currentApiAccessMissing"\), true\)/);
+  assert.match(optionsSource, /Failed to refresh host access status after API test access check/);
   assert.match(optionsSource, /if \(!response\?\.ok\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*setApiTestStatus\(/);
   assert.match(optionsSource, /if \(!granted\) \{[\s\S]*setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)[\s\S]*showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
+  assert.match(optionsSource, /Failed to refresh host access status after auto organize permission check/);
   assert.match(optionsSource, /if \(!autoAccessGranted\) \{[\s\S]*setApiTestStatus\([\s\S]*apiTestAutoAccessFailed[\s\S]*true[\s\S]*showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
+  assert.match(optionsSource, /Failed to refresh host access status after API test auto permission check/);
   assert.match(optionsSource, /function shouldRequireModelAccess\(config\)/);
   assert.match(optionsSource, /if \(configToSave\.autoOrganizeEnabled\) \{[\s\S]*const granted = shouldRequireBroadHostAccess\(configToSave\)[\s\S]*ensureBroadHostAccess\(\)[\s\S]*shouldRequireModelAccess\(configToSave\)[\s\S]*ensureOriginAccess\(configToSave\.baseUrl\)[\s\S]*: true/);
   assert.match(optionsSource, /showSettingsIssue\(t\("autoOrganizePermission"\), "automation", "autoOrganizeEnabled"\)/);
@@ -1395,6 +1398,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /keeps the saved configuration visible/);
   assert.match(changelog, /access-status refresh failures now restore controls/);
   assert.match(changelog, /Settings access requests now keep the permission decision separate/);
+  assert.match(changelog, /Settings save and Test & Save now keep API or automation permission-denied feedback visible/);
   assert.match(changelog, /clear stale backup error text/);
   assert.match(changelog, /Backup actions now preserve the completed action message/);
   assert.match(readme, /npm test/);
@@ -1475,6 +1479,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /keeps the saved connection visible/);
   assert.match(releaseNotes, /Access-status refresh failures now restore controls/);
   assert.match(releaseNotes, /separate the permission decision from follow-up status refresh failures/);
+  assert.match(releaseNotes, /Settings save and Test & Save keep API or automation permission-denied feedback visible/);
   assert.match(releaseNotes, /clear stale backup error text/);
   assert.match(releaseNotes, /preserve the completed action message/);
   assert.match(releaseNotes, /silently clamping invalid values/);
@@ -1516,6 +1521,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /read-only until an organize\/apply run completes/);
   assert.match(storeListing, /lock the whole action group while one item is being kept or deleted/);
   assert.match(storeListing, /runs locally, needs model endpoint access, or needs website access/);
+  assert.match(storeListing, /Save and Test & Save keep API or automation permission-denied feedback visible/);
   assert.match(storeListing, /fresh pre-restore snapshot/);
   assert.match(storeListing, /keeps saved connection fields visible/);
   assert.match(storeListing, /Access-status refresh failures restore controls/);

@@ -95,6 +95,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Settings warn before capping slow-model batch sizes and explain the selected auto-organize mode's permission impact inline
 - After access approval succeeds, settings now show an explicit granted status instead of leaving the waiting message in place
 - Settings access requests now separate the permission decision from follow-up status refresh failures, so a granted request is still reported as granted
+- Settings save and Test & Save keep API or automation permission-denied feedback visible even if the follow-up access-status refresh fails
 - Popup apply, backup restore/delete, and settings validation now use inline confirmations and status messages instead of browser dialogs
 - Unprocessed items stay read-only until an organize/apply run completes, so preview and error states cannot mutate bookmarks
 - Unprocessed item keep/delete actions lock the whole action group while one item is being handled

@@ -95,6 +95,7 @@ Key features:
 - Popup and settings actions use inline confirmations and validation feedback instead of browser dialogs
 - Settings Privacy falls back from tab creation to window opening and shows inline feedback if both paths are blocked
 - Auto organize settings explain inline whether the selected mode runs locally, needs model endpoint access, or needs website access
+- Save and Test & Save keep API or automation permission-denied feedback visible even if the follow-up access-status refresh fails
 - Settings load keeps saved connection fields visible even when backup or permission status refreshes fail
 - Access-status refresh failures restore controls and show inline feedback
 - Recovered backup-list refreshes clear stale error text for more consistent status feedback

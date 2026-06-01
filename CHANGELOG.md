@@ -40,6 +40,7 @@
 - Settings now show the auto-organize permission impact inline as users switch automation and speed modes
 - Settings now replace the access-request waiting message with an explicit granted status after permission approval succeeds
 - Settings access requests now keep the permission decision separate from follow-up status refresh failures, so a granted request is still reported as granted
+- Settings save and Test & Save now keep API or automation permission-denied feedback visible even if the follow-up access-status refresh fails
 - Test & Save now reports when the API test succeeded but auto-organize permission was not granted
 - README and store release materials now describe the slow-batch, automation permission, API access, and unprocessed-action safeguards consistently
 - Running legacy organize jobs are normalized before the next batch so stale large batches cannot continue after an update

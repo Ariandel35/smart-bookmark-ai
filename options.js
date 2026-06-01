@@ -1406,7 +1406,10 @@ async function saveConfig(event) {
         : shouldRequireModelAccess(configToSave)
           ? await ensureOriginAccess(configToSave.baseUrl)
           : true;
-      await refreshHostAccessStatus();
+      await refreshHostAccessStatus().catch((error) => {
+        console.error("Failed to refresh host access status after auto organize permission check:", error);
+        renderHostAccessRefreshFailure();
+      });
       if (!granted) {
         setSaveBadge(t("saveBadgeFailed"), "danger");
         showSettingsIssue(t("autoOrganizePermission"), "automation", "autoOrganizeEnabled");
@@ -1477,7 +1480,10 @@ async function testApiConnection() {
 
   try {
     const granted = await ensureOriginAccess(config.baseUrl);
-    await refreshHostAccessStatus();
+    await refreshHostAccessStatus().catch((error) => {
+      console.error("Failed to refresh host access status after API test access check:", error);
+      renderHostAccessRefreshFailure();
+    });
     if (!granted) {
       setActiveSection("connection");
       setSaveBadge(t("saveBadgeFailed"), "danger");
@@ -1510,7 +1516,10 @@ async function testApiConnection() {
       const autoAccessGranted = shouldRequireBroadHostAccess(configToSave)
         ? await ensureBroadHostAccess()
         : true;
-      await refreshHostAccessStatus();
+      await refreshHostAccessStatus().catch((error) => {
+        console.error("Failed to refresh host access status after API test auto permission check:", error);
+        renderHostAccessRefreshFailure();
+      });
       if (!autoAccessGranted) {
         setSaveBadge(t("saveBadgeFailed"), "danger");
         setApiTestStatus(
