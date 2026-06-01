@@ -330,6 +330,8 @@ Hard rules:
       setupMissingApiKey: "API key is required for this provider.",
       modelAccessRequiredForUncachedPreview:
         "Balanced or Complete mode has bookmarks that are not covered by local rules or cached classifications, so Marko needs model access before it can classify them. Slow-model timeouts fall back to local review.",
+      modelAccessRequiredForUncachedPreviewWithCount:
+        "{count} bookmarks are not covered by local rules or cached classifications, so Marko needs model access before it can classify them. Slow-model timeouts fall back to local review.",
       applyConfirmTitle: "Apply saved preview plan",
       applyConfirmDesc:
         "Marko will create a fresh backup, verify the preview is still current, then rebuild locally without calling the model again.",
@@ -622,6 +624,8 @@ Hard rules:
       setupMissingApiKey: "当前服务商需要 API Key。",
       modelAccessRequiredForUncachedPreview:
         "平衡或完整模式中有书签没有命中本地规则或分类缓存，Marko 需要先访问模型才能分类；慢模型超时会改用本地待分类兜底。",
+      modelAccessRequiredForUncachedPreviewWithCount:
+        "{count} 条书签没有命中本地规则或分类缓存，Marko 需要先访问模型才能分类；慢模型超时会改用本地待分类兜底。",
       applyConfirmTitle: "应用已保存的预览方案",
       applyConfirmDesc: "Marko 会先创建新备份，确认预览仍然有效，然后直接本地重建，不会再次请求模型。",
       applyConfirmPrimary: "备份并应用",

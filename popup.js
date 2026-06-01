@@ -1059,13 +1059,16 @@ async function startPreview() {
     }
 
     if (requirement.needsModel && !hasModelAccessConfig(currentConfig)) {
+      const aiCandidateCount = Number(requirement.aiCandidateCount || 0);
       await refreshAll();
       renderResponseError(
         {
-          error: t("setupMissingApiKey"),
-          detail: t("modelAccessRequiredForUncachedPreview")
+          error: getSetupProblem(currentConfig),
+          detail: aiCandidateCount
+            ? t("modelAccessRequiredForUncachedPreviewWithCount", { count: aiCandidateCount })
+            : t("modelAccessRequiredForUncachedPreview")
         },
-        t("setupMissingApiKey")
+        getSetupProblem(currentConfig)
       );
       return;
     }

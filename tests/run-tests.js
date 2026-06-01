@@ -644,6 +644,9 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /localRequirementCheckId: requirement\.checkId \|\| ""/);
   assert.match(popupSource, /chrome\.storage\.local\.get\(\[CONFIG_KEY, STATUS_KEY, PREVIEW_PLAN_KEY\]\)/);
   assert.match(popupSource, /requirement\.needsModel \|\| requirement\.requiresBroadHostAccess/);
+  assert.match(popupSource, /const aiCandidateCount = Number\(requirement\.aiCandidateCount \|\| 0\)/);
+  assert.match(popupSource, /error: getSetupProblem\(currentConfig\)/);
+  assert.match(popupSource, /modelAccessRequiredForUncachedPreviewWithCount/);
   assert.match(popupSource, /modelAccessRequiredForUncachedPreview/);
   assert.match(popupSource, /async function createManualBackup\(\) \{\n  setPopupActionInFlight\(true, t\("popupCreatingBackupStatus"\)\);/);
   assert.match(popupSource, /async function cancelJob\(\) \{\n  setPopupActionInFlight\(true, t\("popupCancellingStatus"\)\);/);
@@ -746,6 +749,7 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /setupInvalidBaseUrl: "Base URL 必须是有效的 http 或 https 地址。"/);
   assert.match(i18nSource, /setupMissingModel: "预览前需要填写模型名称。"/);
   assert.match(i18nSource, /setupMissingApiKey: "当前服务商需要 API Key。"/);
+  assert.match(i18nSource, /modelAccessRequiredForUncachedPreviewWithCount:[\s\S]*"\{count\} 条书签没有命中本地规则或分类缓存/);
   assert.match(i18nSource, /baseUrlInvalid: "Base URL 必须是有效的 http 或 https 地址。"/);
   assert.match(i18nSource, /modelRequired: "模型名称不能为空。"/);
   assert.match(i18nSource, /hostAccessRefreshFailed: "访问状态刷新失败。请检查 Chrome 扩展权限后重试。"/);
@@ -1264,6 +1268,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings connection now explains which modes need model fields or website access/);
   assert.match(changelog, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
+  assert.match(changelog, /show how many uncached bookmarks require model classification/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);
@@ -1316,6 +1321,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Fast mode no longer blocks preview or settings save when Base URL or model name are blank/);
   assert.match(releaseNotes, /Settings connection now explains which modes need model fields or website access/);
   assert.match(releaseNotes, /Settings connection fields now expose the selected mode requirement hint/);
+  assert.match(releaseNotes, /show how many uncached bookmarks require model classification/);
   assert.match(releaseNotes, /Fast mode needs API credentials/);
   assert.match(releaseNotes, /speed-mode changes now save against merged provider defaults/);
   assert.match(releaseNotes, /Fast automatic organize can now run locally without an API key/);
