@@ -2527,6 +2527,8 @@ async function processNextBatch() {
     let bookmarksToClassify = useAiClassification && !job.modelFallbackToManual ? builtInFastPlans.remaining : [];
     let needsModelClassification = bookmarksToClassify.length > 0;
     let modelCacheBookmarks = [];
+    let partialModelFallbackCount = 0;
+    let partialModelFallbackPendingCount = 0;
     let normalized = {
       results: [],
       taxonomyLocks: job.taxonomyLocks
@@ -2586,6 +2588,8 @@ async function processNextBatch() {
         const fallbackBookmarks = builtInFastPlans.remaining.filter(
           (bookmark) => !locallyHandledModelIds.has(bookmark.id)
         );
+        partialModelFallbackCount = partialModelBookmarks.length;
+        partialModelFallbackPendingCount = fallbackBookmarks.length;
         bookmarksToClassify = [];
         needsModelClassification = false;
         localFallbackPendingWarnings = buildModelTimeoutFallbackWarnings(
@@ -2626,18 +2630,26 @@ async function processNextBatch() {
       message: ux(
         needsModelClassification
           ? `第 ${currentBatch}/${job.totalBatches} 批模型结果已返回，正在写入最终整理方案。`
+          : partialModelFallbackCount
+            ? `第 ${currentBatch}/${job.totalBatches} 批已保留部分模型结果，正在写入兜底方案。`
           : `第 ${currentBatch}/${job.totalBatches} 批已完成本地处理，正在写入最终整理方案。`,
         needsModelClassification
           ? `Model output for batch ${currentBatch}/${job.totalBatches} received. Writing it into the final organize plan.`
+          : partialModelFallbackCount
+            ? `Batch ${currentBatch}/${job.totalBatches} kept partial model output and is writing the fallback plan.`
           : `Batch ${currentBatch}/${job.totalBatches} finished local processing. Writing it into the final organize plan.`
       ),
       detail: aliveBatch.length
         ? ux(
             needsModelClassification
               ? "正在把本批结果加入最终重建方案，原有书签结构暂时不会变化。"
+              : partialModelFallbackCount
+                ? `已有 ${partialModelFallbackCount} 条小请求结果进入最终方案，剩余 ${partialModelFallbackPendingCount} 条进入 ${MANUAL_FOLDER_TITLE}；原有书签结构暂时不会变化。`
               : "本批没有等待模型，直接把本地结果加入最终重建方案；原有书签结构暂时不会变化。",
             needsModelClassification
               ? "This batch is being added to the final rebuild plan. The current bookmark structure is still unchanged."
+              : partialModelFallbackCount
+                ? `${partialModelFallbackCount} mini-request results are being kept in the final plan, and ${partialModelFallbackPendingCount} unfinished bookmarks are going to "${MANUAL_FOLDER_TITLE}". The current bookmark structure is still unchanged.`
               : "This batch did not wait for the model. Local results are being added to the final rebuild plan, and the current bookmark structure is still unchanged."
           )
         : ux(

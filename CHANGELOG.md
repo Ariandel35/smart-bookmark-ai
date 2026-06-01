@@ -23,6 +23,7 @@
 - DeepSeek and DeepSeek-compatible endpoints now use the slow-model profile automatically, cap runtime batches at 9, split actual model requests to 3 bookmarks, and run up to three mini requests at once
 - DeepSeek and DeepSeek-compatible classification now stops after a 6-second first-response stall or a 14-second full-response stall before falling back locally
 - DeepSeek and DeepSeek-compatible local fallback now keeps and caches completed mini-request classifications before sending only unfinished items to manual review
+- Slow-model fallback status now distinguishes partial AI results from fully local processing, so users can see how many results were preserved before manual review
 - DeepSeek and DeepSeek-compatible batch-size settings are capped when loaded or saved, so older 48-item settings cannot keep driving slow previews
 - Startup now writes normalized batch-size settings back to storage only when no run or saved preview is active
 - Startup config normalization now compares the stored config with the full normalized config instead of using retry-batch rules

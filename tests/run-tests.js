@@ -812,8 +812,12 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /attachPartialClassificationResults/);
   assert.match(backgroundSource, /filterBookmarksByClassificationResults/);
   assert.match(backgroundSource, /modelCacheBookmarks/);
+  assert.match(backgroundSource, /partialModelFallbackCount/);
+  assert.match(backgroundSource, /partialModelFallbackPendingCount/);
   assert.match(backgroundSource, /Marko kept and cached \$\{partialModelBookmarks\.length\} classifications/);
   assert.match(backgroundSource, /remaining \$\{fallbackBookmarks\.length\} bookmarks will stop waiting/);
+  assert.match(backgroundSource, /kept partial model output and is writing the fallback plan/);
+  assert.match(backgroundSource, /mini-request results are being kept in the final plan/);
   assert.match(backgroundSource, /activeModelAbortControllers/);
   assert.match(backgroundSource, /abortActiveModelRequests/);
   assert.match(backgroundSource, /Splitting slow-model request/);
@@ -1283,6 +1287,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Saved preview validation now includes whitelist-preserved bookmarks/);
   assert.match(changelog, /Backup restore now preserves existing backup folders/);
   assert.match(changelog, /local fallback now keeps and caches completed mini-request classifications/);
+  assert.match(changelog, /fallback status now distinguishes partial AI results/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);
@@ -1339,6 +1344,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Saved preview validation now includes whitelist-preserved bookmarks/);
   assert.match(releaseNotes, /Backup restore now preserves existing backup folders/);
   assert.match(releaseNotes, /keeps and caches any completed mini-request classifications/);
+  assert.match(releaseNotes, /shows how many were preserved/);
   assert.match(releaseNotes, /Fast mode needs API credentials/);
   assert.match(releaseNotes, /speed-mode changes now save against merged provider defaults/);
   assert.match(releaseNotes, /Fast automatic organize can now run locally without an API key/);
@@ -1354,7 +1360,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /cap each model request at 3 bookmarks/);
   assert.match(releaseNotes, /run up to three mini requests at a time/);
   assert.match(releaseNotes, /skip the separate taxonomy-planning request/);
-  assert.match(releaseNotes, /finishes with local fallback/);
+  assert.match(releaseNotes, /sends only unfinished bookmarks to local fallback/);
   assert.match(releaseNotes, /reuses the popup preflight coverage result/);
   assert.match(releaseNotes, /inline confirmations and status messages/);
   assert.match(releaseNotes, /preview and error states cannot mutate bookmarks/);
