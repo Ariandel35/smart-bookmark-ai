@@ -13,6 +13,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 新增快速/平衡/完整速度模式：快速模式跳过失效链接检测、额外目录规划请求和模型等待；平衡模式跳过失效链接检测但保留 AI 分类；完整模式保留链接检查和 AI 分类，并按服务商速度决定是否额外规划目录
 - 快速模式会直接本地完成预览；规则和缓存无法确定的书签会进入待手动分类，不再因为慢模型排队而卡住
 - 预览会先检查本地规则和缓存覆盖情况；快速模式不要求模型接口授权，平衡/完整模式只有未缓存书签需要 AI 分类时才要求 API Key 或模型接口授权
+- 快速模式现在也不会因为 Base URL 或模型名称为空而阻止预览或保存设置，因为本地路径不调用模型
 - 弹窗设置提示不再把快速模式说成必须先接入 API，只有确实需要模型分类时才提示模型凭据
 - 弹窗切换速度模式时会先合并服务商默认值，旧版残缺配置不会继续保留缺失连接字段
 - 预览启动会复用弹窗预检的本地覆盖结果，即使慢模型运行批量被压低，也不会重复扫描同一批书签
@@ -54,6 +55,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Added Fast, Balanced, and Complete speed modes: Fast skips dead-link checks, the extra taxonomy-planning request, and model waiting; Balanced skips dead-link checks but keeps AI classification; Complete keeps link checks and AI classification with provider-aware planning
 - Fast mode now finishes previews locally; bookmarks that custom rules, cache, and built-in domain rules cannot classify go to manual review instead of blocking on a slow model queue
 - Preview checks local rule/cache coverage first; Fast mode does not ask for model endpoint access, and Balanced/Complete ask only when uncached bookmarks need AI classification
+- Fast mode no longer blocks preview or settings save when Base URL or model name are blank because the local path does not call the model
 - Popup setup copy no longer implies Fast mode needs API credentials; model credentials are shown only when classification actually needs the model
 - Popup speed-mode changes now save against merged provider defaults, so legacy partial configs do not keep stale missing connection fields
 - Preview startup reuses the popup preflight coverage result even after slow-model runtime batch caps, avoiding a duplicate bookmark scan before the run starts

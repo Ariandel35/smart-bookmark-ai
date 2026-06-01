@@ -9,6 +9,7 @@
 - Fast mode now applies conservative built-in domain rules for common developer, learning, productivity, design, community, shopping, media, and life sites after custom rules and cache reuse
 - Fast mode now finishes locally without waiting for the model; bookmarks that do not match rules or cache are moved to the manual review folder, while Complete mode keeps AI classification
 - Fast mode no longer asks for model endpoint access during preview because it does not call the model
+- Fast mode no longer blocks preview or settings save when Base URL or model name are blank because the local path does not call the model
 - Popup setup copy and shortcut logic now avoid implying Fast mode needs API credentials when local preview can run without a model call
 - Popup speed-mode changes now save against merged provider defaults so legacy partial configs do not keep stale missing connection fields
 - Fast automatic organize can now run locally without an API key; Balanced requires model credentials, and Complete still requires model credentials plus website access

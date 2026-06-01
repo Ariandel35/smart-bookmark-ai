@@ -1287,17 +1287,18 @@ async function saveConfig(event) {
   clearSettingsFieldIssues();
   const config = collectFormData();
   const defaults = getDefaults(config.provider);
+  const requiresModelAccess = shouldRequireModelAccess(config);
 
-  if (!config.baseUrl) {
+  if (requiresModelAccess && !config.baseUrl) {
     showSettingsIssue(t("baseUrlRequired"), "connection", "baseUrl");
     return;
   }
-  if (!isValidHttpUrl(config.baseUrl)) {
+  if (requiresModelAccess && !isValidHttpUrl(config.baseUrl)) {
     showSettingsIssue(t("baseUrlInvalid"), "connection", "baseUrl");
     return;
   }
 
-  if (!config.model) {
+  if (requiresModelAccess && !config.model) {
     showSettingsIssue(t("modelRequired"), "connection", "model");
     return;
   }
@@ -1318,7 +1319,7 @@ async function saveConfig(event) {
 
   if (
     config.autoOrganizeEnabled &&
-    shouldRequireModelAccess(config) &&
+    requiresModelAccess &&
     !defaults.apiKeyOptional &&
     !config.apiKey
   ) {

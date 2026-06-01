@@ -3310,23 +3310,6 @@ async function finishJob(phase, message, job, overrides = {}) {
 function validateConfig(config, options = {}) {
   const requireModelAccess = options.requireModelAccess !== false;
 
-  if (!config.baseUrl) {
-    throw new Error(ux("Base URL 不能为空。", "Base URL is required."));
-  }
-
-  if (!isValidHttpUrl(config.baseUrl)) {
-    throw new Error(
-      ux(
-        "Base URL 必须是有效的 http 或 https 地址。",
-        "Base URL must be a valid http or https URL."
-      )
-    );
-  }
-
-  if (!config.model) {
-    throw new Error(ux("模型名称不能为空。", "Model Name is required."));
-  }
-
   if (!Number.isInteger(config.batchSize) || config.batchSize < 5 || config.batchSize > 100) {
     throw new Error(ux("批大小必须是 5 到 100 之间的整数。", "Batch size must be an integer between 5 and 100."));
   }
@@ -3342,6 +3325,27 @@ function validateConfig(config, options = {}) {
         "Auto organize interval must be an integer between 1 and 168 hours."
       )
     );
+  }
+
+  if (!requireModelAccess) {
+    return;
+  }
+
+  if (!config.baseUrl) {
+    throw new Error(ux("Base URL 不能为空。", "Base URL is required."));
+  }
+
+  if (!isValidHttpUrl(config.baseUrl)) {
+    throw new Error(
+      ux(
+        "Base URL 必须是有效的 http 或 https 地址。",
+        "Base URL must be a valid http or https URL."
+      )
+    );
+  }
+
+  if (!config.model) {
+    throw new Error(ux("模型名称不能为空。", "Model Name is required."));
   }
 
   if (requireModelAccess && !hasRequiredProviderCredential(config)) {

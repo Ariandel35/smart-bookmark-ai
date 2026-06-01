@@ -316,7 +316,7 @@ Hard rules:
         "Deleted duplicates and confirmed dead links will leave a traceable log here.",
       setupRequiredTitle: "Finish preview setup",
       setupRequiredDesc:
-        "Provider, Base URL, and model are required before preview.",
+        "Fast preview only needs a provider. Balanced or Complete will ask for Base URL and model only when AI classification is needed.",
       setupMissingProvider: "Choose a provider first.",
       setupMissingBaseUrl: "Base URL is required before preview.",
       setupInvalidBaseUrl: "Base URL must be a valid http or https URL.",
@@ -602,7 +602,7 @@ Hard rules:
       noDeletedTitle: "暂无删除记录",
       noDeletedDesc: "自动删除重复书签或确认失效书签后，这里会留下可追溯的记录。",
       setupRequiredTitle: "完成预览设置",
-      setupRequiredDesc: "预览前需要先选择服务商，并填写 Base URL 和模型名称。",
+      setupRequiredDesc: "快速预览只需要选择服务商；平衡或完整模式只有需要 AI 分类时才要求 Base URL 和模型名称。",
       setupMissingProvider: "请先选择服务商。",
       setupMissingBaseUrl: "预览前需要填写 Base URL。",
       setupInvalidBaseUrl: "Base URL 必须是有效的 http 或 https 地址。",

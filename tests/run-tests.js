@@ -631,6 +631,8 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /cancelButton\.disabled = true/);
   assert.match(popupSource, /hasPreviewAttemptConfig/);
   assert.match(popupSource, /Providers\?\.hasProvider\?\.\(config\.provider\)/);
+  assert.match(popupSource, /if \(!shouldRequireModelAccess\(config\)\) \{[\s\S]*return true;[\s\S]*\}/);
+  assert.match(popupSource, /if \(!shouldRequireModelAccess\(config\)\) \{[\s\S]*return t\("setupRequiredDesc"\);[\s\S]*\}/);
   assert.match(popupSource, /shouldRequireModelAccess\(config\) && !provider\?\.apiKeyOptional && !config\?\.apiKey/);
   assert.match(popupSource, /shouldRequireModelAccess\(currentConfig\) && !hasModelAccessConfig\(currentConfig\)/);
   assert.match(popupSource, /function mergePopupConfig\(raw = \{\}\)/);
@@ -736,7 +738,7 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /autoOrganizePermission: "快速自动整理会在本地运行；平衡自动整理需要模型接口权限，完整自动整理还需要网站访问权限。"/);
   assert.match(i18nSource, /backupTitle: "备份管理"/);
   assert.match(i18nSource, /setupRequiredTitle: "完成预览设置"/);
-  assert.match(i18nSource, /setupRequiredDesc: "预览前需要先选择服务商，并填写 Base URL 和模型名称。"/);
+  assert.match(i18nSource, /setupRequiredDesc: "快速预览只需要选择服务商；平衡或完整模式只有需要 AI 分类时才要求 Base URL 和模型名称。"/);
   assert.match(i18nSource, /setupMissingProvider: "请先选择服务商。"/);
   assert.match(i18nSource, /setupInvalidBaseUrl: "Base URL 必须是有效的 http 或 https 地址。"/);
   assert.match(i18nSource, /setupMissingModel: "预览前需要填写模型名称。"/);
@@ -1051,12 +1053,13 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /setGrantAccessButtonState\(false, \{ accessNeeded: false \}\)/);
   assert.match(optionsSource, /hostAccessRefreshFailed/);
   assert.match(optionsSource, /refreshVersion !== hostAccessRefreshVersion/);
-  assert.match(optionsSource, /showSettingsIssue\(t\("baseUrlRequired"\), "connection", "baseUrl"\)/);
-  assert.match(optionsSource, /showSettingsIssue\(t\("baseUrlInvalid"\), "connection", "baseUrl"\)/);
-  assert.match(optionsSource, /showSettingsIssue\(t\("modelRequired"\), "connection", "model"\)/);
+  assert.match(optionsSource, /const requiresModelAccess = shouldRequireModelAccess\(config\)/);
+  assert.match(optionsSource, /if \(requiresModelAccess && !config\.baseUrl\) \{[\s\S]*showSettingsIssue\(t\("baseUrlRequired"\), "connection", "baseUrl"\)/);
+  assert.match(optionsSource, /if \(requiresModelAccess && !isValidHttpUrl\(config\.baseUrl\)\) \{[\s\S]*showSettingsIssue\(t\("baseUrlInvalid"\), "connection", "baseUrl"\)/);
+  assert.match(optionsSource, /if \(requiresModelAccess && !config\.model\) \{[\s\S]*showSettingsIssue\(t\("modelRequired"\), "connection", "model"\)/);
   assert.match(optionsSource, /showSettingsIssue\(t\("batchSizeValidation"\), "organize", "batchSize"\)/);
   assert.match(optionsSource, /showSettingsIssue\(t\("autoIntervalValidation"\), "automation", "autoOrganizeIntervalHours"\)/);
-  assert.match(optionsSource, /config\.autoOrganizeEnabled &&[\s\S]*shouldRequireModelAccess\(config\)[\s\S]*!defaults\.apiKeyOptional &&[\s\S]*!config\.apiKey/);
+  assert.match(optionsSource, /config\.autoOrganizeEnabled &&[\s\S]*requiresModelAccess[\s\S]*!defaults\.apiKeyOptional &&[\s\S]*!config\.apiKey/);
   assert.match(optionsSource, /showSettingsIssue\(t\("requiredApiKey", \{ provider: defaults\.label \}\), "connection", "apiKey"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("baseUrlRequired"\), "baseUrl"\)/);
   assert.match(optionsSource, /showApiTestIssue\(t\("baseUrlInvalid"\), "baseUrl"\)/);
@@ -1098,6 +1101,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(backgroundSource, /const model =\s*providerKnown && typeof raw\.model === "string"/);
   assert.match(backgroundSource, /autoOrganizeEnabled,/);
   assert.match(backgroundSource, /function shouldRequireModelAccess\(config = \{\}\)/);
+  assert.match(backgroundSource, /if \(!requireModelAccess\) \{[\s\S]*return;[\s\S]*\}/);
   assert.match(backgroundSource, /if \(shouldRequireModelAccess\(config\) && !hasRequiredProviderCredential\(config\)\) \{[\s\S]*chrome\.alarms\.clear\(AUTO_ORGANIZE_ALARM_NAME\)/);
   assert.match(backgroundSource, /if \(shouldRequireModelAccess\(config\) && !\(await hasOriginAccess\(config\.baseUrl\)\)\) \{/);
 
@@ -1240,6 +1244,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings navigation tabs now expose localized hover tooltips/);
   assert.match(changelog, /Settings save and backup status badges/);
   assert.match(changelog, /Fast mode now finishes locally without waiting for the model/);
+  assert.match(changelog, /Fast mode no longer blocks preview or settings save when Base URL or model name are blank/);
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
@@ -1290,6 +1295,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Balanced skips dead-link checks but keeps AI classification/);
   assert.match(releaseNotes, /built-in domain rules/);
   assert.match(releaseNotes, /unmatched bookmarks go to manual review/);
+  assert.match(releaseNotes, /Fast mode no longer blocks preview or settings save when Base URL or model name are blank/);
   assert.match(releaseNotes, /Fast mode needs API credentials/);
   assert.match(releaseNotes, /speed-mode changes now save against merged provider defaults/);
   assert.match(releaseNotes, /Fast automatic organize can now run locally without an API key/);

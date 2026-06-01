@@ -277,11 +277,15 @@ function getLogKindLabel(kind) {
 }
 
 function hasPreviewAttemptConfig(config) {
-  if (!config?.provider || !Providers?.hasProvider?.(config.provider) || !config?.baseUrl || !config?.model) {
+  if (!config?.provider || !Providers?.hasProvider?.(config.provider)) {
     return false;
   }
 
-  if (!isValidHttpUrl(config.baseUrl)) {
+  if (!shouldRequireModelAccess(config)) {
+    return true;
+  }
+
+  if (!config?.baseUrl || !config?.model || !isValidHttpUrl(config.baseUrl)) {
     return false;
   }
 
@@ -300,6 +304,10 @@ function hasModelAccessConfig(config) {
 function getSetupProblem(config) {
   if (!config?.provider || !Providers?.hasProvider?.(config.provider)) {
     return t("setupMissingProvider");
+  }
+
+  if (!shouldRequireModelAccess(config)) {
+    return t("setupRequiredDesc");
   }
 
   if (!config?.baseUrl) {
