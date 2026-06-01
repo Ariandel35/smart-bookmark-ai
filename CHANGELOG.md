@@ -23,6 +23,7 @@
 - UI audit now retries a layout case once after a transient CDP timeout, and CDP-based release checks use a longer named command timeout for fewer false-negative runs
 - Added `npm run e2e:extension` and `npm run verify:release:full` for a real unpacked-extension smoke test with Chrome for Testing or Chromium
 - The real extension smoke test now clicks through the real popup Preview -> Apply Plan -> Backup and Apply path before checking the live bookmark tree
+- The real extension smoke test now clicks through the real settings Backup UI create, inline restore confirmation, and inline delete confirmation flows against the live bookmark tree
 - The real extension smoke test now seeds a temporary bookmark profile and verifies manual backup, Fast preview, Apply Plan, duplicate cleanup, backup records, and screenshots
 - The real extension smoke test now deletes a generated unprocessed item and verifies the live bookmark tree and warning count update before backup restore
 - The real extension smoke test now also restores the original manual backup, verifies the duplicate returns, deletes that backup record, and confirms the backup list shrinks

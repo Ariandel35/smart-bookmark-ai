@@ -28,6 +28,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - UI 审计遇到偶发 CDP 超时时会重试当前布局用例一次，真实扩展和 UI 审计的 CDP 命令也使用更长的具名超时，减少发布门禁误失败
 - 新增 `npm run e2e:extension` 和 `npm run verify:release:full`，可用 Chrome for Testing 或 Chromium 运行真实解压扩展冒烟测试
 - 真实扩展冒烟测试现在会点击真实弹窗“预览整理 -> 应用方案 -> 备份并应用”路径，再验证实际书签树
+- 真实扩展冒烟测试现在也会点击真实设置页备份创建、页面内恢复确认和页面内删除确认，并校验实际书签树
 - 真实扩展冒烟测试会写入临时书签，并验证手动备份、快速预览、应用方案、重复清理、备份记录和截图
 - 真实扩展冒烟测试会删除生成的未处理项，并在恢复备份前验证真实书签树和未处理计数已经更新
 - 真实扩展冒烟测试还会恢复原始手动备份，确认重复书签回到原始状态，再删除该备份记录并验证列表减少
@@ -98,6 +99,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - UI audit now retries the current layout case once after a transient CDP timeout, and real-extension/UI-audit CDP commands use a longer named timeout to reduce false-negative release gates
 - Added `npm run e2e:extension` and `npm run verify:release:full` for a real unpacked-extension smoke test with Chrome for Testing or Chromium
 - The real extension smoke test now clicks through the real popup Preview -> Apply Plan -> Backup and Apply path before checking the live bookmark tree
+- The real extension smoke test now also clicks through the real settings Backup UI create, inline restore confirmation, and inline delete confirmation flows against the live bookmark tree
 - The real extension smoke test seeds temporary bookmarks and verifies manual backup, Fast preview, Apply Plan, duplicate cleanup, backup records, and screenshots
 - The real extension smoke test deletes a generated unprocessed item and verifies the live bookmark tree and warning count update before backup restore
 - The real extension smoke test also restores the original manual backup, verifies the duplicate returns, deletes that backup record, and confirms the backup list shrinks

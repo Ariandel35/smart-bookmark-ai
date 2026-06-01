@@ -958,6 +958,326 @@ function formatPopupUiFlowFailures(result) {
   return failures;
 }
 
+function setupOptionsBackupUiFlowExpression() {
+  return `(async () => {
+    if (!chrome?.runtime?.id || !chrome?.bookmarks || !chrome?.storage?.local) {
+      throw new Error("Required extension APIs are not available in the options page.");
+    }
+
+    const tree = await chrome.bookmarks.getTree();
+    const bar = tree[0].children.find((node) => node.id === "1") || tree[0].children.find((node) => !node.url);
+    if (!bar) {
+      throw new Error("Bookmarks bar was not found in the temporary profile.");
+    }
+    for (const child of await chrome.bookmarks.getChildren(bar.id)) {
+      if (child.url) {
+        await chrome.bookmarks.remove(child.id);
+      } else {
+        await chrome.bookmarks.removeTree(child.id);
+      }
+    }
+    await chrome.storage.local.clear();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await chrome.bookmarks.create({
+      parentId: bar.id,
+      title: "Options UI Original",
+      url: "https://example.com/options-ui-original"
+    });
+    await chrome.bookmarks.create({
+      parentId: bar.id,
+      title: "Options UI OpenAI",
+      url: "https://openai.com/options-ui"
+    });
+    await chrome.storage.local.set({
+      smartBookmarkConfig: {
+        provider: "openai",
+        baseUrl: "https://api.openai.com/v1",
+        apiKey: "",
+        model: "gpt-4.1-mini",
+        batchSize: 9,
+        linkCheckMode: "fast",
+        autoOrganizeEnabled: false,
+        autoOrganizeIntervalHours: 24,
+        whitelistDomains: "",
+        protectedRootFolders: "",
+        domainFolderRules: "",
+        customPrompt: "Keep this temporary options backup UI E2E run local and compact."
+      }
+    });
+    return { ok: true };
+  })()`;
+}
+
+function optionsBackupUiFlowExpression() {
+  return `(async () => {
+    const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+    const waitFor = async (predicate, label) => {
+      for (let attempt = 0; attempt < 90; attempt += 1) {
+        const value = await predicate();
+        if (value) {
+          return value;
+        }
+        await wait(150);
+      }
+      throw new Error("Timed out waiting for " + label);
+    };
+    const flattenBookmarks = async (node) => {
+      if (node.url) {
+        return [{ title: node.title, url: node.url }];
+      }
+      const children = await chrome.bookmarks.getChildren(node.id).catch(() => []);
+      const nested = [];
+      for (const child of children) {
+        nested.push(...(await flattenBookmarks(child)));
+      }
+      return nested;
+    };
+    const getBookmarkSummary = async () => {
+      const tree = await chrome.bookmarks.getTree();
+      const bar = tree[0].children.find((node) => node.id === "1") || tree[0].children.find((node) => !node.url);
+      const rootChildren = await chrome.bookmarks.getChildren(bar.id);
+      const bookmarks = [];
+      for (const child of rootChildren) {
+        bookmarks.push(...(await flattenBookmarks(child)));
+      }
+      return {
+        bookmarkCount: bookmarks.length,
+        rootTitles: rootChildren.map((child) => child.title),
+        urlCounts: bookmarks.reduce((counts, bookmark) => {
+          counts[bookmark.url] = (counts[bookmark.url] || 0) + 1;
+          return counts;
+        }, {})
+      };
+    };
+    const clickButton = (button, label) => {
+      if (!button) {
+        throw new Error(label + " button was not found.");
+      }
+      if (button.disabled) {
+        throw new Error(label + " button is disabled.");
+      }
+      button.click();
+    };
+
+    document.getElementById("settings-tab-backup")?.click();
+    const createButton = await waitFor(() => {
+      const button = document.getElementById("createBackupButton");
+      return button && !button.disabled ? button : null;
+    }, "enabled Create Backup button");
+    clickButton(createButton, "Create Backup");
+
+    const createdState = await waitFor(async () => {
+      const stored = await chrome.storage.local.get("smartBookmarkBackupRecords");
+      const records = stored.smartBookmarkBackupRecords || [];
+      const firstRecord = records[0] || null;
+      if (!firstRecord?.id) {
+        return null;
+      }
+      const restoreButton = document.querySelector('[data-backup-action-button="restore"][data-backup-id="' + CSS.escape(firstRecord.id) + '"]');
+      return restoreButton && !restoreButton.disabled
+        ? {
+            backupId: firstRecord.id,
+            backupTitle: firstRecord.title || "",
+            backupRecordCount: records.length,
+            createStatusText: (document.getElementById("backupActionStatus")?.textContent || "").trim()
+          }
+        : null;
+    }, "manual backup creation through options UI");
+
+    const tree = await chrome.bookmarks.getTree();
+    const bar = tree[0].children.find((node) => node.id === "1") || tree[0].children.find((node) => !node.url);
+    for (const child of await chrome.bookmarks.getChildren(bar.id)) {
+      if (child.url) {
+        await chrome.bookmarks.remove(child.id);
+      } else {
+        await chrome.bookmarks.removeTree(child.id);
+      }
+    }
+    await chrome.bookmarks.create({
+      parentId: bar.id,
+      title: "Options UI Mutation",
+      url: "https://example.invalid/options-ui-mutation"
+    });
+    const mutatedSummary = await getBookmarkSummary();
+
+    const restoreButton = await waitFor(() => {
+      const button = document.querySelector('[data-backup-action-button="restore"][data-backup-id="' + CSS.escape(createdState.backupId) + '"]');
+      return button && !button.disabled ? button : null;
+    }, "restore backup row button");
+    const restoreButtonText = (restoreButton.textContent || "").trim();
+    clickButton(restoreButton, "Restore");
+    const restoreConfirm = await waitFor(() => {
+      const button = document.querySelector('[data-backup-confirm-primary][data-backup-id="' + CSS.escape(createdState.backupId) + '"]');
+      return button && !button.disabled ? button : null;
+    }, "restore inline confirmation");
+    const restoreConfirmText = restoreConfirm.closest(".backup-confirm")?.innerText.trim() || "";
+    clickButton(restoreConfirm, "Confirm Restore");
+
+    const restoredState = await waitFor(async () => {
+      const summary = await getBookmarkSummary();
+      const stored = await chrome.storage.local.get(["smartBookmarkBackupRecords", "smartBookmarkJobStatus"]);
+      const records = stored.smartBookmarkBackupRecords || [];
+      if (
+        summary.urlCounts["https://example.com/options-ui-original"] === 1 &&
+        summary.urlCounts["https://openai.com/options-ui"] === 1 &&
+        !summary.urlCounts["https://example.invalid/options-ui-mutation"] &&
+        records.length >= createdState.backupRecordCount + 1
+      ) {
+        return {
+          ...summary,
+          backupRecordCount: records.length,
+          statusPhase: stored.smartBookmarkJobStatus?.phase || "",
+          restoreStatusText: (document.getElementById("backupActionStatus")?.textContent || "").trim()
+        };
+      }
+      return null;
+    }, "backup restore through options UI");
+
+    const deleteButton = await waitFor(() => {
+      const button = document.querySelector('[data-backup-action-button="delete"][data-backup-id="' + CSS.escape(createdState.backupId) + '"]');
+      return button && !button.disabled ? button : null;
+    }, "delete backup row button after restore refresh");
+    const deleteButtonText = (deleteButton.textContent || "").trim();
+    clickButton(deleteButton, "Delete");
+    const deleteConfirm = await waitFor(() => {
+      const button = document.querySelector('[data-backup-confirm-primary][data-backup-id="' + CSS.escape(createdState.backupId) + '"]');
+      return button && !button.disabled ? button : null;
+    }, "delete inline confirmation");
+    const deleteConfirmText = deleteConfirm.closest(".backup-confirm")?.innerText.trim() || "";
+    clickButton(deleteConfirm, "Confirm Delete");
+
+    const deletedState = await waitFor(async () => {
+      const stored = await chrome.storage.local.get("smartBookmarkBackupRecords");
+      const records = stored.smartBookmarkBackupRecords || [];
+      const stillPresent = records.some((record) => record.id === createdState.backupId);
+      if (!stillPresent && records.length === restoredState.backupRecordCount - 1) {
+        return {
+          backupRecordCount: records.length,
+          deleteStatusText: (document.getElementById("backupActionStatus")?.textContent || "").trim(),
+          backupBadgeText: (document.getElementById("backupStatusBadge")?.textContent || "").trim()
+        };
+      }
+      return null;
+    }, "backup delete through options UI");
+
+    return {
+      ...createdState,
+      restoreButtonText,
+      restoreConfirmText,
+      deleteButtonText,
+      deleteConfirmText,
+      mutatedSummary,
+      restoredState,
+      deletedState,
+      bodyText: document.body.innerText.trim().slice(0, 800)
+    };
+  })()`;
+}
+
+async function runOptionsBackupUiFlow(port, extensionId) {
+  const target = await createTarget(port);
+  const client = new CdpClient(target.webSocketDebuggerUrl);
+  try {
+    await client.send("Runtime.enable");
+    await client.send("Page.enable");
+    await client.send("Emulation.setDeviceMetricsOverride", {
+      width: 1280,
+      height: 900,
+      deviceScaleFactor: 1,
+      mobile: false
+    });
+    await client.send("Page.navigate", { url: `chrome-extension://${extensionId}/options.html#backup` });
+    await sleep(1500);
+    await evaluate(client, setupOptionsBackupUiFlowExpression());
+    await client.send("Page.navigate", { url: `chrome-extension://${extensionId}/options.html#backup` });
+    await sleep(1500);
+    const result = await evaluate(client, optionsBackupUiFlowExpression());
+    let screenshotPath = "";
+    if (screenshotDir) {
+      await fs.mkdir(screenshotDir, { recursive: true });
+      const screenshot = await client.send("Page.captureScreenshot", {
+        format: "png",
+        captureBeyondViewport: false
+      });
+      screenshotPath = path.join(screenshotDir, "options-backup-ui-restore-delete-1280.png");
+      await fs.writeFile(screenshotPath, Buffer.from(screenshot.data, "base64"));
+    }
+    const exceptions = client.events
+      .filter((event) => event.method === "Runtime.exceptionThrown")
+      .map((event) => event.params?.exceptionDetails?.exception?.description || "Runtime exception");
+    const consoleErrors = client.events
+      .filter((event) => event.method === "Runtime.consoleAPICalled" && event.params?.type === "error")
+      .map((event) =>
+        (event.params?.args || [])
+          .map((arg) => arg.value || arg.description || "")
+          .filter(Boolean)
+          .join(" ")
+      );
+    return {
+      ...result,
+      screenshotPath,
+      exceptions,
+      consoleErrors
+    };
+  } finally {
+    client.close();
+    await closeTarget(port, target.id);
+  }
+}
+
+function formatOptionsBackupUiFlowFailures(result) {
+  const failures = [];
+  if (!result.backupId || Number(result.backupRecordCount || 0) !== 1) {
+    failures.push("options backup UI did not create the initial manual backup record");
+  }
+  if (!/Backup created|备份已创建/.test(result.createStatusText || "")) {
+    failures.push(`options backup UI did not show create success feedback: ${result.createStatusText || "(missing)"}`);
+  }
+  if (Number(result.mutatedSummary?.urlCounts?.["https://example.invalid/options-ui-mutation"] || 0) !== 1) {
+    failures.push("options backup UI setup did not mutate the live bookmark tree before restore");
+  }
+  if (!/Restore|恢复/.test(result.restoreButtonText || "")) {
+    failures.push(`options backup UI did not click a restore button: ${result.restoreButtonText || "(missing)"}`);
+  }
+  if (!/Restore|恢复/.test(result.restoreConfirmText || "")) {
+    failures.push("options backup UI restore inline confirmation was not visible");
+  }
+  if (Number(result.restoredState?.urlCounts?.["https://example.com/options-ui-original"] || 0) !== 1) {
+    failures.push("options backup UI restore did not bring back the original bookmark");
+  }
+  if (Number(result.restoredState?.urlCounts?.["https://openai.com/options-ui"] || 0) !== 1) {
+    failures.push("options backup UI restore did not bring back the second original bookmark");
+  }
+  if (Number(result.restoredState?.urlCounts?.["https://example.invalid/options-ui-mutation"] || 0) !== 0) {
+    failures.push("options backup UI restore left the mutation bookmark in the live tree");
+  }
+  if (Number(result.restoredState?.backupRecordCount || 0) < 2) {
+    failures.push("options backup UI restore did not create a pre-restore backup record");
+  }
+  if (!/Backup restored|备份已恢复/.test(result.restoredState?.restoreStatusText || "")) {
+    failures.push(`options backup UI did not show restore success feedback: ${result.restoredState?.restoreStatusText || "(missing)"}`);
+  }
+  if (!/Delete|删除/.test(result.deleteButtonText || "")) {
+    failures.push(`options backup UI did not click a delete button: ${result.deleteButtonText || "(missing)"}`);
+  }
+  if (!/Delete|删除/.test(result.deleteConfirmText || "")) {
+    failures.push("options backup UI delete inline confirmation was not visible");
+  }
+  if (Number(result.deletedState?.backupRecordCount || 0) !== Number(result.restoredState?.backupRecordCount || 0) - 1) {
+    failures.push("options backup UI delete did not remove exactly the selected backup record");
+  }
+  if (!/Backup deleted|备份已删除/.test(result.deletedState?.deleteStatusText || "")) {
+    failures.push(`options backup UI did not show delete success feedback: ${result.deletedState?.deleteStatusText || "(missing)"}`);
+  }
+  if (result.exceptions?.length) {
+    failures.push(`options backup UI runtime exceptions: ${result.exceptions.join(" | ")}`);
+  }
+  if (result.consoleErrors?.length) {
+    failures.push(`options backup UI console errors: ${result.consoleErrors.join(" | ")}`);
+  }
+  return failures;
+}
+
 function optionsSaveExpression() {
   return `(async () => {
     const setValue = (id, value) => {
@@ -1209,6 +1529,7 @@ async function main() {
       const extensionId = await waitForExtensionId(browserClient, profileDir);
       const backgroundTarget = await waitForBackgroundTarget(browserClient, extensionId);
       const popupUiFlow = await runPopupUiFlow(port, extensionId);
+      const optionsBackupUiFlow = await runOptionsBackupUiFlow(port, extensionId);
       const coreFlow = await runCoreFlow(port, extensionId);
       const pages = [
         {
@@ -1235,6 +1556,7 @@ async function main() {
       }
       const failures = [
         ...formatPopupUiFlowFailures(popupUiFlow).map((failure) => `popup UI flow: ${failure}`),
+        ...formatOptionsBackupUiFlowFailures(optionsBackupUiFlow).map((failure) => `options backup UI flow: ${failure}`),
         ...formatCoreFlowFailures(coreFlow).map((failure) => `core flow: ${failure}`),
         ...results.flatMap((result) =>
           formatPageFailures(result, extensionId).map((failure) => `${result.label}: ${failure}`)
@@ -1258,6 +1580,20 @@ async function main() {
       );
       if (popupUiFlow.screenshotPath) {
         console.log(`OK screenshot ${popupUiFlow.screenshotPath}`);
+      }
+      console.log(
+        [
+          "OK options backup UI flow",
+          `create=${optionsBackupUiFlow.createStatusText || ""}`,
+          `restore=${optionsBackupUiFlow.restoredState?.restoreStatusText || ""}`,
+          `delete=${optionsBackupUiFlow.deletedState?.deleteStatusText || ""}`,
+          `restoredBookmarks=${optionsBackupUiFlow.restoredState?.bookmarkCount}`,
+          `backupRecordsAfterRestore=${optionsBackupUiFlow.restoredState?.backupRecordCount}`,
+          `backupRecordsAfterDelete=${optionsBackupUiFlow.deletedState?.backupRecordCount}`
+        ].join(" | ")
+      );
+      if (optionsBackupUiFlow.screenshotPath) {
+        console.log(`OK screenshot ${optionsBackupUiFlow.screenshotPath}`);
       }
       console.log(
         [

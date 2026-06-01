@@ -1408,6 +1408,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Added `npm run audit:ui`/);
   assert.match(changelog, /retries a layout case once after a transient CDP timeout/);
   assert.match(changelog, /Added `npm run e2e:extension` and `npm run verify:release:full`/);
+  assert.match(changelog, /settings Backup UI create, inline restore confirmation, and inline delete confirmation/);
   assert.match(changelog, /seeds a temporary bookmark profile and verifies manual backup, Fast preview, Apply Plan/);
   assert.match(changelog, /deletes a generated unprocessed item and verifies the live bookmark tree and warning count/);
   assert.match(changelog, /restores the original manual backup, verifies the duplicate returns, deletes that backup record/);
@@ -1448,9 +1449,10 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /npm run audit:ui/);
   assert.match(readme, /npm run e2e:extension/);
   assert.match(readme, /real popup Preview -> Apply Plan confirmation click flow/);
+  assert.match(readme, /real settings Backup UI create\/restore\/delete flow/);
   assert.match(readme, /manual backup, Fast preview, duplicate cleanup/);
   assert.match(readme, /unprocessed-item delete/);
-  assert.match(readme, /backup restore\/delete/);
+  assert.match(readme, /Backup UI create\/restore\/delete/);
   assert.match(readme, /real options UI save/);
   assert.match(readme, /DeepSeek batch-size capping/);
   assert.match(readme, /MARKO_EXTENSION_SCREENSHOT_DIR=\/tmp\/marko-e2e/);
@@ -1474,9 +1476,10 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /npm run audit:ui/);
   assert.match(readmeZh, /npm run e2e:extension/);
   assert.match(readmeZh, /真实弹窗“预览整理 -> 应用方案 -> 备份并应用”点击流/);
+  assert.match(readmeZh, /真实设置页备份创建\/恢复\/删除点击流/);
   assert.match(readmeZh, /手动备份、快速预览、重复清理/);
   assert.match(readmeZh, /未处理项删除/);
-  assert.match(readmeZh, /备份恢复\/删除/);
+  assert.match(readmeZh, /备份创建\/恢复\/删除点击流/);
   assert.match(readmeZh, /真实设置页保存/);
   assert.match(readmeZh, /DeepSeek 批量压低/);
   assert.match(readmeZh, /批处理会优先即时唤醒，Chrome alarm 仅作为后台兜底/);
@@ -1515,6 +1518,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Added `npm run audit:ui`/);
   assert.match(releaseNotes, /retries the current layout case once after a transient CDP timeout/);
   assert.match(releaseNotes, /Added `npm run e2e:extension` and `npm run verify:release:full`/);
+  assert.match(releaseNotes, /settings Backup UI create, inline restore confirmation, and inline delete confirmation/);
   assert.match(releaseNotes, /seeds temporary bookmarks and verifies manual backup, Fast preview, Apply Plan/);
   assert.match(releaseNotes, /deletes a generated unprocessed item and verifies the live bookmark tree and warning count/);
   assert.match(releaseNotes, /restores the original manual backup, verifies the duplicate returns, deletes that backup record/);
@@ -1702,6 +1706,16 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /finalWarningCount/);
   assert.match(extensionE2e, /popup-ui-preview-apply-flow-400\.png/);
   assert.match(extensionE2e, /OK popup UI flow/);
+  assert.match(extensionE2e, /setupOptionsBackupUiFlowExpression/);
+  assert.match(extensionE2e, /optionsBackupUiFlowExpression/);
+  assert.match(extensionE2e, /runOptionsBackupUiFlow/);
+  assert.match(extensionE2e, /formatOptionsBackupUiFlowFailures/);
+  assert.match(extensionE2e, /createBackupButton/);
+  assert.match(extensionE2e, /\[data-backup-action-button="restore"\]/);
+  assert.match(extensionE2e, /\[data-backup-action-button="delete"\]/);
+  assert.match(extensionE2e, /\[data-backup-confirm-primary\]/);
+  assert.match(extensionE2e, /options-backup-ui-restore-delete-1280\.png/);
+  assert.match(extensionE2e, /OK options backup UI flow/);
   assert.match(extensionE2e, /RESOLVE_UNPROCESSED_ENTRY/);
   assert.match(extensionE2e, /RESTORE_BACKUP_ENTRY/);
   assert.match(extensionE2e, /DELETE_BACKUP_ENTRY/);
@@ -1781,7 +1795,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /权限说明/);
   assert.match(publishChecklist, /npm run audit:ui/);
   assert.match(publishChecklist, /npm run e2e:extension/);
-  assert.match(publishChecklist, /临时书签可完成真实弹窗预览\/应用点击流、手动备份、快速预览、应用方案、重复清理、未处理项删除、备份恢复\/删除、备份记录、真实设置页保存和 DeepSeek 批量压低验证/);
+  assert.match(publishChecklist, /临时书签可完成真实弹窗预览\/应用点击流、真实设置页备份创建\/恢复\/删除点击流、手动备份、快速预览、应用方案、重复清理、未处理项删除、备份记录、真实设置页保存和 DeepSeek 批量压低验证/);
   assert.match(publishChecklist, /npm run verify:release/);
   assert.match(publishChecklist, /npm run verify:release:full/);
   assert.match(publishChecklist, /--load-extension is not allowed in Google Chrome, ignoring/);

@@ -3,7 +3,7 @@
 ## 代码与权限
 - [ ] 在 `chrome://extensions` 中重新加载扩展
 - [ ] 真实扩展回归优先使用 `chrome://extensions` 的手动 `Load unpacked`；当前 Google Chrome 命令行会提示 `--load-extension is not allowed in Google Chrome, ignoring.`，不要把这种 CLI 启动当作已加载扩展
-- [ ] 如需自动化真实扩展 E2E，运行 `npm run e2e:extension`，使用允许 `--load-extension` 的 Chrome for Testing 或 Chromium，并确认 Marko 的 service worker 是 `background.js`，临时书签可完成真实弹窗预览/应用点击流、手动备份、快速预览、应用方案、重复清理、未处理项删除、备份恢复/删除、备份记录、真实设置页保存和 DeepSeek 批量压低验证
+- [ ] 如需自动化真实扩展 E2E，运行 `npm run e2e:extension`，使用允许 `--load-extension` 的 Chrome for Testing 或 Chromium，并确认 Marko 的 service worker 是 `background.js`，临时书签可完成真实弹窗预览/应用点击流、真实设置页备份创建/恢复/删除点击流、手动备份、快速预览、应用方案、重复清理、未处理项删除、备份记录、真实设置页保存和 DeepSeek 批量压低验证
 - [ ] 最终候选发布前运行 `npm run verify:release:full`，把常规发布门禁和真实扩展冒烟测试串起来
 - [ ] 首次点击“预览整理”时确认运行时权限弹窗正常出现
 - [ ] 拒绝权限后，弹窗能给出明确提示
