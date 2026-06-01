@@ -629,6 +629,8 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /cancelButton\.disabled = true/);
   assert.match(popupSource, /hasPreviewAttemptConfig/);
   assert.match(popupSource, /Providers\?\.hasProvider\?\.\(config\.provider\)/);
+  assert.match(popupSource, /shouldRequireModelAccess\(config\) && !provider\?\.apiKeyOptional && !config\?\.apiKey/);
+  assert.match(popupSource, /shouldRequireModelAccess\(currentConfig\) && !hasModelAccessConfig\(currentConfig\)/);
   assert.match(popupSource, /function mergePopupConfig\(raw = \{\}\)/);
   assert.match(popupSource, /baseUrl:[\s\S]*defaults\.baseUrl \|\| ""/);
   assert.match(popupSource, /model:[\s\S]*defaults\.model \|\| ""/);
@@ -731,6 +733,7 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /settingsStepAccess: "快速自动整理可本地运行；平衡模式需要模型接口权限；完整模式还需要网站访问权限。"/);
   assert.match(i18nSource, /autoOrganizePermission: "快速自动整理会在本地运行；平衡自动整理需要模型接口权限，完整自动整理还需要网站访问权限。"/);
   assert.match(i18nSource, /backupTitle: "备份管理"/);
+  assert.match(i18nSource, /setupRequiredTitle: "完成预览设置"/);
   assert.match(i18nSource, /setupRequiredDesc: "预览前需要先选择服务商，并填写 Base URL 和模型名称。"/);
   assert.match(i18nSource, /setupMissingProvider: "请先选择服务商。"/);
   assert.match(i18nSource, /setupInvalidBaseUrl: "Base URL 必须是有效的 http 或 https 地址。"/);
@@ -1234,6 +1237,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings navigation tabs now expose localized hover tooltips/);
   assert.match(changelog, /Settings save and backup status badges/);
   assert.match(changelog, /Fast mode now finishes locally without waiting for the model/);
+  assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /Complete-mode site-access errors and duplicate cleanup suggestions/);
   assert.match(changelog, /DeepSeek-compatible runs now keep the same runtime provider label/);
   assert.match(changelog, /Popup preview checks now merge provider defaults/);
@@ -1283,6 +1287,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Balanced skips dead-link checks but keeps AI classification/);
   assert.match(releaseNotes, /built-in domain rules/);
   assert.match(releaseNotes, /unmatched bookmarks go to manual review/);
+  assert.match(releaseNotes, /Fast mode needs API credentials/);
   assert.match(releaseNotes, /Fast automatic organize can now run locally without an API key/);
   assert.match(releaseNotes, /Balanced automatic organize requires model credentials/);
   assert.match(releaseNotes, /auto organize access is not granted/);

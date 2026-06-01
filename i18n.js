@@ -314,7 +314,7 @@ Hard rules:
       noDeletedTitle: "No deletion records",
       noDeletedDesc:
         "Deleted duplicates and confirmed dead links will leave a traceable log here.",
-      setupRequiredTitle: "Set up your model",
+      setupRequiredTitle: "Finish preview setup",
       setupRequiredDesc:
         "Provider, Base URL, and model are required before preview.",
       setupMissingProvider: "Choose a provider first.",
@@ -601,7 +601,7 @@ Hard rules:
       noWarningsDesc: "扫描状态不明确、移动失败或其他需要你决定的书签会出现在这里。",
       noDeletedTitle: "暂无删除记录",
       noDeletedDesc: "自动删除重复书签或确认失效书签后，这里会留下可追溯的记录。",
-      setupRequiredTitle: "先配置模型",
+      setupRequiredTitle: "完成预览设置",
       setupRequiredDesc: "预览前需要先选择服务商，并填写 Base URL 和模型名称。",
       setupMissingProvider: "请先选择服务商。",
       setupMissingBaseUrl: "预览前需要填写 Base URL。",

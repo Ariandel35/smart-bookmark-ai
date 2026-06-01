@@ -13,6 +13,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 新增快速/平衡/完整速度模式：快速模式跳过失效链接检测、额外目录规划请求和模型等待；平衡模式跳过失效链接检测但保留 AI 分类；完整模式保留链接检查和 AI 分类，并按服务商速度决定是否额外规划目录
 - 快速模式会直接本地完成预览；规则和缓存无法确定的书签会进入待手动分类，不再因为慢模型排队而卡住
 - 预览会先检查本地规则和缓存覆盖情况；快速模式不要求模型接口授权，平衡/完整模式只有未缓存书签需要 AI 分类时才要求 API Key 或模型接口授权
+- 弹窗设置提示不再把快速模式说成必须先接入 API，只有确实需要模型分类时才提示模型凭据
 - 预览启动会复用弹窗预检的本地覆盖结果，即使慢模型运行批量被压低，也不会重复扫描同一批书签
 - 快速自动整理现在可以不填 API Key 本地运行；平衡自动整理需要模型凭据，完整自动整理还要求网站访问权限
 - API 检测成功后自动保存当前连接配置
@@ -52,6 +53,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Added Fast, Balanced, and Complete speed modes: Fast skips dead-link checks, the extra taxonomy-planning request, and model waiting; Balanced skips dead-link checks but keeps AI classification; Complete keeps link checks and AI classification with provider-aware planning
 - Fast mode now finishes previews locally; bookmarks that custom rules, cache, and built-in domain rules cannot classify go to manual review instead of blocking on a slow model queue
 - Preview checks local rule/cache coverage first; Fast mode does not ask for model endpoint access, and Balanced/Complete ask only when uncached bookmarks need AI classification
+- Popup setup copy no longer implies Fast mode needs API credentials; model credentials are shown only when classification actually needs the model
 - Preview startup reuses the popup preflight coverage result even after slow-model runtime batch caps, avoiding a duplicate bookmark scan before the run starts
 - Fast automatic organize can now run locally without an API key; Balanced automatic organize requires model credentials, and Complete automatic organize also requires website access
 - Successful API tests now save the verified connection settings

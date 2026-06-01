@@ -315,7 +315,7 @@ function getSetupProblem(config) {
   }
 
   const provider = Providers?.getProvider?.(config.provider);
-  if (!provider?.apiKeyOptional && !config?.apiKey) {
+  if (shouldRequireModelAccess(config) && !provider?.apiKeyOptional && !config?.apiKey) {
     return t("setupMissingApiKey");
   }
 
@@ -507,7 +507,10 @@ function shouldShowSettingsShortcut() {
     return false;
   }
 
-  if (!hasPreviewAttemptConfig(currentConfig) || !hasModelAccessConfig(currentConfig)) {
+  if (
+    !hasPreviewAttemptConfig(currentConfig) ||
+    (shouldRequireModelAccess(currentConfig) && !hasModelAccessConfig(currentConfig))
+  ) {
     return true;
   }
 
