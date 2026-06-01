@@ -1310,7 +1310,8 @@ function testOptionsBackupInlineConfirmationSurface() {
 
 function testResponsiveTextHardeningSurface() {
   const stylesSource = fs.readFileSync(path.join(ROOT_DIR, "styles.css"), "utf8");
-  assert.match(stylesSource, /\.button[\s\S]*overflow-wrap: anywhere/);
+  assert.match(stylesSource, /\.button[\s\S]*min-width: 0[\s\S]*line-height: 1\.25[\s\S]*overflow-wrap: anywhere/);
+  assert.match(stylesSource, /\.pill[\s\S]*min-width: 0[\s\S]*max-width: 100%[\s\S]*white-space: normal[\s\S]*overflow-wrap: anywhere/);
   assert.match(stylesSource, /body\.popup-body[\s\S]*width: min\(400px, 100vw\)/);
   assert.match(stylesSource, /\.page-shell \{[\s\S]*width: 100%/);
   assert.match(stylesSource, /\.workspace[\s\S]*min-width: 0/);
@@ -1388,6 +1389,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Popup action failures now keep their inline error visible/);
   assert.match(changelog, /Popup action error responses now keep their specific failure message/);
   assert.match(changelog, /Popup action successes now preserve refresh-failure feedback/);
+  assert.match(changelog, /Buttons and status badges now shrink and wrap/);
   assert.match(changelog, /startup controls now stay disabled/);
   assert.match(changelog, /Long settings status and hint text now wraps safely/);
   assert.match(changelog, /Popup state refresh failures now show an inline error/);
@@ -1461,6 +1463,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Popup action failures now keep their inline error visible/);
   assert.match(releaseNotes, /Popup action error responses now keep their specific failure message/);
   assert.match(releaseNotes, /Popup action successes now preserve refresh-failure feedback/);
+  assert.match(releaseNotes, /Buttons and status badges now shrink and wrap/);
   assert.match(releaseNotes, /startup controls now stay disabled/);
   assert.match(releaseNotes, /Long settings status and hint text now wraps safely/);
   assert.match(releaseNotes, /Popup state refresh failures now show an inline error/);
@@ -1532,6 +1535,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /Popup Settings shortcuts show inline feedback if both opening paths fail/);
   assert.match(storeListing, /Popup action errors keep their specific failure message/);
   assert.match(storeListing, /Popup action successes keep refresh-failure feedback visible/);
+  assert.match(storeListing, /Buttons and status badges shrink and wrap/);
   assert.match(storeListing, /startup controls stay disabled/);
   assert.match(storeListing, /Long settings status and hint text wraps safely/);
   assert.match(storeListing, /Settings Privacy falls back from tab creation to window opening/);
@@ -1583,6 +1587,10 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /不会再次请求模型/);
   assert.match(publishChecklist, /自动整理重建前都会自动备份/);
   assert.match(publishChecklist, /页面内确认/);
+  assert.match(publishChecklist, /--load-extension is not allowed in Google Chrome, ignoring/);
+  assert.match(publishChecklist, /Chrome for Testing 或 Chromium/);
+  assert.match(publishChecklist, /弹窗在 320px、360px、400px 宽度下没有横向滚动/);
+  assert.match(publishChecklist, /设置页在 390px、720px、1280px 宽度下没有横向滚动/);
 }
 
 function testI18nCoverage() {

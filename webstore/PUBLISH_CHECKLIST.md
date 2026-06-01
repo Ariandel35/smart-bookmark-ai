@@ -2,10 +2,17 @@
 
 ## 代码与权限
 - [ ] 在 `chrome://extensions` 中重新加载扩展
+- [ ] 真实扩展回归优先使用 `chrome://extensions` 的手动 `Load unpacked`；当前 Google Chrome 命令行会提示 `--load-extension is not allowed in Google Chrome, ignoring.`，不要把这种 CLI 启动当作已加载扩展
+- [ ] 如需自动化真实扩展 E2E，使用允许 `--load-extension` 的 Chrome for Testing 或 Chromium，再确认 Marko 的 service worker 是 `background.js`
 - [ ] 首次点击“预览整理”时确认运行时权限弹窗正常出现
 - [ ] 拒绝权限后，弹窗能给出明确提示
 - [ ] 设置页开启自动整理时，若未授权网站访问，会被拦截并提示
 - [ ] 重新授权网站访问后，自动整理闹钟会恢复
+
+## UI 自适应
+- [ ] 弹窗在 320px、360px、400px 宽度下没有横向滚动，顶部状态、速度模式、主操作按钮、错误提示都不裁切
+- [ ] 设置页在 390px、720px、1280px 宽度下没有横向滚动，连接区、备份区、长错误提示和长服务商/模型名称都能换行
+- [ ] 中英文界面都检查一次长状态文案、权限失败文案、备份恢复确认和未处理项按钮
 
 ## 功能回归
 - [ ] 手动备份
