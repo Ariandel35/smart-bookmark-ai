@@ -16,6 +16,7 @@
 - Popup setup errors now show how many uncached bookmarks require model classification before asking users to finish AI access setup
 - Popup action failures now keep their inline error visible after buttons unlock instead of clearing the message in the completion cleanup
 - Popup action error responses now keep their specific failure message even if the follow-up popup refresh also fails
+- Popup action successes now preserve refresh-failure feedback instead of clearing it or reporting a completed action as failed
 - Popup and settings startup controls now stay disabled until saved state is loaded or a recoverable load failure is shown, avoiding early mis-clicks on stale default UI
 - Long settings status and hint text now wraps safely on narrow screens, and disabled primary buttons use a muted disabled style instead of looking actionable
 - Popup state refresh failures now show an inline error and keep retrying, then clear the warning after state refresh recovers

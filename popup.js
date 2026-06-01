@@ -1059,6 +1059,16 @@ async function refreshAllBeforeActionFeedback(reason = "action feedback") {
   }
 }
 
+async function refreshAllAfterActionSuccess(reason = "action success") {
+  try {
+    await refreshAll();
+    return true;
+  } catch (error) {
+    renderPopupRefreshFailure(error, reason);
+    return false;
+  }
+}
+
 async function updatePopupSpeedMode(rawMode) {
   const nextMode = normalizeLinkCheckMode(rawMode);
   const currentMode = normalizeLinkCheckMode(currentConfig?.linkCheckMode);
@@ -1089,8 +1099,10 @@ async function updatePopupSpeedMode(rawMode) {
     currentPreviewPlan = null;
     applyConfirmationVisible = false;
     renderConfig(currentConfig);
-    await refreshAll();
-    setPopupActionStatus(t("popupSpeedModeSavedStatus"));
+    const refreshed = await refreshAllAfterActionSuccess("speed mode update");
+    if (refreshed) {
+      setPopupActionStatus(t("popupSpeedModeSavedStatus"));
+    }
   } catch (error) {
     console.error("Failed to update speed mode:", error);
     setPopupActionStatus(t("popupSpeedModeFailedStatus"), { isError: true });
@@ -1114,7 +1126,7 @@ async function startJob() {
       return;
     }
 
-    await refreshAll();
+    preserveActionStatus = !(await refreshAllAfterActionSuccess("apply preview success"));
   } finally {
     setPopupActionInFlight(false, "", { preserveStatus: preserveActionStatus });
   }
@@ -1179,7 +1191,7 @@ async function startPreview() {
       return;
     }
 
-    await refreshAll();
+    preserveActionStatus = !(await refreshAllAfterActionSuccess("preview start success"));
   } finally {
     setPopupActionInFlight(false, "", { preserveStatus: preserveActionStatus });
   }
@@ -1215,7 +1227,7 @@ async function createManualBackup() {
       return;
     }
 
-    await refreshAll();
+    preserveActionStatus = !(await refreshAllAfterActionSuccess("manual backup success"));
   } finally {
     setPopupActionInFlight(false, "", { preserveStatus: preserveActionStatus });
   }
@@ -1239,7 +1251,7 @@ async function resolveUnprocessedEntry(entryId, action) {
       return;
     }
 
-    await refreshAll();
+    preserveActionStatus = !(await refreshAllAfterActionSuccess("unprocessed item success"));
   } finally {
     setPopupActionInFlight(false, "", { preserveStatus: preserveActionStatus });
   }
@@ -1259,7 +1271,7 @@ async function cancelJob() {
       return;
     }
 
-    await refreshAll();
+    preserveActionStatus = !(await refreshAllAfterActionSuccess("cancel job success"));
   } finally {
     setPopupActionInFlight(false, "", { preserveStatus: preserveActionStatus });
   }

@@ -27,6 +27,7 @@ Marko 是一个面向重度书签用户的整理工具，目标不是把书签�
 - 预览阶段的未处理项保持只读，应用方案前不会出现保留/删除操作
 - 处理未处理项时会锁定整组操作按钮，避免重复点击造成并发请求
 - 弹窗状态刷新失败时会显示页面内错误并继续重试，恢复后自动清除提示
+- 弹窗操作已经成功但后续状态刷新失败时，会保留刷新失败提示，不再误报成操作失败
 - 弹窗文件夹摘要读取失败时会在详情区提示，不会静默显示空白结果区
 - 白名单网站目录读取失败时会显示独立错误提示，不再误显示成没有可选网站
 - 弹窗设置入口在两种打开路径都失败时会显示页面内错误，不会静默无响应
@@ -91,6 +92,7 @@ Key features:
 - Whitelist website catalog load failures show a distinct inline error instead of looking like an empty bookmark-site list
 - Popup Settings shortcuts show inline feedback if both opening paths fail
 - Popup action errors keep their specific failure message even if the follow-up popup refresh also fails
+- Popup action successes keep refresh-failure feedback visible instead of clearing it or reporting the completed action as failed
 - Popup and settings startup controls stay disabled until saved state is loaded or a recoverable load failure is shown
 - Long settings status and hint text wraps safely on narrow screens, with clearer muted disabled buttons
 - Popup and settings actions use inline confirmations and validation feedback instead of browser dialogs

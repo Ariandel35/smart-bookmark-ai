@@ -577,10 +577,19 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /renderPopupRefreshFailure/);
   assert.match(popupSource, /async function refreshAllSafely\(reason = "refresh"\)/);
   assert.match(popupSource, /async function refreshAllBeforeActionFeedback\(reason = "action feedback"\)/);
+  assert.match(popupSource, /async function refreshAllAfterActionSuccess\(reason = "action success"\)/);
+  assert.match(popupSource, /return true;\n  \} catch \(error\) \{\n    renderPopupRefreshFailure\(error, reason\);\n    return false;/);
   assert.match(popupSource, /renderPopupRefreshFailure\(error, reason\)/);
   assert.match(popupSource, /refreshAllBeforeActionFeedback\("apply preview error"\)/);
   assert.match(popupSource, /refreshAllBeforeActionFeedback\("preview permission denial"\)/);
   assert.match(popupSource, /refreshAllBeforeActionFeedback\("manual backup error"\)/);
+  assert.match(popupSource, /refreshAllAfterActionSuccess\("speed mode update"\)/);
+  assert.match(popupSource, /if \(refreshed\) \{\n      setPopupActionStatus\(t\("popupSpeedModeSavedStatus"\)\);/);
+  assert.match(popupSource, /preserveActionStatus = !\(await refreshAllAfterActionSuccess\("apply preview success"\)\)/);
+  assert.match(popupSource, /preserveActionStatus = !\(await refreshAllAfterActionSuccess\("preview start success"\)\)/);
+  assert.match(popupSource, /preserveActionStatus = !\(await refreshAllAfterActionSuccess\("manual backup success"\)\)/);
+  assert.match(popupSource, /preserveActionStatus = !\(await refreshAllAfterActionSuccess\("unprocessed item success"\)\)/);
+  assert.match(popupSource, /preserveActionStatus = !\(await refreshAllAfterActionSuccess\("cancel job success"\)\)/);
   assert.match(popupSource, /if \(popupRefreshFailureVisible\) \{\n      setPopupActionStatus\(""\)/);
   assert.match(popupSource, /void refreshAllSafely\("visibilitychange"\)/);
   assert.match(popupSource, /refreshAllSafely\("initial load"\)\.then/);
@@ -1378,6 +1387,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /show how many uncached bookmarks require model classification/);
   assert.match(changelog, /Popup action failures now keep their inline error visible/);
   assert.match(changelog, /Popup action error responses now keep their specific failure message/);
+  assert.match(changelog, /Popup action successes now preserve refresh-failure feedback/);
   assert.match(changelog, /startup controls now stay disabled/);
   assert.match(changelog, /Long settings status and hint text now wraps safely/);
   assert.match(changelog, /Popup state refresh failures now show an inline error/);
@@ -1450,6 +1460,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /show how many uncached bookmarks require model classification/);
   assert.match(releaseNotes, /Popup action failures now keep their inline error visible/);
   assert.match(releaseNotes, /Popup action error responses now keep their specific failure message/);
+  assert.match(releaseNotes, /Popup action successes now preserve refresh-failure feedback/);
   assert.match(releaseNotes, /startup controls now stay disabled/);
   assert.match(releaseNotes, /Long settings status and hint text now wraps safely/);
   assert.match(releaseNotes, /Popup state refresh failures now show an inline error/);
@@ -1520,6 +1531,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /inline confirmations and validation feedback/);
   assert.match(storeListing, /Popup Settings shortcuts show inline feedback if both opening paths fail/);
   assert.match(storeListing, /Popup action errors keep their specific failure message/);
+  assert.match(storeListing, /Popup action successes keep refresh-failure feedback visible/);
   assert.match(storeListing, /startup controls stay disabled/);
   assert.match(storeListing, /Long settings status and hint text wraps safely/);
   assert.match(storeListing, /Settings Privacy falls back from tab creation to window opening/);

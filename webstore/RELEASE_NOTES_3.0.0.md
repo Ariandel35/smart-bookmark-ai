@@ -22,6 +22,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 弹窗在要求完成 AI 访问配置前，会说明有多少条未缓存书签确实需要模型分类
 - 弹窗操作失败后会保留页面内错误提示，不会在按钮恢复可点时立刻清空失败原因
 - 弹窗状态刷新失败时会显示页面内错误并继续重试，恢复后自动清除提示，避免用户一直看到过期状态却没有提示
+- 弹窗操作已经成功但后续状态刷新失败时，会保留“状态刷新失败”提示，不再把已完成操作误报成失败或直接清空提示
 - 弹窗文件夹摘要读取失败时会显示详情区提示，不再静默显示空白结果区
 - 白名单网站目录读取失败时会显示独立错误提示，不再误显示成没有可选网站
 - 弹窗顶部操作区和状态徽标会在窄宽度内自动换行，避免中文或较长状态挤压重叠
@@ -78,6 +79,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Popup setup errors now show how many uncached bookmarks require model classification before asking users to finish AI access setup
 - Popup action failures now keep their inline error visible after buttons unlock instead of clearing the failure reason during cleanup
 - Popup action error responses now keep their specific failure message even if the follow-up popup refresh also fails
+- Popup action successes now preserve refresh-failure feedback instead of clearing it or misreporting the completed action as failed
 - Popup and settings startup controls now stay disabled until saved state is loaded or a recoverable load failure is shown, avoiding early mis-clicks on stale default UI
 - Long settings status and hint text now wraps safely on narrow screens, and disabled primary buttons use a muted disabled style instead of looking actionable
 - Popup state refresh failures now show an inline error and keep retrying, then clear the warning after refresh recovers so users are not left with silently stale status
