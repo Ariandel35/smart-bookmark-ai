@@ -12,6 +12,7 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const REQUIRED_BACKGROUND_PATH = "background.js";
 const CDP_COMMAND_TIMEOUT_MS = 20_000;
+const OPTIONAL_SCREENSHOT_TIMEOUT_MS = 5_000;
 const screenshotDir = process.env.MARKO_EXTENSION_SCREENSHOT_DIR || "";
 const runHeadless = process.env.MARKO_SHOW_BROWSER !== "1" && process.env.MARKO_EXTENSION_HEADLESS !== "0";
 const BROWSER_HINT =
@@ -244,12 +245,6 @@ class CdpClient {
     const id = this.nextId;
     this.nextId += 1;
     const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : CDP_COMMAND_TIMEOUT_MS;
-    this.socket.write(createWebSocketFrame(JSON.stringify({
-      id,
-      method,
-      params,
-      ...(sessionId ? { sessionId } : {})
-    })));
 
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
@@ -257,6 +252,12 @@ class CdpClient {
         reject(new Error(`Timed out waiting for CDP response to ${method} after ${timeoutMs}ms`));
       }, timeoutMs);
       this.pending.set(id, { resolve, reject, timeout });
+      this.socket.write(createWebSocketFrame(JSON.stringify({
+        id,
+        method,
+        params,
+        ...(sessionId ? { sessionId } : {})
+      })));
     });
   }
 
@@ -292,6 +293,37 @@ async function createTarget(port, url = "about:blank") {
 
 async function closeTarget(port, targetId) {
   await fetch(`http://127.0.0.1:${port}/json/close/${targetId}`).catch(() => {});
+}
+
+async function saveOptionalScreenshot(client, fileName) {
+  if (!screenshotDir) {
+    return "";
+  }
+
+  await fs.mkdir(screenshotDir, { recursive: true });
+  const outputPath = path.join(screenshotDir, fileName);
+  let lastError;
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      const screenshot = await client.send(
+        "Page.captureScreenshot",
+        {
+          format: "png",
+          captureBeyondViewport: false
+        },
+        "",
+        { timeoutMs: OPTIONAL_SCREENSHOT_TIMEOUT_MS }
+      );
+      await fs.writeFile(outputPath, Buffer.from(screenshot.data, "base64"));
+      return outputPath;
+    } catch (error) {
+      lastError = error;
+      await sleep(250);
+    }
+  }
+
+  console.warn(`WARN optional screenshot skipped ${fileName}: ${lastError?.message || lastError}`);
+  return "";
 }
 
 async function readLoadedExtensionId(profileDir) {
@@ -1135,16 +1167,7 @@ async function runPopupUiFlow(port, extensionId) {
     await client.send("Page.reload");
     await sleep(1500);
     const result = await evaluate(client, popupUiFlowExpression());
-    let screenshotPath = "";
-    if (screenshotDir) {
-      await fs.mkdir(screenshotDir, { recursive: true });
-      const screenshot = await client.send("Page.captureScreenshot", {
-        format: "png",
-        captureBeyondViewport: false
-      });
-      screenshotPath = path.join(screenshotDir, "popup-ui-preview-apply-flow-400.png");
-      await fs.writeFile(screenshotPath, Buffer.from(screenshot.data, "base64"));
-    }
+    const screenshotPath = await saveOptionalScreenshot(client, "popup-ui-preview-apply-flow-400.png");
     const exceptions = client.events
       .filter((event) => event.method === "Runtime.exceptionThrown")
       .map((event) => event.params?.exceptionDetails?.exception?.description || "Runtime exception");
@@ -1359,16 +1382,7 @@ async function runPopupUnprocessedUiFlow(port, extensionId) {
     await client.send("Page.reload");
     await sleep(1500);
     const result = await evaluate(client, popupUnprocessedUiFlowExpression());
-    let screenshotPath = "";
-    if (screenshotDir) {
-      await fs.mkdir(screenshotDir, { recursive: true });
-      const screenshot = await client.send("Page.captureScreenshot", {
-        format: "png",
-        captureBeyondViewport: false
-      });
-      screenshotPath = path.join(screenshotDir, "popup-unprocessed-delete-flow-400.png");
-      await fs.writeFile(screenshotPath, Buffer.from(screenshot.data, "base64"));
-    }
+    const screenshotPath = await saveOptionalScreenshot(client, "popup-unprocessed-delete-flow-400.png");
     const exceptions = client.events
       .filter((event) => event.method === "Runtime.exceptionThrown")
       .map((event) => event.params?.exceptionDetails?.exception?.description || "Runtime exception");
@@ -1675,16 +1689,7 @@ async function runOptionsBackupUiFlow(port, extensionId) {
     await client.send("Page.navigate", { url: `chrome-extension://${extensionId}/options.html#backup` });
     await sleep(1500);
     const result = await evaluate(client, optionsBackupUiFlowExpression());
-    let screenshotPath = "";
-    if (screenshotDir) {
-      await fs.mkdir(screenshotDir, { recursive: true });
-      const screenshot = await client.send("Page.captureScreenshot", {
-        format: "png",
-        captureBeyondViewport: false
-      });
-      screenshotPath = path.join(screenshotDir, "options-backup-ui-restore-delete-1280.png");
-      await fs.writeFile(screenshotPath, Buffer.from(screenshot.data, "base64"));
-    }
+    const screenshotPath = await saveOptionalScreenshot(client, "options-backup-ui-restore-delete-1280.png");
     const exceptions = client.events
       .filter((event) => event.method === "Runtime.exceptionThrown")
       .map((event) => event.params?.exceptionDetails?.exception?.description || "Runtime exception");
@@ -1943,16 +1948,10 @@ async function auditExtensionPage(port, page) {
     }
 
     const metrics = await evaluate(client, pageAuditExpression(page.kind));
-    let screenshotPath = "";
-    if (screenshotDir) {
-      await fs.mkdir(screenshotDir, { recursive: true });
-      const screenshot = await client.send("Page.captureScreenshot", {
-        format: "png",
-        captureBeyondViewport: false
-      });
-      screenshotPath = path.join(screenshotDir, `${page.label.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.png`);
-      await fs.writeFile(screenshotPath, Buffer.from(screenshot.data, "base64"));
-    }
+    const screenshotPath = await saveOptionalScreenshot(
+      client,
+      `${page.label.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.png`
+    );
     const exceptions = client.events
       .filter((event) => event.method === "Runtime.exceptionThrown")
       .map((event) => event.params?.exceptionDetails?.exception?.description || "Runtime exception");

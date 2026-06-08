@@ -32,6 +32,7 @@
 
 ## Chrome Web Store 后台
 - [ ] 上传 128x128 图标
+- [ ] UI 或商店文案改动后运行 `npm run render:store-assets`，用 `playwright-core` 和已安装的 Chrome/Chrome for Testing 后台重新生成 README 截图和 Chrome Web Store 宣传图
 - [ ] 上传截图
 - [ ] 确认 `npm run verify:release` 已校验商店文案、隐私政策、审核备注、发布清单、截图、宣传图和图标尺寸
 - [ ] 填写简短描述与详细描述

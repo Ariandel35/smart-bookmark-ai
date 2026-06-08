@@ -144,6 +144,14 @@ npm run e2e:extension
 脚本会使用临时浏览器 profile，写入真实书签，然后验证真实弹窗“预览整理 -> 应用方案 -> 备份并应用”点击流、真实弹窗未处理项删除按钮、真实设置页备份创建/恢复/删除点击流、100 条书签快速模式规模用例、手动备份、快速预览、重复清理、备份记录、真实设置页保存、DeepSeek 批量压低、弹窗和设置页。
 自动化 Chrome 默认使用 headless 后台运行，不会打开可见浏览器窗口。只有需要观察过程时才设置 `MARKO_SHOW_BROWSER=1`；设置 `MARKO_EXTENSION_SCREENSHOT_DIR=/tmp/marko-e2e` 可以保留该次运行的弹窗和设置页截图。
 
+UI 或商店文案改动后重新生成 README 和 Chrome Web Store 截图：
+
+```bash
+npm run render:store-assets
+```
+
+渲染脚本同样默认 headless 后台运行，使用仓库声明的 `playwright-core` 开发依赖，并控制你已安装的 Chrome 或 Chrome for Testing，不会下载浏览器。新 checkout 先运行 `npm install`；Chrome for Testing 不在默认位置时，可设置 `MARKO_RENDER_BROWSER`。
+
 上传前运行完整发布门禁：
 
 ```bash

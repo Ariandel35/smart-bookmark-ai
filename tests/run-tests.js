@@ -253,11 +253,12 @@ function testStaticExtensionAssets() {
   assert.equal(packageJson.scripts?.test, "node tests/run-tests.js");
   assert.equal(packageJson.scripts?.["audit:ui"], "node webstore/audit_ui_layout.mjs");
   assert.equal(packageJson.scripts?.["e2e:extension"], "node webstore/e2e_extension.mjs");
+  assert.equal(packageJson.scripts?.["render:store-assets"], "node webstore/render_store_assets.mjs");
   assert.equal(packageJson.scripts?.["verify:release"], "node webstore/verify_release.mjs");
   assert.equal(packageJson.scripts?.["verify:release:full"], "npm run verify:release && npm run e2e:extension");
   assert.equal(packageJson.scripts?.["package:webstore"], "node webstore/build_extension_package.mjs");
   assert.equal(packageJson.dependencies, undefined);
-  assert.equal(packageJson.devDependencies, undefined);
+  assert.deepEqual(Object.keys(packageJson.devDependencies || {}), ["playwright-core"]);
 
   assert.deepEqual(manifest.permissions, ["bookmarks", "storage", "alarms"]);
   assert.deepEqual(manifest.optional_host_permissions, ["https://*/*", "http://*/*"]);
@@ -1459,6 +1460,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(changelog, /Settings automation now uses a direct Silent organize switch/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
+  assert.match(changelog, /Added `npm run render:store-assets`/);
+  assert.match(changelog, /playwright-core/);
+  assert.match(changelog, /without downloading a browser/);
   assert.match(changelog, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /show how many uncached bookmarks require model classification/);
@@ -1520,6 +1524,11 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /Automated Chrome runs are headless by default/);
   assert.match(readme, /MARKO_SHOW_BROWSER=1/);
   assert.match(readme, /MARKO_EXTENSION_SCREENSHOT_DIR=\/tmp\/marko-e2e/);
+  assert.match(readme, /npm run render:store-assets/);
+  assert.match(readme, /playwright-core/);
+  assert.match(readme, /without downloading a browser/);
+  assert.match(readme, /npm install/);
+  assert.match(readme, /MARKO_RENDER_BROWSER/);
   assert.match(readme, /npm run verify:release/);
   assert.match(readme, /npm run verify:release:full/);
   assert.match(readme, /npm run package:webstore/);
@@ -1555,6 +1564,11 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /MARKO_SHOW_BROWSER=1/);
   assert.match(readmeZh, /批处理会优先即时唤醒，Chrome alarm 仅作为后台兜底/);
   assert.match(readmeZh, /MARKO_EXTENSION_SCREENSHOT_DIR=\/tmp\/marko-e2e/);
+  assert.match(readmeZh, /npm run render:store-assets/);
+  assert.match(readmeZh, /playwright-core/);
+  assert.match(readmeZh, /不会下载浏览器/);
+  assert.match(readmeZh, /npm install/);
+  assert.match(readmeZh, /MARKO_RENDER_BROWSER/);
   assert.match(readmeZh, /npm run verify:release/);
   assert.match(readmeZh, /npm run verify:release:full/);
   assert.match(readmeZh, /npm run package:webstore/);
@@ -1586,6 +1600,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(releaseNotes, /Settings automation now uses a direct Silent organize switch/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
+  assert.match(releaseNotes, /Added `npm run render:store-assets`/);
+  assert.match(releaseNotes, /playwright-core/);
+  assert.match(releaseNotes, /without downloading a browser/);
   assert.match(releaseNotes, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(releaseNotes, /Settings Privacy now falls back from tab creation to window opening/);
   assert.match(releaseNotes, /Popup Settings shortcuts now show an inline error if both tab creation and the options-page fallback fail/);
@@ -1737,9 +1754,15 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeAssetRenderer, /currentBatch: 18/);
   assert.match(storeAssetRenderer, /totalBatches: 18/);
   assert.match(storeAssetRenderer, /#settingsSpeedModeFastButton/);
+  assert.match(storeAssetRenderer, /require\("playwright-core"\)\.chromium/);
+  assert.match(storeAssetRenderer, /MARKO_RENDER_BROWSER/);
+  assert.match(storeAssetRenderer, /MARKO_RENDER_HEADLESS/);
   assert.match(storeAssetRenderer, /linear-gradient\(\$\{palette\.lineSoft\} 1px, transparent 1px\)/);
   assert.match(storeAssetRenderer, /letter-spacing: 0/);
   assert.match(storeAssetRenderer, /border-radius: 8px/);
+  assert.doesNotMatch(storeAssetRenderer, /require\("playwright"\)/);
+  assert.doesNotMatch(storeAssetRenderer, /Chrome DevTools Protocol/);
+  assert.doesNotMatch(storeAssetRenderer, /CdpClient/);
   assert.doesNotMatch(storeAssetRenderer, /radial-gradient/);
   assert.doesNotMatch(storeAssetRenderer, /letter-spacing: -/);
   assert.doesNotMatch(storeAssetRenderer, /waitForSelector\("#linkCheckMode"\)/);
@@ -1779,6 +1802,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /MARKO_EXTENSION_HEADLESS/);
   assert.match(extensionE2e, /MARKO_EXTENSION_SCREENSHOT_DIR/);
   assert.match(extensionE2e, /CDP_COMMAND_TIMEOUT_MS = 20_000/);
+  assert.match(extensionE2e, /OPTIONAL_SCREENSHOT_TIMEOUT_MS = 5_000/);
+  assert.match(extensionE2e, /async function saveOptionalScreenshot/);
+  assert.match(extensionE2e, /WARN optional screenshot skipped/);
   assert.match(extensionE2e, /Timed out waiting for CDP response to \$\{method\} after \$\{timeoutMs\}ms/);
   assert.match(extensionE2e, /Google Chrome for Testing/);
   assert.match(extensionE2e, /--disable-extensions-except/);
@@ -1937,6 +1963,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /权限说明/);
   assert.match(publishChecklist, /npm run audit:ui/);
   assert.match(publishChecklist, /npm run e2e:extension/);
+  assert.match(publishChecklist, /npm run render:store-assets/);
+  assert.match(publishChecklist, /playwright-core/);
+  assert.match(publishChecklist, /Chrome\/Chrome for Testing/);
   assert.match(publishChecklist, /自动化默认 headless 后台运行/);
   assert.match(publishChecklist, /MARKO_SHOW_BROWSER=1/);
   assert.match(publishChecklist, /临时书签可完成真实弹窗预览\/应用点击流、真实弹窗未处理项删除点击流、真实设置页备份创建\/恢复\/删除点击流、100 条书签快速模式规模用例、手动备份、快速预览、应用方案、重复清理、备份记录、真实设置页保存和 DeepSeek 批量压低验证/);

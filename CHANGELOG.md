@@ -17,6 +17,7 @@
 - Settings automation now uses a direct Silent organize switch instead of a true/false dropdown
 - Settings automation keeps the interval field disabled until Silent organize is turned on, so inactive timing settings no longer distract or block saves
 - Chrome Web Store promo images now use a cleaner grid-backed product layout without decorative glow backgrounds or negative title spacing
+- Added `npm run render:store-assets` with `playwright-core` so release screenshots can be regenerated against an installed Chrome or Chrome for Testing without downloading a browser
 - Settings connection fields now expose the selected mode requirement hint to assistive technologies while preserving inline validation messages
 - Popup setup copy and shortcut logic now avoid implying Fast mode needs API credentials when local preview can run without a model call
 - Popup setup errors now show how many uncached bookmarks require model classification before asking users to finish AI access setup

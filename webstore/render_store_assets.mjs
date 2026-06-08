@@ -5,13 +5,12 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import process from "node:process";
 
 const require = createRequire(import.meta.url);
-const { chromium } = require("playwright");
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const screenshotDir = path.join(rootDir, "docs", "screenshots");
 const outputDir = path.join(__dirname, "assets");
+const runHeadless = process.env.MARKO_SHOW_BROWSER !== "1" && process.env.MARKO_RENDER_HEADLESS !== "0";
 
 const palette = {
   bg: "#f7f8fa",
@@ -148,7 +147,10 @@ const sampleData = {
 };
 
 const chromeCandidates = [
+  process.env.MARKO_RENDER_BROWSER,
   process.env.CHROME_EXECUTABLE,
+  process.env.CHROME_FOR_TESTING_EXECUTABLE,
+  "/Applications/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
   "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
   "/Applications/Chromium.app/Contents/MacOS/Chromium"
@@ -440,12 +442,32 @@ function marqueeVariant({ popupSrc, optionsBackupSrc }) {
   });
 }
 
-function createChromeMockInitScript(data) {
-  return (payload) => {
+function loadChromium() {
+  try {
+    return require("playwright-core").chromium;
+  } catch (error) {
+    throw new Error(
+      "Missing dev dependency playwright-core. Run `npm install` before regenerating store assets."
+    );
+  }
+}
+
+async function capturePageScreenshotWithPlaywright(browser, {
+  filePath,
+  outputPath,
+  viewport,
+  hash = "",
+  prepare
+}) {
+  const context = await browser.newContext({
+    viewport,
+    deviceScaleFactor: 2
+  });
+  const page = await context.newPage();
+  await page.addInitScript((payload) => {
     const deepClone = (value) => JSON.parse(JSON.stringify(value));
     const storageState = deepClone(payload.storage || {});
     const treeState = deepClone(payload.bookmarkTree || []);
-
     const normalizeKeys = (keys) => {
       if (typeof keys === "string") {
         return [keys];
@@ -458,16 +480,13 @@ function createChromeMockInitScript(data) {
       }
       return [];
     };
-
     const getFromStorage = (keys) => {
       if (keys == null) {
         return deepClone(storageState);
       }
-
       if (typeof keys === "string") {
         return keys in storageState ? { [keys]: deepClone(storageState[keys]) } : {};
       }
-
       if (Array.isArray(keys)) {
         return keys.reduce((result, key) => {
           if (key in storageState) {
@@ -476,42 +495,19 @@ function createChromeMockInitScript(data) {
           return result;
         }, {});
       }
-
       if (typeof keys === "object") {
         return Object.entries(keys).reduce((result, [key, fallback]) => {
           result[key] = key in storageState ? deepClone(storageState[key]) : fallback;
           return result;
         }, {});
       }
-
       return {};
     };
-
-    const createEvent = () => {
-      const listeners = [];
-      return {
-        addListener(listener) {
-          if (typeof listener === "function" && !listeners.includes(listener)) {
-            listeners.push(listener);
-          }
-        },
-        removeListener(listener) {
-          const index = listeners.indexOf(listener);
-          if (index >= 0) {
-            listeners.splice(index, 1);
-          }
-        },
-        hasListener(listener) {
-          return listeners.includes(listener);
-        },
-        async dispatch(...args) {
-          for (const listener of [...listeners]) {
-            await listener(...args);
-          }
-        }
-      };
-    };
-
+    const event = () => ({
+      addListener() {},
+      removeListener() {},
+      hasListener() { return false; }
+    });
     const findBookmarkNode = (targetId, nodes = treeState) => {
       for (const node of nodes) {
         if (node.id === targetId) {
@@ -527,14 +523,10 @@ function createChromeMockInitScript(data) {
       return null;
     };
 
-    const runtimeMessageEvent = createEvent();
-    const permissionsAddedEvent = createEvent();
-    const permissionsRemovedEvent = createEvent();
-
     globalThis.chrome = {
       i18n: {
         getUILanguage() {
-          return payload.language || "en";
+          return payload.language || "zh-CN";
         },
         getMessage(key) {
           return key;
@@ -562,8 +554,8 @@ function createChromeMockInitScript(data) {
         async request() {
           return true;
         },
-        onAdded: permissionsAddedEvent,
-        onRemoved: permissionsRemovedEvent
+        onAdded: event(),
+        onRemoved: event()
       },
       bookmarks: {
         async getTree() {
@@ -587,24 +579,25 @@ function createChromeMockInitScript(data) {
           switch (message?.type) {
             case "GET_BACKUP_RECORDS":
               return { ok: true, records: deepClone(payload.backups || []) };
+            case "CHECK_LOCAL_MODEL_REQUIREMENT":
+              return {
+                ok: true,
+                needsModel: false,
+                requiresBroadHostAccess: false,
+                aiCandidateCount: 0,
+                checkId: "store-assets"
+              };
             case "TEST_API_CONNECTION":
               return {
                 ok: true,
                 message: payload.apiTestMessage || "API OK",
                 detail: payload.apiTestDetail || "Model responded successfully"
               };
-            case "START_PREVIEW":
-            case "APPLY_PREVIEW_PLAN":
-            case "CREATE_MANUAL_BACKUP":
-            case "RESTORE_BACKUP_ENTRY":
-            case "DELETE_BACKUP_ENTRY":
-            case "CANCEL_JOB":
-              return { ok: true };
             default:
               return { ok: true };
           }
         },
-        onMessage: runtimeMessageEvent,
+        onMessage: event(),
         openOptionsPage() {},
         getURL(relativePath) {
           return relativePath;
@@ -618,22 +611,7 @@ function createChromeMockInitScript(data) {
     globalThis.alert = () => {};
     globalThis.confirm = () => true;
     globalThis.open = () => null;
-  };
-}
-
-async function capturePageScreenshot(browser, {
-  filePath,
-  outputPath,
-  viewport,
-  hash = "",
-  prepare
-}) {
-  const context = await browser.newContext({
-    viewport,
-    deviceScaleFactor: 2
-  });
-  const page = await context.newPage();
-  await page.addInitScript(createChromeMockInitScript(sampleData), sampleData);
+  }, sampleData);
 
   const url = `${pathToFileURL(filePath).href}${hash}`;
   await page.goto(url, { waitUntil: "load" });
@@ -659,11 +637,12 @@ async function capturePageScreenshot(browser, {
     path: outputPath,
     type: "png"
   });
+  console.log(`Rendered ${path.relative(rootDir, outputPath)}`);
 
   await context.close();
 }
 
-async function renderSourceScreenshots(browser) {
+async function renderSourceScreenshotsWithPlaywright(browser) {
   await fs.mkdir(screenshotDir, { recursive: true });
 
   const popupPath = path.join(screenshotDir, "popup-store.png");
@@ -672,7 +651,7 @@ async function renderSourceScreenshots(browser) {
   const optionsOrganizationPath = path.join(screenshotDir, "options-organization-store.png");
   const optionsBackupPath = path.join(screenshotDir, "options-backup-store.png");
 
-  await capturePageScreenshot(browser, {
+  await capturePageScreenshotWithPlaywright(browser, {
     filePath: path.join(rootDir, "popup.html"),
     outputPath: popupPath,
     viewport: { width: 400, height: 720 },
@@ -681,7 +660,7 @@ async function renderSourceScreenshots(browser) {
     }
   });
 
-  await capturePageScreenshot(browser, {
+  await capturePageScreenshotWithPlaywright(browser, {
     filePath: path.join(rootDir, "popup.html"),
     outputPath: popupApplyPath,
     viewport: { width: 400, height: 720 },
@@ -692,7 +671,7 @@ async function renderSourceScreenshots(browser) {
     }
   });
 
-  await capturePageScreenshot(browser, {
+  await capturePageScreenshotWithPlaywright(browser, {
     filePath: path.join(rootDir, "options.html"),
     outputPath: optionsConnectionPath,
     viewport: { width: 1280, height: 860 },
@@ -709,7 +688,7 @@ async function renderSourceScreenshots(browser) {
     }
   });
 
-  await capturePageScreenshot(browser, {
+  await capturePageScreenshotWithPlaywright(browser, {
     filePath: path.join(rootDir, "options.html"),
     outputPath: optionsOrganizationPath,
     viewport: { width: 1280, height: 860 },
@@ -719,7 +698,7 @@ async function renderSourceScreenshots(browser) {
     }
   });
 
-  await capturePageScreenshot(browser, {
+  await capturePageScreenshotWithPlaywright(browser, {
     filePath: path.join(rootDir, "options.html"),
     outputPath: optionsBackupPath,
     viewport: { width: 1280, height: 860 },
@@ -740,7 +719,7 @@ async function renderSourceScreenshots(browser) {
   };
 }
 
-async function renderVariant(page, { width, height, html, output }) {
+async function renderVariantWithPlaywright(page, { width, height, html, output }) {
   await page.setViewportSize({ width, height });
   await page.setContent(html, { waitUntil: "domcontentloaded" });
   await page.screenshot({
@@ -754,46 +733,50 @@ async function main() {
   await fs.mkdir(outputDir, { recursive: true });
 
   const executablePath = await resolveExecutablePath();
+  const chromium = loadChromium();
   const browser = await chromium.launch({
     executablePath,
     channel: undefined,
-    headless: true
+    headless: runHeadless
   });
 
-  const { popupPath, optionsConnectionPath, optionsBackupPath } = await renderSourceScreenshots(browser);
+  try {
+    const { popupPath, optionsConnectionPath, optionsBackupPath } =
+      await renderSourceScreenshotsWithPlaywright(browser);
 
-  const popupSrc = await fileToDataUrl(popupPath);
-  const optionsConnectionSrc = await fileToDataUrl(optionsConnectionPath);
-  const optionsBackupSrc = await fileToDataUrl(optionsBackupPath);
+    const popupSrc = await fileToDataUrl(popupPath);
+    const optionsConnectionSrc = await fileToDataUrl(optionsConnectionPath);
+    const optionsBackupSrc = await fileToDataUrl(optionsBackupPath);
+    const page = await browser.newPage();
 
-  const page = await browser.newPage();
-  const variants = [
-    {
-      width: 1280,
-      height: 800,
-      html: screenshotVariant({ popupSrc, optionsConnectionSrc }),
-      output: path.join(outputDir, "chrome-web-store-screenshot-1280x800.png")
-    },
-    {
-      width: 440,
-      height: 280,
-      html: smallPromoVariant({ popupSrc }),
-      output: path.join(outputDir, "chrome-web-store-small-promo-440x280.png")
-    },
-    {
-      width: 1400,
-      height: 560,
-      html: marqueeVariant({ popupSrc, optionsBackupSrc }),
-      output: path.join(outputDir, "chrome-web-store-marquee-1400x560.png")
+    const variants = [
+      {
+        width: 1280,
+        height: 800,
+        html: screenshotVariant({ popupSrc, optionsConnectionSrc }),
+        output: path.join(outputDir, "chrome-web-store-screenshot-1280x800.png")
+      },
+      {
+        width: 440,
+        height: 280,
+        html: smallPromoVariant({ popupSrc }),
+        output: path.join(outputDir, "chrome-web-store-small-promo-440x280.png")
+      },
+      {
+        width: 1400,
+        height: 560,
+        html: marqueeVariant({ popupSrc, optionsBackupSrc }),
+        output: path.join(outputDir, "chrome-web-store-marquee-1400x560.png")
+      }
+    ];
+
+    for (const item of variants) {
+      await renderVariantWithPlaywright(page, item);
+      console.log(`Rendered ${path.basename(item.output)}`);
     }
-  ];
-
-  for (const item of variants) {
-    await renderVariant(page, item);
-    console.log(`Rendered ${path.basename(item.output)}`);
+  } finally {
+    await browser.close();
   }
-
-  await browser.close();
 }
 
 main().catch((error) => {
