@@ -1429,6 +1429,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /deletes a generated unprocessed item and verifies the live bookmark tree and warning count/);
   assert.match(changelog, /restores the original manual backup, verifies the duplicate returns, deletes that backup record/);
   assert.match(changelog, /saves settings through the real options UI and verifies DeepSeek batch-size capping/);
+  assert.match(changelog, /100-bookmark Fast-mode scale case/);
   assert.match(changelog, /Added `npm run verify:release`/);
   assert.match(changelog, /validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes/);
   assert.match(changelog, /Buttons and status badges now shrink and wrap/);
@@ -1467,6 +1468,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /real popup Preview -> Apply Plan confirmation click flow/);
   assert.match(readme, /real popup unprocessed-item Delete button/);
   assert.match(readme, /real settings Backup UI create\/restore\/delete flow/);
+  assert.match(readme, /100-bookmark Fast-mode scale run/);
   assert.match(readme, /manual backup, Fast preview, duplicate cleanup/);
   assert.match(readme, /Backup UI create\/restore\/delete/);
   assert.match(readme, /real options UI save/);
@@ -1497,6 +1499,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /真实弹窗“预览整理 -> 应用方案 -> 备份并应用”点击流/);
   assert.match(readmeZh, /真实弹窗未处理项删除按钮/);
   assert.match(readmeZh, /真实设置页备份创建\/恢复\/删除点击流/);
+  assert.match(readmeZh, /100 条书签快速模式规模用例/);
   assert.match(readmeZh, /手动备份、快速预览、重复清理/);
   assert.match(readmeZh, /未处理项删除/);
   assert.match(readmeZh, /备份创建\/恢复\/删除点击流/);
@@ -1549,6 +1552,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /deletes a generated unprocessed item and verifies the live bookmark tree and warning count/);
   assert.match(releaseNotes, /restores the original manual backup, verifies the duplicate returns, deletes that backup record/);
   assert.match(releaseNotes, /saves settings through the real options UI and verifies DeepSeek batch-size capping/);
+  assert.match(releaseNotes, /100-bookmark Fast-mode scale case/);
   assert.match(releaseNotes, /Added `npm run verify:release`/);
   assert.match(releaseNotes, /validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes/);
   assert.match(releaseNotes, /Buttons and status badges now shrink and wrap/);
@@ -1756,6 +1760,13 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /RESOLVE_UNPROCESSED_ENTRY/);
   assert.match(extensionE2e, /RESTORE_BACKUP_ENTRY/);
   assert.match(extensionE2e, /DELETE_BACKUP_ENTRY/);
+  assert.match(extensionE2e, /largeFastLibraryFlowExpression/);
+  assert.match(extensionE2e, /runLargeFastLibraryFlow/);
+  assert.match(extensionE2e, /formatLargeFastLibraryFlowFailures/);
+  assert.match(extensionE2e, /expected to seed 100 bookmarks/);
+  assert.match(extensionE2e, /large Fast preview unexpectedly used AI classification/);
+  assert.match(extensionE2e, /large Fast preview took too long/);
+  assert.match(extensionE2e, /OK large Fast library flow/);
   assert.match(extensionE2e, /optionsSaveExpression/);
   assert.match(extensionE2e, /config\.provider === "deepseek"/);
   assert.match(extensionE2e, /config\.batchSize === 9/);
@@ -1845,7 +1856,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /npm run e2e:extension/);
   assert.match(publishChecklist, /自动化默认 headless 后台运行/);
   assert.match(publishChecklist, /MARKO_SHOW_BROWSER=1/);
-  assert.match(publishChecklist, /临时书签可完成真实弹窗预览\/应用点击流、真实弹窗未处理项删除点击流、真实设置页备份创建\/恢复\/删除点击流、手动备份、快速预览、应用方案、重复清理、备份记录、真实设置页保存和 DeepSeek 批量压低验证/);
+  assert.match(publishChecklist, /临时书签可完成真实弹窗预览\/应用点击流、真实弹窗未处理项删除点击流、真实设置页备份创建\/恢复\/删除点击流、100 条书签快速模式规模用例、手动备份、快速预览、应用方案、重复清理、备份记录、真实设置页保存和 DeepSeek 批量压低验证/);
   assert.match(publishChecklist, /npm run verify:release/);
   assert.match(publishChecklist, /npm run verify:release:full/);
   assert.match(publishChecklist, /--load-extension is not allowed in Google Chrome, ignoring/);

@@ -630,6 +630,262 @@ function formatCoreFlowFailures(result) {
   return failures;
 }
 
+function largeFastLibraryFlowExpression() {
+  return `(async () => {
+    if (!chrome?.runtime?.id || !chrome?.bookmarks || !chrome?.storage?.local) {
+      throw new Error("Required extension APIs are not available in the extension page.");
+    }
+
+    const sendMessage = (message) => chrome.runtime.sendMessage(message);
+    const deepClone = (value) => JSON.parse(JSON.stringify(value));
+    const flattenBookmarks = async (node) => {
+      if (node.url) {
+        return [{ title: node.title, url: node.url }];
+      }
+      const children = await chrome.bookmarks.getChildren(node.id).catch(() => []);
+      const nested = [];
+      for (const child of children) {
+        nested.push(...(await flattenBookmarks(child)));
+      }
+      return nested;
+    };
+    const summarizeBookmarks = async (bar) => {
+      const rootChildren = await chrome.bookmarks.getChildren(bar.id);
+      const bookmarks = [];
+      for (const child of rootChildren) {
+        bookmarks.push(...(await flattenBookmarks(child)));
+      }
+      return {
+        rootTitles: rootChildren.map((child) => child.title),
+        bookmarkCount: bookmarks.length,
+        urlCounts: bookmarks.reduce((counts, bookmark) => {
+          counts[bookmark.url] = (counts[bookmark.url] || 0) + 1;
+          return counts;
+        }, {})
+      };
+    };
+    const tree = await chrome.bookmarks.getTree();
+    const bar = tree[0].children.find((node) => node.id === "1") || tree[0].children.find((node) => !node.url);
+    if (!bar) {
+      throw new Error("Bookmarks bar was not found in the temporary profile.");
+    }
+
+    for (const child of await chrome.bookmarks.getChildren(bar.id)) {
+      if (child.url) {
+        await chrome.bookmarks.remove(child.id);
+      } else {
+        await chrome.bookmarks.removeTree(child.id);
+      }
+    }
+    await chrome.storage.local.clear();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
+    const recognizedDomains = [
+      "github.com",
+      "stackoverflow.com",
+      "developer.mozilla.org",
+      "npmjs.com",
+      "python.org",
+      "coursera.org",
+      "udemy.com",
+      "notion.so",
+      "docs.google.com",
+      "figma.com",
+      "producthunt.com",
+      "news.ycombinator.com",
+      "reddit.com",
+      "amazon.com",
+      "netflix.com",
+      "airbnb.com"
+    ];
+    const recognizedUrls = [];
+    for (const domain of recognizedDomains) {
+      for (let index = 0; index < 4; index += 1) {
+        const url = "https://" + domain + "/marko-scale/" + index;
+        recognizedUrls.push(url);
+        await chrome.bookmarks.create({
+          parentId: bar.id,
+          title: "Scale " + domain + " " + index,
+          url
+        });
+      }
+    }
+    for (const [index, url] of recognizedUrls.slice(0, 12).entries()) {
+      await chrome.bookmarks.create({
+        parentId: bar.id,
+        title: "Scale duplicate " + index,
+        url
+      });
+    }
+    const unknownUrls = [];
+    for (let index = 0; index < 24; index += 1) {
+      const url = "https://example.invalid/marko-scale-review/" + index;
+      unknownUrls.push(url);
+      await chrome.bookmarks.create({
+        parentId: bar.id,
+        title: "Scale manual review " + index,
+        url
+      });
+    }
+
+    await chrome.storage.local.set({
+      smartBookmarkConfig: {
+        provider: "openai",
+        baseUrl: "",
+        apiKey: "",
+        model: "",
+        batchSize: 100,
+        linkCheckMode: "fast",
+        autoOrganizeEnabled: false,
+        autoOrganizeIntervalHours: 24,
+        whitelistDomains: "",
+        protectedRootFolders: "",
+        domainFolderRules: "",
+        customPrompt: "Keep this temporary scale E2E run local and compact."
+      }
+    });
+
+    const beforeSummary = await summarizeBookmarks(bar);
+    const requirement = await sendMessage({ type: "CHECK_LOCAL_MODEL_REQUIREMENT" });
+    const previewStart = Date.now();
+    const preview = await sendMessage({
+      type: "START_PREVIEW",
+      localRequirementCheckId: requirement.checkId || ""
+    });
+    const previewDurationMs = Date.now() - previewStart;
+    const afterPreview = await chrome.storage.local.get([
+      "smartBookmarkJobStatus",
+      "smartBookmarkPreviewPlan",
+      "smartBookmarkBackupRecords"
+    ]);
+    const applyStart = Date.now();
+    const apply = await sendMessage({ type: "APPLY_PREVIEW_PLAN" });
+    const applyDurationMs = Date.now() - applyStart;
+    const afterApply = await chrome.storage.local.get([
+      "smartBookmarkJobStatus",
+      "smartBookmarkPreviewPlan",
+      "smartBookmarkBackupRecords"
+    ]);
+    const afterSummary = await summarizeBookmarks(bar);
+
+    return {
+      seededTotal: beforeSummary.bookmarkCount,
+      recognizedUniqueCount: recognizedUrls.length,
+      duplicateCount: 12,
+      unknownCount: unknownUrls.length,
+      requirement,
+      preview,
+      apply,
+      previewDurationMs,
+      applyDurationMs,
+      totalDurationMs: previewDurationMs + applyDurationMs,
+      previewStatus: deepClone(afterPreview.smartBookmarkJobStatus || {}),
+      previewPlan: deepClone(afterPreview.smartBookmarkPreviewPlan || null),
+      finalStatus: deepClone(afterApply.smartBookmarkJobStatus || {}),
+      previewPlanAfterApply: Boolean(afterApply.smartBookmarkPreviewPlan),
+      backupRecordCount: (afterApply.smartBookmarkBackupRecords || []).length,
+      finalBookmarkCount: afterSummary.bookmarkCount,
+      finalUrlCounts: afterSummary.urlCounts,
+      finalRootTitles: afterSummary.rootTitles,
+      duplicateSampleCount: Number(afterSummary.urlCounts[recognizedUrls[0]] || 0),
+      unknownSampleCount: Number(afterSummary.urlCounts[unknownUrls[0]] || 0)
+    };
+  })()`;
+}
+
+async function runLargeFastLibraryFlow(port, extensionId) {
+  const target = await createTarget(port);
+  const client = new CdpClient(target.webSocketDebuggerUrl);
+  try {
+    await client.send("Runtime.enable");
+    await client.send("Page.enable");
+    await client.send("Page.navigate", { url: `chrome-extension://${extensionId}/popup.html` });
+    await sleep(1500);
+    const result = await evaluate(client, largeFastLibraryFlowExpression(), { timeoutMs: 60_000 });
+    const exceptions = client.events
+      .filter((event) => event.method === "Runtime.exceptionThrown")
+      .map((event) => event.params?.exceptionDetails?.exception?.description || "Runtime exception");
+    const consoleErrors = client.events
+      .filter((event) => event.method === "Runtime.consoleAPICalled" && event.params?.type === "error")
+      .map((event) =>
+        (event.params?.args || [])
+          .map((arg) => arg.value || arg.description || "")
+          .filter(Boolean)
+          .join(" ")
+      );
+    return {
+      ...result,
+      exceptions,
+      consoleErrors
+    };
+  } finally {
+    client.close();
+    await closeTarget(port, target.id);
+  }
+}
+
+function formatLargeFastLibraryFlowFailures(result) {
+  const failures = [];
+  if (Number(result.seededTotal || 0) !== 100) {
+    failures.push(`expected to seed 100 bookmarks, got ${result.seededTotal}`);
+  }
+  if (!result?.requirement?.ok || Number(result.requirement.total || 0) !== 100 || result.requirement.needsModel) {
+    failures.push(`large Fast local requirement unexpectedly needs model access: ${JSON.stringify(result?.requirement || {})}`);
+  }
+  if (!result?.preview?.ok || result.previewStatus?.phase !== "preview" || !result.previewPlan) {
+    failures.push("large Fast preview did not finish with a saved preview plan");
+  }
+  if (Number(result.previewPlan?.aiClassified || 0) !== 0 || Number(result.previewStatus?.aiClassified || 0) !== 0) {
+    failures.push("large Fast preview unexpectedly used AI classification");
+  }
+  if (Number(result.previewPlan?.deleted || 0) !== Number(result.duplicateCount || 0)) {
+    failures.push(`large Fast preview expected ${result.duplicateCount} duplicate deletions, got ${result.previewPlan?.deleted}`);
+  }
+  if (Number(result.previewStatus?.warningCount || 0) !== Number(result.unknownCount || 0)) {
+    failures.push(`large Fast preview expected ${result.unknownCount} manual-review warnings, got ${result.previewStatus?.warningCount}`);
+  }
+  if (!result?.apply?.ok || result.finalStatus?.phase !== "completed") {
+    failures.push("large Fast apply did not complete");
+  }
+  if (result.previewPlanAfterApply) {
+    failures.push("large Fast preview plan was not cleared after apply");
+  }
+  if (Number(result.finalStatus?.aiClassified || 0) !== 0) {
+    failures.push("large Fast apply unexpectedly reported AI classifications");
+  }
+  if (Number(result.finalStatus?.warningCount || 0) !== Number(result.unknownCount || 0)) {
+    failures.push(`large Fast apply expected ${result.unknownCount} manual-review warnings, got ${result.finalStatus?.warningCount}`);
+  }
+  if (Number(result.finalBookmarkCount || 0) !== Number(result.seededTotal || 0) - Number(result.duplicateCount || 0)) {
+    failures.push(`large Fast apply expected ${Number(result.seededTotal || 0) - Number(result.duplicateCount || 0)} final bookmarks, got ${result.finalBookmarkCount}`);
+  }
+  if (Number(result.duplicateSampleCount || 0) !== 1) {
+    failures.push(`large Fast duplicate sample should have one surviving bookmark, got ${result.duplicateSampleCount}`);
+  }
+  if (Number(result.unknownSampleCount || 0) !== 1) {
+    failures.push(`large Fast manual-review sample should survive, got ${result.unknownSampleCount}`);
+  }
+  if (Number(result.backupRecordCount || 0) < 1) {
+    failures.push("large Fast apply did not create a pre-apply backup record");
+  }
+  if (Number(result.previewDurationMs || 0) > 20_000) {
+    failures.push(`large Fast preview took too long: ${result.previewDurationMs}ms`);
+  }
+  if (Number(result.applyDurationMs || 0) > 20_000) {
+    failures.push(`large Fast apply took too long: ${result.applyDurationMs}ms`);
+  }
+  if (Number(result.totalDurationMs || 0) > 45_000) {
+    failures.push(`large Fast preview+apply took too long: ${result.totalDurationMs}ms`);
+  }
+  if (result.exceptions?.length) {
+    failures.push(`large Fast runtime exceptions: ${result.exceptions.join(" | ")}`);
+  }
+  if (result.consoleErrors?.length) {
+    failures.push(`large Fast console errors: ${result.consoleErrors.join(" | ")}`);
+  }
+  return failures;
+}
+
 function pageAuditExpression(pageKind) {
   return `(() => {
     const pageKind = ${JSON.stringify(pageKind)};
@@ -690,12 +946,12 @@ function pageAuditExpression(pageKind) {
   })()`;
 }
 
-async function evaluate(client, expression) {
+async function evaluate(client, expression, options = {}) {
   const result = await client.send("Runtime.evaluate", {
     expression,
     returnByValue: true,
     awaitPromise: true
-  });
+  }, "", options);
   if (result.exceptionDetails) {
     throw new Error(result.exceptionDetails.exception?.description || "Runtime evaluation failed.");
   }
@@ -1778,6 +2034,7 @@ async function main() {
       const popupUnprocessedUiFlow = await runPopupUnprocessedUiFlow(port, extensionId);
       const optionsBackupUiFlow = await runOptionsBackupUiFlow(port, extensionId);
       const coreFlow = await runCoreFlow(port, extensionId);
+      const largeFastLibraryFlow = await runLargeFastLibraryFlow(port, extensionId);
       const pages = [
         {
           kind: "popup",
@@ -1808,6 +2065,7 @@ async function main() {
         ),
         ...formatOptionsBackupUiFlowFailures(optionsBackupUiFlow).map((failure) => `options backup UI flow: ${failure}`),
         ...formatCoreFlowFailures(coreFlow).map((failure) => `core flow: ${failure}`),
+        ...formatLargeFastLibraryFlowFailures(largeFastLibraryFlow).map((failure) => `large Fast library flow: ${failure}`),
         ...results.flatMap((result) =>
           formatPageFailures(result, extensionId).map((failure) => `${result.label}: ${failure}`)
         )
@@ -1871,6 +2129,20 @@ async function main() {
           `backupRecords=${coreFlow.backupRecordCount}`,
           `backupRecordsAfterDelete=${coreFlow.backupRecordCountAfterDelete}`,
           `duplicateGithub=${coreFlow.finalUrlCounts?.["https://github.com/Ariandel35/marko"] || 0}`
+        ].join(" | ")
+      );
+      console.log(
+        [
+          "OK large Fast library flow",
+          `seeded=${largeFastLibraryFlow.seededTotal}`,
+          `preview=${largeFastLibraryFlow.previewStatus?.phase || ""}`,
+          `apply=${largeFastLibraryFlow.finalStatus?.phase || ""}`,
+          `ai=${largeFastLibraryFlow.finalStatus?.aiClassified}`,
+          `deleted=${largeFastLibraryFlow.finalStatus?.deleted}`,
+          `warnings=${largeFastLibraryFlow.finalStatus?.warningCount}`,
+          `normalBookmarks=${largeFastLibraryFlow.finalBookmarkCount}`,
+          `previewMs=${largeFastLibraryFlow.previewDurationMs}`,
+          `applyMs=${largeFastLibraryFlow.applyDurationMs}`
         ].join(" | ")
       );
       for (const result of results) {
