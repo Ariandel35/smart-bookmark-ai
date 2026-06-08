@@ -1737,6 +1737,11 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeAssetRenderer, /currentBatch: 18/);
   assert.match(storeAssetRenderer, /totalBatches: 18/);
   assert.match(storeAssetRenderer, /#settingsSpeedModeFastButton/);
+  assert.match(storeAssetRenderer, /linear-gradient\(\$\{palette\.lineSoft\} 1px, transparent 1px\)/);
+  assert.match(storeAssetRenderer, /letter-spacing: 0/);
+  assert.match(storeAssetRenderer, /border-radius: 8px/);
+  assert.doesNotMatch(storeAssetRenderer, /radial-gradient/);
+  assert.doesNotMatch(storeAssetRenderer, /letter-spacing: -/);
   assert.doesNotMatch(storeAssetRenderer, /waitForSelector\("#linkCheckMode"\)/);
 
   const layoutAuditor = fs.readFileSync(

@@ -14,14 +14,17 @@ const screenshotDir = path.join(rootDir, "docs", "screenshots");
 const outputDir = path.join(__dirname, "assets");
 
 const palette = {
-  bg: "#f7f7f2",
+  bg: "#f7f8fa",
   paper: "#ffffff",
-  line: "#dde2d7",
-  text: "#171b17",
-  muted: "#697168",
-  accent: "#1d5f49",
-  accentSoft: "#e9f3ee",
-  shadow: "0 22px 56px rgba(23, 27, 23, 0.08)"
+  line: "#dfe6e8",
+  lineSoft: "#edf2f3",
+  text: "#15191c",
+  muted: "#657077",
+  accent: "#176c5f",
+  accentSoft: "#e8f4f1",
+  gold: "#9a5b12",
+  goldSoft: "#fff4df",
+  shadow: "0 18px 44px rgba(18, 26, 31, 0.10)"
 };
 
 const sampleData = {
@@ -191,11 +194,7 @@ function shellHtml({ width, height, body }) {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Segoe UI", sans-serif;
           }
           body {
-            background:
-              radial-gradient(circle at 10% 14%, rgba(29,95,73,0.09), transparent 24%),
-              radial-gradient(circle at 88% 12%, rgba(29,95,73,0.05), transparent 18%),
-              radial-gradient(circle at 74% 88%, rgba(29,95,73,0.06), transparent 22%),
-              ${palette.bg};
+            background: ${palette.bg};
           }
           .frame {
             position: relative;
@@ -203,10 +202,29 @@ function shellHtml({ width, height, body }) {
             height: 100%;
             overflow: hidden;
           }
+          .frame::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+              linear-gradient(${palette.lineSoft} 1px, transparent 1px),
+              linear-gradient(90deg, ${palette.lineSoft} 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.75;
+          }
+          .frame::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 6px;
+            background: ${palette.accent};
+          }
           .surface {
             position: absolute;
             overflow: hidden;
-            border-radius: 24px;
+            border-radius: 8px;
             border: 1px solid ${palette.line};
             background: ${palette.paper};
             box-shadow: ${palette.shadow};
@@ -239,7 +257,7 @@ function shellHtml({ width, height, body }) {
             color: ${palette.text};
             font-size: 14px;
             font-weight: 700;
-            letter-spacing: 0.01em;
+            letter-spacing: 0;
             white-space: nowrap;
           }
           .badge--accent {
@@ -262,7 +280,7 @@ function shellHtml({ width, height, body }) {
             color: ${palette.accent};
             font-size: 14px;
             font-weight: 800;
-            letter-spacing: 0.08em;
+            letter-spacing: 0;
           }
           .brand__title {
             margin: 0;
@@ -270,7 +288,7 @@ function shellHtml({ width, height, body }) {
             color: ${palette.text};
             font-weight: 900;
             line-height: 0.96;
-            letter-spacing: -0.045em;
+            letter-spacing: 0;
           }
           .brand__sub {
             margin: 0;
@@ -305,8 +323,15 @@ function shellHtml({ width, height, body }) {
             position: absolute;
             height: 2px;
             border-radius: 999px;
-            background: rgba(29,95,73,0.14);
+            background: ${palette.line};
             z-index: 1;
+          }
+          .rule {
+            position: absolute;
+            z-index: 1;
+            border: 1px solid ${palette.line};
+            border-radius: 8px;
+            background: rgba(255,255,255,0.52);
           }
         </style>
       </head>
@@ -330,21 +355,23 @@ function screenshotVariant({ popupSrc, optionsConnectionSrc }) {
         <p class="brand__sub">确认方案后本地应用，不重复跑模型。</p>
         <div class="badge-row">
           <div class="badge badge--soft">平衡 AI 模式</div>
-          <div class="badge">内联确认</div>
-          <div class="badge">本地备份恢复</div>
+          <div class="badge" style="color: ${palette.gold}; background: ${palette.goldSoft};">内联确认</div>
+          <div class="badge">本地备份</div>
         </div>
       </div>
+
+      <div class="rule" style="right: 30px; top: 30px; width: 884px; height: 738px;"></div>
 
       <div class="surface surface--contain" style="right: 44px; top: 42px; width: 858px; height: 714px;">
         <img src="${optionsConnectionSrc}" alt="Settings center" />
       </div>
 
-      <div class="surface surface--contain" style="left: 58px; top: 246px; width: 332px; height: 486px; z-index: 4;">
+      <div class="surface surface--contain" style="left: 52px; top: 238px; width: 352px; height: 506px; z-index: 4;">
         <img src="${popupSrc}" alt="Popup panel" />
       </div>
 
-      <div class="line" style="left: 352px; top: 388px; width: 112px;"></div>
-      <div class="line" style="left: 352px; top: 420px; width: 88px;"></div>
+      <div class="line" style="left: 404px; top: 388px; width: 92px;"></div>
+      <div class="line" style="left: 404px; top: 420px; width: 68px;"></div>
 
       <div class="caption" style="left: 48px; bottom: 42px;">
         <span class="dot" style="color: ${palette.accent};"></span>
@@ -361,14 +388,16 @@ function smallPromoVariant({ popupSrc }) {
     body: `
       <div class="brand" style="left: 22px; top: 24px; width: 186px; gap: 14px;">
         <div class="brand__eyebrow">MARKO</div>
-        <h1 class="brand__title" style="font-size: 30px;">更少<br />文件夹</h1>
+        <h1 class="brand__title" style="font-size: 30px;">预览后<br />整理</h1>
         <div class="badge-row">
           <div class="badge badge--soft" style="font-size: 12px;">预览后执行</div>
-          <div class="badge" style="font-size: 12px;">本地应用</div>
+          <div class="badge" style="font-size: 12px; color: ${palette.gold}; background: ${palette.goldSoft};">本地应用</div>
         </div>
       </div>
 
-      <div class="surface surface--contain" style="right: 20px; top: 28px; width: 182px; height: 232px;">
+      <div class="rule" style="right: 14px; top: 22px; width: 208px; height: 244px;"></div>
+
+      <div class="surface surface--contain" style="right: 20px; top: 28px; width: 196px; height: 232px;">
         <img src="${popupSrc}" alt="Popup panel" />
       </div>
 
@@ -390,21 +419,23 @@ function marqueeVariant({ popupSrc, optionsBackupSrc }) {
         <p class="brand__sub">先预览，再确认。本地备份和恢复都留在设置里。</p>
         <div class="badge-row">
           <div class="badge badge--soft">快速 / 平衡 / 完整</div>
-          <div class="badge">重复删除</div>
-          <div class="badge">行内确认</div>
+          <div class="badge">重复清理</div>
+          <div class="badge" style="color: ${palette.gold}; background: ${palette.goldSoft};">行内确认</div>
         </div>
       </div>
+
+      <div class="rule" style="right: 30px; top: 30px; width: 848px; height: 502px;"></div>
 
       <div class="surface surface--contain" style="right: 44px; top: 42px; width: 820px; height: 478px;">
         <img src="${optionsBackupSrc}" alt="Backup management" />
       </div>
 
-      <div class="surface surface--contain" style="left: 452px; top: 126px; width: 252px; height: 372px; z-index: 4;">
+      <div class="surface surface--contain" style="left: 444px; top: 118px; width: 272px; height: 392px; z-index: 4;">
         <img src="${popupSrc}" alt="Popup panel" />
       </div>
 
-      <div class="line" style="left: 676px; top: 238px; width: 92px;"></div>
-      <div class="line" style="left: 676px; top: 268px; width: 68px;"></div>
+      <div class="line" style="left: 716px; top: 238px; width: 68px;"></div>
+      <div class="line" style="left: 716px; top: 268px; width: 48px;"></div>
     `
   });
 }
