@@ -563,6 +563,18 @@ textarea {
   box-shadow: 0 0 0 3px rgba(179, 58, 50, 0.08);
 }
 
+.field.is-disabled label,
+.field.is-disabled .field__hint {
+  color: var(--text-soft);
+}
+
+.field.is-disabled input {
+  border-color: var(--line);
+  background: var(--surface-muted);
+  color: var(--text-soft);
+  cursor: not-allowed;
+}
+
 .field textarea {
   min-height: 120px;
   resize: vertical;

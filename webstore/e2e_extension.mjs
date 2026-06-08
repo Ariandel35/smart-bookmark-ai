@@ -1801,6 +1801,7 @@ function optionsSaveExpression() {
           config.provider === "deepseek" &&
           config.batchSize === 9 &&
           config.linkCheckMode === "fast" &&
+          config.autoOrganizeIntervalHours === 24 &&
           config.protectedRootFolders === "E2E Protected Root" &&
           /openai\\.com => AI Saved/.test(config.domainFolderRules || "") &&
           /E2E saved prompt/.test(config.customPrompt || "")
@@ -1832,24 +1833,28 @@ function optionsSaveExpression() {
     const fastConnectionSummaryText = (document.getElementById("aiConnectionSummaryNote")?.textContent || "").trim();
     clickButton("settings-tab-automation");
     await wait(100);
+    const automationIntervalInput = document.getElementById("autoOrganizeIntervalHours");
+    const automationIntervalDisabledBefore = Boolean(automationIntervalInput?.disabled);
     const automationSwitch = clickInput("autoOrganizeEnabled");
     await wait(100);
     const automationToggleOnChecked = Boolean(automationSwitch.checked);
     const automationToggleOnAria = automationSwitch.getAttribute("aria-checked");
     const automationToggleOnStateText = (document.getElementById("autoOrganizeState")?.textContent || "").trim();
     const automationToggleOnHint = (document.getElementById("autoOrganizeAccessHint")?.textContent || "").trim();
+    const automationIntervalDisabledOn = Boolean(automationIntervalInput?.disabled);
     automationSwitch.click();
     await wait(100);
     const automationToggleOffChecked = Boolean(automationSwitch.checked);
     const automationToggleOffAria = automationSwitch.getAttribute("aria-checked");
     const automationToggleOffStateText = (document.getElementById("autoOrganizeState")?.textContent || "").trim();
     const automationToggleOffHint = (document.getElementById("autoOrganizeAccessHint")?.textContent || "").trim();
+    const automationIntervalDisabledOff = Boolean(automationIntervalInput?.disabled);
     setValue("autoOrganizeEnabled", false);
     setValue("baseUrl", "https://api.deepseek.com");
     setValue("model", "deepseek-chat");
     setValue("apiKey", "");
     setValue("batchSize", "48");
-    setValue("autoOrganizeIntervalHours", "12");
+    setValue("autoOrganizeIntervalHours", "");
     setValue("protectedRootFolders", "E2E Protected Root");
     setValue("domainFolderRules", "openai.com => AI Saved");
     setValue("customPrompt", "E2E saved prompt from real options UI.");
@@ -1879,10 +1884,13 @@ function optionsSaveExpression() {
       automationToggleOnAria,
       automationToggleOnStateText,
       automationToggleOnHint,
+      automationIntervalDisabledBefore,
+      automationIntervalDisabledOn,
       automationToggleOffChecked,
       automationToggleOffAria,
       automationToggleOffStateText,
       automationToggleOffHint,
+      automationIntervalDisabledOff,
       saveBadgeText: (document.getElementById("saveBadge")?.textContent || "").trim(),
       settingsActionText: (document.getElementById("settingsActionStatus")?.textContent || "").trim()
     };
@@ -2025,6 +2033,9 @@ function formatPageFailures(result, extensionId) {
     if (config.linkCheckMode !== "fast" || config.autoOrganizeEnabled !== false) {
       failures.push("options save did not persist the safe Fast mode automation settings");
     }
+    if (config.autoOrganizeIntervalHours !== 24) {
+      failures.push(`options save did not fall back to the default disabled automation interval: ${config.autoOrganizeIntervalHours}`);
+    }
     if (config.protectedRootFolders !== "E2E Protected Root") {
       failures.push("options save did not persist protected root folders");
     }
@@ -2061,18 +2072,21 @@ function formatPageFailures(result, extensionId) {
       result.optionsSave?.automationToggleOnChecked !== true ||
       result.optionsSave?.automationToggleOnAria !== "true" ||
       !result.optionsSave?.automationToggleOnStateText ||
-      !result.optionsSave?.automationToggleOnHint
+      !result.optionsSave?.automationToggleOnHint ||
+      result.optionsSave?.automationIntervalDisabledBefore !== true ||
+      result.optionsSave?.automationIntervalDisabledOn !== false
     ) {
-      failures.push("options Silent organize switch did not turn on with visible state and permission hint");
+      failures.push("options Silent organize switch did not turn on with visible state, permission hint, and enabled interval");
     }
     if (
       result.optionsSave?.automationToggleOffChecked !== false ||
       result.optionsSave?.automationToggleOffAria !== "false" ||
       !result.optionsSave?.automationToggleOffStateText ||
       !result.optionsSave?.automationToggleOffHint ||
-      result.optionsSave?.automationToggleOffStateText === result.optionsSave?.automationToggleOnStateText
+      result.optionsSave?.automationToggleOffStateText === result.optionsSave?.automationToggleOnStateText ||
+      result.optionsSave?.automationIntervalDisabledOff !== true
     ) {
-      failures.push("options Silent organize switch did not turn off with updated visible state and permission hint");
+      failures.push("options Silent organize switch did not turn off with updated visible state, permission hint, and disabled interval");
     }
   }
 
@@ -2258,6 +2272,7 @@ async function main() {
               `fastConnectionOpen=${Boolean(result.optionsSave.fastConnectionOpen)}`,
               `automationOn=${Boolean(result.optionsSave.automationToggleOnChecked)}`,
               `automationOff=${Boolean(result.optionsSave.automationToggleOffChecked)}`,
+              `interval=${result.optionsSave.savedConfig?.autoOrganizeIntervalHours || ""}`,
               `feedback=${result.optionsSave.saveBadgeText || ""}`
             ].join(" | ")
           );

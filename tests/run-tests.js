@@ -1162,9 +1162,14 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /setGrantAccessButtonState\(granted\)/);
   assert.doesNotMatch(optionsSource, /grantAccessButton\.textContent/);
   assert.match(optionsSource, /const autoOrganizeState = document\.getElementById\("autoOrganizeState"\)/);
+  assert.match(optionsSource, /const autoOrganizeIntervalField = autoOrganizeIntervalInput\?\.closest\("\.field"\)/);
   assert.match(optionsSource, /function renderAutoOrganizeToggle/);
   assert.match(optionsSource, /autoOrganizeEnabledInput\.checked = Boolean\(config\.autoOrganizeEnabled\)/);
   assert.match(optionsSource, /autoOrganizeEnabled: Boolean\(autoOrganizeEnabledInput\.checked\)/);
+  assert.match(optionsSource, /autoOrganizeIntervalInput\.disabled = isLocked \|\| !autoOrganizeEnabled/);
+  assert.match(optionsSource, /autoOrganizeIntervalField\?\.classList\.toggle\("is-disabled", !isLocked && !autoOrganizeEnabled\)/);
+  assert.match(optionsSource, /if \(config\.autoOrganizeEnabled && !hasValidAutoInterval\)/);
+  assert.match(optionsSource, /if \(!config\.autoOrganizeEnabled && !hasValidAutoInterval\)/);
   assert.doesNotMatch(optionsSource, /autoOrganizeEnabledInput\.value === "true"/);
   assert.match(optionsSource, /renderHostAccessRefreshFailure\(\)/);
   assert.match(optionsSource, /console\.error\("Failed to save settings:"/);
@@ -1329,6 +1334,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(stylesSource, /\.toggle__input:checked \+ \.toggle__track/);
   assert.match(stylesSource, /\.toggle__input:focus-visible \+ \.toggle__track/);
   assert.match(stylesSource, /\.toggle:has\(\.toggle__input\[aria-invalid="true"\]\) \.toggle__track/);
+  assert.match(stylesSource, /\.field\.is-disabled input/);
   assert.match(stylesSource, /\.field input\[aria-invalid="true"\]/);
   assert.match(stylesSource, /\.field select\[aria-invalid="true"\]/);
   assert.match(stylesSource, /\.field textarea\[aria-invalid="true"\]/);
@@ -1452,6 +1458,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /collapses AI endpoint fields by default in Fast mode/);
   assert.match(changelog, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(changelog, /Settings automation now uses a direct Silent organize switch/);
+  assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
   assert.match(changelog, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /show how many uncached bookmarks require model classification/);
@@ -1523,9 +1530,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /unless Balanced\/Complete preview or enabled auto organize needs external access/);
   assert.match(readme, /manual-review fallback finish locally/);
   assert.match(readme, /Fast automatic organize can run locally without an API key/);
-  assert.match(readme, /direct Silent organize switch/);
+  assert.match(readme, /Silent organize switch enables the interval field only when needed/);
   assert.match(readme, /automation access still needs approval/);
-  assert.match(readme, /showing the impact inline before saving/);
+  assert.match(readme, /shows the permission impact inline before saving/);
   assert.match(readme, /Settings warn inline before a slow-model batch cap/);
   assert.match(readme, /Batches wake immediately while a Chrome alarm remains as fallback/);
   assert.match(readme, /Complete mode checks up to 8 links at a time/);
@@ -1557,7 +1564,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /内置域名规则/);
   assert.match(readmeZh, /待手动分类兜底会在本地完成/);
   assert.match(readmeZh, /快速自动整理可以不填 API Key 本地运行/);
-  assert.match(readmeZh, /静默整理开关/);
+  assert.match(readmeZh, /静默整理开关打开后才启用间隔设置/);
   assert.match(readmeZh, /自动整理权限仍未授权时明确提示/);
   assert.match(readmeZh, /保存前直接显示权限影响/);
   assert.match(readmeZh, /慢模型批量被压低前先提示/);
@@ -1578,6 +1585,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /keeps AI connection fields collapsed by default/);
   assert.match(releaseNotes, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(releaseNotes, /Settings automation now uses a direct Silent organize switch/);
+  assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
   assert.match(releaseNotes, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(releaseNotes, /Settings Privacy now falls back from tab creation to window opening/);
   assert.match(releaseNotes, /Popup Settings shortcuts now show an inline error if both tab creation and the options-page fallback fail/);
@@ -1710,6 +1718,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /lock the whole action group while one item is being kept or deleted/);
   assert.match(storeListing, /静默整理使用直接开关/);
   assert.match(storeListing, /direct Silent organize switch/);
+  assert.match(storeListing, /interval field is enabled only after the switch is on/);
   assert.match(storeListing, /runs locally, needs model endpoint access, or needs website access/);
   assert.match(storeListing, /Save and Test & Save keep API or automation permission-denied feedback visible/);
   assert.match(storeListing, /fresh pre-restore snapshot/);
@@ -1827,6 +1836,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /clickInput\("autoOrganizeEnabled"\)/);
   assert.match(extensionE2e, /options Silent organize switch did not turn on/);
   assert.match(extensionE2e, /options Silent organize switch did not turn off/);
+  assert.match(extensionE2e, /config\.autoOrganizeIntervalHours === 24/);
+  assert.match(extensionE2e, /automationIntervalDisabledBefore/);
+  assert.match(extensionE2e, /options save did not fall back to the default disabled automation interval/);
   assert.match(extensionE2e, /options speed-mode segmented control did not activate Balanced mode/);
   assert.match(extensionE2e, /options speed-mode segmented control did not return to Fast mode/);
   assert.match(extensionE2e, /config\.provider === "deepseek"/);
@@ -1837,6 +1849,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /fastButton=/);
   assert.match(extensionE2e, /automationOn=/);
   assert.match(extensionE2e, /automationOff=/);
+  assert.match(extensionE2e, /interval=/);
   assert.match(extensionE2e, /auto-open AI connection fields for Balanced mode/);
   assert.match(extensionE2e, /E2E saved prompt/);
   assert.match(extensionE2e, /openai\\.com => AI Saved/);

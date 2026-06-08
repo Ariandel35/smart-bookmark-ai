@@ -32,6 +32,7 @@ const autoOrganizeEnabledInput = document.getElementById("autoOrganizeEnabled");
 const autoOrganizeState = document.getElementById("autoOrganizeState");
 const autoOrganizeAccessHint = document.getElementById("autoOrganizeAccessHint");
 const autoOrganizeIntervalInput = document.getElementById("autoOrganizeIntervalHours");
+const autoOrganizeIntervalField = autoOrganizeIntervalInput?.closest(".field");
 const whitelistSearchInput = document.getElementById("whitelistSearch");
 const whitelistDomainsInput = document.getElementById("whitelistDomains");
 const whitelistSelectionStatus = document.getElementById("whitelistSelectionStatus");
@@ -580,9 +581,12 @@ function updateSettingsOperationControls() {
   const isLocked = !settingsReady || settingsActionInFlight;
   const granted = grantAccessButton.dataset.granted === "true";
   const accessNeeded = grantAccessButton.dataset.accessNeeded !== "false";
+  const autoOrganizeEnabled = Boolean(autoOrganizeEnabledInput.checked);
   settingsFields.forEach((field) => {
     field.disabled = isLocked;
   });
+  autoOrganizeIntervalInput.disabled = isLocked || !autoOrganizeEnabled;
+  autoOrganizeIntervalField?.classList.toggle("is-disabled", !isLocked && !autoOrganizeEnabled);
   linkCheckModeButtons.forEach((button) => {
     button.disabled = isLocked;
   });
@@ -994,6 +998,7 @@ function updateAutoOrganizeAccessHint() {
   autoOrganizeAccessHint.textContent = t(key);
   autoOrganizeAccessHint.className = caution ? "field__hint field__hint--warm" : "field__hint";
   addDescribedByToken(autoOrganizeEnabledInput, autoOrganizeAccessHint.id);
+  updateSettingsOperationControls();
 }
 
 function capConfigBatchSize(config) {
@@ -1441,13 +1446,18 @@ async function saveConfig(event) {
     return;
   }
 
-  if (
-    !Number.isInteger(config.autoOrganizeIntervalHours) ||
-    config.autoOrganizeIntervalHours < 1 ||
-    config.autoOrganizeIntervalHours > 168
-  ) {
+  const hasValidAutoInterval =
+    Number.isInteger(config.autoOrganizeIntervalHours) &&
+    config.autoOrganizeIntervalHours >= 1 &&
+    config.autoOrganizeIntervalHours <= 168;
+
+  if (config.autoOrganizeEnabled && !hasValidAutoInterval) {
     showSettingsIssue(t("autoIntervalValidation"), "automation", "autoOrganizeIntervalHours");
     return;
+  }
+  if (!config.autoOrganizeEnabled && !hasValidAutoInterval) {
+    config.autoOrganizeIntervalHours = buildDefaultConfig(config.provider).autoOrganizeIntervalHours;
+    autoOrganizeIntervalInput.value = String(config.autoOrganizeIntervalHours);
   }
 
   if (
