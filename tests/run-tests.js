@@ -442,13 +442,16 @@ function testExtensionPackageFileList() {
 
 function testSpeedModeSurface() {
   const optionsHtml = fs.readFileSync(path.join(ROOT_DIR, "options.html"), "utf8");
-  assert.match(optionsHtml, /id="linkCheckMode"/);
-  assert.match(optionsHtml, /value="fast"/);
-  assert.match(optionsHtml, /value="balanced"/);
-  assert.match(optionsHtml, /value="complete"/);
+  assert.match(optionsHtml, /id="linkCheckMode"[\s\S]*type="hidden"[\s\S]*value="fast"/);
+  assert.match(optionsHtml, /data-settings-speed-mode="fast"/);
+  assert.match(optionsHtml, /data-settings-speed-mode="balanced"/);
+  assert.match(optionsHtml, /data-settings-speed-mode="complete"/);
+  assert.doesNotMatch(optionsHtml, /<select id="linkCheckMode"/);
 
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
   assert.match(optionsSource, /linkCheckMode/);
+  assert.match(optionsSource, /renderLinkCheckModeButtons/);
+  assert.match(optionsSource, /setLinkCheckMode/);
   assert.match(optionsSource, /LINK_CHECK_MODE_FAST/);
   assert.match(optionsSource, /LINK_CHECK_MODE_BALANCED/);
   assert.match(optionsSource, /LINK_CHECK_MODE_COMPLETE/);
@@ -1009,7 +1012,13 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="baseUrl"[\s\S]*aria-describedby="connectionModeHint"/);
   assert.match(optionsHtml, /id="apiKey"[\s\S]*aria-describedby="connectionModeHint"/);
   assert.match(optionsHtml, /id="autoOrganizeAccessHint"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*hidden/);
-  assert.match(optionsHtml, /id="linkCheckMode"[\s\S]*aria-describedby="linkCheckModeHint"/);
+  assert.match(optionsHtml, /id="linkCheckMode"[\s\S]*type="hidden"[\s\S]*value="fast"/);
+  assert.match(optionsHtml, /id="linkCheckModeLabel"[\s\S]*data-i18n="labelLinkCheckMode"/);
+  assert.match(optionsHtml, /class="segmented-control segmented-control--settings"[\s\S]*role="radiogroup"[\s\S]*aria-labelledby="linkCheckModeLabel"[\s\S]*aria-describedby="linkCheckModeHint"/);
+  assert.match(optionsHtml, /id="settingsSpeedModeFastButton"[\s\S]*role="radio"[\s\S]*data-settings-speed-mode="fast"[\s\S]*aria-checked="true"[\s\S]*disabled/);
+  assert.match(optionsHtml, /id="settingsSpeedModeBalancedButton"[\s\S]*role="radio"[\s\S]*data-settings-speed-mode="balanced"[\s\S]*aria-checked="false"[\s\S]*disabled/);
+  assert.match(optionsHtml, /id="settingsSpeedModeCompleteButton"[\s\S]*role="radio"[\s\S]*data-settings-speed-mode="complete"[\s\S]*aria-checked="false"[\s\S]*disabled/);
+  assert.doesNotMatch(optionsHtml, /<select id="linkCheckMode"/);
   assert.match(optionsHtml, /id="linkCheckModeHint"[\s\S]*data-i18n="hintLinkCheckMode"/);
   assert.match(optionsHtml, /id="batchSize"[\s\S]*aria-describedby="batchSizeHint"/);
   assert.match(optionsHtml, /id="batchSizeHint"[\s\S]*data-i18n="hintBatchSize"/);
@@ -1154,9 +1163,18 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /setSaveBadge\(t\("saveBadgeFailed"\), "danger"\)/);
   assert.match(optionsSource, /settingsAccessRequestingStatus/);
   assert.match(optionsSource, /let settingsReady = false/);
+  assert.match(optionsSource, /const linkCheckModeButtons = Array\.from\(document\.querySelectorAll\("\[data-settings-speed-mode\]"\)\)/);
+  assert.match(optionsSource, /function renderLinkCheckModeButtons/);
+  assert.match(optionsSource, /function setLinkCheckMode/);
+  assert.match(optionsSource, /linkCheckModeSelect\.dispatchEvent\(new Event\("change", \{ bubbles: true \}\)\)/);
+  assert.match(optionsSource, /button\.setAttribute\("aria-checked", String\(isActive\)\)/);
+  assert.match(optionsSource, /button\.tabIndex = isActive \? 0 : -1/);
+  assert.match(optionsSource, /linkCheckModeButtons\.forEach\(\(button, index\) =>/);
+  assert.match(optionsSource, /const handledKeys = \["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"\]/);
   assert.match(optionsSource, /const isLocked = !settingsReady \|\| settingsActionInFlight/);
   assert.match(optionsSource, /settingsFields\.forEach/);
   assert.match(optionsSource, /field\.disabled = isLocked/);
+  assert.match(optionsSource, /linkCheckModeButtons\.forEach\(\(button\) => \{\n    button\.disabled = isLocked;/);
   assert.match(optionsSource, /saveButton\.disabled = isLocked/);
   assert.match(optionsSource, /testApiButton\.disabled = isLocked/);
   assert.match(optionsSource, /resetButton\.disabled = isLocked/);
@@ -1292,8 +1310,11 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(stylesSource, /\.settings-action-status/);
   assert.match(stylesSource, /\.backup-confirm/);
   assert.match(stylesSource, /\.panel__hint/);
+  assert.match(stylesSource, /\.field label,[\s\S]*\.field__label/);
   assert.match(stylesSource, /\.field__hint--warm/);
   assert.match(stylesSource, /\.field__hint\[hidden\]/);
+  assert.match(stylesSource, /\.segmented-control[\s\S]*width: 100%/);
+  assert.match(stylesSource, /\.segmented-control__button:focus-visible/);
   assert.match(stylesSource, /\.field input\[aria-invalid="true"\]/);
   assert.match(stylesSource, /\.field select\[aria-invalid="true"\]/);
   assert.match(stylesSource, /\.field textarea\[aria-invalid="true"\]/);
@@ -1415,6 +1436,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Fast mode no longer blocks preview or settings save when Base URL or model name are blank/);
   assert.match(changelog, /Settings connection now explains which modes need model fields or website access/);
   assert.match(changelog, /collapses AI endpoint fields by default in Fast mode/);
+  assert.match(changelog, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(changelog, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /show how many uncached bookmarks require model classification/);
@@ -1481,6 +1503,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /npm run package:webstore/);
   assert.match(readme, /Popup mode switch/);
   assert.match(readme, /keeps AI connection fields collapsed until Balanced or Complete needs them/);
+  assert.match(readme, /same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(readme, /built-in domain rules/);
   assert.match(readme, /unless Balanced\/Complete preview or enabled auto organize needs external access/);
   assert.match(readme, /manual-review fallback finish locally/);
@@ -1514,6 +1537,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /npm run package:webstore/);
   assert.match(readmeZh, /弹窗模式切换/);
   assert.match(readmeZh, /AI 连接字段会在平衡或完整模式需要时再展开/);
+  assert.match(readmeZh, /和弹窗一致的快速\/平衡\/完整三段控件/);
   assert.match(readmeZh, /内置域名规则/);
   assert.match(readmeZh, /待手动分类兜底会在本地完成/);
   assert.match(readmeZh, /快速自动整理可以不填 API Key 本地运行/);
@@ -1535,6 +1559,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Fast mode no longer blocks preview or settings save when Base URL or model name are blank/);
   assert.match(releaseNotes, /Settings connection now explains which modes need model fields or website access/);
   assert.match(releaseNotes, /keeps AI connection fields collapsed by default/);
+  assert.match(releaseNotes, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(releaseNotes, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(releaseNotes, /Settings Privacy now falls back from tab creation to window opening/);
   assert.match(releaseNotes, /Popup Settings shortcuts now show an inline error if both tab creation and the options-page fallback fail/);
@@ -1682,6 +1707,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeAssetRenderer, /batchSize: 9/);
   assert.match(storeAssetRenderer, /currentBatch: 18/);
   assert.match(storeAssetRenderer, /totalBatches: 18/);
+  assert.match(storeAssetRenderer, /#settingsSpeedModeFastButton/);
+  assert.doesNotMatch(storeAssetRenderer, /waitForSelector\("#linkCheckMode"\)/);
 
   const layoutAuditor = fs.readFileSync(
     path.join(ROOT_DIR, "webstore/audit_ui_layout.mjs"),
@@ -1691,6 +1718,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(layoutAuditor, /popup zh preview 320/);
   assert.match(layoutAuditor, /popup en long error 320/);
   assert.match(layoutAuditor, /settings en connection 390/);
+  assert.match(layoutAuditor, /settings zh organization 390/);
+  assert.match(layoutAuditor, /settings en organization 390/);
   assert.match(layoutAuditor, /settings zh backup 1280/);
   assert.match(layoutAuditor, /overflowElements/);
   assert.match(layoutAuditor, /scrollableControls/);
@@ -1768,10 +1797,16 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /large Fast preview took too long/);
   assert.match(extensionE2e, /OK large Fast library flow/);
   assert.match(extensionE2e, /optionsSaveExpression/);
+  assert.match(extensionE2e, /settingsSpeedModeBalancedButton/);
+  assert.match(extensionE2e, /settingsSpeedModeFastButton/);
+  assert.match(extensionE2e, /options speed-mode segmented control did not activate Balanced mode/);
+  assert.match(extensionE2e, /options speed-mode segmented control did not return to Fast mode/);
   assert.match(extensionE2e, /config\.provider === "deepseek"/);
   assert.match(extensionE2e, /config\.batchSize === 9/);
   assert.match(extensionE2e, /balancedConnectionOpen/);
   assert.match(extensionE2e, /fastConnectionOpen/);
+  assert.match(extensionE2e, /balancedButton=/);
+  assert.match(extensionE2e, /fastButton=/);
   assert.match(extensionE2e, /auto-open AI connection fields for Balanced mode/);
   assert.match(extensionE2e, /E2E saved prompt/);
   assert.match(extensionE2e, /openai\\.com => AI Saved/);
@@ -1862,7 +1897,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /--load-extension is not allowed in Google Chrome, ignoring/);
   assert.match(publishChecklist, /Chrome for Testing 或 Chromium/);
   assert.match(publishChecklist, /弹窗在 320px、360px、400px 宽度下没有横向滚动/);
-  assert.match(publishChecklist, /设置页在 390px、720px、1280px 宽度下没有横向滚动/);
+  assert.match(publishChecklist, /设置页在 390px、720px、1280px 宽度下没有横向滚动，连接区、整理规则区、备份区/);
 }
 
 function testI18nCoverage() {

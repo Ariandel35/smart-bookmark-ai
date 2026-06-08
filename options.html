@@ -292,12 +292,52 @@
                   </div>
 
                   <div class="field">
-                    <label for="linkCheckMode" data-i18n="labelLinkCheckMode">Speed Mode</label>
-                    <select id="linkCheckMode" name="linkCheckMode" aria-describedby="linkCheckModeHint">
-                      <option value="fast" data-i18n="linkCheckFast">Fast</option>
-                      <option value="balanced" data-i18n="linkCheckBalanced">Balanced</option>
-                      <option value="complete" data-i18n="linkCheckComplete">Complete</option>
-                    </select>
+                    <div class="field__label" id="linkCheckModeLabel" data-i18n="labelLinkCheckMode">Speed Mode</div>
+                    <input id="linkCheckMode" name="linkCheckMode" type="hidden" value="fast" />
+                    <div
+                      class="segmented-control segmented-control--settings"
+                      role="radiogroup"
+                      aria-labelledby="linkCheckModeLabel"
+                      aria-describedby="linkCheckModeHint"
+                      aria-orientation="horizontal"
+                    >
+                      <button
+                        class="segmented-control__button"
+                        id="settingsSpeedModeFastButton"
+                        type="button"
+                        role="radio"
+                        data-settings-speed-mode="fast"
+                        aria-checked="true"
+                        data-i18n="linkCheckFast"
+                        disabled
+                      >
+                        Fast
+                      </button>
+                      <button
+                        class="segmented-control__button"
+                        id="settingsSpeedModeBalancedButton"
+                        type="button"
+                        role="radio"
+                        data-settings-speed-mode="balanced"
+                        aria-checked="false"
+                        data-i18n="linkCheckBalanced"
+                        disabled
+                      >
+                        Balanced
+                      </button>
+                      <button
+                        class="segmented-control__button"
+                        id="settingsSpeedModeCompleteButton"
+                        type="button"
+                        role="radio"
+                        data-settings-speed-mode="complete"
+                        aria-checked="false"
+                        data-i18n="linkCheckComplete"
+                        disabled
+                      >
+                        Complete
+                      </button>
+                    </div>
                     <p class="field__hint" id="linkCheckModeHint" data-i18n="hintLinkCheckMode">
                       Fast finishes locally. Balanced skips link checks but keeps AI classification. Complete checks links and uses AI.
                     </p>

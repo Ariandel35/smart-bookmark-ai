@@ -684,7 +684,7 @@ async function renderSourceScreenshots(browser) {
     viewport: { width: 1280, height: 860 },
     hash: "#organize",
     prepare: async (page) => {
-      await page.waitForSelector("#linkCheckMode");
+      await page.waitForSelector("#settingsSpeedModeFastButton");
     }
   });
 

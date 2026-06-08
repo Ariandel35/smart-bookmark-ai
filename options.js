@@ -24,6 +24,7 @@ const modelInput = document.getElementById("model");
 const batchSizeInput = document.getElementById("batchSize");
 const batchSizeCapHint = document.getElementById("batchSizeCapHint");
 const linkCheckModeSelect = document.getElementById("linkCheckMode");
+const linkCheckModeButtons = Array.from(document.querySelectorAll("[data-settings-speed-mode]"));
 const connectionModeHint = document.getElementById("connectionModeHint");
 const aiConnectionBlock = document.getElementById("aiConnectionBlock");
 const aiConnectionSummaryNote = document.getElementById("aiConnectionSummaryNote");
@@ -581,6 +582,9 @@ function updateSettingsOperationControls() {
   settingsFields.forEach((field) => {
     field.disabled = isLocked;
   });
+  linkCheckModeButtons.forEach((button) => {
+    button.disabled = isLocked;
+  });
   saveButton.disabled = isLocked;
   testApiButton.disabled = isLocked;
   resetButton.disabled = isLocked;
@@ -832,13 +836,44 @@ function scheduleHostAccessStatusRefresh(reason) {
   }, 250);
 }
 
+function renderLinkCheckModeButtons(mode = normalizeLinkCheckMode(linkCheckModeSelect.value)) {
+  const activeMode = normalizeLinkCheckMode(mode);
+  const modeLabels = {
+    [LINK_CHECK_MODE_FAST]: t("popupSpeedModeFastAria"),
+    [LINK_CHECK_MODE_BALANCED]: t("popupSpeedModeBalancedAria"),
+    [LINK_CHECK_MODE_COMPLETE]: t("popupSpeedModeCompleteAria")
+  };
+
+  linkCheckModeButtons.forEach((button) => {
+    const buttonMode = normalizeLinkCheckMode(button.dataset.settingsSpeedMode);
+    const isActive = buttonMode === activeMode;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-checked", String(isActive));
+    button.title = modeLabels[buttonMode] || "";
+    button.setAttribute("aria-label", modeLabels[buttonMode] || button.textContent.trim());
+    button.tabIndex = isActive ? 0 : -1;
+  });
+}
+
+function setLinkCheckMode(mode, options = {}) {
+  const nextMode = normalizeLinkCheckMode(mode);
+  const previousMode = normalizeLinkCheckMode(linkCheckModeSelect.value);
+
+  linkCheckModeSelect.value = nextMode;
+  renderLinkCheckModeButtons(nextMode);
+
+  if (options.emitChange && nextMode !== previousMode) {
+    linkCheckModeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+}
+
 function populateForm(config) {
   providerSelect.value = config.provider;
   baseUrlInput.value = config.baseUrl;
   apiKeyInput.value = config.apiKey;
   modelInput.value = config.model;
   batchSizeInput.value = String(config.batchSize);
-  linkCheckModeSelect.value = normalizeLinkCheckMode(config.linkCheckMode);
+  setLinkCheckMode(config.linkCheckMode);
   autoOrganizeEnabledInput.value = config.autoOrganizeEnabled ? "true" : "false";
   autoOrganizeIntervalInput.value = String(config.autoOrganizeIntervalHours);
   setWhitelistSelection(parseWhitelistDomains(config.whitelistDomains));
@@ -1821,6 +1856,35 @@ providerSelect.addEventListener("change", () => {
   void refreshHostAccessStatus().catch((error) => {
     console.error("Failed to refresh host access status after provider change:", error);
     renderHostAccessRefreshFailure();
+  });
+});
+
+linkCheckModeButtons.forEach((button, index) => {
+  button.addEventListener("click", () => {
+    if (button.disabled) {
+      return;
+    }
+
+    setLinkCheckMode(button.dataset.settingsSpeedMode, { emitChange: true });
+  });
+
+  button.addEventListener("keydown", (event) => {
+    const handledKeys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"];
+    if (!handledKeys.includes(event.key)) {
+      return;
+    }
+
+    event.preventDefault();
+    const nextIndex =
+      event.key === "Home"
+        ? 0
+        : event.key === "End"
+          ? linkCheckModeButtons.length - 1
+          : (index + (["ArrowRight", "ArrowDown"].includes(event.key) ? 1 : -1) + linkCheckModeButtons.length) %
+            linkCheckModeButtons.length;
+    const nextButton = linkCheckModeButtons[nextIndex];
+    nextButton.focus();
+    setLinkCheckMode(nextButton.dataset.settingsSpeedMode, { emitChange: true });
   });
 });
 

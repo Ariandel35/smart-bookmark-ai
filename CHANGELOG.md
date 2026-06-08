@@ -13,6 +13,7 @@
 - Fast mode no longer blocks preview or settings save when Base URL or model name are blank because the local path does not call the model
 - Settings connection now explains which modes need model fields or website access, so Fast mode no longer looks like mandatory API setup
 - Settings connection now collapses AI endpoint fields by default in Fast mode and opens them automatically for Balanced or Complete mode
+- Settings organization rules now use the same Fast/Balanced/Complete segmented control as the popup instead of a compact dropdown
 - Settings connection fields now expose the selected mode requirement hint to assistive technologies while preserving inline validation messages
 - Popup setup copy and shortcut logic now avoid implying Fast mode needs API credentials when local preview can run without a model call
 - Popup setup errors now show how many uncached bookmarks require model classification before asking users to finish AI access setup

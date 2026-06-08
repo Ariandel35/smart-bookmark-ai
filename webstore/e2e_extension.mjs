@@ -1772,6 +1772,14 @@ function optionsSaveExpression() {
       element.dispatchEvent(new Event("input", { bubbles: true }));
       element.dispatchEvent(new Event("change", { bubbles: true }));
     };
+    const clickButton = (id) => {
+      const button = document.getElementById(id);
+      if (!button || button.disabled) {
+        throw new Error(id + " button is not available.");
+      }
+      button.click();
+      return button;
+    };
     const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
     const waitForSavedConfig = async () => {
       for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -1794,12 +1802,20 @@ function optionsSaveExpression() {
 
     setValue("provider", "deepseek");
     await wait(100);
-    setValue("linkCheckMode", "balanced");
+    clickButton("settings-tab-organize");
     await wait(100);
+    const balancedButton = clickButton("settingsSpeedModeBalancedButton");
+    await wait(150);
+    const balancedModeValue = document.getElementById("linkCheckMode")?.value || "";
+    const balancedButtonActive = balancedButton.classList.contains("is-active");
+    const balancedButtonChecked = balancedButton.getAttribute("aria-checked");
     const balancedConnectionOpen = Boolean(document.getElementById("aiConnectionBlock")?.open);
     const balancedConnectionSummaryText = (document.getElementById("aiConnectionSummaryNote")?.textContent || "").trim();
-    setValue("linkCheckMode", "fast");
-    await wait(100);
+    const fastButton = clickButton("settingsSpeedModeFastButton");
+    await wait(150);
+    const fastModeValue = document.getElementById("linkCheckMode")?.value || "";
+    const fastButtonActive = fastButton.classList.contains("is-active");
+    const fastButtonChecked = fastButton.getAttribute("aria-checked");
     const fastConnectionOpen = Boolean(document.getElementById("aiConnectionBlock")?.open);
     const fastConnectionSummaryText = (document.getElementById("aiConnectionSummaryNote")?.textContent || "").trim();
     setValue("autoOrganizeEnabled", "false");
@@ -1823,8 +1839,14 @@ function optionsSaveExpression() {
     return {
       savedConfig,
       batchSizeInputValue: document.getElementById("batchSize")?.value || "",
+      balancedModeValue,
+      balancedButtonActive,
+      balancedButtonChecked,
       balancedConnectionOpen,
       balancedConnectionSummaryText,
+      fastModeValue,
+      fastButtonActive,
+      fastButtonChecked,
       fastConnectionOpen,
       fastConnectionSummaryText,
       saveBadgeText: (document.getElementById("saveBadge")?.textContent || "").trim(),
@@ -1981,8 +2003,22 @@ function formatPageFailures(result, extensionId) {
     if (!result.optionsSave?.saveBadgeText) {
       failures.push("options save did not render visible save feedback");
     }
+    if (
+      result.optionsSave?.balancedModeValue !== "balanced" ||
+      result.optionsSave?.balancedButtonActive !== true ||
+      result.optionsSave?.balancedButtonChecked !== "true"
+    ) {
+      failures.push("options speed-mode segmented control did not activate Balanced mode");
+    }
     if (!result.optionsSave?.balancedConnectionOpen) {
       failures.push("options save flow did not auto-open AI connection fields for Balanced mode");
+    }
+    if (
+      result.optionsSave?.fastModeValue !== "fast" ||
+      result.optionsSave?.fastButtonActive !== true ||
+      result.optionsSave?.fastButtonChecked !== "true"
+    ) {
+      failures.push("options speed-mode segmented control did not return to Fast mode");
     }
     if (result.optionsSave?.fastConnectionOpen) {
       failures.push("options save flow did not collapse AI connection fields after returning to Fast mode");
@@ -2165,7 +2201,9 @@ async function main() {
               `provider=${result.optionsSave.savedConfig?.provider || ""}`,
               `batchSize=${result.optionsSave.savedConfig?.batchSize || ""}`,
               `mode=${result.optionsSave.savedConfig?.linkCheckMode || ""}`,
+              `balancedButton=${result.optionsSave.balancedButtonChecked || ""}`,
               `balancedConnectionOpen=${Boolean(result.optionsSave.balancedConnectionOpen)}`,
+              `fastButton=${result.optionsSave.fastButtonChecked || ""}`,
               `fastConnectionOpen=${Boolean(result.optionsSave.fastConnectionOpen)}`,
               `feedback=${result.optionsSave.saveBadgeText || ""}`
             ].join(" | ")

@@ -217,9 +217,25 @@ const auditCases = [
     data: previewSample
   },
   {
+    label: "settings zh organization 390",
+    file: "options.html",
+    hash: "#organize",
+    width: 390,
+    height: 1040,
+    data: previewSample
+  },
+  {
     label: "settings en connection 390",
     file: "options.html",
     hash: "#connection",
+    width: 390,
+    height: 1040,
+    data: longErrorSample
+  },
+  {
+    label: "settings en organization 390",
+    file: "options.html",
+    hash: "#organize",
     width: 390,
     height: 1040,
     data: longErrorSample

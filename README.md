@@ -73,7 +73,7 @@ Marko helps turn a crowded Chrome bookmark bar into a smaller, clearer, easier-t
   </tr>
   <tr>
     <td><strong>Apply</strong><br />Confirm the saved preview inline, then back up and rebuild locally without a second model run.</td>
-    <td><strong>Rules</strong><br />Tune speed mode, batch size, whitelist websites, and advanced rules without crowding setup.</td>
+    <td><strong>Rules</strong><br />Tune speed mode with the same Fast/Balanced/Complete segmented control as the popup, plus batch size, whitelist websites, and advanced rules.</td>
   </tr>
 </table>
 
