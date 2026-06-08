@@ -1023,6 +1023,11 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="batchSize"[\s\S]*aria-describedby="batchSizeHint"/);
   assert.match(optionsHtml, /id="batchSizeHint"[\s\S]*data-i18n="hintBatchSize"/);
   assert.match(optionsHtml, /id="batchSizeCapHint"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*hidden/);
+  assert.match(optionsHtml, /class="toggle"[\s\S]*for="autoOrganizeEnabled"/);
+  assert.match(optionsHtml, /id="autoOrganizeEnabled"[\s\S]*type="checkbox"[\s\S]*role="switch"[\s\S]*aria-describedby="autoOrganizeAccessHint"[\s\S]*disabled/);
+  assert.match(optionsHtml, /class="toggle__track"[\s\S]*class="toggle__thumb"/);
+  assert.match(optionsHtml, /id="autoOrganizeState"[\s\S]*data-i18n="autoOrganizeOff"/);
+  assert.doesNotMatch(optionsHtml, /<select id="autoOrganizeEnabled"/);
   assert.match(optionsHtml, /id="autoOrganizeIntervalHours"[\s\S]*aria-describedby="autoOrganizeIntervalHint"/);
   assert.match(optionsHtml, /id="autoOrganizeIntervalHint"[\s\S]*data-i18n="hintAutoOrganizeInterval"/);
   assert.match(optionsHtml, /id="whitelistSelectionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
@@ -1156,6 +1161,11 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /setGrantAccessButtonState\(false\)/);
   assert.match(optionsSource, /setGrantAccessButtonState\(granted\)/);
   assert.doesNotMatch(optionsSource, /grantAccessButton\.textContent/);
+  assert.match(optionsSource, /const autoOrganizeState = document\.getElementById\("autoOrganizeState"\)/);
+  assert.match(optionsSource, /function renderAutoOrganizeToggle/);
+  assert.match(optionsSource, /autoOrganizeEnabledInput\.checked = Boolean\(config\.autoOrganizeEnabled\)/);
+  assert.match(optionsSource, /autoOrganizeEnabled: Boolean\(autoOrganizeEnabledInput\.checked\)/);
+  assert.doesNotMatch(optionsSource, /autoOrganizeEnabledInput\.value === "true"/);
   assert.match(optionsSource, /renderHostAccessRefreshFailure\(\)/);
   assert.match(optionsSource, /console\.error\("Failed to save settings:"/);
   assert.match(optionsSource, /console\.error\("Failed to save settings after API test:"/);
@@ -1315,6 +1325,10 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(stylesSource, /\.field__hint\[hidden\]/);
   assert.match(stylesSource, /\.segmented-control[\s\S]*width: 100%/);
   assert.match(stylesSource, /\.segmented-control__button:focus-visible/);
+  assert.match(stylesSource, /\.toggle[\s\S]*grid-template-columns: auto minmax\(0, 1fr\)/);
+  assert.match(stylesSource, /\.toggle__input:checked \+ \.toggle__track/);
+  assert.match(stylesSource, /\.toggle__input:focus-visible \+ \.toggle__track/);
+  assert.match(stylesSource, /\.toggle:has\(\.toggle__input\[aria-invalid="true"\]\) \.toggle__track/);
   assert.match(stylesSource, /\.field input\[aria-invalid="true"\]/);
   assert.match(stylesSource, /\.field select\[aria-invalid="true"\]/);
   assert.match(stylesSource, /\.field textarea\[aria-invalid="true"\]/);
@@ -1437,6 +1451,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings connection now explains which modes need model fields or website access/);
   assert.match(changelog, /collapses AI endpoint fields by default in Fast mode/);
   assert.match(changelog, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
+  assert.match(changelog, /Settings automation now uses a direct Silent organize switch/);
   assert.match(changelog, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /show how many uncached bookmarks require model classification/);
@@ -1508,8 +1523,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /unless Balanced\/Complete preview or enabled auto organize needs external access/);
   assert.match(readme, /manual-review fallback finish locally/);
   assert.match(readme, /Fast automatic organize can run locally without an API key/);
+  assert.match(readme, /direct Silent organize switch/);
   assert.match(readme, /automation access still needs approval/);
-  assert.match(readme, /impact shown inline before saving/);
+  assert.match(readme, /showing the impact inline before saving/);
   assert.match(readme, /Settings warn inline before a slow-model batch cap/);
   assert.match(readme, /Batches wake immediately while a Chrome alarm remains as fallback/);
   assert.match(readme, /Complete mode checks up to 8 links at a time/);
@@ -1541,8 +1557,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /内置域名规则/);
   assert.match(readmeZh, /待手动分类兜底会在本地完成/);
   assert.match(readmeZh, /快速自动整理可以不填 API Key 本地运行/);
+  assert.match(readmeZh, /静默整理开关/);
   assert.match(readmeZh, /自动整理权限仍未授权时明确提示/);
-  assert.match(readmeZh, /保存前会在页面内显示影响/);
+  assert.match(readmeZh, /保存前直接显示权限影响/);
   assert.match(readmeZh, /慢模型批量被压低前先提示/);
   assert.match(readmeZh, /完整模式每次最多并发检测 8 条链接/);
   assert.match(readmeZh, /恢复前会先创建新的本地快照/);
@@ -1560,6 +1577,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings connection now explains which modes need model fields or website access/);
   assert.match(releaseNotes, /keeps AI connection fields collapsed by default/);
   assert.match(releaseNotes, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
+  assert.match(releaseNotes, /Settings automation now uses a direct Silent organize switch/);
   assert.match(releaseNotes, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(releaseNotes, /Settings Privacy now falls back from tab creation to window opening/);
   assert.match(releaseNotes, /Popup Settings shortcuts now show an inline error if both tab creation and the options-page fallback fail/);
@@ -1690,6 +1708,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /Whitelist website catalog load failures show a distinct inline error/);
   assert.match(storeListing, /read-only until an organize\/apply run completes/);
   assert.match(storeListing, /lock the whole action group while one item is being kept or deleted/);
+  assert.match(storeListing, /静默整理使用直接开关/);
+  assert.match(storeListing, /direct Silent organize switch/);
   assert.match(storeListing, /runs locally, needs model endpoint access, or needs website access/);
   assert.match(storeListing, /Save and Test & Save keep API or automation permission-denied feedback visible/);
   assert.match(storeListing, /fresh pre-restore snapshot/);
@@ -1720,6 +1740,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(layoutAuditor, /settings en connection 390/);
   assert.match(layoutAuditor, /settings zh organization 390/);
   assert.match(layoutAuditor, /settings en organization 390/);
+  assert.match(layoutAuditor, /settings zh automation 390/);
+  assert.match(layoutAuditor, /settings en automation 390/);
   assert.match(layoutAuditor, /settings zh backup 1280/);
   assert.match(layoutAuditor, /overflowElements/);
   assert.match(layoutAuditor, /scrollableControls/);
@@ -1799,6 +1821,12 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /optionsSaveExpression/);
   assert.match(extensionE2e, /settingsSpeedModeBalancedButton/);
   assert.match(extensionE2e, /settingsSpeedModeFastButton/);
+  assert.match(extensionE2e, /element\.type === "checkbox"/);
+  assert.match(extensionE2e, /element\.checked = value === true \|\| value === "true"/);
+  assert.match(extensionE2e, /setValue\("autoOrganizeEnabled", false\)/);
+  assert.match(extensionE2e, /clickInput\("autoOrganizeEnabled"\)/);
+  assert.match(extensionE2e, /options Silent organize switch did not turn on/);
+  assert.match(extensionE2e, /options Silent organize switch did not turn off/);
   assert.match(extensionE2e, /options speed-mode segmented control did not activate Balanced mode/);
   assert.match(extensionE2e, /options speed-mode segmented control did not return to Fast mode/);
   assert.match(extensionE2e, /config\.provider === "deepseek"/);
@@ -1807,6 +1835,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /fastConnectionOpen/);
   assert.match(extensionE2e, /balancedButton=/);
   assert.match(extensionE2e, /fastButton=/);
+  assert.match(extensionE2e, /automationOn=/);
+  assert.match(extensionE2e, /automationOff=/);
   assert.match(extensionE2e, /auto-open AI connection fields for Balanced mode/);
   assert.match(extensionE2e, /E2E saved prompt/);
   assert.match(extensionE2e, /openai\\.com => AI Saved/);
@@ -1897,7 +1927,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /--load-extension is not allowed in Google Chrome, ignoring/);
   assert.match(publishChecklist, /Chrome for Testing 或 Chromium/);
   assert.match(publishChecklist, /弹窗在 320px、360px、400px 宽度下没有横向滚动/);
-  assert.match(publishChecklist, /设置页在 390px、720px、1280px 宽度下没有横向滚动，连接区、整理规则区、备份区/);
+  assert.match(publishChecklist, /设置页在 390px、720px、1280px 宽度下没有横向滚动，连接区、整理规则区、自动化区、备份区/);
 }
 
 function testI18nCoverage() {

@@ -1768,7 +1768,11 @@ function optionsSaveExpression() {
       if (!element) {
         throw new Error(id + " was not found on the options page.");
       }
-      element.value = value;
+      if (element.type === "checkbox") {
+        element.checked = value === true || value === "true";
+      } else {
+        element.value = value;
+      }
       element.dispatchEvent(new Event("input", { bubbles: true }));
       element.dispatchEvent(new Event("change", { bubbles: true }));
     };
@@ -1779,6 +1783,14 @@ function optionsSaveExpression() {
       }
       button.click();
       return button;
+    };
+    const clickInput = (id) => {
+      const input = document.getElementById(id);
+      if (!input || input.disabled) {
+        throw new Error(id + " input is not available.");
+      }
+      input.click();
+      return input;
     };
     const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
     const waitForSavedConfig = async () => {
@@ -1818,7 +1830,21 @@ function optionsSaveExpression() {
     const fastButtonChecked = fastButton.getAttribute("aria-checked");
     const fastConnectionOpen = Boolean(document.getElementById("aiConnectionBlock")?.open);
     const fastConnectionSummaryText = (document.getElementById("aiConnectionSummaryNote")?.textContent || "").trim();
-    setValue("autoOrganizeEnabled", "false");
+    clickButton("settings-tab-automation");
+    await wait(100);
+    const automationSwitch = clickInput("autoOrganizeEnabled");
+    await wait(100);
+    const automationToggleOnChecked = Boolean(automationSwitch.checked);
+    const automationToggleOnAria = automationSwitch.getAttribute("aria-checked");
+    const automationToggleOnStateText = (document.getElementById("autoOrganizeState")?.textContent || "").trim();
+    const automationToggleOnHint = (document.getElementById("autoOrganizeAccessHint")?.textContent || "").trim();
+    automationSwitch.click();
+    await wait(100);
+    const automationToggleOffChecked = Boolean(automationSwitch.checked);
+    const automationToggleOffAria = automationSwitch.getAttribute("aria-checked");
+    const automationToggleOffStateText = (document.getElementById("autoOrganizeState")?.textContent || "").trim();
+    const automationToggleOffHint = (document.getElementById("autoOrganizeAccessHint")?.textContent || "").trim();
+    setValue("autoOrganizeEnabled", false);
     setValue("baseUrl", "https://api.deepseek.com");
     setValue("model", "deepseek-chat");
     setValue("apiKey", "");
@@ -1849,6 +1875,14 @@ function optionsSaveExpression() {
       fastButtonChecked,
       fastConnectionOpen,
       fastConnectionSummaryText,
+      automationToggleOnChecked,
+      automationToggleOnAria,
+      automationToggleOnStateText,
+      automationToggleOnHint,
+      automationToggleOffChecked,
+      automationToggleOffAria,
+      automationToggleOffStateText,
+      automationToggleOffHint,
       saveBadgeText: (document.getElementById("saveBadge")?.textContent || "").trim(),
       settingsActionText: (document.getElementById("settingsActionStatus")?.textContent || "").trim()
     };
@@ -2022,6 +2056,23 @@ function formatPageFailures(result, extensionId) {
     }
     if (result.optionsSave?.fastConnectionOpen) {
       failures.push("options save flow did not collapse AI connection fields after returning to Fast mode");
+    }
+    if (
+      result.optionsSave?.automationToggleOnChecked !== true ||
+      result.optionsSave?.automationToggleOnAria !== "true" ||
+      !result.optionsSave?.automationToggleOnStateText ||
+      !result.optionsSave?.automationToggleOnHint
+    ) {
+      failures.push("options Silent organize switch did not turn on with visible state and permission hint");
+    }
+    if (
+      result.optionsSave?.automationToggleOffChecked !== false ||
+      result.optionsSave?.automationToggleOffAria !== "false" ||
+      !result.optionsSave?.automationToggleOffStateText ||
+      !result.optionsSave?.automationToggleOffHint ||
+      result.optionsSave?.automationToggleOffStateText === result.optionsSave?.automationToggleOnStateText
+    ) {
+      failures.push("options Silent organize switch did not turn off with updated visible state and permission hint");
     }
   }
 
@@ -2205,6 +2256,8 @@ async function main() {
               `balancedConnectionOpen=${Boolean(result.optionsSave.balancedConnectionOpen)}`,
               `fastButton=${result.optionsSave.fastButtonChecked || ""}`,
               `fastConnectionOpen=${Boolean(result.optionsSave.fastConnectionOpen)}`,
+              `automationOn=${Boolean(result.optionsSave.automationToggleOnChecked)}`,
+              `automationOff=${Boolean(result.optionsSave.automationToggleOffChecked)}`,
               `feedback=${result.optionsSave.saveBadgeText || ""}`
             ].join(" | ")
           );

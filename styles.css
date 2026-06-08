@@ -568,6 +568,86 @@ textarea {
   resize: vertical;
 }
 
+.toggle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  cursor: pointer;
+}
+
+.toggle__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.toggle__track {
+  display: inline-flex;
+  align-items: center;
+  width: 46px;
+  height: 26px;
+  padding: 3px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface-muted);
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.toggle__thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 4px rgba(23, 27, 23, 0.18);
+  transition: transform 160ms ease;
+}
+
+.toggle__copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.toggle__state {
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.toggle__input:checked + .toggle__track {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.toggle__input:checked + .toggle__track .toggle__thumb {
+  transform: translateX(20px);
+  background: var(--accent);
+}
+
+.toggle__input:focus-visible + .toggle__track {
+  box-shadow: 0 0 0 3px rgba(29, 95, 73, 0.16);
+}
+
+.toggle:has(.toggle__input[aria-invalid="true"]) .toggle__track {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.toggle:has(.toggle__input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .whitelist-picker {
   display: grid;
   gap: 12px;

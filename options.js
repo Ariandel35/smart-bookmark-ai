@@ -29,6 +29,7 @@ const connectionModeHint = document.getElementById("connectionModeHint");
 const aiConnectionBlock = document.getElementById("aiConnectionBlock");
 const aiConnectionSummaryNote = document.getElementById("aiConnectionSummaryNote");
 const autoOrganizeEnabledInput = document.getElementById("autoOrganizeEnabled");
+const autoOrganizeState = document.getElementById("autoOrganizeState");
 const autoOrganizeAccessHint = document.getElementById("autoOrganizeAccessHint");
 const autoOrganizeIntervalInput = document.getElementById("autoOrganizeIntervalHours");
 const whitelistSearchInput = document.getElementById("whitelistSearch");
@@ -867,6 +868,14 @@ function setLinkCheckMode(mode, options = {}) {
   }
 }
 
+function renderAutoOrganizeToggle() {
+  const enabled = Boolean(autoOrganizeEnabledInput.checked);
+  autoOrganizeEnabledInput.setAttribute("aria-checked", String(enabled));
+  if (autoOrganizeState) {
+    autoOrganizeState.textContent = t(enabled ? "autoOrganizeOn" : "autoOrganizeOff");
+  }
+}
+
 function populateForm(config) {
   providerSelect.value = config.provider;
   baseUrlInput.value = config.baseUrl;
@@ -874,7 +883,8 @@ function populateForm(config) {
   modelInput.value = config.model;
   batchSizeInput.value = String(config.batchSize);
   setLinkCheckMode(config.linkCheckMode);
-  autoOrganizeEnabledInput.value = config.autoOrganizeEnabled ? "true" : "false";
+  autoOrganizeEnabledInput.checked = Boolean(config.autoOrganizeEnabled);
+  renderAutoOrganizeToggle();
   autoOrganizeIntervalInput.value = String(config.autoOrganizeIntervalHours);
   setWhitelistSelection(parseWhitelistDomains(config.whitelistDomains));
   protectedRootFoldersInput.value = config.protectedRootFolders;
@@ -897,7 +907,7 @@ function collectFormData() {
     model: modelInput.value.trim(),
     batchSize: parseIntegerInput(batchSizeInput.value),
     linkCheckMode: normalizeLinkCheckMode(linkCheckModeSelect.value),
-    autoOrganizeEnabled: autoOrganizeEnabledInput.value === "true",
+    autoOrganizeEnabled: Boolean(autoOrganizeEnabledInput.checked),
     autoOrganizeIntervalHours: parseIntegerInput(autoOrganizeIntervalInput.value),
     whitelistDomains: serializeWhitelistDomains(),
     protectedRootFolders: protectedRootFoldersInput.value.trim(),
@@ -968,7 +978,8 @@ function updateAiConnectionDisclosure(mode = normalizeLinkCheckMode(linkCheckMod
 }
 
 function updateAutoOrganizeAccessHint() {
-  const enabled = autoOrganizeEnabledInput.value === "true";
+  renderAutoOrganizeToggle();
+  const enabled = Boolean(autoOrganizeEnabledInput.checked);
   const mode = normalizeLinkCheckMode(linkCheckModeSelect.value);
   const key = !enabled
     ? "autoOrganizeDisabledHint"

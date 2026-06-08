@@ -433,11 +433,24 @@
 
                 <div class="split-grid">
                   <div class="field">
-                    <label for="autoOrganizeEnabled" data-i18n="labelAutoOrganizeEnabled">Auto Silent Organize</label>
-                    <select id="autoOrganizeEnabled" name="autoOrganizeEnabled">
-                      <option value="true" data-i18n="autoOrganizeOn">Enabled</option>
-                      <option value="false" data-i18n="autoOrganizeOff">Disabled</option>
-                    </select>
+                    <label class="toggle" for="autoOrganizeEnabled">
+                      <input
+                        class="toggle__input"
+                        id="autoOrganizeEnabled"
+                        name="autoOrganizeEnabled"
+                        type="checkbox"
+                        role="switch"
+                        aria-describedby="autoOrganizeAccessHint"
+                        disabled
+                      />
+                      <span class="toggle__track" aria-hidden="true">
+                        <span class="toggle__thumb"></span>
+                      </span>
+                      <span class="toggle__copy">
+                        <span class="toggle__title" data-i18n="labelAutoOrganizeEnabled">Auto Silent Organize</span>
+                        <span class="toggle__state" id="autoOrganizeState" data-i18n="autoOrganizeOff">Disabled</span>
+                      </span>
+                    </label>
                     <p class="field__hint" id="autoOrganizeAccessHint" role="status" aria-live="polite" hidden></p>
                   </div>
 

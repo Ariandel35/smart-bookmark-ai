@@ -225,6 +225,14 @@ const auditCases = [
     data: previewSample
   },
   {
+    label: "settings zh automation 390",
+    file: "options.html",
+    hash: "#automation",
+    width: 390,
+    height: 980,
+    data: previewSample
+  },
+  {
     label: "settings en connection 390",
     file: "options.html",
     hash: "#connection",
@@ -238,6 +246,14 @@ const auditCases = [
     hash: "#organize",
     width: 390,
     height: 1040,
+    data: longErrorSample
+  },
+  {
+    label: "settings en automation 390",
+    file: "options.html",
+    hash: "#automation",
+    width: 390,
+    height: 980,
     data: longErrorSample
   },
   {
