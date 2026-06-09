@@ -1642,6 +1642,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Popup action error responses now keep their specific failure message/);
   assert.match(changelog, /Popup action successes now preserve refresh-failure feedback/);
   assert.match(changelog, /Added `npm run audit:ui`/);
+  assert.match(changelog, /separates expected long single-line input value scrolling from actual form-control layout overflow/);
   assert.match(changelog, /retries a layout case once after a transient CDP timeout/);
   assert.match(changelog, /Added `npm run e2e:extension` and `npm run verify:release:full`/);
   assert.match(changelog, /settings Backup UI create, inline restore confirmation, and inline delete confirmation/);
@@ -1827,6 +1828,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Popup action error responses now keep their specific failure message/);
   assert.match(releaseNotes, /Popup action successes now preserve refresh-failure feedback/);
   assert.match(releaseNotes, /Added `npm run audit:ui`/);
+  assert.match(releaseNotes, /separates expected long single-line input value scrolling from actual form-control layout overflow/);
   assert.match(releaseNotes, /retries the current layout case once after a transient CDP timeout/);
   assert.match(releaseNotes, /run headless by default/);
   assert.match(releaseNotes, /Added `npm run e2e:extension` and `npm run verify:release:full`/);
@@ -2001,6 +2003,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(layoutAuditor, /settings zh backup 1280/);
   assert.match(layoutAuditor, /overflowElements/);
   assert.match(layoutAuditor, /scrollableControls/);
+  assert.match(layoutAuditor, /scrollableValueControls/);
+  assert.match(layoutAuditor, /isExpectedSingleLineValueScroll/);
+  assert.match(layoutAuditor, /scrollable controls:/);
   assert.match(layoutAuditor, /clippedButtons/);
   assert.match(layoutAuditor, /Runtime\.exceptionThrown/);
   assert.match(layoutAuditor, /Page\.addScriptToEvaluateOnNewDocument/);

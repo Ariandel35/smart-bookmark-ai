@@ -731,6 +731,14 @@ function auditExpression() {
       return rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden";
     };
     const isFormValueControl = (el) => /^(input|textarea|select)$/i.test(el.tagName);
+    const isExpectedSingleLineValueScroll = (el) => {
+      if (el.tagName.toLowerCase() !== "input") {
+        return false;
+      }
+      const type = (el.getAttribute("type") || "text").toLowerCase();
+      const singleLineTypes = new Set(["email", "number", "password", "search", "tel", "text", "url"]);
+      return singleLineTypes.has(type) && typeof el.value === "string" && el.value.length > 0;
+    };
     const summarize = (el) => ({
       tag: el.tagName.toLowerCase(),
       id: el.id || "",
@@ -743,8 +751,13 @@ function auditExpression() {
       .filter((el) => visible(el) && !isFormValueControl(el) && el.scrollWidth > el.clientWidth + 1)
       .slice(0, 12)
       .map(summarize);
-    const scrollableControls = Array.from(document.querySelectorAll("input, textarea, select"))
-      .filter((el) => visible(el) && el.scrollWidth > el.clientWidth + 1)
+    const allScrollableControls = Array.from(document.querySelectorAll("input, textarea, select"))
+      .filter((el) => visible(el) && el.scrollWidth > el.clientWidth + 1);
+    const scrollableControls = allScrollableControls
+      .filter((el) => !isExpectedSingleLineValueScroll(el))
+      .map(summarize);
+    const scrollableValueControls = allScrollableControls
+      .filter(isExpectedSingleLineValueScroll)
       .map(summarize);
     const clippedButtons = Array.from(document.querySelectorAll("button"))
       .filter((el) => visible(el) && el.scrollWidth > el.clientWidth + 1)
@@ -757,6 +770,7 @@ function auditExpression() {
       bodyScrollWidth: document.body.scrollWidth,
       overflowElements,
       scrollableControls,
+      scrollableValueControls,
       clippedButtons,
       visibleButtons: Array.from(document.querySelectorAll("button"))
         .filter(visible)
@@ -856,6 +870,9 @@ function formatFailure(result) {
   }
   if (metrics.clippedButtons?.length) {
     failures.push(`clipped buttons: ${JSON.stringify(metrics.clippedButtons)}`);
+  }
+  if (metrics.scrollableControls?.length) {
+    failures.push(`scrollable controls: ${JSON.stringify(metrics.scrollableControls)}`);
   }
   if (result.exceptions?.length) {
     failures.push(`runtime exceptions: ${result.exceptions.join(" | ")}`);

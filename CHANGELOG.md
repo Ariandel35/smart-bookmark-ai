@@ -41,6 +41,7 @@
 - Popup action successes now preserve refresh-failure feedback instead of clearing it or reporting a completed action as failed
 - The publish checklist now separates real `chrome://extensions` Load unpacked validation from Google Chrome CLI launches that ignore `--load-extension`, and adds narrow-width popup/settings UI audit gates
 - Added `npm run audit:ui` to render popup and settings pages with Chrome API mocks across Chinese preview and English long-error states, failing on horizontal overflow, clipped buttons, or runtime exceptions
+- UI audit now separates expected long single-line input value scrolling from actual form-control layout overflow, so the settings gate fails only on actionable control clipping
 - UI audit now retries a layout case once after a transient CDP timeout, and CDP-based release checks use a longer named command timeout for fewer false-negative runs
 - Automated Chrome UI and extension checks now run headless by default, with `MARKO_SHOW_BROWSER=1` available only for visible debugging
 - Added `npm run e2e:extension` and `npm run verify:release:full` for a real unpacked-extension smoke test with Chrome for Testing or Chromium
