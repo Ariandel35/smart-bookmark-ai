@@ -10,6 +10,8 @@ const LINK_CHECK_MODE_COMPLETE = "complete";
 const I18N = globalThis.SmartBookmarkI18n;
 const Providers = globalThis.SmartBookmarkProviders;
 const t = (key, params) => I18N.t(key, params);
+const STATE_REFRESH_INTERVAL_MS = 5_000;
+const PROGRESS_CLOCK_INTERVAL_MS = 1_000;
 
 const phaseBadge = document.getElementById("phaseBadge");
 const progressTrack = document.getElementById("progressTrack");
@@ -30,6 +32,7 @@ const popupActionStatus = document.getElementById("popupActionStatus");
 const speedModeButtons = Array.from(document.querySelectorAll("[data-popup-speed-mode]"));
 
 let refreshTimer = null;
+let progressClockTimer = null;
 let currentConfig = null;
 let currentStatus = null;
 let currentPreviewPlan = null;
@@ -535,6 +538,38 @@ function renderStatus(status) {
   warningValue.textContent = String(warnings);
 
   syncActionButtons();
+  syncProgressClock();
+}
+
+function stopProgressClock() {
+  if (!progressClockTimer) {
+    return;
+  }
+
+  clearInterval(progressClockTimer);
+  progressClockTimer = null;
+}
+
+function syncProgressClock() {
+  const shouldRun =
+    currentStatus?.phase === "running" && document.visibilityState !== "hidden";
+  if (!shouldRun) {
+    stopProgressClock();
+    return;
+  }
+
+  if (progressClockTimer) {
+    return;
+  }
+
+  progressClockTimer = setInterval(() => {
+    if (currentStatus?.phase !== "running") {
+      stopProgressClock();
+      return;
+    }
+
+    renderStatus(currentStatus);
+  }, PROGRESS_CLOCK_INTERVAL_MS);
 }
 
 function createEmptyState(title, description) {
@@ -1375,7 +1410,10 @@ cancelButton.addEventListener("click", () => {
 
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
+    syncProgressClock();
     void refreshAllSafely("visibilitychange");
+  } else {
+    stopProgressClock();
   }
 });
 
@@ -1383,10 +1421,12 @@ window.addEventListener("unload", () => {
   if (refreshTimer) {
     clearInterval(refreshTimer);
   }
+  stopProgressClock();
 });
 
 refreshAllSafely("initial load").then(() => {
   refreshTimer = setInterval(() => {
     void refreshAllSafely("timer");
-  }, 2000);
+  }, STATE_REFRESH_INTERVAL_MS);
+  syncProgressClock();
 });

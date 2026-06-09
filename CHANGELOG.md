@@ -16,7 +16,7 @@
 - Settings organization rules now use the same Fast/Balanced/Complete segmented control as the popup instead of a compact dropdown
 - Settings automation now uses a direct Silent organize switch instead of a true/false dropdown
 - Settings automation keeps the interval field disabled until Silent organize is turned on, so inactive timing settings no longer distract or block saves
-- Popup progress now estimates remaining time after the first completed work segment, so long previews show whether they are still moving instead of only showing elapsed time
+- Popup progress now estimates remaining time after the first completed work segment and refreshes the elapsed/remaining clock locally without reloading the full popup state every second
 - Chrome Web Store promo images now use a cleaner grid-backed product layout without decorative glow backgrounds or negative title spacing
 - Added `npm run render:store-assets` with `playwright-core` so release screenshots can be regenerated against an installed Chrome or Chrome for Testing without downloading a browser
 - Settings connection fields now expose the selected mode requirement hint to assistive technologies while preserving inline validation messages

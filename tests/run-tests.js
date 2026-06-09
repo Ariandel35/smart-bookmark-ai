@@ -608,6 +608,15 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /void refreshAllSafely\("visibilitychange"\)/);
   assert.match(popupSource, /refreshAllSafely\("initial load"\)\.then/);
   assert.match(popupSource, /void refreshAllSafely\("timer"\)/);
+  assert.match(popupSource, /const STATE_REFRESH_INTERVAL_MS = 5_000/);
+  assert.match(popupSource, /const PROGRESS_CLOCK_INTERVAL_MS = 1_000/);
+  assert.match(popupSource, /let progressClockTimer = null/);
+  assert.match(popupSource, /function syncProgressClock\(\)/);
+  assert.match(popupSource, /currentStatus\?\.phase === "running" && document\.visibilityState !== "hidden"/);
+  assert.match(popupSource, /renderStatus\(currentStatus\)/);
+  assert.match(popupSource, /}, PROGRESS_CLOCK_INTERVAL_MS\)/);
+  assert.match(popupSource, /}, STATE_REFRESH_INTERVAL_MS\)/);
+  assert.match(popupSource, /stopProgressClock\(\)/);
   assert.doesNotMatch(popupSource, /refreshAll\(\)\.catch\(console\.error\)/);
   assert.match(popupSource, /getOptionsSectionUrl/);
   assert.match(popupSource, /options\.html#\$\{safeSection\}/);
@@ -1466,6 +1475,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings automation now uses a direct Silent organize switch/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
   assert.match(changelog, /Popup progress now estimates remaining time/);
+  assert.match(changelog, /without reloading the full popup state every second/);
   assert.match(changelog, /Added `npm run render:store-assets`/);
   assert.match(changelog, /playwright-core/);
   assert.match(changelog, /without downloading a browser/);
@@ -1550,6 +1560,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /shows the permission impact inline before saving/);
   assert.match(readme, /Settings warn inline before a slow-model batch cap/);
   assert.match(readme, /estimated remaining time/);
+  assert.match(readme, /lightweight once-per-second clock/);
   assert.match(readme, /Batches wake immediately while a Chrome alarm remains as fallback/);
   assert.match(readme, /Complete mode checks up to 8 links at a time/);
   assert.doesNotMatch(readme, /unless you start an organize run/);
@@ -1590,6 +1601,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /保存前直接显示权限影响/);
   assert.match(readmeZh, /慢模型批量被压低前先提示/);
   assert.match(readmeZh, /预计剩余时间/);
+  assert.match(readmeZh, /每秒轻量刷新/);
   assert.match(readmeZh, /完整模式每次最多并发检测 8 条链接/);
   assert.match(readmeZh, /恢复前会先创建新的本地快照/);
 
@@ -1609,6 +1621,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings automation now uses a direct Silent organize switch/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
   assert.match(releaseNotes, /Popup progress now estimates remaining time/);
+  assert.match(releaseNotes, /without reloading the full popup state every second/);
   assert.match(releaseNotes, /Added `npm run render:store-assets`/);
   assert.match(releaseNotes, /playwright-core/);
   assert.match(releaseNotes, /without downloading a browser/);
