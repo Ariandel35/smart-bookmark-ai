@@ -852,6 +852,10 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /staleStatusFastAction/);
   assert.match(i18nSource, /staleStatusCancelAction/);
   assert.match(i18nSource, /detailPanelAriaLabel/);
+  assert.match(i18nSource, /notStartedMessage: "No preview has been generated yet\."/);
+  assert.match(i18nSource, /notStartedMessage: "尚未生成预览。"/);
+  assert.doesNotMatch(i18nSource, /No organize task has started yet/);
+  assert.doesNotMatch(i18nSource, /尚未开始整理/);
   assert.match(i18nSource, /managedFoldersLoadFailedTitle/);
   assert.match(i18nSource, /managedFoldersLoadFailedDesc/);
   assert.match(i18nSource, /keepBookmarkAria/);
@@ -1539,6 +1543,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /collapses AI endpoint fields by default in Fast mode/);
   assert.match(changelog, /API Key field now has an explicit show\/hide toggle/);
   assert.match(changelog, /neutral Provider\/Connection wording/);
+  assert.match(changelog, /no preview has been generated yet/);
   assert.match(changelog, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(changelog, /Settings automation now uses a direct Silent organize switch/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
@@ -1713,6 +1718,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /keeps AI connection fields collapsed by default/);
   assert.match(releaseNotes, /offers a show\/hide toggle/);
   assert.match(releaseNotes, /neutral Connection and Provider labels/);
+  assert.match(releaseNotes, /no preview has been generated yet/);
   assert.match(releaseNotes, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(releaseNotes, /Settings automation now uses a direct Silent organize switch/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);

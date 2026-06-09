@@ -330,7 +330,7 @@ Hard rules:
       managedFoldersLoadFailedTitle: "Could not load current folder summary",
       managedFoldersLoadFailedDesc:
         "The saved organize result is still preserved, but the popup could not read the folder list right now. Reopen the popup or refresh Chrome bookmarks and try again.",
-      notStartedMessage: "No organize task has started yet.",
+      notStartedMessage: "No preview has been generated yet.",
       untitledBookmark: "(Untitled bookmark)",
       noReason: "No details yet.",
       noSuggestion: "No extra suggestion.",
@@ -653,7 +653,7 @@ Hard rules:
       managedFoldersLoadFailedTitle: "无法读取当前文件夹摘要",
       managedFoldersLoadFailedDesc:
         "已保存的整理结果仍会保留，但弹窗暂时无法读取文件夹列表。请重开弹窗，或刷新 Chrome 书签后再试。",
-      notStartedMessage: "尚未开始整理。",
+      notStartedMessage: "尚未生成预览。",
       untitledBookmark: "(无标题书签)",
       noReason: "暂无说明。",
       noSuggestion: "暂无额外建议。",

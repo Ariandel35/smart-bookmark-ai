@@ -19,6 +19,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 快速模式下设置页会默认收起 AI 连接字段，只保留服务商选择；切到平衡或完整模式时会自动展开模型、Base URL、API Key 和授权检测
 - 设置页 API Key 默认继续隐藏，但现在提供显示/隐藏切换，便于确认粘贴内容是否正确
 - 设置页连接区改用更中性的“连接 / 服务商”措辞，避免快速模式看起来像必须先配置 API
+- 弹窗空状态改为提示“尚未生成预览”，让首屏继续围绕先预览再应用的流程
 - 设置页整理规则中的速度模式改为和弹窗一致的快速/平衡/完整三段控件，不再藏在下拉框里
 - 设置页自动整理改为直接的“静默整理”开关，不再让用户在 true/false 下拉框里选择
 - 自动整理间隔会在静默整理开关打开后才启用，关闭状态下不会用无关时间设置阻断保存
@@ -106,6 +107,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - In Fast mode, settings now keeps AI connection fields collapsed by default and automatically opens model, Base URL, API key, and access checks for Balanced or Complete mode
 - Settings keeps API keys hidden by default but now offers a show/hide toggle so pasted keys can be checked intentionally
 - Settings now uses neutral Connection and Provider labels so Fast mode no longer looks like mandatory API setup
+- Popup empty-state copy now says no preview has been generated yet, keeping the first screen aligned with the preview-first workflow
 - Settings organization rules now use the same Fast/Balanced/Complete segmented control as the popup instead of hiding speed mode in a dropdown
 - Settings automation now uses a direct Silent organize switch instead of asking users to choose true or false from a dropdown
 - The automation interval stays disabled until Silent organize is turned on, so inactive timing settings no longer block saves
