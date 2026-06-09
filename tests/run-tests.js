@@ -555,7 +555,7 @@ function testSpeedModeSurface() {
   assert.match(storeListing, /Complete mode/);
 
   const privacyPolicy = fs.readFileSync(path.join(ROOT_DIR, "PRIVACY.md"), "utf8");
-  assert.match(privacyPolicy, /Last updated: 2026-05-31/);
+  assert.match(privacyPolicy, /Last updated: 2026-06-09/);
   assert.match(privacyPolicy, /when Balanced\/Complete preview or enabled auto organize/);
   assert.match(privacyPolicy, /Applying a saved preview plan rebuilds locally and does not call the model again/);
   assert.match(privacyPolicy, /Fast mode skips dead-link checks, the separate taxonomy-planning model request, and model classification/);
@@ -1777,6 +1777,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Release tests now verify README local links and images resolve to existing files or directories/);
   assert.match(changelog, /Release tests now lock new-install and reset defaults to OpenAI, Fast mode, and Silent organize off/);
   assert.match(changelog, /Manifest now declares the Marko GitHub homepage/);
+  assert.match(changelog, /Privacy policies now use the 2026-06-09 release date/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
   assert.match(changelog, /Popup progress now estimates remaining time/);
   assert.match(changelog, /warns when the background status has not changed for 45 seconds/);
@@ -1965,6 +1966,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Release tests now verify README local links and images resolve to existing files or directories/);
   assert.match(releaseNotes, /new installs and resets default to the OpenAI provider, Fast mode, and Silent organize off/);
   assert.match(releaseNotes, /manifest now declares the Marko GitHub homepage/);
+  assert.match(releaseNotes, /privacy policies now use the 2026-06-09 release date/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
   assert.match(releaseNotes, /Popup progress now estimates remaining time/);
   assert.match(releaseNotes, /warns when the background status has not changed for 45 seconds/);
@@ -2349,7 +2351,7 @@ function testReleaseMaterialsCurrent() {
     path.join(ROOT_DIR, "webstore/PRIVACY_POLICY.md"),
     "utf8"
   );
-  assert.match(webstorePrivacyPolicy, /最后更新：2026-05-31/);
+  assert.match(webstorePrivacyPolicy, /最后更新：2026-06-09/);
   assert.match(webstorePrivacyPolicy, /模型服务商、Base URL、模型名/);
   assert.match(webstorePrivacyPolicy, /较快服务商可能会在分类前额外生成全局目录方案/);
   assert.match(webstorePrivacyPolicy, /应用已保存的预览方案会直接本地重建，不会再次请求模型/);

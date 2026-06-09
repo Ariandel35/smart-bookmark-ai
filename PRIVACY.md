@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Last updated: 2026-05-31
+Last updated: 2026-06-09
 
 Marko only processes data needed to organize bookmarks.
 

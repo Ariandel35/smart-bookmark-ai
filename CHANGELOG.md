@@ -31,6 +31,7 @@
 - Web Store privacy policy now omits internal publishing instructions, and the release verifier blocks them from returning
 - Release tests now lock new-install and reset defaults to OpenAI, Fast mode, and Silent organize off so first use cannot regress to a slow or higher-permission path
 - Manifest now declares the Marko GitHub homepage so installed-extension metadata points to the same public support entry as the store materials
+- Privacy policies now use the 2026-06-09 release date so repository and Web Store disclosures stay aligned with the current 3.0 package
 - Settings automation keeps the interval field disabled until Silent organize is turned on, so inactive timing settings no longer distract or block saves
 - Popup progress now estimates remaining time after the first completed work segment, warns when the background status has not changed for 45 seconds, shows an inline wait-or-cancel suggestion with a direct cancel action in the detail panel, and refreshes the elapsed/remaining clock locally without reloading the full popup state every second
 - Stale popup progress now offers a one-click stop-and-use-Fast action, so users do not need to cancel, switch modes, and retry manually when a slow model stalls

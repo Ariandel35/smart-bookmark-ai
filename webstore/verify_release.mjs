@@ -233,7 +233,7 @@ function verifyStoreTextMaterials() {
   assertTextIncludesAll(
     privacyPolicy,
     [
-      "最后更新：2026-05-31",
+      "最后更新：2026-06-09",
       "模型服务商、Base URL、模型名",
       "应用已保存的预览方案会直接本地重建，不会再次请求模型",
       "恢复旧备份前也会先为当前书签状态创建本地快照",
