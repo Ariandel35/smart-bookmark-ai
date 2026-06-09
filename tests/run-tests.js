@@ -1111,8 +1111,12 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /class="toggle"[\s\S]*for="autoOrganizeEnabled"/);
   assert.match(optionsHtml, /id="autoOrganizeEnabled"[\s\S]*type="checkbox"[\s\S]*role="switch"[\s\S]*aria-describedby="autoOrganizeAccessHint"[\s\S]*disabled/);
   assert.match(optionsHtml, /class="toggle__track"[\s\S]*class="toggle__thumb"/);
+  assert.match(optionsHtml, /data-i18n="labelAutoOrganizeEnabled">Silent organize<\/span>/);
   assert.match(optionsHtml, /id="autoOrganizeState"[\s\S]*data-i18n="autoOrganizeOff"/);
   assert.doesNotMatch(optionsHtml, /<select id="autoOrganizeEnabled"/);
+  assert.doesNotMatch(optionsHtml, /Auto Silent Organize/);
+  assert.match(optionsHtml, /data-i18n="labelAutoOrganizeInterval">Interval \(hours\)<\/label>/);
+  assert.doesNotMatch(optionsHtml, /Auto Organize Interval/);
   assert.match(optionsHtml, /id="autoOrganizeIntervalHours"[\s\S]*aria-describedby="autoOrganizeIntervalHint"/);
   assert.match(optionsHtml, /id="autoOrganizeIntervalHint"[\s\S]*data-i18n="hintAutoOrganizeInterval"/);
   assert.match(optionsHtml, /id="whitelistSelectionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
@@ -1565,6 +1569,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Popup setup primary action now says Open Settings/);
   assert.match(changelog, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(changelog, /Settings automation now uses a direct Silent organize switch/);
+  assert.match(changelog, /Settings automation fallback labels now match the simplified Silent organize wording/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
   assert.match(changelog, /Popup progress now estimates remaining time/);
   assert.match(changelog, /warns when the background status has not changed for 45 seconds/);
@@ -1744,6 +1749,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Popup setup primary action now says Open Settings/);
   assert.match(releaseNotes, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(releaseNotes, /Settings automation now uses a direct Silent organize switch/);
+  assert.match(releaseNotes, /Settings automation fallback labels now match the simplified Silent organize wording/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
   assert.match(releaseNotes, /Popup progress now estimates remaining time/);
   assert.match(releaseNotes, /warns when the background status has not changed for 45 seconds/);
