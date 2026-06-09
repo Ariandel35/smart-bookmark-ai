@@ -35,6 +35,7 @@
 - Privacy page now shows the 2026-06-09 update date in English and Chinese, and the UI audit covers the privacy page at narrow width
 - Runtime helper globals now use Marko names while storage keys remain unchanged for upgrade compatibility
 - Security and support docs now use Marko's GitHub vulnerability reporting path, and the release verifier blocks placeholder security contacts
+- README now exposes the security reporting link in both language entrypoints and support links
 - Settings automation keeps the interval field disabled until Silent organize is turned on, so inactive timing settings no longer distract or block saves
 - Popup progress now estimates remaining time after the first completed work segment, warns when the background status has not changed for 45 seconds, shows an inline wait-or-cancel suggestion with a direct cancel action in the detail panel, and refreshes the elapsed/remaining clock locally without reloading the full popup state every second
 - Stale popup progress now offers a one-click stop-and-use-Fast action, so users do not need to cancel, switch modes, and retry manually when a slow model stalls

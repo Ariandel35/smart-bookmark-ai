@@ -12,7 +12,8 @@
   <a href="README.md">English</a> ·
   <a href="README.zh-CN.md">简体中文</a> ·
   <a href="https://github.com/Ariandel35/marko/issues">问题反馈</a> ·
-  <a href="PRIVACY.md">隐私说明</a>
+  <a href="PRIVACY.md">隐私说明</a> ·
+  <a href="SECURITY.md">安全报告</a>
 </p>
 
 <p align="center">
@@ -207,3 +208,4 @@ npm run package:webstore
 - 仓库主页：[github.com/Ariandel35/marko](https://github.com/Ariandel35/marko)
 - 问题反馈：[github.com/Ariandel35/marko/issues](https://github.com/Ariandel35/marko/issues)
 - 隐私政策：[github.com/Ariandel35/marko/blob/main/PRIVACY.md](https://github.com/Ariandel35/marko/blob/main/PRIVACY.md)
+- 安全报告：[github.com/Ariandel35/marko/security/advisories/new](https://github.com/Ariandel35/marko/security/advisories/new)

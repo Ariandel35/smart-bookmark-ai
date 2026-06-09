@@ -12,7 +12,8 @@
   <a href="README.md">English</a> ·
   <a href="README.zh-CN.md">简体中文</a> ·
   <a href="https://github.com/Ariandel35/marko/issues">Issues</a> ·
-  <a href="PRIVACY.md">Privacy</a>
+  <a href="PRIVACY.md">Privacy</a> ·
+  <a href="SECURITY.md">Security</a>
 </p>
 
 <p align="center">
@@ -207,3 +208,4 @@ Read the full policy in [PRIVACY.md](PRIVACY.md).
 - Homepage: [github.com/Ariandel35/marko](https://github.com/Ariandel35/marko)
 - Support: [github.com/Ariandel35/marko/issues](https://github.com/Ariandel35/marko/issues)
 - Privacy policy: [github.com/Ariandel35/marko/blob/main/PRIVACY.md](https://github.com/Ariandel35/marko/blob/main/PRIVACY.md)
+- Security reporting: [github.com/Ariandel35/marko/security/advisories/new](https://github.com/Ariandel35/marko/security/advisories/new)

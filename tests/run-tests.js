@@ -1802,6 +1802,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Privacy policies now use the 2026-06-09 release date/);
   assert.match(changelog, /Privacy page now shows the 2026-06-09 update date/);
   assert.match(changelog, /Runtime helper globals now use Marko names/);
+  assert.match(changelog, /Security and support docs now use Marko's GitHub vulnerability reporting path/);
+  assert.match(changelog, /README now exposes the security reporting link/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
   assert.match(changelog, /Popup progress now estimates remaining time/);
   assert.match(changelog, /warns when the background status has not changed for 45 seconds/);
@@ -1911,6 +1913,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /Complete mode checks up to 8 links at a time/);
   assert.doesNotMatch(readme, /unless you start an organize run/);
   assert.match(readme, /restoring creates a fresh local snapshot first/);
+  assert.match(readme, /<a href="SECURITY\.md">Security<\/a>/);
+  assert.match(readme, /Security reporting: \[github\.com\/Ariandel35\/marko\/security\/advisories\/new\]/);
   assert.match(readmeZh, /DeepSeek 兼容接口/);
   assert.match(readmeZh, /npm test/);
   assert.match(readmeZh, /npm run audit:ui/);
@@ -1960,6 +1964,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /每秒轻量刷新/);
   assert.match(readmeZh, /完整模式每次最多并发检测 8 条链接/);
   assert.match(readmeZh, /恢复前会先创建新的本地快照/);
+  assert.match(readmeZh, /<a href="SECURITY\.md">安全报告<\/a>/);
+  assert.match(readmeZh, /安全报告：\[github\.com\/Ariandel35\/marko\/security\/advisories\/new\]/);
 
   const releaseNotes = fs.readFileSync(
     path.join(ROOT_DIR, "webstore/RELEASE_NOTES_3.0.0.md"),
@@ -1993,6 +1999,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /privacy policies now use the 2026-06-09 release date/);
   assert.match(releaseNotes, /Privacy page now shows the 2026-06-09 update date/);
   assert.match(releaseNotes, /runtime helper globals now use Marko names/);
+  assert.match(releaseNotes, /Security and support docs now use Marko's GitHub vulnerability reporting path/);
+  assert.match(releaseNotes, /README now exposes the security reporting link/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
   assert.match(releaseNotes, /Popup progress now estimates remaining time/);
   assert.match(releaseNotes, /warns when the background status has not changed for 45 seconds/);
