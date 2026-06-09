@@ -27,6 +27,7 @@
 - Settings fallback labels, hints, and placeholders now match the current English i18n copy before translations load
 - Release tests now fail when HTML fallback copy drifts from the current English i18n text
 - README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label
+- Release tests now verify README local links and images resolve to existing files or directories
 - Web Store privacy policy now omits internal publishing instructions, and the release verifier blocks them from returning
 - Settings automation keeps the interval field disabled until Silent organize is turned on, so inactive timing settings no longer distract or block saves
 - Popup progress now estimates remaining time after the first completed work segment, warns when the background status has not changed for 45 seconds, shows an inline wait-or-cancel suggestion with a direct cancel action in the detail panel, and refreshes the elapsed/remaining clock locally without reloading the full popup state every second

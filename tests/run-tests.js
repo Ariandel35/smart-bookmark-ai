@@ -226,6 +226,27 @@ function normalizeFallbackText(value) {
     .trim();
 }
 
+function collectLocalMarkdownReferences(markdownFile) {
+  const source = fs.readFileSync(path.join(ROOT_DIR, markdownFile), "utf8");
+  const refs = new Set();
+  const collect = (value) => {
+    const target = String(value || "").split("#")[0].split("?")[0];
+    if (!target || /^(?:https?:|mailto:|chrome:|data:)/i.test(target)) {
+      return;
+    }
+    refs.add(target);
+  };
+
+  for (const match of source.matchAll(/!?\[[^\]]*]\(([^)]+)\)/g)) {
+    collect(match[1]);
+  }
+  for (const match of source.matchAll(/<(?:a|img)\b[^>]*(?:href|src)="([^"]+)"/g)) {
+    collect(match[1]);
+  }
+
+  return Array.from(refs).sort();
+}
+
 function testHtmlRelationshipIntegrity() {
   for (const file of ["popup.html", "options.html", "privacy.html"]) {
     const source = fs.readFileSync(path.join(ROOT_DIR, file), "utf8");
@@ -352,6 +373,23 @@ function testStaticExtensionAssets() {
       if (!/^https?:/.test(ref)) {
         assert.equal(fs.existsSync(path.join(ROOT_DIR, ref)), true, `${file} references missing ${ref}`);
       }
+    }
+  }
+}
+
+function testReadmeLocalReferences() {
+  for (const markdownFile of ["README.md", "README.zh-CN.md"]) {
+    const markdownDir = path.dirname(path.join(ROOT_DIR, markdownFile));
+    const refs = collectLocalMarkdownReferences(markdownFile);
+    assert.ok(refs.length > 0, `${markdownFile} should contain local links or images`);
+
+    for (const ref of refs) {
+      const targetPath = path.resolve(markdownDir, decodeURIComponent(ref));
+      assert.equal(
+        fs.existsSync(targetPath),
+        true,
+        `${markdownFile} references missing local file or directory: ${ref}`
+      );
     }
   }
 }
@@ -1623,6 +1661,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings fallback labels, hints, and placeholders now match the current English i18n copy before translations load/);
   assert.match(changelog, /Release tests now fail when HTML fallback copy drifts from the current English i18n text/);
   assert.match(changelog, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
+  assert.match(changelog, /Release tests now verify README local links and images resolve to existing files or directories/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
   assert.match(changelog, /Popup progress now estimates remaining time/);
   assert.match(changelog, /warns when the background status has not changed for 45 seconds/);
@@ -1808,6 +1847,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings fallback labels, hints, and placeholders now match the current English i18n copy before translations load/);
   assert.match(releaseNotes, /Release tests now fail when HTML fallback copy drifts from the current English i18n text/);
   assert.match(releaseNotes, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
+  assert.match(releaseNotes, /Release tests now verify README local links and images resolve to existing files or directories/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
   assert.match(releaseNotes, /Popup progress now estimates remaining time/);
   assert.match(releaseNotes, /warns when the background status has not changed for 45 seconds/);
@@ -2356,6 +2396,7 @@ function main() {
   testCacheUtils();
   testHtmlRelationshipIntegrity();
   testStaticExtensionAssets();
+  testReadmeLocalReferences();
   testExtensionPackageFileList();
   testSpeedModeSurface();
   testPreviewApplySurface();
