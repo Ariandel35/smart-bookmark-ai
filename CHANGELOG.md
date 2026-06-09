@@ -16,6 +16,7 @@
 - Settings API Key field now has an explicit show/hide toggle so users can verify pasted keys without exposing them by default
 - Settings connection labels now use neutral Provider/Connection wording so Fast mode no longer looks like a required API setup flow
 - Popup empty-state copy now says no preview has been generated yet, keeping the first screen aligned with the preview-first workflow
+- Chinese popup title now keeps the Marko brand visible instead of replacing it with a generic bookmark-organizing label
 - Settings organization rules now use the same Fast/Balanced/Complete segmented control as the popup instead of a compact dropdown
 - Settings automation now uses a direct Silent organize switch instead of a true/false dropdown
 - Settings automation keeps the interval field disabled until Silent organize is turned on, so inactive timing settings no longer distract or block saves

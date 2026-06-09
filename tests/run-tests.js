@@ -843,6 +843,8 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /popupSpeedModeSavedStatus/);
   assert.match(i18nSource, /popupRefreshFailedStatus/);
   assert.match(i18nSource, /popupOpenSettingsFailed/);
+  assert.match(i18nSource, /popupMainTitle: "Marko"/);
+  assert.doesNotMatch(i18nSource, /popupMainTitle: "书签整理"/);
   assert.match(i18nSource, /logModelTimeoutFallback/);
   assert.match(i18nSource, /elapsedMeta/);
   assert.match(i18nSource, /remainingMeta/);
@@ -1544,6 +1546,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /API Key field now has an explicit show\/hide toggle/);
   assert.match(changelog, /neutral Provider\/Connection wording/);
   assert.match(changelog, /no preview has been generated yet/);
+  assert.match(changelog, /Chinese popup title now keeps the Marko brand visible/);
   assert.match(changelog, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(changelog, /Settings automation now uses a direct Silent organize switch/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
@@ -1719,6 +1722,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /offers a show\/hide toggle/);
   assert.match(releaseNotes, /neutral Connection and Provider labels/);
   assert.match(releaseNotes, /no preview has been generated yet/);
+  assert.match(releaseNotes, /Chinese popup title now keeps the Marko brand visible/);
   assert.match(releaseNotes, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(releaseNotes, /Settings automation now uses a direct Silent organize switch/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);

@@ -463,7 +463,7 @@ Hard rules:
     },
     zh_CN: {
       popupPageTitle: "Marko",
-      popupMainTitle: "书签整理",
+      popupMainTitle: "Marko",
       popupSubtitle: "先预览 AI 书签整理方案，支持备份、重复清理和可选失效链接检测。",
       popupStepConnect: "1. 打开设置页并连接模型",
       popupStepPreview: "2. 先点预览查看整理方案",
