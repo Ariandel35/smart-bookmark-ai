@@ -458,6 +458,10 @@ function syncActionButtons() {
     button.disabled = popupActionInFlight || isRunning;
     button.setAttribute("aria-busy", String(popupActionInFlight));
   });
+  detailPanel.querySelectorAll("[data-stale-status-cancel-button]").forEach((button) => {
+    button.disabled = popupActionInFlight || !isRunning || isCancelling;
+    button.setAttribute("aria-busy", String(popupActionInFlight));
+  });
   setButtonLabel(optionsButton, t("optionsButton"));
   setButtonLabel(startButton, startLabel);
   setButtonLabel(backupButton, t("backupButton"));
@@ -1014,7 +1018,30 @@ function createStaleStatusNotice() {
   detail.className = "record-item__suggestion";
   detail.textContent = t("staleStatusDetail");
 
-  notice.append(title, detail);
+  const actions = document.createElement("div");
+  actions.className = "record-item__actions";
+
+  const staleCancelButton = document.createElement("button");
+  staleCancelButton.type = "button";
+  staleCancelButton.className = "button button--danger button--compact";
+  staleCancelButton.dataset.staleStatusCancelButton = "true";
+  staleCancelButton.setAttribute("aria-describedby", popupActionStatus.id);
+  setButtonLabel(staleCancelButton, t("staleStatusCancelAction"));
+  staleCancelButton.disabled = popupActionInFlight || Boolean(currentStatus?.cancelRequested);
+  staleCancelButton.addEventListener("click", () => {
+    if (popupActionInFlight || currentStatus?.cancelRequested) {
+      return;
+    }
+
+    staleCancelButton.disabled = true;
+    cancelJob().catch((error) => {
+      console.error("Failed to cancel stale task:", error);
+      renderPopupActionError(t("cancelJobFailed"));
+    });
+  });
+
+  actions.appendChild(staleCancelButton);
+  notice.append(title, detail, actions);
   return notice;
 }
 

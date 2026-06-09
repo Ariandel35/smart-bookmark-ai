@@ -740,6 +740,8 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /deleteButton\.dataset\.unprocessedActionButton = "delete"/);
   assert.match(popupSource, /detailPanel\.querySelectorAll\("\[data-unprocessed-action-button\]"\)/);
   assert.match(popupSource, /button\.disabled = popupActionInFlight \|\| isRunning/);
+  assert.match(popupSource, /detailPanel\.querySelectorAll\("\[data-stale-status-cancel-button\]"\)/);
+  assert.match(popupSource, /button\.disabled = popupActionInFlight \|\| !isRunning \|\| isCancelling/);
   assert.match(popupSource, /const lockEntryActions = \(\) => \{\n        keepButton\.disabled = true;\n        deleteButton\.disabled = true;/);
   assert.match(popupSource, /keepButton\.addEventListener\("click", \(\) => \{\n        if \(popupActionInFlight\) \{/);
   assert.match(popupSource, /deleteButton\.addEventListener\("click", \(\) => \{\n        if \(popupActionInFlight\) \{/);
@@ -789,6 +791,13 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /record-item record-item--notice/);
   assert.match(popupSource, /t\("staleStatusTitle"\)/);
   assert.match(popupSource, /t\("staleStatusDetail"\)/);
+  assert.match(popupSource, /staleCancelButton\.dataset\.staleStatusCancelButton = "true"/);
+  assert.match(popupSource, /staleCancelButton\.setAttribute\("aria-describedby", popupActionStatus\.id\)/);
+  assert.match(popupSource, /setButtonLabel\(staleCancelButton, t\("staleStatusCancelAction"\)\)/);
+  assert.match(popupSource, /staleCancelButton\.disabled = popupActionInFlight \|\| Boolean\(currentStatus\?\.cancelRequested\)/);
+  assert.match(popupSource, /staleCancelButton\.addEventListener\("click", \(\) => \{/);
+  assert.match(popupSource, /cancelJob\(\)\.catch\(\(error\) => \{/);
+  assert.match(popupSource, /Failed to cancel stale task/);
   assert.match(popupSource, /wrapper\.appendChild\(createStaleStatusNotice\(\)\)/);
   assert.match(popupSource, /progressTrack\.setAttribute\("aria-valuetext", `\$\{progress\}%, \$\{progressSummaryText\}, \$\{progressMetaText\}`\)/);
   assert.doesNotMatch(popupSource, /processedValue/);
@@ -823,6 +832,7 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /staleStatusMeta/);
   assert.match(i18nSource, /staleStatusTitle/);
   assert.match(i18nSource, /staleStatusDetail/);
+  assert.match(i18nSource, /staleStatusCancelAction/);
   assert.match(i18nSource, /detailPanelAriaLabel/);
   assert.match(i18nSource, /managedFoldersLoadFailedTitle/);
   assert.match(i18nSource, /managedFoldersLoadFailedDesc/);
@@ -1494,6 +1504,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Popup progress now estimates remaining time/);
   assert.match(changelog, /warns when the background status has not changed for 45 seconds/);
   assert.match(changelog, /inline wait-or-cancel suggestion/);
+  assert.match(changelog, /direct cancel action/);
   assert.match(changelog, /without reloading the full popup state every second/);
   assert.match(changelog, /Added `npm run render:store-assets`/);
   assert.match(changelog, /playwright-core/);
@@ -1580,7 +1591,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /Settings warn inline before a slow-model batch cap/);
   assert.match(readme, /estimated remaining time/);
   assert.match(readme, /If the background status has not changed for 45 seconds/);
-  assert.match(readme, /cancelling and retrying with Fast mode/);
+  assert.match(readme, /direct cancel action/);
+  assert.match(readme, /retrying with Fast mode/);
   assert.match(readme, /lightweight once-per-second clock/);
   assert.match(readme, /Batches wake immediately while a Chrome alarm remains as fallback/);
   assert.match(readme, /Complete mode checks up to 8 links at a time/);
@@ -1623,7 +1635,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /慢模型批量被压低前先提示/);
   assert.match(readmeZh, /预计剩余时间/);
   assert.match(readmeZh, /45 秒没有后台更新/);
-  assert.match(readmeZh, /取消后改用快速模式重试/);
+  assert.match(readmeZh, /直接取消操作/);
+  assert.match(readmeZh, /改用快速模式重试/);
   assert.match(readmeZh, /每秒轻量刷新/);
   assert.match(readmeZh, /完整模式每次最多并发检测 8 条链接/);
   assert.match(readmeZh, /恢复前会先创建新的本地快照/);
@@ -1646,6 +1659,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Popup progress now estimates remaining time/);
   assert.match(releaseNotes, /warns when the background status has not changed for 45 seconds/);
   assert.match(releaseNotes, /inline wait-or-cancel suggestion/);
+  assert.match(releaseNotes, /direct cancel action/);
   assert.match(releaseNotes, /without reloading the full popup state every second/);
   assert.match(releaseNotes, /Added `npm run render:store-assets`/);
   assert.match(releaseNotes, /playwright-core/);

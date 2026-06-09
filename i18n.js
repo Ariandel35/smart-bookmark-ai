@@ -312,6 +312,7 @@ Hard rules:
       staleStatusTitle: "Background update delayed",
       staleStatusDetail:
         "Marko may still be waiting on the model. Keep waiting if the provider is slow, or cancel and retry with Fast mode if this continues.",
+      staleStatusCancelAction: "Cancel task",
       updatedMeta: "Updated {time}",
       unnamedCategory: "Untitled category",
       rootCategoryTitle: "Root",
@@ -625,6 +626,7 @@ Hard rules:
       staleStatusTitle: "后台更新延迟",
       staleStatusDetail:
         "Marko 可能仍在等待模型。接口较慢时可以继续等待；如果持续无更新，可取消后改用快速模式重试。",
+      staleStatusCancelAction: "取消任务",
       updatedMeta: "最近更新 {time}",
       unnamedCategory: "未命名分类",
       rootCategoryTitle: "根目录",
