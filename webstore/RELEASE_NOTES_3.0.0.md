@@ -21,6 +21,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 设置页自动整理改为直接的“静默整理”开关，不再让用户在 true/false 下拉框里选择
 - 自动整理间隔会在静默整理开关打开后才启用，关闭状态下不会用无关时间设置阻断保存
 - 弹窗进度会在已有实际处理进度后估算预计剩余时间，45 秒没有后台更新时会在详情区提供直接取消操作，便于改用快速模式重试，并本地轻量刷新时间文本
+- 弹窗慢任务提示现在提供“一键停止并改用快速模式”，慢模型卡住时不需要再手动取消、切模式、重新开始
 - Chrome Web Store 宣传图改为更干净的网格产品布局，移除装饰光斑背景和负字距标题
 - 新增 `npm run render:store-assets`，使用 `playwright-core` 控制已安装的 Chrome 或 Chrome for Testing 重新生成发布截图，不会下载浏览器
 - 新增 `npm run install:e2e-browser` 和 Playwright 浏览器缓存发现逻辑，真实扩展 E2E 可自动使用已下载的 Chromium，不再只能依赖固定应用路径
@@ -37,6 +38,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 自动化 Chrome UI 审计和真实扩展测试默认 headless 后台运行，只有调试时才需要设置 `MARKO_SHOW_BROWSER=1` 打开可见窗口
 - 新增 `npm run e2e:extension` 和 `npm run verify:release:full`，可用 Chrome for Testing 或 Chromium 运行真实解压扩展冒烟测试
 - 真实扩展冒烟测试现在会点击真实弹窗“预览整理 -> 应用方案 -> 备份并应用”路径，再验证实际书签树
+- 真实扩展冒烟测试现在会点击慢任务“一键停止并改用快速模式”路径，并验证已请求取消且快速模式已保存
 - 真实扩展冒烟测试现在会点击真实弹窗未处理项删除按钮，并验证弹窗状态中的未处理计数清零
 - 真实扩展冒烟测试现在也会点击真实设置页备份创建、页面内恢复确认和页面内删除确认，并校验实际书签树
 - 真实扩展冒烟测试会写入临时书签，并验证手动备份、快速预览、应用方案、重复清理、备份记录和截图
@@ -104,6 +106,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Settings automation now uses a direct Silent organize switch instead of asking users to choose true or false from a dropdown
 - The automation interval stays disabled until Silent organize is turned on, so inactive timing settings no longer block saves
 - Popup progress now estimates remaining time after the first completed work segment, warns when the background status has not changed for 45 seconds, shows an inline wait-or-cancel suggestion with a direct cancel action in the detail panel, and refreshes the elapsed/remaining clock locally without reloading the full popup state every second
+- Stale popup progress now offers a one-click stop-and-use-Fast action, so users do not need to cancel, switch modes, and start over manually when a slow model stalls
 - Chrome Web Store promo images now use a cleaner grid-backed product layout without decorative glow backgrounds or negative title spacing
 - Added `npm run render:store-assets` with `playwright-core` so release screenshots can be regenerated against an installed Chrome or Chrome for Testing without downloading a browser
 - Added `npm run install:e2e-browser` and Playwright browser-cache discovery so real extension E2E can use a downloaded Chromium instead of requiring a fixed app path
@@ -120,6 +123,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Automated Chrome UI and real-extension checks now run headless by default, with `MARKO_SHOW_BROWSER=1` reserved for visible debugging
 - Added `npm run e2e:extension` and `npm run verify:release:full` for a real unpacked-extension smoke test with Chrome for Testing or Chromium
 - The real extension smoke test now clicks through the real popup Preview -> Apply Plan -> Backup and Apply path before checking the live bookmark tree
+- The real extension smoke test now clicks stale progress stop-and-use-Fast recovery and verifies cancellation is requested while Fast mode is saved
 - The real extension smoke test now clicks the real popup unprocessed-item Delete button and verifies the warning disappears from the popup state
 - The real extension smoke test now also clicks through the real settings Backup UI create, inline restore confirmation, and inline delete confirmation flows against the live bookmark tree
 - The real extension smoke test seeds temporary bookmarks and verifies manual backup, Fast preview, Apply Plan, duplicate cleanup, backup records, and screenshots

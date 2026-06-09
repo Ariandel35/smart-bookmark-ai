@@ -1311,6 +1311,191 @@ function formatPopupUiFlowFailures(result) {
   return failures;
 }
 
+function setupStaleFastRecoveryFlowExpression() {
+  return `(() => {
+    const staleConfig = {
+      provider: "deepseek",
+      baseUrl: "https://api.deepseek.com",
+      apiKey: "sk-marko-e2e",
+      model: "deepseek-chat",
+      batchSize: 9,
+      linkCheckMode: "balanced",
+      autoOrganizeEnabled: false,
+      autoOrganizeIntervalHours: 24,
+      whitelistDomains: "",
+      protectedRootFolders: "",
+      domainFolderRules: "",
+      customPrompt: "E2E stale Fast recovery flow."
+    };
+    const now = Date.now();
+    const staleStatus = {
+      phase: "running",
+      total: 48,
+      processed: 12,
+      moved: 10,
+      deleted: 0,
+      warningCount: 2,
+      currentBatch: 4,
+      totalBatches: 16,
+      batchSize: 9,
+      startedAt: new Date(now - 120000).toISOString(),
+      updatedAt: new Date(now - 70000).toISOString(),
+      provider: "DeepSeek",
+      model: "deepseek-chat",
+      message: "Waiting for a slow model response.",
+      detail: "This stale E2E status should expose the stop-and-use-Fast action.",
+      warnings: []
+    };
+    return chrome.storage.local.set({
+      smartBookmarkConfig: staleConfig,
+      smartBookmarkActiveJob: {
+        phase: "running",
+        cancelRequested: false,
+        config: staleConfig
+      },
+      smartBookmarkJobStatus: staleStatus,
+      smartBookmarkPreviewPlan: {
+        version: 1,
+        configSignature: "stale-e2e",
+        sourceBookmarkSignature: "stale-e2e",
+        plannedBookmarks: []
+      }
+    });
+  })()`;
+}
+
+function staleFastRecoveryFlowExpression() {
+  return `(async () => {
+    const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+    const waitFor = async (predicate, label) => {
+      for (let attempt = 0; attempt < 90; attempt += 1) {
+        const value = await predicate();
+        if (value) {
+          return value;
+        }
+        await wait(150);
+      }
+      throw new Error("Timed out waiting for " + label);
+    };
+    const clickButton = (button, label) => {
+      if (!button) {
+        throw new Error(label + " button was not found.");
+      }
+      if (button.disabled) {
+        throw new Error(label + " button is disabled.");
+      }
+      button.click();
+    };
+
+    const fastButton = await waitFor(() => {
+      const button = document.querySelector("[data-stale-status-fast-button]");
+      return button && !button.disabled ? button : null;
+    }, "stale Fast recovery button");
+    const cancelButton = document.querySelector("[data-stale-status-cancel-button]");
+    const buttonText = (fastButton.textContent || fastButton.getAttribute("aria-label") || "").trim();
+    const cancelButtonText = (cancelButton?.textContent || cancelButton?.getAttribute("aria-label") || "").trim();
+    const noticeText = fastButton.closest(".record-item")?.innerText.trim() || "";
+    clickButton(fastButton, "Stale Fast recovery");
+
+    await wait(3000);
+    const stored = await chrome.storage.local.get([
+      "smartBookmarkConfig",
+      "smartBookmarkActiveJob",
+      "smartBookmarkJobStatus"
+    ]);
+    const statusText = (document.getElementById("popupActionStatus")?.textContent || "").trim();
+    const result = {
+      config: stored.smartBookmarkConfig || {},
+      activeJob: stored.smartBookmarkActiveJob || {},
+      status: stored.smartBookmarkJobStatus || {},
+      statusText
+    };
+
+    return {
+      buttonText,
+      cancelButtonText,
+      noticeText,
+      savedMode: result.config.linkCheckMode,
+      activeJobCancelRequested: result.activeJob.cancelRequested,
+      statusCancelRequested: result.status.cancelRequested,
+      statusPhase: result.status.phase,
+      actionStatusText: result.statusText,
+      visibleText: document.body.innerText.trim().slice(0, 500)
+    };
+  })()`;
+}
+
+async function runStaleFastRecoveryFlow(port, extensionId) {
+  const target = await createTarget(port);
+  const client = new CdpClient(target.webSocketDebuggerUrl);
+  try {
+    await client.send("Runtime.enable");
+    await client.send("Page.enable");
+    await client.send("Emulation.setDeviceMetricsOverride", {
+      width: 320,
+      height: 800,
+      deviceScaleFactor: 1,
+      mobile: false
+    });
+    await client.send("Page.navigate", { url: `chrome-extension://${extensionId}/popup.html` });
+    await sleep(1500);
+    await evaluate(client, setupStaleFastRecoveryFlowExpression());
+    await client.send("Page.reload");
+    await sleep(1500);
+    const result = await evaluate(client, staleFastRecoveryFlowExpression());
+    const screenshotPath = await saveOptionalScreenshot(client, "popup-stale-fast-recovery-flow-320.png");
+    const exceptions = client.events
+      .filter((event) => event.method === "Runtime.exceptionThrown")
+      .map((event) => event.params?.exceptionDetails?.exception?.description || "Runtime exception");
+    const consoleErrors = client.events
+      .filter((event) => event.method === "Runtime.consoleAPICalled" && event.params?.type === "error")
+      .map((event) =>
+        (event.params?.args || [])
+          .map((arg) => arg.value || arg.description || "")
+          .filter(Boolean)
+          .join(" ")
+      );
+    return {
+      ...result,
+      screenshotPath,
+      exceptions,
+      consoleErrors
+    };
+  } finally {
+    client.close();
+    await closeTarget(port, target.id);
+  }
+}
+
+function formatStaleFastRecoveryFlowFailures(result) {
+  const failures = [];
+  if (!/Fast|快速/.test(result.buttonText || "")) {
+    failures.push(`stale Fast recovery button did not mention Fast mode: ${result.buttonText || "(missing)"}`);
+  }
+  if (!/Cancel|取消/.test(result.cancelButtonText || "")) {
+    failures.push(`stale notice did not keep a separate cancel button: ${result.cancelButtonText || "(missing)"}`);
+  }
+  if (!/slow|模型|Fast|快速/.test(result.noticeText || "")) {
+    failures.push("stale Fast recovery notice did not explain the slow-model fallback path");
+  }
+  if (result.savedMode !== "fast") {
+    failures.push(`stale Fast recovery did not save Fast mode: ${result.savedMode || "(missing)"}`);
+  }
+  if (result.statusCancelRequested !== true) {
+    failures.push("stale Fast recovery did not record a cancellation request in status storage");
+  }
+  if (!/Fast|快速/.test(result.actionStatusText || "")) {
+    failures.push(`stale Fast recovery did not show Fast-mode action feedback: ${result.actionStatusText || "(missing)"}`);
+  }
+  if (result.exceptions?.length) {
+    failures.push(`stale Fast recovery runtime exceptions: ${result.exceptions.join(" | ")}`);
+  }
+  if (result.consoleErrors?.length) {
+    failures.push(`stale Fast recovery console errors: ${result.consoleErrors.join(" | ")}`);
+  }
+  return failures;
+}
+
 function popupUnprocessedUiFlowExpression() {
   return `(async () => {
     const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -2204,6 +2389,7 @@ async function main() {
       const extensionId = await waitForExtensionId(browserClient, profileDir);
       const backgroundTarget = await waitForBackgroundTarget(browserClient, extensionId);
       const popupUiFlow = await runPopupUiFlow(port, extensionId);
+      const staleFastRecoveryFlow = await runStaleFastRecoveryFlow(port, extensionId);
       const popupUnprocessedUiFlow = await runPopupUnprocessedUiFlow(port, extensionId);
       const optionsBackupUiFlow = await runOptionsBackupUiFlow(port, extensionId);
       const coreFlow = await runCoreFlow(port, extensionId);
@@ -2233,6 +2419,9 @@ async function main() {
       }
       const failures = [
         ...formatPopupUiFlowFailures(popupUiFlow).map((failure) => `popup UI flow: ${failure}`),
+        ...formatStaleFastRecoveryFlowFailures(staleFastRecoveryFlow).map(
+          (failure) => `stale Fast recovery flow: ${failure}`
+        ),
         ...formatPopupUnprocessedUiFlowFailures(popupUnprocessedUiFlow).map(
           (failure) => `popup unprocessed UI flow: ${failure}`
         ),
@@ -2261,6 +2450,18 @@ async function main() {
       );
       if (popupUiFlow.screenshotPath) {
         console.log(`OK screenshot ${popupUiFlow.screenshotPath}`);
+      }
+      console.log(
+        [
+          "OK stale Fast recovery flow",
+          `button=${staleFastRecoveryFlow.buttonText || ""}`,
+          `mode=${staleFastRecoveryFlow.savedMode || ""}`,
+          `cancel=${Boolean(staleFastRecoveryFlow.statusCancelRequested)}`,
+          `feedback=${staleFastRecoveryFlow.actionStatusText || ""}`
+        ].join(" | ")
+      );
+      if (staleFastRecoveryFlow.screenshotPath) {
+        console.log(`OK screenshot ${staleFastRecoveryFlow.screenshotPath}`);
       }
       console.log(
         [

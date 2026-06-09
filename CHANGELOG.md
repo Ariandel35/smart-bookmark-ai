@@ -17,6 +17,7 @@
 - Settings automation now uses a direct Silent organize switch instead of a true/false dropdown
 - Settings automation keeps the interval field disabled until Silent organize is turned on, so inactive timing settings no longer distract or block saves
 - Popup progress now estimates remaining time after the first completed work segment, warns when the background status has not changed for 45 seconds, shows an inline wait-or-cancel suggestion with a direct cancel action in the detail panel, and refreshes the elapsed/remaining clock locally without reloading the full popup state every second
+- Stale popup progress now offers a one-click stop-and-use-Fast action, so users do not need to cancel, switch modes, and retry manually when a slow model stalls
 - Chrome Web Store promo images now use a cleaner grid-backed product layout without decorative glow backgrounds or negative title spacing
 - Added `npm run render:store-assets` with `playwright-core` so release screenshots can be regenerated against an installed Chrome or Chrome for Testing without downloading a browser
 - Added `npm run install:e2e-browser` and Playwright browser-cache discovery so real extension E2E can find a downloaded Chromium instead of requiring a fixed app path
@@ -32,6 +33,7 @@
 - Automated Chrome UI and extension checks now run headless by default, with `MARKO_SHOW_BROWSER=1` available only for visible debugging
 - Added `npm run e2e:extension` and `npm run verify:release:full` for a real unpacked-extension smoke test with Chrome for Testing or Chromium
 - The real extension smoke test now clicks through the real popup Preview -> Apply Plan -> Backup and Apply path before checking the live bookmark tree
+- The real extension smoke test now clicks stale progress stop-and-use-Fast recovery and verifies cancellation is requested while Fast mode is saved
 - The real extension smoke test now clicks the real popup unprocessed-item Delete button and verifies the warning disappears from the popup state
 - The real extension smoke test now clicks through the real settings Backup UI create, inline restore confirmation, and inline delete confirmation flows against the live bookmark tree
 - The real extension smoke test now seeds a temporary bookmark profile and verifies manual backup, Fast preview, Apply Plan, duplicate cleanup, backup records, and screenshots

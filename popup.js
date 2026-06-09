@@ -462,6 +462,10 @@ function syncActionButtons() {
     button.disabled = popupActionInFlight || !isRunning || isCancelling;
     button.setAttribute("aria-busy", String(popupActionInFlight));
   });
+  detailPanel.querySelectorAll("[data-stale-status-fast-button]").forEach((button) => {
+    button.disabled = popupActionInFlight || !isRunning || isCancelling;
+    button.setAttribute("aria-busy", String(popupActionInFlight));
+  });
   setButtonLabel(optionsButton, t("optionsButton"));
   setButtonLabel(startButton, startLabel);
   setButtonLabel(backupButton, t("backupButton"));
@@ -1021,6 +1025,25 @@ function createStaleStatusNotice() {
   const actions = document.createElement("div");
   actions.className = "record-item__actions";
 
+  const staleFastButton = document.createElement("button");
+  staleFastButton.type = "button";
+  staleFastButton.className = "button button--primary button--compact";
+  staleFastButton.dataset.staleStatusFastButton = "true";
+  staleFastButton.setAttribute("aria-describedby", popupActionStatus.id);
+  setButtonLabel(staleFastButton, t("staleStatusFastAction"));
+  staleFastButton.disabled = popupActionInFlight || Boolean(currentStatus?.cancelRequested);
+  staleFastButton.addEventListener("click", () => {
+    if (popupActionInFlight || currentStatus?.cancelRequested) {
+      return;
+    }
+
+    staleFastButton.disabled = true;
+    cancelAndSwitchToFastMode().catch((error) => {
+      console.error("Failed to cancel stale task and switch to Fast mode:", error);
+      renderPopupActionError(t("popupCancelToFastFailedStatus"));
+    });
+  });
+
   const staleCancelButton = document.createElement("button");
   staleCancelButton.type = "button";
   staleCancelButton.className = "button button--danger button--compact";
@@ -1040,7 +1063,7 @@ function createStaleStatusNotice() {
     });
   });
 
-  actions.appendChild(staleCancelButton);
+  actions.append(staleFastButton, staleCancelButton);
   notice.append(title, detail, actions);
   return notice;
 }
@@ -1228,6 +1251,32 @@ async function refreshAllAfterActionSuccess(reason = "action success") {
   }
 }
 
+async function persistPopupSpeedMode(rawMode) {
+  const nextMode = normalizeLinkCheckMode(rawMode);
+  const stored = await chrome.storage.local.get(CONFIG_KEY);
+  const storedConfig = mergePopupConfig(stored[CONFIG_KEY] || currentConfig || {});
+  const changed = normalizeLinkCheckMode(storedConfig.linkCheckMode) !== nextMode;
+
+  const nextConfig = {
+    ...storedConfig,
+    linkCheckMode: nextMode
+  };
+
+  if (changed) {
+    await chrome.storage.local.set({ [CONFIG_KEY]: nextConfig });
+    const invalidation = await chrome.runtime.sendMessage({ type: "INVALIDATE_PREVIEW_PLAN" });
+    if (!invalidation?.ok) {
+      throw new Error(invalidation?.error || t("popupSpeedModeFailedStatus"));
+    }
+  }
+
+  currentConfig = nextConfig;
+  currentPreviewPlan = null;
+  applyConfirmationVisible = false;
+  renderConfig(currentConfig);
+  return { changed, config: nextConfig };
+}
+
 async function updatePopupSpeedMode(rawMode) {
   const nextMode = normalizeLinkCheckMode(rawMode);
   const currentMode = normalizeLinkCheckMode(currentConfig?.linkCheckMode);
@@ -1236,28 +1285,11 @@ async function updatePopupSpeedMode(rawMode) {
     return;
   }
 
-  popupActionInFlight = true;
-  setPopupActionStatus(t("popupSavingSpeedModeStatus"));
-  syncActionButtons();
-
   try {
-    const stored = await chrome.storage.local.get(CONFIG_KEY);
-    const storedConfig = mergePopupConfig(stored[CONFIG_KEY] || currentConfig || {});
-
-    const nextConfig = {
-      ...storedConfig,
-      linkCheckMode: nextMode
-    };
-    await chrome.storage.local.set({ [CONFIG_KEY]: nextConfig });
-    const invalidation = await chrome.runtime.sendMessage({ type: "INVALIDATE_PREVIEW_PLAN" });
-    if (!invalidation?.ok) {
-      throw new Error(invalidation?.error || t("popupSpeedModeFailedStatus"));
-    }
-
-    currentConfig = nextConfig;
-    currentPreviewPlan = null;
-    applyConfirmationVisible = false;
-    renderConfig(currentConfig);
+    popupActionInFlight = true;
+    setPopupActionStatus(t("popupSavingSpeedModeStatus"));
+    syncActionButtons();
+    await persistPopupSpeedMode(nextMode);
     const refreshed = await refreshAllAfterActionSuccess("speed mode update");
     if (refreshed) {
       setPopupActionStatus(t("popupSpeedModeSavedStatus"));
@@ -1268,6 +1300,35 @@ async function updatePopupSpeedMode(rawMode) {
   } finally {
     popupActionInFlight = false;
     syncActionButtons();
+  }
+}
+
+async function cancelAndSwitchToFastMode() {
+  setPopupActionInFlight(true, t("popupCancellingToFastStatus"));
+  let preserveActionStatus = false;
+
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "CANCEL_JOB" });
+
+    if (!response?.ok) {
+      await refreshAllBeforeActionFeedback("cancel and switch fast error");
+      renderResponseError(response, t("popupCancelToFastFailedStatus"));
+      preserveActionStatus = true;
+      return;
+    }
+
+    await persistPopupSpeedMode(LINK_CHECK_MODE_FAST);
+    const refreshed = await refreshAllAfterActionSuccess("cancel and switch fast success");
+    if (refreshed) {
+      setPopupActionStatus(t("popupCancelledToFastStatus"));
+    }
+    preserveActionStatus = true;
+  } catch (error) {
+    console.error("Failed to cancel task and switch to Fast mode:", error);
+    setPopupActionStatus(t("popupCancelToFastFailedStatus"), { isError: true });
+    preserveActionStatus = true;
+  } finally {
+    setPopupActionInFlight(false, "", { preserveStatus: preserveActionStatus });
   }
 }
 

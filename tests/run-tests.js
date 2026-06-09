@@ -599,6 +599,7 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /refreshAllBeforeActionFeedback\("preview permission denial"\)/);
   assert.match(popupSource, /refreshAllBeforeActionFeedback\("manual backup error"\)/);
   assert.match(popupSource, /refreshAllAfterActionSuccess\("speed mode update"\)/);
+  assert.match(popupSource, /refreshAllAfterActionSuccess\("cancel and switch fast success"\)/);
   assert.match(popupSource, /if \(refreshed\) \{\n      setPopupActionStatus\(t\("popupSpeedModeSavedStatus"\)\);/);
   assert.match(popupSource, /preserveActionStatus = !\(await refreshAllAfterActionSuccess\("apply preview success"\)\)/);
   assert.match(popupSource, /preserveActionStatus = !\(await refreshAllAfterActionSuccess\("preview start success"\)\)/);
@@ -644,8 +645,12 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /popupCreatingBackupStatus/);
   assert.match(popupSource, /popupResolvingItemStatus/);
   assert.match(popupSource, /popupCancellingStatus/);
+  assert.match(popupSource, /popupCancellingToFastStatus/);
+  assert.match(popupSource, /popupCancelledToFastStatus/);
+  assert.match(popupSource, /popupCancelToFastFailedStatus/);
   assert.match(popupSource, /speedModeButtons/);
   assert.match(popupSource, /normalizeLinkCheckMode/);
+  assert.match(popupSource, /async function persistPopupSpeedMode/);
   assert.match(popupSource, /async function updatePopupSpeedMode/);
   assert.match(popupSource, /const storedConfig = mergePopupConfig\(stored\[CONFIG_KEY\] \|\| currentConfig \|\| \{\}\)/);
   assert.doesNotMatch(popupSource, /const storedConfig = stored\[CONFIG_KEY\] \|\| currentConfig/);
@@ -728,6 +733,10 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /modelAccessRequiredForUncachedPreview/);
   assert.match(popupSource, /async function createManualBackup\(\) \{\n  setPopupActionInFlight\(true, t\("popupCreatingBackupStatus"\)\);/);
   assert.match(popupSource, /async function cancelJob\(\) \{\n  setPopupActionInFlight\(true, t\("popupCancellingStatus"\)\);/);
+  assert.match(popupSource, /async function cancelAndSwitchToFastMode\(\) \{\n  setPopupActionInFlight\(true, t\("popupCancellingToFastStatus"\)\);/);
+  assert.match(popupSource, /chrome\.runtime\.sendMessage\(\{ type: "CANCEL_JOB" \}\)/);
+  assert.match(popupSource, /await persistPopupSpeedMode\(LINK_CHECK_MODE_FAST\)/);
+  assert.match(popupSource, /setPopupActionStatus\(t\("popupCancelledToFastStatus"\)\)/);
   assert.match(popupSource, /const recordTitle = entry\.title \|\| t\("untitledBookmark"\)/);
   assert.match(popupSource, /const keepLabel = t\("keepBookmarkAria", \{ title: recordTitle \}\)/);
   assert.match(popupSource, /keepButton\.title = keepLabel/);
@@ -743,6 +752,7 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /button\.disabled = popupActionInFlight \|\| isRunning/);
   assert.match(popupSource, /detailPanel\.querySelectorAll\("\[data-stale-status-cancel-button\]"\)/);
   assert.match(popupSource, /button\.disabled = popupActionInFlight \|\| !isRunning \|\| isCancelling/);
+  assert.match(popupSource, /detailPanel\.querySelectorAll\("\[data-stale-status-fast-button\]"\)/);
   assert.match(popupSource, /const lockEntryActions = \(\) => \{\n        keepButton\.disabled = true;\n        deleteButton\.disabled = true;/);
   assert.match(popupSource, /keepButton\.addEventListener\("click", \(\) => \{\n        if \(popupActionInFlight\) \{/);
   assert.match(popupSource, /deleteButton\.addEventListener\("click", \(\) => \{\n        if \(popupActionInFlight\) \{/);
@@ -792,6 +802,12 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /record-item record-item--notice/);
   assert.match(popupSource, /t\("staleStatusTitle"\)/);
   assert.match(popupSource, /t\("staleStatusDetail"\)/);
+  assert.match(popupSource, /staleFastButton\.dataset\.staleStatusFastButton = "true"/);
+  assert.match(popupSource, /staleFastButton\.setAttribute\("aria-describedby", popupActionStatus\.id\)/);
+  assert.match(popupSource, /setButtonLabel\(staleFastButton, t\("staleStatusFastAction"\)\)/);
+  assert.match(popupSource, /staleFastButton\.disabled = popupActionInFlight \|\| Boolean\(currentStatus\?\.cancelRequested\)/);
+  assert.match(popupSource, /cancelAndSwitchToFastMode\(\)\.catch\(\(error\) => \{/);
+  assert.match(popupSource, /Failed to cancel stale task and switch to Fast mode/);
   assert.match(popupSource, /staleCancelButton\.dataset\.staleStatusCancelButton = "true"/);
   assert.match(popupSource, /staleCancelButton\.setAttribute\("aria-describedby", popupActionStatus\.id\)/);
   assert.match(popupSource, /setButtonLabel\(staleCancelButton, t\("staleStatusCancelAction"\)\)/);
@@ -833,6 +849,7 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /staleStatusMeta/);
   assert.match(i18nSource, /staleStatusTitle/);
   assert.match(i18nSource, /staleStatusDetail/);
+  assert.match(i18nSource, /staleStatusFastAction/);
   assert.match(i18nSource, /staleStatusCancelAction/);
   assert.match(i18nSource, /detailPanelAriaLabel/);
   assert.match(i18nSource, /managedFoldersLoadFailedTitle/);
@@ -1506,6 +1523,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /warns when the background status has not changed for 45 seconds/);
   assert.match(changelog, /inline wait-or-cancel suggestion/);
   assert.match(changelog, /direct cancel action/);
+  assert.match(changelog, /one-click stop-and-use-Fast action/);
   assert.match(changelog, /without reloading the full popup state every second/);
   assert.match(changelog, /Added `npm run render:store-assets`/);
   assert.match(changelog, /playwright-core/);
@@ -1522,6 +1540,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /retries a layout case once after a transient CDP timeout/);
   assert.match(changelog, /Added `npm run e2e:extension` and `npm run verify:release:full`/);
   assert.match(changelog, /settings Backup UI create, inline restore confirmation, and inline delete confirmation/);
+  assert.match(changelog, /stale progress stop-and-use-Fast recovery/);
   assert.match(changelog, /seeds a temporary bookmark profile and verifies manual backup, Fast preview, Apply Plan/);
   assert.match(changelog, /deletes a generated unprocessed item and verifies the live bookmark tree and warning count/);
   assert.match(changelog, /restores the original manual backup, verifies the duplicate returns, deletes that backup record/);
@@ -1565,6 +1584,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /npm run install:e2e-browser/);
   assert.match(readme, /Playwright Chromium/);
   assert.match(readme, /real popup Preview -> Apply Plan confirmation click flow/);
+  assert.match(readme, /stale progress stop-and-use-Fast recovery/);
   assert.match(readme, /real popup unprocessed-item Delete button/);
   assert.match(readme, /real settings Backup UI create\/restore\/delete flow/);
   assert.match(readme, /100-bookmark Fast-mode scale run/);
@@ -1598,8 +1618,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /Settings warn inline before a slow-model batch cap/);
   assert.match(readme, /estimated remaining time/);
   assert.match(readme, /If the background status has not changed for 45 seconds/);
-  assert.match(readme, /direct cancel action/);
-  assert.match(readme, /retrying with Fast mode/);
+  assert.match(readme, /one-click stop-and-use-Fast action/);
+  assert.match(readme, /plus direct cancel/);
   assert.match(readme, /lightweight once-per-second clock/);
   assert.match(readme, /Batches wake immediately while a Chrome alarm remains as fallback/);
   assert.match(readme, /Complete mode checks up to 8 links at a time/);
@@ -1612,6 +1632,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /npm run install:e2e-browser/);
   assert.match(readmeZh, /Playwright Chromium/);
   assert.match(readmeZh, /真实弹窗“预览整理 -> 应用方案 -> 备份并应用”点击流/);
+  assert.match(readmeZh, /慢任务一键切到快速模式恢复/);
   assert.match(readmeZh, /真实弹窗未处理项删除按钮/);
   assert.match(readmeZh, /真实设置页备份创建\/恢复\/删除点击流/);
   assert.match(readmeZh, /100 条书签快速模式规模用例/);
@@ -1646,8 +1667,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /慢模型批量被压低前先提示/);
   assert.match(readmeZh, /预计剩余时间/);
   assert.match(readmeZh, /45 秒没有后台更新/);
-  assert.match(readmeZh, /直接取消操作/);
-  assert.match(readmeZh, /改用快速模式重试/);
+  assert.match(readmeZh, /一键停止并改用快速模式/);
+  assert.match(readmeZh, /保留直接取消/);
   assert.match(readmeZh, /每秒轻量刷新/);
   assert.match(readmeZh, /完整模式每次最多并发检测 8 条链接/);
   assert.match(readmeZh, /恢复前会先创建新的本地快照/);
@@ -1671,6 +1692,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /warns when the background status has not changed for 45 seconds/);
   assert.match(releaseNotes, /inline wait-or-cancel suggestion/);
   assert.match(releaseNotes, /direct cancel action/);
+  assert.match(releaseNotes, /one-click stop-and-use-Fast action/);
   assert.match(releaseNotes, /without reloading the full popup state every second/);
   assert.match(releaseNotes, /Added `npm run render:store-assets`/);
   assert.match(releaseNotes, /playwright-core/);
@@ -1688,6 +1710,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /retries the current layout case once after a transient CDP timeout/);
   assert.match(releaseNotes, /run headless by default/);
   assert.match(releaseNotes, /Added `npm run e2e:extension` and `npm run verify:release:full`/);
+  assert.match(releaseNotes, /stale progress stop-and-use-Fast recovery/);
   assert.match(releaseNotes, /clicks the real popup unprocessed-item Delete button/);
   assert.match(releaseNotes, /settings Backup UI create, inline restore confirmation, and inline delete confirmation/);
   assert.match(releaseNotes, /seeds temporary bookmarks and verifies manual backup, Fast preview, Apply Plan/);
@@ -1907,6 +1930,16 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /popupUiFlowExpression/);
   assert.match(extensionE2e, /runPopupUiFlow/);
   assert.match(extensionE2e, /formatPopupUiFlowFailures/);
+  assert.match(extensionE2e, /setupStaleFastRecoveryFlowExpression/);
+  assert.match(extensionE2e, /staleFastRecoveryFlowExpression/);
+  assert.match(extensionE2e, /runStaleFastRecoveryFlow/);
+  assert.match(extensionE2e, /formatStaleFastRecoveryFlowFailures/);
+  assert.match(extensionE2e, /smartBookmarkActiveJob/);
+  assert.match(extensionE2e, /\[data-stale-status-fast-button\]/);
+  assert.match(extensionE2e, /stale Fast recovery did not save Fast mode/);
+  assert.match(extensionE2e, /stale Fast recovery did not record a cancellation request/);
+  assert.match(extensionE2e, /OK stale Fast recovery flow/);
+  assert.match(extensionE2e, /popup-stale-fast-recovery-flow-320\.png/);
   assert.match(extensionE2e, /popupUnprocessedUiFlowExpression/);
   assert.match(extensionE2e, /runPopupUnprocessedUiFlow/);
   assert.match(extensionE2e, /formatPopupUnprocessedUiFlowFailures/);
@@ -2056,7 +2089,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /Chrome\/Chrome for Testing/);
   assert.match(publishChecklist, /自动化默认 headless 后台运行/);
   assert.match(publishChecklist, /MARKO_SHOW_BROWSER=1/);
-  assert.match(publishChecklist, /临时书签可完成真实弹窗预览\/应用点击流、真实弹窗未处理项删除点击流、真实设置页备份创建\/恢复\/删除点击流、100 条书签快速模式规模用例、手动备份、快速预览、应用方案、重复清理、备份记录、真实设置页保存和 DeepSeek 批量压低验证/);
+  assert.match(publishChecklist, /临时书签可完成真实弹窗预览\/应用点击流、慢任务一键切到快速模式恢复、真实弹窗未处理项删除点击流、真实设置页备份创建\/恢复\/删除点击流、100 条书签快速模式规模用例、手动备份、快速预览、应用方案、重复清理、备份记录、真实设置页保存和 DeepSeek 批量压低验证/);
   assert.match(publishChecklist, /npm run verify:release/);
   assert.match(publishChecklist, /npm run verify:release:full/);
   assert.match(publishChecklist, /--load-extension is not allowed in Google Chrome, ignoring/);
