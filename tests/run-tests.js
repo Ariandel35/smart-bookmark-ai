@@ -2349,6 +2349,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseVerifier, /发布前事项/);
   assert.match(releaseVerifier, /webstore\/PUBLISH_CHECKLIST\.md/);
   assert.match(releaseVerifier, /webstore\/GITHUB_LINKS_TEMPLATE\.md/);
+  assert.match(releaseVerifier, /SUPPORT\.md/);
+  assert.match(releaseVerifier, /SECURITY\.md/);
+  assert.match(releaseVerifier, /security@your-domain\.com/);
   assert.match(releaseVerifier, /verifyStoreAssets/);
   assert.match(releaseVerifier, /README_SCREENSHOTS/);
   assert.match(releaseVerifier, /EXACT_IMAGE_DIMENSIONS/);
@@ -2390,6 +2393,21 @@ function testReleaseMaterialsCurrent() {
   assert.doesNotMatch(webstorePrivacyPolicy, /发布前事项/);
   assert.doesNotMatch(webstorePrivacyPolicy, /将本文件发布到一个公开可访问的 HTTPS URL/);
   assert.doesNotMatch(webstorePrivacyPolicy, /在 Chrome Web Store 后台把该 URL 作为隐私政策链接填写/);
+
+  const supportPolicy = fs.readFileSync(path.join(ROOT_DIR, "SUPPORT.md"), "utf8");
+  assert.match(supportPolicy, /https:\/\/github\.com\/Ariandel35\/marko\/issues/);
+  assert.match(supportPolicy, /\[SECURITY\.md\]\(SECURITY\.md\)/);
+  assert.doesNotMatch(supportPolicy, /private email listed/);
+
+  const securityPolicy = fs.readFileSync(path.join(ROOT_DIR, "SECURITY.md"), "utf8");
+  assert.match(securityPolicy, /Supported Versions/);
+  assert.match(securityPolicy, /https:\/\/github\.com\/Ariandel35\/marko\/security\/advisories\/new/);
+  assert.match(securityPolicy, /Do not include exploit details, API keys, bookmark data, or personal data in public issues/);
+  assert.match(securityPolicy, /Expected first response: best effort within 5 business days/);
+  assert.match(securityPolicy, /unauthorized bookmark access/);
+  assert.doesNotMatch(securityPolicy, /replace this file/);
+  assert.doesNotMatch(securityPolicy, /security@your-domain\.com/);
+  assert.doesNotMatch(securityPolicy, /Recommended format/);
 
   const publishChecklist = fs.readFileSync(
     path.join(ROOT_DIR, "webstore/PUBLISH_CHECKLIST.md"),

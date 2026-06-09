@@ -195,6 +195,8 @@ function verifyStoreTextMaterials() {
   const privacyPolicy = readText("webstore/PRIVACY_POLICY.md");
   const publishChecklist = readText("webstore/PUBLISH_CHECKLIST.md");
   const githubLinks = readText("webstore/GITHUB_LINKS_TEMPLATE.md");
+  const supportPolicy = readText("SUPPORT.md");
+  const securityPolicy = readText("SECURITY.md");
 
   assertTextIncludesAll(storeListing, STORE_LISTING_REQUIRED_HEADINGS, "store listing sections");
   assertShortDescription(storeListing, "### 简短描述", "Chinese store listing");
@@ -272,6 +274,34 @@ function verifyStoreTextMaterials() {
       "https://github.com/Ariandel35/marko/blob/main/PRIVACY.md"
     ],
     "GitHub store links"
+  );
+
+  assertTextIncludesAll(
+    supportPolicy,
+    [
+      "https://github.com/Ariandel35/marko/issues",
+      "[SECURITY.md](SECURITY.md)"
+    ],
+    "support policy"
+  );
+
+  assertTextIncludesAll(
+    securityPolicy,
+    [
+      "https://github.com/Ariandel35/marko/security/advisories/new",
+      "Do not include exploit details, API keys, bookmark data, or personal data in public issues",
+      "Expected first response: best effort within 5 business days"
+    ],
+    "security policy"
+  );
+  assertTextExcludesAll(
+    securityPolicy,
+    [
+      "replace this file",
+      "security@your-domain.com",
+      "Recommended format"
+    ],
+    "security policy"
   );
 }
 

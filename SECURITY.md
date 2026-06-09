@@ -1,12 +1,17 @@
 # Security Policy
 
+## Supported Versions
+
+Security fixes target the current `main` branch and the latest Chrome Web Store release package.
+
 ## Reporting a Vulnerability
 
-If you publish this repository, replace this file with your real security contact method before release.
+Report security issues through GitHub private vulnerability reporting:
 
-Recommended format:
+`https://github.com/Ariandel35/marko/security/advisories/new`
 
-- Security contact email: `security@your-domain.com`
-- Expected response time: `3-5 business days`
+If private reporting is unavailable, open a GitHub issue with only a non-sensitive summary and request a private follow-up. Do not include exploit details, API keys, bookmark data, or personal data in public issues.
 
-Please do not post security vulnerabilities in public issues.
+Expected first response: best effort within 5 business days.
+
+In-scope examples include unauthorized bookmark access, permission escalation, backup exposure, API-key exposure, or behavior that sends data outside the user-selected provider flow.
