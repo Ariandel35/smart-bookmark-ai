@@ -572,10 +572,13 @@ function testSpeedModeSurface() {
   assert.match(privacyHtml, /Applying a saved preview does not call the model again/);
   assert.match(privacyHtml, /before restoring an older backup/);
   assert.match(privacyHtml, /data-i18n="privacyMeta"/);
+  assert.match(privacyHtml, /data-i18n="privacyLastUpdatedMeta">Last updated: 2026-06-09<\/p>/);
   assert.match(privacyHtml, /data-i18n="privacyDataUseEyebrow"/);
   assert.match(privacyHtml, /data-i18n="privacyControlEyebrow"/);
 
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
+  assert.match(i18nSource, /privacyLastUpdatedMeta: "Last updated: 2026-06-09"/);
+  assert.match(i18nSource, /privacyLastUpdatedMeta: "最后更新：2026-06-09"/);
   assert.match(i18nSource, /privacyMeta: "Marko \/ 隐私说明"/);
   assert.match(i18nSource, /privacyDataUseEyebrow: "数据使用"/);
   assert.match(i18nSource, /privacyControlEyebrow: "控制项"/);
@@ -1778,6 +1781,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Release tests now lock new-install and reset defaults to OpenAI, Fast mode, and Silent organize off/);
   assert.match(changelog, /Manifest now declares the Marko GitHub homepage/);
   assert.match(changelog, /Privacy policies now use the 2026-06-09 release date/);
+  assert.match(changelog, /Privacy page now shows the 2026-06-09 update date/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
   assert.match(changelog, /Popup progress now estimates remaining time/);
   assert.match(changelog, /warns when the background status has not changed for 45 seconds/);
@@ -1967,6 +1971,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /new installs and resets default to the OpenAI provider, Fast mode, and Silent organize off/);
   assert.match(releaseNotes, /manifest now declares the Marko GitHub homepage/);
   assert.match(releaseNotes, /privacy policies now use the 2026-06-09 release date/);
+  assert.match(releaseNotes, /Privacy page now shows the 2026-06-09 update date/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
   assert.match(releaseNotes, /Popup progress now estimates remaining time/);
   assert.match(releaseNotes, /warns when the background status has not changed for 45 seconds/);
@@ -2160,6 +2165,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(layoutAuditor, /settings zh automation 390/);
   assert.match(layoutAuditor, /settings en automation 390/);
   assert.match(layoutAuditor, /settings zh backup 1280/);
+  assert.match(layoutAuditor, /privacy en 390/);
+  assert.match(layoutAuditor, /privacy zh 390/);
   assert.match(layoutAuditor, /overflowElements/);
   assert.match(layoutAuditor, /scrollableControls/);
   assert.match(layoutAuditor, /scrollableValueControls/);

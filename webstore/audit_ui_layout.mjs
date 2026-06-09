@@ -330,6 +330,20 @@ const auditCases = [
     width: 1280,
     height: 900,
     data: previewSample
+  },
+  {
+    label: "privacy en 390",
+    file: "privacy.html",
+    width: 390,
+    height: 900,
+    data: longErrorSample
+  },
+  {
+    label: "privacy zh 390",
+    file: "privacy.html",
+    width: 390,
+    height: 900,
+    data: previewSample
   }
 ];
 
