@@ -1518,6 +1518,9 @@ function testReleaseMaterialsCurrent() {
   const changelog = fs.readFileSync(path.join(ROOT_DIR, "CHANGELOG.md"), "utf8");
   const readme = fs.readFileSync(path.join(ROOT_DIR, "README.md"), "utf8");
   const readmeZh = fs.readFileSync(path.join(ROOT_DIR, "README.zh-CN.md"), "utf8");
+  const heroSvg = fs.readFileSync(path.join(ROOT_DIR, "docs/assets/hero.svg"), "utf8");
+  assert.match(heroSvg, />MARKO</);
+  assert.doesNotMatch(heroSvg, /SMART BOOKMARK AI|Smart Bookmark AI/);
   assert.match(changelog, /without a second model request/);
   assert.match(changelog, /Fast\/Balanced\/Complete mode switch/);
   assert.match(changelog, /wakes the next batch immediately with a Chrome alarm fallback/);
@@ -1570,6 +1573,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(changelog, /Settings automation now uses a direct Silent organize switch/);
   assert.match(changelog, /Settings automation fallback labels now match the simplified Silent organize wording/);
+  assert.match(changelog, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
   assert.match(changelog, /Popup progress now estimates remaining time/);
   assert.match(changelog, /warns when the background status has not changed for 45 seconds/);
@@ -1750,6 +1754,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(releaseNotes, /Settings automation now uses a direct Silent organize switch/);
   assert.match(releaseNotes, /Settings automation fallback labels now match the simplified Silent organize wording/);
+  assert.match(releaseNotes, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
   assert.match(releaseNotes, /Popup progress now estimates remaining time/);
   assert.match(releaseNotes, /warns when the background status has not changed for 45 seconds/);
