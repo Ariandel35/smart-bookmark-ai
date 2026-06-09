@@ -309,6 +309,9 @@ Hard rules:
       elapsedMeta: "Elapsed {duration}",
       remainingMeta: "About {duration} left",
       staleStatusMeta: "No background update for {duration}",
+      staleStatusTitle: "Background update delayed",
+      staleStatusDetail:
+        "Marko may still be waiting on the model. Keep waiting if the provider is slow, or cancel and retry with Fast mode if this continues.",
       updatedMeta: "Updated {time}",
       unnamedCategory: "Untitled category",
       rootCategoryTitle: "Root",
@@ -619,6 +622,9 @@ Hard rules:
       elapsedMeta: "已运行 {duration}",
       remainingMeta: "预计剩余约 {duration}",
       staleStatusMeta: "后台已 {duration} 未更新",
+      staleStatusTitle: "后台更新延迟",
+      staleStatusDetail:
+        "Marko 可能仍在等待模型。接口较慢时可以继续等待；如果持续无更新，可取消后改用快速模式重试。",
       updatedMeta: "最近更新 {time}",
       unnamedCategory: "未命名分类",
       rootCategoryTitle: "根目录",

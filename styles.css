@@ -1182,6 +1182,10 @@ textarea {
   overflow-wrap: anywhere;
 }
 
+.record-item--notice .record-item__title {
+  color: var(--warn);
+}
+
 .record-item__meta,
 .record-item__suggestion {
   color: var(--text-soft);

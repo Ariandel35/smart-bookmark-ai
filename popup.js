@@ -44,6 +44,7 @@ let popupActionInFlight = false;
 let popupRefreshFailureVisible = false;
 let managedFolderLoadFailed = false;
 let popupReady = false;
+let staleStatusNoticeVisible = false;
 
 I18N.applyDocument(document);
 
@@ -302,19 +303,29 @@ function buildRemainingMeta(status, phase) {
 }
 
 function buildStaleStatusMeta(status, phase) {
-  if (phase !== "running" || !status?.updatedAt) {
-    return "";
-  }
-
-  const updatedAtMs = new Date(status.updatedAt).getTime();
-  const staleMs = Date.now() - updatedAtMs;
-  if (!Number.isFinite(updatedAtMs) || staleMs < STALE_STATUS_THRESHOLD_MS) {
+  const staleMs = getStaleStatusMs(status, phase);
+  if (staleMs < STALE_STATUS_THRESHOLD_MS) {
     return "";
   }
 
   return t("staleStatusMeta", {
     duration: formatDuration(staleMs)
   });
+}
+
+function getStaleStatusMs(status, phase) {
+  if (phase !== "running" || !status?.updatedAt) {
+    return 0;
+  }
+
+  const updatedAtMs = new Date(status.updatedAt).getTime();
+  const staleMs = Date.now() - updatedAtMs;
+  return Number.isFinite(updatedAtMs) && Number.isFinite(staleMs) ? staleMs : 0;
+}
+
+function shouldShowStaleStatusNotice(status = currentStatus) {
+  const phase = status?.phase || "idle";
+  return getStaleStatusMs(status, phase) >= STALE_STATUS_THRESHOLD_MS;
 }
 
 function getHostname(urlString) {
@@ -560,6 +571,7 @@ function renderStatus(status) {
 
   syncActionButtons();
   syncProgressClock();
+  syncStaleStatusNotice();
 }
 
 function stopProgressClock() {
@@ -591,6 +603,18 @@ function syncProgressClock() {
 
     renderStatus(currentStatus);
   }, PROGRESS_CLOCK_INTERVAL_MS);
+}
+
+function syncStaleStatusNotice() {
+  const nextVisible = shouldShowStaleStatusNotice();
+  if (nextVisible === staleStatusNoticeVisible) {
+    return;
+  }
+
+  staleStatusNoticeVisible = nextVisible;
+  if (detailPanel.children.length) {
+    renderDetailPanelContent();
+  }
 }
 
 function createEmptyState(title, description) {
@@ -978,6 +1002,22 @@ function renderLogDetail(logEntries, emptyTitle, emptyDescription, options = {})
   return wrapper;
 }
 
+function createStaleStatusNotice() {
+  const notice = document.createElement("article");
+  notice.className = "record-item record-item--notice";
+
+  const title = document.createElement("div");
+  title.className = "record-item__title";
+  title.textContent = t("staleStatusTitle");
+
+  const detail = document.createElement("div");
+  detail.className = "record-item__suggestion";
+  detail.textContent = t("staleStatusDetail");
+
+  notice.append(title, detail);
+  return notice;
+}
+
 function renderMainDetail() {
   if (!hasPreviewAttemptConfig(currentConfig)) {
     return createSetupRequiredState();
@@ -1017,6 +1057,10 @@ function renderMainDetail() {
     summary.appendChild(summaryActions);
   }
   wrapper.appendChild(summary);
+
+  if (shouldShowStaleStatusNotice()) {
+    wrapper.appendChild(createStaleStatusNotice());
+  }
 
   if (Array.isArray(currentStatus?.warnings) && currentStatus.warnings.length) {
     const warningsSection = document.createElement("div");

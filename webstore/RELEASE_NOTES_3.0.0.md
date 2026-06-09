@@ -20,7 +20,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 设置页整理规则中的速度模式改为和弹窗一致的快速/平衡/完整三段控件，不再藏在下拉框里
 - 设置页自动整理改为直接的“静默整理”开关，不再让用户在 true/false 下拉框里选择
 - 自动整理间隔会在静默整理开关打开后才启用，关闭状态下不会用无关时间设置阻断保存
-- 弹窗进度会在已有实际处理进度后估算预计剩余时间，45 秒没有后台更新时也会提示，并本地轻量刷新时间文本
+- 弹窗进度会在已有实际处理进度后估算预计剩余时间，45 秒没有后台更新时会在详情区提示可继续等待或取消后改用快速模式重试，并本地轻量刷新时间文本
 - Chrome Web Store 宣传图改为更干净的网格产品布局，移除装饰光斑背景和负字距标题
 - 新增 `npm run render:store-assets`，使用 `playwright-core` 控制已安装的 Chrome 或 Chrome for Testing 重新生成发布截图，不会下载浏览器
 - 设置页连接字段现在也会把当前速度模式要求提供给读屏等辅助技术，同时保留页面内校验提示
@@ -102,7 +102,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Settings organization rules now use the same Fast/Balanced/Complete segmented control as the popup instead of hiding speed mode in a dropdown
 - Settings automation now uses a direct Silent organize switch instead of asking users to choose true or false from a dropdown
 - The automation interval stays disabled until Silent organize is turned on, so inactive timing settings no longer block saves
-- Popup progress now estimates remaining time after the first completed work segment, warns when the background status has not changed for 45 seconds, and refreshes the elapsed/remaining clock locally without reloading the full popup state every second
+- Popup progress now estimates remaining time after the first completed work segment, warns when the background status has not changed for 45 seconds, shows an inline wait-or-cancel suggestion in the detail panel, and refreshes the elapsed/remaining clock locally without reloading the full popup state every second
 - Chrome Web Store promo images now use a cleaner grid-backed product layout without decorative glow backgrounds or negative title spacing
 - Added `npm run render:store-assets` with `playwright-core` so release screenshots can be regenerated against an installed Chrome or Chrome for Testing without downloading a browser
 - Settings connection fields now expose the selected mode requirement hint to assistive technologies while preserving inline validation messages

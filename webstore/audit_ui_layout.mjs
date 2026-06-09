@@ -182,10 +182,69 @@ const longErrorSample = {
   ]
 };
 
+const staleRunningSample = {
+  language: "en-US",
+  apiTestMessage: "API available",
+  apiTestDetail: "DeepSeek-compatible endpoint responded successfully.",
+  storage: {
+    smartBookmarkConfig: {
+      provider: "deepseek",
+      baseUrl: "https://api.deepseek.com",
+      apiKey: "sk-marko-demo",
+      model: "deepseek-chat",
+      batchSize: 9,
+      linkCheckMode: "balanced",
+      autoOrganizeEnabled: false,
+      autoOrganizeIntervalHours: 24,
+      whitelistDomains: "github.com\nmail.google.com",
+      protectedRootFolders: "Work",
+      domainFolderRules: "github.com => AI & Tech",
+      customPrompt: "Keep folder names concise. Put uncertain bookmarks into Manual Review."
+    },
+    smartBookmarkJobStatus: {
+      phase: "running",
+      total: 216,
+      processed: 81,
+      moved: 58,
+      deleted: 8,
+      warningCount: 6,
+      currentBatch: 9,
+      totalBatches: 24,
+      batchSize: 9,
+      startedAt: "2026-04-19T08:00:00.000Z",
+      updatedAt: "2026-04-19T08:02:00.000Z",
+      provider: "DeepSeek",
+      model: "deepseek-chat",
+      message: "Waiting for the model response for batch 9/24.",
+      detail:
+        "Keep-alive is active. If the model does not return a first response soon, Marko will stop waiting and continue with local fallback.",
+      reused: 31,
+      aiClassified: 27,
+      protectedRootCount: 1,
+      warnings: []
+    }
+  },
+  backups: [],
+  bookmarkTree: [
+    {
+      id: "0",
+      title: "",
+      children: [{ id: "1", title: "Bookmarks Bar", children: [] }]
+    }
+  ]
+};
+
 const auditCases = [
   { label: "popup zh preview 320", file: "popup.html", width: 320, height: 760, data: previewSample },
   { label: "popup zh preview 360", file: "popup.html", width: 360, height: 760, data: previewSample },
   { label: "popup zh preview 400", file: "popup.html", width: 400, height: 760, data: previewSample },
+  {
+    label: "popup en stale running 320",
+    file: "popup.html",
+    width: 320,
+    height: 800,
+    data: staleRunningSample
+  },
   {
     label: "popup en long error 320",
     file: "popup.html",
