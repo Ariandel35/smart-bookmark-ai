@@ -148,7 +148,7 @@ Hard rules:
       startButton: "Organize",
       confirmOrganizeButton: "Apply Plan",
       previewButton: "Preview",
-      backupButton: "Backup",
+      backupButton: "Backup Now",
       cancelButton: "Cancel",
       cancelRequestedButton: "Cancelling",
       progressWaiting: "Waiting to start",
