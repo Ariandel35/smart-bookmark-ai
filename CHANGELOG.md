@@ -19,6 +19,7 @@
 - Popup progress now estimates remaining time after the first completed work segment, warns when the background status has not changed for 45 seconds, shows an inline wait-or-cancel suggestion with a direct cancel action in the detail panel, and refreshes the elapsed/remaining clock locally without reloading the full popup state every second
 - Chrome Web Store promo images now use a cleaner grid-backed product layout without decorative glow backgrounds or negative title spacing
 - Added `npm run render:store-assets` with `playwright-core` so release screenshots can be regenerated against an installed Chrome or Chrome for Testing without downloading a browser
+- Added `npm run install:e2e-browser` and Playwright browser-cache discovery so real extension E2E can find a downloaded Chromium instead of requiring a fixed app path
 - Settings connection fields now expose the selected mode requirement hint to assistive technologies while preserving inline validation messages
 - Popup setup copy and shortcut logic now avoid implying Fast mode needs API credentials when local preview can run without a model call
 - Popup setup errors now show how many uncached bookmarks require model classification before asking users to finish AI access setup

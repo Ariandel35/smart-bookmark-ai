@@ -16,8 +16,8 @@ const OPTIONAL_SCREENSHOT_TIMEOUT_MS = 5_000;
 const screenshotDir = process.env.MARKO_EXTENSION_SCREENSHOT_DIR || "";
 const runHeadless = process.env.MARKO_SHOW_BROWSER !== "1" && process.env.MARKO_EXTENSION_HEADLESS !== "0";
 const BROWSER_HINT =
-  "Install Chrome for Testing or Chromium, or set MARKO_EXTENSION_BROWSER to a browser executable that allows --load-extension.";
-const browserCandidates = [
+  "Install Chrome for Testing or Chromium, run `npm run install:e2e-browser` to install Playwright Chromium, or set MARKO_EXTENSION_BROWSER to a browser executable that allows --load-extension.";
+const staticBrowserCandidates = [
   process.env.MARKO_EXTENSION_BROWSER,
   process.env.CHROME_FOR_TESTING_EXECUTABLE,
   "/Applications/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
@@ -35,6 +35,74 @@ async function pathExists(candidate) {
   } catch {
     return false;
   }
+}
+
+async function directoryEntries(directoryPath) {
+  try {
+    return await fs.readdir(directoryPath, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+}
+
+function uniqueList(items) {
+  return Array.from(new Set(items.filter(Boolean)));
+}
+
+function getPlaywrightBrowserCacheRoots() {
+  const envPath =
+    process.env.PLAYWRIGHT_BROWSERS_PATH && process.env.PLAYWRIGHT_BROWSERS_PATH !== "0"
+      ? [process.env.PLAYWRIGHT_BROWSERS_PATH]
+      : [];
+
+  return uniqueList([
+    ...envPath,
+    path.join(os.homedir(), "Library", "Caches", "ms-playwright"),
+    path.join(os.homedir(), ".cache", "ms-playwright")
+  ]);
+}
+
+async function getPlaywrightBrowserCandidates() {
+  const candidates = [];
+  for (const cacheRoot of getPlaywrightBrowserCacheRoots()) {
+    const entries = await directoryEntries(cacheRoot);
+    const browserDirs = entries
+      .filter((entry) => entry.isDirectory() && /^(chromium|chrome)-/i.test(entry.name))
+      .map((entry) => entry.name)
+      .sort()
+      .reverse();
+
+    for (const browserDir of browserDirs) {
+      candidates.push(
+        path.join(
+          cacheRoot,
+          browserDir,
+          "chrome-mac-arm64",
+          "Google Chrome for Testing.app",
+          "Contents",
+          "MacOS",
+          "Google Chrome for Testing"
+        ),
+        path.join(
+          cacheRoot,
+          browserDir,
+          "chrome-mac",
+          "Google Chrome for Testing.app",
+          "Contents",
+          "MacOS",
+          "Google Chrome for Testing"
+        ),
+        path.join(cacheRoot, browserDir, "chrome-mac", "Chromium.app", "Contents", "MacOS", "Chromium"),
+        path.join(cacheRoot, browserDir, "chrome-mac-arm64", "Chromium.app", "Contents", "MacOS", "Chromium"),
+        path.join(cacheRoot, browserDir, "chrome-linux", "chrome"),
+        path.join(cacheRoot, browserDir, "chrome-linux64", "chrome"),
+        path.join(cacheRoot, browserDir, "chrome-win", "chrome.exe"),
+        path.join(cacheRoot, browserDir, "chrome-win64", "chrome.exe")
+      );
+    }
+  }
+
+  return uniqueList(candidates);
 }
 
 async function waitForProcessExit(childProcess, timeoutMs = 3000) {
@@ -70,6 +138,11 @@ function isKnownUnsupportedChrome(executablePath) {
 }
 
 async function resolveExecutablePath() {
+  const browserCandidates = uniqueList([
+    ...staticBrowserCandidates,
+    ...(await getPlaywrightBrowserCandidates())
+  ]);
+
   for (const candidate of browserCandidates) {
     if (!(await pathExists(candidate))) {
       continue;

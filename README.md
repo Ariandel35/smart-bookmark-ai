@@ -142,8 +142,14 @@ Run a real unpacked-extension smoke test with Chrome for Testing or Chromium:
 npm run e2e:extension
 ```
 
+If neither browser is installed in a standard location, install Playwright Chromium first:
+
+```bash
+npm run install:e2e-browser
+```
+
 The script uses a temporary browser profile, seeds real bookmarks, then verifies the real popup Preview -> Apply Plan confirmation click flow, the real popup unprocessed-item Delete button, the real settings Backup UI create/restore/delete flow, a 100-bookmark Fast-mode scale run, manual backup, Fast preview, duplicate cleanup, backup records, real options UI save, DeepSeek batch-size capping, the popup, and the options page.
-Automated Chrome runs are headless by default, so they do not open visible browser windows. Set `MARKO_SHOW_BROWSER=1` only when you need to watch the run, and set `MARKO_EXTENSION_SCREENSHOT_DIR=/tmp/marko-e2e` to keep popup and options screenshots.
+Automated Chrome runs are headless by default, so they do not open visible browser windows. The E2E runner also checks the Playwright browser cache and `PLAYWRIGHT_BROWSERS_PATH` before failing. Set `MARKO_SHOW_BROWSER=1` only when you need to watch the run, and set `MARKO_EXTENSION_SCREENSHOT_DIR=/tmp/marko-e2e` to keep popup and options screenshots.
 
 Regenerate README and Chrome Web Store screenshots after UI or store-copy changes:
 

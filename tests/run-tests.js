@@ -253,6 +253,7 @@ function testStaticExtensionAssets() {
   assert.equal(packageJson.scripts?.test, "node tests/run-tests.js");
   assert.equal(packageJson.scripts?.["audit:ui"], "node webstore/audit_ui_layout.mjs");
   assert.equal(packageJson.scripts?.["e2e:extension"], "node webstore/e2e_extension.mjs");
+  assert.equal(packageJson.scripts?.["install:e2e-browser"], "playwright-core install chromium");
   assert.equal(packageJson.scripts?.["render:store-assets"], "node webstore/render_store_assets.mjs");
   assert.equal(packageJson.scripts?.["verify:release"], "node webstore/verify_release.mjs");
   assert.equal(packageJson.scripts?.["verify:release:full"], "npm run verify:release && npm run e2e:extension");
@@ -1509,6 +1510,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Added `npm run render:store-assets`/);
   assert.match(changelog, /playwright-core/);
   assert.match(changelog, /without downloading a browser/);
+  assert.match(changelog, /Added `npm run install:e2e-browser`/);
+  assert.match(changelog, /Playwright browser-cache discovery/);
   assert.match(changelog, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(changelog, /avoid implying Fast mode needs API credentials/);
   assert.match(changelog, /show how many uncached bookmarks require model classification/);
@@ -1559,6 +1562,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run audit:ui/);
   assert.match(readme, /npm run e2e:extension/);
+  assert.match(readme, /npm run install:e2e-browser/);
+  assert.match(readme, /Playwright Chromium/);
   assert.match(readme, /real popup Preview -> Apply Plan confirmation click flow/);
   assert.match(readme, /real popup unprocessed-item Delete button/);
   assert.match(readme, /real settings Backup UI create\/restore\/delete flow/);
@@ -1568,6 +1573,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /real options UI save/);
   assert.match(readme, /DeepSeek batch-size capping/);
   assert.match(readme, /Automated Chrome runs are headless by default/);
+  assert.match(readme, /Playwright browser cache/);
+  assert.match(readme, /PLAYWRIGHT_BROWSERS_PATH/);
   assert.match(readme, /MARKO_SHOW_BROWSER=1/);
   assert.match(readme, /MARKO_EXTENSION_SCREENSHOT_DIR=\/tmp\/marko-e2e/);
   assert.match(readme, /npm run render:store-assets/);
@@ -1602,6 +1609,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /npm test/);
   assert.match(readmeZh, /npm run audit:ui/);
   assert.match(readmeZh, /npm run e2e:extension/);
+  assert.match(readmeZh, /npm run install:e2e-browser/);
+  assert.match(readmeZh, /Playwright Chromium/);
   assert.match(readmeZh, /真实弹窗“预览整理 -> 应用方案 -> 备份并应用”点击流/);
   assert.match(readmeZh, /真实弹窗未处理项删除按钮/);
   assert.match(readmeZh, /真实设置页备份创建\/恢复\/删除点击流/);
@@ -1612,6 +1621,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /真实设置页保存/);
   assert.match(readmeZh, /DeepSeek 批量压低/);
   assert.match(readmeZh, /headless 后台运行，不会打开可见浏览器窗口/);
+  assert.match(readmeZh, /Playwright 浏览器缓存/);
+  assert.match(readmeZh, /PLAYWRIGHT_BROWSERS_PATH/);
   assert.match(readmeZh, /MARKO_SHOW_BROWSER=1/);
   assert.match(readmeZh, /批处理会优先即时唤醒，Chrome alarm 仅作为后台兜底/);
   assert.match(readmeZh, /MARKO_EXTENSION_SCREENSHOT_DIR=\/tmp\/marko-e2e/);
@@ -1664,6 +1675,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Added `npm run render:store-assets`/);
   assert.match(releaseNotes, /playwright-core/);
   assert.match(releaseNotes, /without downloading a browser/);
+  assert.match(releaseNotes, /Added `npm run install:e2e-browser`/);
+  assert.match(releaseNotes, /Playwright browser-cache discovery/);
   assert.match(releaseNotes, /Settings connection fields now expose the selected mode requirement hint/);
   assert.match(releaseNotes, /Settings Privacy now falls back from tab creation to window opening/);
   assert.match(releaseNotes, /Popup Settings shortcuts now show an inline error if both tab creation and the options-page fallback fail/);
@@ -1861,6 +1874,12 @@ function testReleaseMaterialsCurrent() {
     "utf8"
   );
   assert.match(extensionE2e, /MARKO_EXTENSION_BROWSER/);
+  assert.match(extensionE2e, /staticBrowserCandidates/);
+  assert.match(extensionE2e, /getPlaywrightBrowserCacheRoots/);
+  assert.match(extensionE2e, /getPlaywrightBrowserCandidates/);
+  assert.match(extensionE2e, /PLAYWRIGHT_BROWSERS_PATH/);
+  assert.match(extensionE2e, /ms-playwright/);
+  assert.match(extensionE2e, /npm run install:e2e-browser/);
   assert.match(extensionE2e, /MARKO_SHOW_BROWSER/);
   assert.match(extensionE2e, /MARKO_EXTENSION_HEADLESS/);
   assert.match(extensionE2e, /MARKO_EXTENSION_SCREENSHOT_DIR/);
@@ -1870,6 +1889,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /WARN optional screenshot skipped/);
   assert.match(extensionE2e, /Timed out waiting for CDP response to \$\{method\} after \$\{timeoutMs\}ms/);
   assert.match(extensionE2e, /Google Chrome for Testing/);
+  assert.match(extensionE2e, /chrome-mac-arm64",\s*"Google Chrome for Testing\.app"/);
+  assert.match(extensionE2e, /chrome-mac", "Chromium\.app"/);
   assert.match(extensionE2e, /--disable-extensions-except/);
   assert.match(extensionE2e, /--load-extension/);
   assert.match(extensionE2e, /--headless=new/);
@@ -2026,8 +2047,12 @@ function testReleaseMaterialsCurrent() {
   assert.match(publishChecklist, /权限说明/);
   assert.match(publishChecklist, /npm run audit:ui/);
   assert.match(publishChecklist, /npm run e2e:extension/);
+  assert.match(publishChecklist, /npm run install:e2e-browser/);
   assert.match(publishChecklist, /npm run render:store-assets/);
   assert.match(publishChecklist, /playwright-core/);
+  assert.match(publishChecklist, /Playwright Chromium/);
+  assert.match(publishChecklist, /Playwright 缓存/);
+  assert.match(publishChecklist, /PLAYWRIGHT_BROWSERS_PATH/);
   assert.match(publishChecklist, /Chrome\/Chrome for Testing/);
   assert.match(publishChecklist, /自动化默认 headless 后台运行/);
   assert.match(publishChecklist, /MARKO_SHOW_BROWSER=1/);

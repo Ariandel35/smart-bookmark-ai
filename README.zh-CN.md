@@ -142,8 +142,14 @@ npm run audit:ui
 npm run e2e:extension
 ```
 
+如果标准位置没有这两类浏览器，先安装 Playwright Chromium：
+
+```bash
+npm run install:e2e-browser
+```
+
 脚本会使用临时浏览器 profile，写入真实书签，然后验证真实弹窗“预览整理 -> 应用方案 -> 备份并应用”点击流、真实弹窗未处理项删除按钮、真实设置页备份创建/恢复/删除点击流、100 条书签快速模式规模用例、手动备份、快速预览、重复清理、备份记录、真实设置页保存、DeepSeek 批量压低、弹窗和设置页。
-自动化 Chrome 默认使用 headless 后台运行，不会打开可见浏览器窗口。只有需要观察过程时才设置 `MARKO_SHOW_BROWSER=1`；设置 `MARKO_EXTENSION_SCREENSHOT_DIR=/tmp/marko-e2e` 可以保留该次运行的弹窗和设置页截图。
+自动化 Chrome 默认使用 headless 后台运行，不会打开可见浏览器窗口。E2E 运行器也会在失败前检查 Playwright 浏览器缓存和 `PLAYWRIGHT_BROWSERS_PATH`。只有需要观察过程时才设置 `MARKO_SHOW_BROWSER=1`；设置 `MARKO_EXTENSION_SCREENSHOT_DIR=/tmp/marko-e2e` 可以保留该次运行的弹窗和设置页截图。
 
 UI 或商店文案改动后重新生成 README 和 Chrome Web Store 截图：
 

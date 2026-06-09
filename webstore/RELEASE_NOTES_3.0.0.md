@@ -23,6 +23,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 弹窗进度会在已有实际处理进度后估算预计剩余时间，45 秒没有后台更新时会在详情区提供直接取消操作，便于改用快速模式重试，并本地轻量刷新时间文本
 - Chrome Web Store 宣传图改为更干净的网格产品布局，移除装饰光斑背景和负字距标题
 - 新增 `npm run render:store-assets`，使用 `playwright-core` 控制已安装的 Chrome 或 Chrome for Testing 重新生成发布截图，不会下载浏览器
+- 新增 `npm run install:e2e-browser` 和 Playwright 浏览器缓存发现逻辑，真实扩展 E2E 可自动使用已下载的 Chromium，不再只能依赖固定应用路径
 - 设置页连接字段现在也会把当前速度模式要求提供给读屏等辅助技术，同时保留页面内校验提示
 - 设置页隐私按钮会优先新建标签页，失败时回退到窗口打开；如果两种方式都被浏览器拦截，会显示页面内错误
 - 弹窗设置提示不再把快速模式说成必须先接入 API，只有确实需要模型分类时才提示模型凭据
@@ -105,6 +106,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Popup progress now estimates remaining time after the first completed work segment, warns when the background status has not changed for 45 seconds, shows an inline wait-or-cancel suggestion with a direct cancel action in the detail panel, and refreshes the elapsed/remaining clock locally without reloading the full popup state every second
 - Chrome Web Store promo images now use a cleaner grid-backed product layout without decorative glow backgrounds or negative title spacing
 - Added `npm run render:store-assets` with `playwright-core` so release screenshots can be regenerated against an installed Chrome or Chrome for Testing without downloading a browser
+- Added `npm run install:e2e-browser` and Playwright browser-cache discovery so real extension E2E can use a downloaded Chromium instead of requiring a fixed app path
 - Settings connection fields now expose the selected mode requirement hint to assistive technologies while preserving inline validation messages
 - Settings Privacy now falls back from tab creation to window opening and shows an inline error if the browser blocks both paths
 - Popup setup copy no longer implies Fast mode needs API credentials; model credentials are shown only when classification actually needs the model
