@@ -24,6 +24,7 @@
 - Settings automation now uses a direct Silent organize switch instead of a true/false dropdown
 - Settings automation fallback labels now match the simplified Silent organize wording before translations load
 - Settings fallback section headings now match the shorter Rules, Auto, Advanced, and Backups labels before translations load
+- Settings fallback labels, hints, and placeholders now match the current English i18n copy before translations load
 - README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label
 - Settings automation keeps the interval field disabled until Silent organize is turned on, so inactive timing settings no longer distract or block saves
 - Popup progress now estimates remaining time after the first completed work segment, warns when the background status has not changed for 45 seconds, shows an inline wait-or-cancel suggestion with a direct cancel action in the detail panel, and refreshes the elapsed/remaining clock locally without reloading the full popup state every second

@@ -98,7 +98,7 @@
                 aria-selected="false"
                 tabindex="-1"
               >
-                <span class="nav-button__title" data-i18n="navOrganize">Organization</span>
+                <span class="nav-button__title" data-i18n="navOrganize">Rules</span>
               </button>
               <button
                 id="settings-tab-automation"
@@ -110,7 +110,7 @@
                 aria-selected="false"
                 tabindex="-1"
               >
-                <span class="nav-button__title" data-i18n="navAutomation">Automation</span>
+                <span class="nav-button__title" data-i18n="navAutomation">Auto</span>
               </button>
               <button
                 id="settings-tab-backup"
@@ -156,7 +156,7 @@
                       aria-live="polite"
                       data-i18n="connectionModeFastHint"
                     >
-                      Fast mode can preview and save without model fields.
+                      Fast mode previews locally. Provider is enough; Base URL, model, API key, and access checks are optional until you switch to AI classification.
                     </p>
                   </div>
                 </div>
@@ -176,7 +176,7 @@
                     </summary>
                     <div class="advanced-block__content">
                       <div class="field">
-                        <label for="model" data-i18n="labelModel">Model Name</label>
+                        <label for="model" data-i18n="labelModel">Model</label>
                         <input
                           id="model"
                           name="model"
@@ -283,7 +283,7 @@
 
                 <div class="form-grid">
                   <div class="field">
-                    <label for="batchSize" data-i18n="labelBatchSize">Batch Size</label>
+                    <label for="batchSize" data-i18n="labelBatchSize">Batch size</label>
                     <input
                       id="batchSize"
                       name="batchSize"
@@ -296,7 +296,7 @@
                       aria-describedby="batchSizeHint"
                     />
                     <p class="field__hint" id="batchSizeHint" data-i18n="hintBatchSize">
-                      Use 5 to 100. Smaller batches are safer for slower models.
+                      Use 5 to 100. DeepSeek and DeepSeek-compatible endpoints are capped per run and split into 3-item model requests with small parallelism.
                     </p>
                     <p
                       class="field__hint field__hint--warm"
@@ -308,7 +308,7 @@
                   </div>
 
                   <div class="field">
-                    <div class="field__label" id="linkCheckModeLabel" data-i18n="labelLinkCheckMode">Speed Mode</div>
+                    <div class="field__label" id="linkCheckModeLabel" data-i18n="labelLinkCheckMode">Speed mode</div>
                     <input id="linkCheckMode" name="linkCheckMode" type="hidden" value="fast" />
                     <div
                       class="segmented-control segmented-control--settings"
@@ -355,7 +355,7 @@
                       </button>
                     </div>
                     <p class="field__hint" id="linkCheckModeHint" data-i18n="hintLinkCheckMode">
-                      Fast finishes locally. Balanced skips link checks but keeps AI classification. Complete checks links and uses AI.
+                      Fast finishes locally without waiting for the model. Balanced skips link checks but keeps AI classification. Complete checks links and uses AI.
                     </p>
                   </div>
 
@@ -375,7 +375,7 @@
                       type="search"
                       aria-describedby="whitelistSelectionStatus"
                       data-i18n-placeholder="placeholderWhitelistSearch"
-                      placeholder="Search websites"
+                      placeholder="Search bookmark websites"
                     />
                     <div class="whitelist-picker">
                       <div class="whitelist-picker__section">
@@ -403,7 +403,7 @@
                           id="protectedRootFolders"
                           name="protectedRootFolders"
                           data-i18n-placeholder="placeholderProtectedRootFolders"
-                          placeholder="One root folder per line"
+                          placeholder="One root folder per line, for example:&#10;Work&#10;Personal&#10;Reference"
                         ></textarea>
                       </div>
 
@@ -413,7 +413,7 @@
                           id="domainFolderRules"
                           name="domainFolderRules"
                           data-i18n-placeholder="placeholderDomainFolderRules"
-                          placeholder="example.com => Tools / Reading"
+                          placeholder="One rule per line, for example:&#10;github.com =&gt; AI &amp; Tech / Code&#10;mail.google.com =&gt; Tools &amp; Productivity"
                         ></textarea>
                       </div>
 
