@@ -846,6 +846,10 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /popupOpenSettingsFailed/);
   assert.match(i18nSource, /popupMainTitle: "Marko"/);
   assert.doesNotMatch(i18nSource, /popupMainTitle: "书签整理"/);
+  assert.match(i18nSource, /setupButton: "Open Settings"/);
+  assert.match(i18nSource, /setupButton: "打开设置"/);
+  assert.doesNotMatch(i18nSource, /setupButton: "Set up"/);
+  assert.doesNotMatch(i18nSource, /setupButton: "去设置"/);
   assert.match(i18nSource, /backupButton: "Backup Now"/);
   assert.match(i18nSource, /backupButton: "手动备份"/);
   assert.doesNotMatch(i18nSource, /backupButton: "Backup"/);
@@ -1558,6 +1562,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Chinese popup title now keeps the Marko brand visible/);
   assert.match(changelog, /Settings page header now keeps the Marko brand visible/);
   assert.match(changelog, /Popup backup action now says Backup Now/);
+  assert.match(changelog, /Popup setup primary action now says Open Settings/);
   assert.match(changelog, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(changelog, /Settings automation now uses a direct Silent organize switch/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
@@ -1736,6 +1741,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Chinese popup title now keeps the Marko brand visible/);
   assert.match(releaseNotes, /Settings page header now keeps the Marko brand visible/);
   assert.match(releaseNotes, /Popup backup action now says Backup Now/);
+  assert.match(releaseNotes, /Popup setup primary action now says Open Settings/);
   assert.match(releaseNotes, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(releaseNotes, /Settings automation now uses a direct Silent organize switch/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);

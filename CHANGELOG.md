@@ -19,6 +19,7 @@
 - Chinese popup title now keeps the Marko brand visible instead of replacing it with a generic bookmark-organizing label
 - Settings page header now keeps the Marko brand visible in both English and Chinese
 - Popup backup action now says Backup Now in English so the toolbar reads as an immediate action, matching the Chinese manual-backup label
+- Popup setup primary action now says Open Settings, making the missing-configuration path explicit on first use
 - Settings organization rules now use the same Fast/Balanced/Complete segmented control as the popup instead of a compact dropdown
 - Settings automation now uses a direct Silent organize switch instead of a true/false dropdown
 - Settings automation keeps the interval field disabled until Silent organize is turned on, so inactive timing settings no longer distract or block saves
