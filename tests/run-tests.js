@@ -182,7 +182,7 @@ function loadI18nForLanguage(language) {
     sandbox,
     { filename: "i18n.js" }
   );
-  return sandbox.SmartBookmarkI18n;
+  return sandbox.MarkoI18n;
 }
 
 function collectI18nKeysFromFiles() {
@@ -590,11 +590,17 @@ function testRuntimeBrandingSurface() {
     "popup.js",
     "options.js",
     "i18n.js",
+    "providers.js",
+    "rules.js",
+    "json-utils.js",
+    "cache-utils.js",
     "privacy.html",
     "_locales/en/messages.json",
     "_locales/zh_CN/messages.json"
   ];
   const oldBrandPattern = /Smart Bookmark AI|Smart Bookmark|TidyMarks AI|TidyMarks/;
+  const oldHelperGlobalPattern =
+    /SmartBookmark(?:I18n|Providers|Rules|Json|Cache)|initSmartBookmark(?:I18n|Providers|Rules|Json|Cache)/;
   const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
   assert.match(
     backgroundSource,
@@ -606,7 +612,20 @@ function testRuntimeBrandingSurface() {
       .readFileSync(path.join(ROOT_DIR, file), "utf8")
       .replace(/const LEGACY_ROOT_FOLDERS = \[[^\n]+\];/, "");
     assert.doesNotMatch(source, oldBrandPattern, `${file} should not expose old product names`);
+    assert.doesNotMatch(source, oldHelperGlobalPattern, `${file} should not expose old helper global names`);
   }
+
+  assert.match(backgroundSource, /const I18N = globalThis\.MarkoI18n/);
+  assert.match(backgroundSource, /const Providers = globalThis\.MarkoProviders/);
+  assert.match(backgroundSource, /const Rules = globalThis\.MarkoRules/);
+  assert.match(backgroundSource, /const JsonUtils = globalThis\.MarkoJson/);
+  assert.match(backgroundSource, /const CacheUtils = globalThis\.MarkoCache/);
+  assert.match(fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8"), /globalScope\.MarkoI18n =/);
+  assert.match(fs.readFileSync(path.join(ROOT_DIR, "providers.js"), "utf8"), /globalScope\.MarkoProviders = api/);
+  assert.match(fs.readFileSync(path.join(ROOT_DIR, "rules.js"), "utf8"), /globalScope\.MarkoRules = api/);
+  assert.match(fs.readFileSync(path.join(ROOT_DIR, "json-utils.js"), "utf8"), /globalScope\.MarkoJson = api/);
+  assert.match(fs.readFileSync(path.join(ROOT_DIR, "cache-utils.js"), "utf8"), /globalScope\.MarkoCache = api/);
+  assert.match(fs.readFileSync(path.join(ROOT_DIR, "privacy.html"), "utf8"), /MarkoI18n\.applyDocument\(document\)/);
 }
 
 function testFirstRunFastDefaults() {
@@ -1782,6 +1801,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Manifest now declares the Marko GitHub homepage/);
   assert.match(changelog, /Privacy policies now use the 2026-06-09 release date/);
   assert.match(changelog, /Privacy page now shows the 2026-06-09 update date/);
+  assert.match(changelog, /Runtime helper globals now use Marko names/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
   assert.match(changelog, /Popup progress now estimates remaining time/);
   assert.match(changelog, /warns when the background status has not changed for 45 seconds/);
@@ -1972,6 +1992,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /manifest now declares the Marko GitHub homepage/);
   assert.match(releaseNotes, /privacy policies now use the 2026-06-09 release date/);
   assert.match(releaseNotes, /Privacy page now shows the 2026-06-09 update date/);
+  assert.match(releaseNotes, /runtime helper globals now use Marko names/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
   assert.match(releaseNotes, /Popup progress now estimates remaining time/);
   assert.match(releaseNotes, /warns when the background status has not changed for 45 seconds/);

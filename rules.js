@@ -1,4 +1,4 @@
-(function initSmartBookmarkRules(globalScope) {
+(function initMarkoRules(globalScope) {
   function parseProtectedRootFolders(rawValue) {
     if (typeof rawValue !== "string" || !rawValue.trim()) {
       return [];
@@ -169,7 +169,7 @@
     normalizeUrlForFingerprint
   };
 
-  globalScope.SmartBookmarkRules = api;
+  globalScope.MarkoRules = api;
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = api;

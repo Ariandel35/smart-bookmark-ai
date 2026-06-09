@@ -1,4 +1,4 @@
-(function initSmartBookmarkCache(globalScope) {
+(function initMarkoCache(globalScope) {
   const DEAD_LINK_TTL_MS = {
     dead: 14 * 24 * 60 * 60 * 1000,
     healthy: 7 * 24 * 60 * 60 * 1000,
@@ -75,7 +75,7 @@
     trimCacheEntries
   };
 
-  globalScope.SmartBookmarkCache = api;
+  globalScope.MarkoCache = api;
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = api;

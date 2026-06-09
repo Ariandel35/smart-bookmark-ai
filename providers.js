@@ -1,4 +1,4 @@
-(function initSmartBookmarkProviders(globalScope) {
+(function initMarkoProviders(globalScope) {
   const PROVIDERS = {
     openai: {
       label: "OpenAI",
@@ -387,7 +387,7 @@
     extractText
   };
 
-  globalScope.SmartBookmarkProviders = api;
+  globalScope.MarkoProviders = api;
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = api;

@@ -1,7 +1,7 @@
 const STORAGE_KEY = "smartBookmarkConfig";
 const HOST_ACCESS_ORIGINS = ["https://*/*", "http://*/*"];
-const I18N = globalThis.SmartBookmarkI18n;
-const Providers = globalThis.SmartBookmarkProviders;
+const I18N = globalThis.MarkoI18n;
+const Providers = globalThis.MarkoProviders;
 const t = (key, params) => I18N.t(key, params);
 const LEGACY_DEFAULT_PROMPT = I18N.getLegacyDefaultPrompt();
 const DEFAULT_PROMPT = I18N.getDefaultPrompt();

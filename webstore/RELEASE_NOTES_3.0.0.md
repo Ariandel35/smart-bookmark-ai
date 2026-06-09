@@ -37,6 +37,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - Manifest 现在声明 Marko 的 GitHub 主页，让安装后的扩展元数据也指向同一个公开支持入口
 - 隐私政策现在使用 2026-06-09 发布日期，仓库和 Chrome Web Store 披露材料保持一致
 - 内置隐私说明页现在也显示 2026-06-09 更新时间，并加入窄屏 UI 审计
+- 运行时 helper 全局名现在使用 Marko 命名，同时保留原有存储 key 以兼容升级
 - 自动整理间隔会在静默整理开关打开后才启用，关闭状态下不会用无关时间设置阻断保存
 - 弹窗进度会在已有实际处理进度后估算预计剩余时间，45 秒没有后台更新时会在详情区提供直接取消操作，便于改用快速模式重试，并本地轻量刷新时间文本
 - 弹窗慢任务提示现在提供“一键停止并改用快速模式”，慢模型卡住时不需要再手动取消、切模式、重新开始
@@ -141,6 +142,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - The manifest now declares the Marko GitHub homepage, keeping installed-extension metadata aligned with the public support links
 - The privacy policies now use the 2026-06-09 release date, keeping repository and Chrome Web Store disclosures aligned
 - The Privacy page now shows the 2026-06-09 update date and is covered by the narrow-width UI audit
+- The runtime helper globals now use Marko names while storage keys stay unchanged for upgrade compatibility
 - The automation interval stays disabled until Silent organize is turned on, so inactive timing settings no longer block saves
 - Popup progress now estimates remaining time after the first completed work segment, warns when the background status has not changed for 45 seconds, shows an inline wait-or-cancel suggestion with a direct cancel action in the detail panel, and refreshes the elapsed/remaining clock locally without reloading the full popup state every second
 - Stale popup progress now offers a one-click stop-and-use-Fast action, so users do not need to cancel, switch modes, and start over manually when a slow model stalls

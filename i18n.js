@@ -1,4 +1,4 @@
-(function initSmartBookmarkI18n(globalScope) {
+(function initMarkoI18n(globalScope) {
   const uiLanguage =
     (typeof chrome !== "undefined" &&
       chrome.i18n &&
@@ -848,7 +848,7 @@ Hard rules:
     }
   }
 
-  globalScope.SmartBookmarkI18n = {
+  globalScope.MarkoI18n = {
     locale,
     langTag,
     t,

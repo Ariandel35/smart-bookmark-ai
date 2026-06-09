@@ -19,11 +19,11 @@ const STORAGE_KEYS = {
 const ALARM_NAME = "smart-bookmark-ai-next-batch";
 const AUTO_ORGANIZE_ALARM_NAME = "smart-bookmark-ai-auto-organize";
 const HOST_ACCESS_ORIGINS = ["https://*/*", "http://*/*"];
-const I18N = globalThis.SmartBookmarkI18n;
-const Providers = globalThis.SmartBookmarkProviders;
-const Rules = globalThis.SmartBookmarkRules;
-const JsonUtils = globalThis.SmartBookmarkJson;
-const CacheUtils = globalThis.SmartBookmarkCache;
+const I18N = globalThis.MarkoI18n;
+const Providers = globalThis.MarkoProviders;
+const Rules = globalThis.MarkoRules;
+const JsonUtils = globalThis.MarkoJson;
+const CacheUtils = globalThis.MarkoCache;
 const t = (key, params) => I18N.t(key, params);
 const isZh = I18N.locale === "zh_CN";
 const ux = (zh, en) => (isZh ? zh : en);

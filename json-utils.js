@@ -1,4 +1,4 @@
-(function initSmartBookmarkJson(globalScope) {
+(function initMarkoJson(globalScope) {
   function extractJsonArray(rawText) {
     const value = extractJsonValue(rawText, "array");
     if (!Array.isArray(value)) {
@@ -175,7 +175,7 @@
     findBalancedJsonEnd
   };
 
-  globalScope.SmartBookmarkJson = api;
+  globalScope.MarkoJson = api;
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = api;
