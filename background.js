@@ -886,7 +886,7 @@ async function cleanupForbiddenRootFoldersForBootstrap(activeJob) {
     const bookmarkBarNode = findBookmarksBarNode(tree);
     await cleanupForbiddenAiRootFolders(bookmarkBarNode?.id);
   } catch (error) {
-    console.error("Failed to clean forbidden Smart Bookmark root folders:", error);
+    console.error("Failed to clean legacy AI organizer root folders:", error);
   }
 }
 

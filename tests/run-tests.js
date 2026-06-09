@@ -530,7 +530,9 @@ function testSpeedModeSurface() {
   assert.match(backgroundSource, /left for review; only confirmed dead links/);
   assert.match(backgroundSource, /Cannot generate a Complete preview without site access/);
   assert.match(backgroundSource, /previewing Complete mode/);
+  assert.match(backgroundSource, /Failed to clean legacy AI organizer root folders/);
   assert.doesNotMatch(backgroundSource, /Cannot start organizing without site access/);
+  assert.doesNotMatch(backgroundSource, /Failed to clean forbidden Smart Bookmark root folders/);
 
   const popupSource = fs.readFileSync(path.join(ROOT_DIR, "popup.js"), "utf8");
   assert.match(popupSource, /ensureOrganizeAccess/);
@@ -576,6 +578,31 @@ function testSpeedModeSurface() {
   assert.match(i18nSource, /privacyMeta: "Marko \/ 隐私说明"/);
   assert.match(i18nSource, /privacyDataUseEyebrow: "数据使用"/);
   assert.match(i18nSource, /privacyControlEyebrow: "控制项"/);
+}
+
+function testRuntimeBrandingSurface() {
+  const runtimeFiles = [
+    "background.js",
+    "popup.js",
+    "options.js",
+    "i18n.js",
+    "privacy.html",
+    "_locales/en/messages.json",
+    "_locales/zh_CN/messages.json"
+  ];
+  const oldBrandPattern = /Smart Bookmark AI|Smart Bookmark|TidyMarks AI|TidyMarks/;
+  const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
+  assert.match(
+    backgroundSource,
+    /const LEGACY_ROOT_FOLDERS = \["Smart Bookmark AI", "TidyMarks AI"\];/
+  );
+
+  for (const file of runtimeFiles) {
+    const source = fs
+      .readFileSync(path.join(ROOT_DIR, file), "utf8")
+      .replace(/const LEGACY_ROOT_FOLDERS = \[[^\n]+\];/, "");
+    assert.doesNotMatch(source, oldBrandPattern, `${file} should not expose old product names`);
+  }
 }
 
 function testFirstRunFastDefaults() {
@@ -2486,6 +2513,7 @@ function main() {
   testReadmeLocalReferences();
   testExtensionPackageFileList();
   testSpeedModeSurface();
+  testRuntimeBrandingSurface();
   testFirstRunFastDefaults();
   testPreviewApplySurface();
   testSlowModelResilienceSurface();
