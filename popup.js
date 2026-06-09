@@ -12,6 +12,7 @@ const Providers = globalThis.SmartBookmarkProviders;
 const t = (key, params) => I18N.t(key, params);
 const STATE_REFRESH_INTERVAL_MS = 5_000;
 const PROGRESS_CLOCK_INTERVAL_MS = 1_000;
+const STALE_STATUS_THRESHOLD_MS = 45_000;
 
 const phaseBadge = document.getElementById("phaseBadge");
 const progressTrack = document.getElementById("progressTrack");
@@ -300,6 +301,22 @@ function buildRemainingMeta(status, phase) {
   });
 }
 
+function buildStaleStatusMeta(status, phase) {
+  if (phase !== "running" || !status?.updatedAt) {
+    return "";
+  }
+
+  const updatedAtMs = new Date(status.updatedAt).getTime();
+  const staleMs = Date.now() - updatedAtMs;
+  if (!Number.isFinite(updatedAtMs) || staleMs < STALE_STATUS_THRESHOLD_MS) {
+    return "";
+  }
+
+  return t("staleStatusMeta", {
+    duration: formatDuration(staleMs)
+  });
+}
+
 function getHostname(urlString) {
   if (!urlString) {
     return "";
@@ -524,6 +541,10 @@ function renderStatus(status) {
   const remainingMeta = buildRemainingMeta(status, phase);
   if (remainingMeta) {
     metaParts.push(remainingMeta);
+  }
+  const staleStatusMeta = buildStaleStatusMeta(status, phase);
+  if (staleStatusMeta) {
+    metaParts.push(staleStatusMeta);
   }
   if (status?.updatedAt) {
     metaParts.push(t("updatedMeta", { time: formatDate(status.updatedAt) }));
