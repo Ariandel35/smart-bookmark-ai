@@ -36,6 +36,14 @@ function readPngDimensions(filePath) {
   };
 }
 
+function sliceSourceBetween(source, start, end) {
+  const startIndex = source.indexOf(start);
+  assert.notEqual(startIndex, -1, `Source is missing ${start}`);
+  const endIndex = source.indexOf(end, startIndex + start.length);
+  assert.notEqual(endIndex, -1, `Source is missing ${end}`);
+  return source.slice(startIndex, endIndex);
+}
+
 function testJavaScriptSyntax() {
   for (const file of JAVASCRIPT_SYNTAX_FILES) {
     assert.equal(fs.existsSync(path.join(ROOT_DIR, file)), true, `Missing JavaScript file ${file}`);
@@ -568,6 +576,83 @@ function testSpeedModeSurface() {
   assert.match(i18nSource, /privacyMeta: "Marko \/ 隐私说明"/);
   assert.match(i18nSource, /privacyDataUseEyebrow: "数据使用"/);
   assert.match(i18nSource, /privacyControlEyebrow: "控制项"/);
+}
+
+function testFirstRunFastDefaults() {
+  const optionsHtml = fs.readFileSync(path.join(ROOT_DIR, "options.html"), "utf8");
+  const autoOrganizeInput = optionsHtml.match(/<input[^>]*id="autoOrganizeEnabled"[^>]*>/)?.[0] || "";
+  assert.match(optionsHtml, /id="linkCheckMode"[\s\S]*type="hidden"[\s\S]*value="fast"/);
+  assert.match(autoOrganizeInput, /type="checkbox"/);
+  assert.match(autoOrganizeInput, /role="switch"/);
+  assert.doesNotMatch(autoOrganizeInput, /\bchecked\b/);
+
+  const backgroundSource = fs.readFileSync(path.join(ROOT_DIR, "background.js"), "utf8");
+  const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
+  const popupSource = fs.readFileSync(path.join(ROOT_DIR, "popup.js"), "utf8");
+
+  const backgroundDefaultBlock = sliceSourceBetween(
+    backgroundSource,
+    'function buildDefaultConfig(provider = "openai")',
+    "function mergeConfig(raw = {})"
+  );
+  const optionsDefaultBlock = sliceSourceBetween(
+    optionsSource,
+    'function buildDefaultConfig(provider = "openai")',
+    "function mergeConfig(raw = {})"
+  );
+
+  for (const defaultBlock of [backgroundDefaultBlock, optionsDefaultBlock]) {
+    assert.match(defaultBlock, /provider,/);
+    assert.match(defaultBlock, /linkCheckMode: LINK_CHECK_MODE_FAST,/);
+    assert.match(defaultBlock, /autoOrganizeEnabled: false,/);
+    assert.match(defaultBlock, /autoOrganizeIntervalHours: 24,/);
+    assert.doesNotMatch(defaultBlock, /LINK_CHECK_MODE_BALANCED|LINK_CHECK_MODE_COMPLETE/);
+    assert.doesNotMatch(defaultBlock, /autoOrganizeEnabled: true/);
+  }
+
+  const initializeDefaultsBlock = sliceSourceBetween(
+    backgroundSource,
+    "async function initializeDefaults()",
+    "async function bootstrapState()"
+  );
+  const bootstrapStateBlock = sliceSourceBetween(
+    backgroundSource,
+    "async function bootstrapState()",
+    "async function syncBackupRecordsForBootstrap()"
+  );
+  assert.match(initializeDefaultsBlock, /\[STORAGE_KEYS\.config\]: buildDefaultConfig\("openai"\)/);
+  assert.match(bootstrapStateBlock, /\[STORAGE_KEYS\.config\]: buildDefaultConfig\("openai"\)/);
+
+  const backgroundMergeBlock = sliceSourceBetween(
+    backgroundSource,
+    "function mergeConfig(raw = {})",
+    "function shouldPersistNormalizedConfig"
+  );
+  const optionsMergeBlock = sliceSourceBetween(
+    optionsSource,
+    "function mergeConfig(raw = {})",
+    "function normalizeWhitelistDomain"
+  );
+  for (const mergeBlock of [backgroundMergeBlock, optionsMergeBlock]) {
+    assert.match(mergeBlock, /const provider = providerKnown \? raw\.provider : "openai"/);
+    assert.match(mergeBlock, /const defaults = buildDefaultConfig\(provider\)/);
+    assert.match(mergeBlock, /const linkCheckMode = normalizeLinkCheckMode\(raw\.linkCheckMode \|\| defaults\.linkCheckMode\)/);
+    assert.match(mergeBlock, /const autoOrganizeEnabled =\s*Boolean\(raw\.autoOrganizeEnabled\) &&/);
+  }
+
+  const popupNormalizeBlock = sliceSourceBetween(
+    popupSource,
+    "function normalizeLinkCheckMode(rawValue)",
+    "function mergePopupConfig(raw = {})"
+  );
+  const popupMergeBlock = sliceSourceBetween(
+    popupSource,
+    "function mergePopupConfig(raw = {})",
+    "async function ensureOrganizeAccess"
+  );
+  assert.match(popupNormalizeBlock, /: LINK_CHECK_MODE_FAST/);
+  assert.match(popupMergeBlock, /const provider = providerKnown \? raw\.provider : "openai"/);
+  assert.match(popupMergeBlock, /linkCheckMode: normalizeLinkCheckMode\(raw\.linkCheckMode\)/);
 }
 
 function testPreviewApplySurface() {
@@ -1662,6 +1747,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Release tests now fail when HTML fallback copy drifts from the current English i18n text/);
   assert.match(changelog, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(changelog, /Release tests now verify README local links and images resolve to existing files or directories/);
+  assert.match(changelog, /Release tests now lock new-install and reset defaults to OpenAI, Fast mode, and Silent organize off/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
   assert.match(changelog, /Popup progress now estimates remaining time/);
   assert.match(changelog, /warns when the background status has not changed for 45 seconds/);
@@ -1848,6 +1934,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Release tests now fail when HTML fallback copy drifts from the current English i18n text/);
   assert.match(releaseNotes, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(releaseNotes, /Release tests now verify README local links and images resolve to existing files or directories/);
+  assert.match(releaseNotes, /new installs and resets default to the OpenAI provider, Fast mode, and Silent organize off/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
   assert.match(releaseNotes, /Popup progress now estimates remaining time/);
   assert.match(releaseNotes, /warns when the background status has not changed for 45 seconds/);
@@ -2399,6 +2486,7 @@ function main() {
   testReadmeLocalReferences();
   testExtensionPackageFileList();
   testSpeedModeSurface();
+  testFirstRunFastDefaults();
   testPreviewApplySurface();
   testSlowModelResilienceSurface();
   testOptionsBackupInlineConfirmationSurface();

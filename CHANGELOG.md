@@ -29,6 +29,7 @@
 - README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label
 - Release tests now verify README local links and images resolve to existing files or directories
 - Web Store privacy policy now omits internal publishing instructions, and the release verifier blocks them from returning
+- Release tests now lock new-install and reset defaults to OpenAI, Fast mode, and Silent organize off so first use cannot regress to a slow or higher-permission path
 - Settings automation keeps the interval field disabled until Silent organize is turned on, so inactive timing settings no longer distract or block saves
 - Popup progress now estimates remaining time after the first completed work segment, warns when the background status has not changed for 45 seconds, shows an inline wait-or-cancel suggestion with a direct cancel action in the detail panel, and refreshes the elapsed/remaining clock locally without reloading the full popup state every second
 - Stale popup progress now offers a one-click stop-and-use-Fast action, so users do not need to cancel, switch modes, and retry manually when a slow model stalls

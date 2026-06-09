@@ -33,6 +33,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - README 顶部插图已改为 Marko 品牌，不再显示旧的 Smart Bookmark AI 标签
 - 发布测试现在会校验 README 本地链接和图片是否指向真实存在的文件或目录，避免图文文档破链
 - Chrome Web Store 隐私政策已移除内部发布提示，发布门禁会阻止这类后台操作说明重新进入对外政策
+- 发布测试现在会锁定新安装和重置默认值：OpenAI 服务商、快速模式、静默整理关闭，避免首次体验回到慢路径或更高权限路径
 - 自动整理间隔会在静默整理开关打开后才启用，关闭状态下不会用无关时间设置阻断保存
 - 弹窗进度会在已有实际处理进度后估算预计剩余时间，45 秒没有后台更新时会在详情区提供直接取消操作，便于改用快速模式重试，并本地轻量刷新时间文本
 - 弹窗慢任务提示现在提供“一键停止并改用快速模式”，慢模型卡住时不需要再手动取消、切模式、重新开始
@@ -133,6 +134,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label
 - Release tests now verify README local links and images resolve to existing files or directories
 - Web Store privacy policy now omits internal publishing instructions, and the release verifier blocks them from returning
+- Release tests now lock new installs and resets default to the OpenAI provider, Fast mode, and Silent organize off so first use stays on the fast, lower-permission path
 - The automation interval stays disabled until Silent organize is turned on, so inactive timing settings no longer block saves
 - Popup progress now estimates remaining time after the first completed work segment, warns when the background status has not changed for 45 seconds, shows an inline wait-or-cancel suggestion with a direct cancel action in the detail panel, and refreshes the elapsed/remaining clock locally without reloading the full popup state every second
 - Stale popup progress now offers a one-click stop-and-use-Fast action, so users do not need to cancel, switch modes, and start over manually when a slow model stalls
