@@ -863,8 +863,12 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /keepBookmarkAria/);
   assert.match(i18nSource, /deleteBookmarkAria/);
   assert.match(i18nSource, /optionsMeta: "Marko \/ Options"/);
+  assert.match(i18nSource, /optionsMainTitle: "Marko Settings"/);
+  assert.doesNotMatch(i18nSource, /optionsMainTitle: "Settings"/);
   assert.match(i18nSource, /navEyebrow: "Navigation"/);
   assert.match(i18nSource, /optionsMeta: "Marko \/ 设置"/);
+  assert.match(i18nSource, /optionsMainTitle: "Marko 设置"/);
+  assert.doesNotMatch(i18nSource, /optionsMainTitle: "设置"/);
   assert.match(i18nSource, /navEyebrow: "导航"/);
   assert.match(i18nSource, /saveBadgeFailed: "失败"/);
   assert.match(i18nSource, /saveBadgeLoadFailed: "读取失败"/);
@@ -1060,6 +1064,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="settings-panel-connection"[\s\S]*role="tabpanel"[\s\S]*aria-labelledby="settings-tab-connection"/);
   assert.match(optionsHtml, /id="settings-panel-backup"[\s\S]*role="tabpanel"[\s\S]*aria-labelledby="settings-tab-backup"/);
   assert.match(optionsHtml, /id="settingsActionStatus"/);
+  assert.match(optionsHtml, /data-i18n="optionsMainTitle">Marko Settings<\/h1>/);
   assert.match(optionsHtml, /id="backupActionStatus"/);
   assert.match(optionsHtml, /id="saveBadge"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*aria-atomic="true"[\s\S]*data-i18n="saveBadgeLoading"/);
   assert.match(optionsHtml, /id="backupStatusBadge"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*aria-atomic="true"/);
@@ -1547,6 +1552,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /neutral Provider\/Connection wording/);
   assert.match(changelog, /no preview has been generated yet/);
   assert.match(changelog, /Chinese popup title now keeps the Marko brand visible/);
+  assert.match(changelog, /Settings page header now keeps the Marko brand visible/);
   assert.match(changelog, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(changelog, /Settings automation now uses a direct Silent organize switch/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
@@ -1723,6 +1729,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /neutral Connection and Provider labels/);
   assert.match(releaseNotes, /no preview has been generated yet/);
   assert.match(releaseNotes, /Chinese popup title now keeps the Marko brand visible/);
+  assert.match(releaseNotes, /Settings page header now keeps the Marko brand visible/);
   assert.match(releaseNotes, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(releaseNotes, /Settings automation now uses a direct Silent organize switch/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);

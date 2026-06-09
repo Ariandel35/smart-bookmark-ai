@@ -21,6 +21,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 设置页连接区改用更中性的“连接 / 服务商”措辞，避免快速模式看起来像必须先配置 API
 - 弹窗空状态改为提示“尚未生成预览”，让首屏继续围绕先预览再应用的流程
 - 中文弹窗标题保留 Marko 品牌名，不再替换成泛化的“书签整理”
+- 设置页顶部标题在中英文下都保留 Marko 品牌名
 - 设置页整理规则中的速度模式改为和弹窗一致的快速/平衡/完整三段控件，不再藏在下拉框里
 - 设置页自动整理改为直接的“静默整理”开关，不再让用户在 true/false 下拉框里选择
 - 自动整理间隔会在静默整理开关打开后才启用，关闭状态下不会用无关时间设置阻断保存
@@ -110,6 +111,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Settings now uses neutral Connection and Provider labels so Fast mode no longer looks like mandatory API setup
 - Popup empty-state copy now says no preview has been generated yet, keeping the first screen aligned with the preview-first workflow
 - Chinese popup title now keeps the Marko brand visible instead of replacing it with a generic bookmark-organizing label
+- Settings page header now keeps the Marko brand visible in both English and Chinese
 - Settings organization rules now use the same Fast/Balanced/Complete segmented control as the popup instead of hiding speed mode in a dropdown
 - Settings automation now uses a direct Silent organize switch instead of asking users to choose true or false from a dropdown
 - The automation interval stays disabled until Silent organize is turned on, so inactive timing settings no longer block saves
