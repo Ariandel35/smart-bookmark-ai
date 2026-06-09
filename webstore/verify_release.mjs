@@ -74,6 +74,14 @@ function assertTextIncludesAll(source, snippets, label) {
   console.log(`OK ${label}`);
 }
 
+function assertTextExcludesAll(source, snippets, label) {
+  for (const snippet of snippets) {
+    if (source.includes(snippet)) {
+      throw new Error(`${label} contains internal-only text: ${snippet}`);
+    }
+  }
+}
+
 function getSectionBody(source, heading) {
   const headingStart = source.indexOf(`${heading}\n`);
   if (headingStart === -1) {
@@ -230,6 +238,15 @@ function verifyStoreTextMaterials() {
       "应用已保存的预览方案会直接本地重建，不会再次请求模型",
       "恢复旧备份前也会先为当前书签状态创建本地快照",
       "扩展开发者不会将这些数据上传到自有服务器"
+    ],
+    "webstore privacy policy"
+  );
+  assertTextExcludesAll(
+    privacyPolicy,
+    [
+      "发布前事项",
+      "将本文件发布到一个公开可访问的 HTTPS URL",
+      "在 Chrome Web Store 后台把该 URL 作为隐私政策链接填写"
     ],
     "webstore privacy policy"
   );

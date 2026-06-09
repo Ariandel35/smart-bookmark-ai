@@ -2157,6 +2157,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseVerifier, /webstore\/STORE_LISTING\.md/);
   assert.match(releaseVerifier, /webstore\/REVIEW_NOTES\.md/);
   assert.match(releaseVerifier, /webstore\/PRIVACY_POLICY\.md/);
+  assert.match(releaseVerifier, /assertTextExcludesAll/);
+  assert.match(releaseVerifier, /contains internal-only text/);
+  assert.match(releaseVerifier, /发布前事项/);
   assert.match(releaseVerifier, /webstore\/PUBLISH_CHECKLIST\.md/);
   assert.match(releaseVerifier, /webstore\/GITHUB_LINKS_TEMPLATE\.md/);
   assert.match(releaseVerifier, /verifyStoreAssets/);
@@ -2197,6 +2200,9 @@ function testReleaseMaterialsCurrent() {
   assert.match(webstorePrivacyPolicy, /平衡模式可以使用模型分类，但不会直接访问书签对应的网站做链接检测/);
   assert.match(webstorePrivacyPolicy, /完整模式会直接访问书签对应的网站/);
   assert.match(webstorePrivacyPolicy, /恢复旧备份前也会先为当前书签状态创建本地快照/);
+  assert.doesNotMatch(webstorePrivacyPolicy, /发布前事项/);
+  assert.doesNotMatch(webstorePrivacyPolicy, /将本文件发布到一个公开可访问的 HTTPS URL/);
+  assert.doesNotMatch(webstorePrivacyPolicy, /在 Chrome Web Store 后台把该 URL 作为隐私政策链接填写/);
 
   const publishChecklist = fs.readFileSync(
     path.join(ROOT_DIR, "webstore/PUBLISH_CHECKLIST.md"),

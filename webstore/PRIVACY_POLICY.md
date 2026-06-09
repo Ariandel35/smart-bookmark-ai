@@ -38,7 +38,3 @@ Marko 仅在完成书签整理功能所必需的范围内处理数据。
 
 ## 6. 联系方式
 GitHub 支持页面：`https://github.com/Ariandel35/marko/issues`
-
-## 发布前事项
-- 将本文件发布到一个公开可访问的 HTTPS URL
-- 在 Chrome Web Store 后台把该 URL 作为隐私政策链接填写
