@@ -758,12 +758,16 @@ function testPreviewApplySurface() {
   assert.match(popupSource, /if \(phaseBadge\.textContent !== phaseLabel\)/);
   assert.match(popupSource, /function formatDuration\(milliseconds\)/);
   assert.match(popupSource, /function buildElapsedMeta\(status, phase\)/);
+  assert.match(popupSource, /function buildRemainingMeta\(status, phase\)/);
   assert.match(popupSource, /"ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"/);
   assert.match(popupSource, /event\.key === "Home"/);
   assert.match(popupSource, /event\.key === "End"/);
   assert.match(popupSource, /\["ArrowRight", "ArrowDown"\]\.includes\(event\.key\)/);
   assert.match(popupSource, /phase !== "running" \|\| !status\?\.startedAt/);
   assert.match(popupSource, /metaParts\.push\(elapsedMeta\)/);
+  assert.match(popupSource, /processed <= 0 \|\| processed >= total/);
+  assert.match(popupSource, /elapsedMs < 5_000/);
+  assert.match(popupSource, /metaParts\.push\(remainingMeta\)/);
   assert.match(popupSource, /progressTrack\.setAttribute\("aria-valuetext", `\$\{progress\}%, \$\{progressSummaryText\}, \$\{progressMetaText\}`\)/);
   assert.doesNotMatch(popupSource, /processedValue/);
   assert.match(popupSource, /title\.id = "folderSummaryTitle"/);
@@ -792,6 +796,7 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /popupOpenSettingsFailed/);
   assert.match(i18nSource, /logModelTimeoutFallback/);
   assert.match(i18nSource, /elapsedMeta/);
+  assert.match(i18nSource, /remainingMeta/);
   assert.match(i18nSource, /detailPanelAriaLabel/);
   assert.match(i18nSource, /managedFoldersLoadFailedTitle/);
   assert.match(i18nSource, /managedFoldersLoadFailedDesc/);
@@ -1460,6 +1465,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(changelog, /Settings automation now uses a direct Silent organize switch/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
+  assert.match(changelog, /Popup progress now estimates remaining time/);
   assert.match(changelog, /Added `npm run render:store-assets`/);
   assert.match(changelog, /playwright-core/);
   assert.match(changelog, /without downloading a browser/);
@@ -1543,6 +1549,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /automation access still needs approval/);
   assert.match(readme, /shows the permission impact inline before saving/);
   assert.match(readme, /Settings warn inline before a slow-model batch cap/);
+  assert.match(readme, /estimated remaining time/);
   assert.match(readme, /Batches wake immediately while a Chrome alarm remains as fallback/);
   assert.match(readme, /Complete mode checks up to 8 links at a time/);
   assert.doesNotMatch(readme, /unless you start an organize run/);
@@ -1582,6 +1589,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /自动整理权限仍未授权时明确提示/);
   assert.match(readmeZh, /保存前直接显示权限影响/);
   assert.match(readmeZh, /慢模型批量被压低前先提示/);
+  assert.match(readmeZh, /预计剩余时间/);
   assert.match(readmeZh, /完整模式每次最多并发检测 8 条链接/);
   assert.match(readmeZh, /恢复前会先创建新的本地快照/);
 
@@ -1600,6 +1608,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(releaseNotes, /Settings automation now uses a direct Silent organize switch/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
+  assert.match(releaseNotes, /Popup progress now estimates remaining time/);
   assert.match(releaseNotes, /Added `npm run render:store-assets`/);
   assert.match(releaseNotes, /playwright-core/);
   assert.match(releaseNotes, /without downloading a browser/);

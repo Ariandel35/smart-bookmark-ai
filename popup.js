@@ -269,6 +269,34 @@ function buildElapsedMeta(status, phase) {
   });
 }
 
+function buildRemainingMeta(status, phase) {
+  if (phase !== "running" || !status?.startedAt) {
+    return "";
+  }
+
+  const total = Number(status.total || 0);
+  const processed = Number(status.processed || 0);
+  if (!total || processed <= 0 || processed >= total) {
+    return "";
+  }
+
+  const startedAtMs = new Date(status.startedAt).getTime();
+  const elapsedMs = Date.now() - startedAtMs;
+  if (!Number.isFinite(startedAtMs) || elapsedMs < 5_000) {
+    return "";
+  }
+
+  const averageMsPerItem = elapsedMs / processed;
+  const remainingMs = Math.max(0, Math.round((total - processed) * averageMsPerItem));
+  if (!Number.isFinite(remainingMs) || remainingMs < 1_000) {
+    return "";
+  }
+
+  return t("remainingMeta", {
+    duration: formatDuration(remainingMs)
+  });
+}
+
 function getHostname(urlString) {
   if (!urlString) {
     return "";
@@ -489,6 +517,10 @@ function renderStatus(status) {
   const elapsedMeta = buildElapsedMeta(status, phase);
   if (elapsedMeta) {
     metaParts.push(elapsedMeta);
+  }
+  const remainingMeta = buildRemainingMeta(status, phase);
+  if (remainingMeta) {
+    metaParts.push(remainingMeta);
   }
   if (status?.updatedAt) {
     metaParts.push(t("updatedMeta", { time: formatDate(status.updatedAt) }));
