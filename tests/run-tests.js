@@ -208,6 +208,24 @@ function collectHtmlAttributeValues(source, attributeName) {
   return values;
 }
 
+function decodeHtmlEntities(value) {
+  return String(value || "")
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCodePoint(Number.parseInt(code, 16)))
+    .replace(/&#([0-9]+);/g, (_, code) => String.fromCodePoint(Number.parseInt(code, 10)))
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&gt;/g, ">")
+    .replace(/&lt;/g, "<")
+    .replace(/&amp;/g, "&");
+}
+
+function normalizeFallbackText(value) {
+  return decodeHtmlEntities(value)
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function testHtmlRelationshipIntegrity() {
   for (const file of ["popup.html", "options.html", "privacy.html"]) {
     const source = fs.readFileSync(path.join(ROOT_DIR, file), "utf8");
@@ -1603,6 +1621,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings automation fallback labels now match the simplified Silent organize wording/);
   assert.match(changelog, /Settings fallback section headings now match the shorter Rules, Auto, Advanced, and Backups labels/);
   assert.match(changelog, /Settings fallback labels, hints, and placeholders now match the current English i18n copy before translations load/);
+  assert.match(changelog, /Release tests now fail when HTML fallback copy drifts from the current English i18n text/);
   assert.match(changelog, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
   assert.match(changelog, /Popup progress now estimates remaining time/);
@@ -1786,6 +1805,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings automation fallback labels now match the simplified Silent organize wording/);
   assert.match(releaseNotes, /Settings fallback section headings now match the shorter Rules, Auto, Advanced, and Backups labels/);
   assert.match(releaseNotes, /Settings fallback labels, hints, and placeholders now match the current English i18n copy before translations load/);
+  assert.match(releaseNotes, /Release tests now fail when HTML fallback copy drifts from the current English i18n text/);
   assert.match(releaseNotes, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
   assert.match(releaseNotes, /Popup progress now estimates remaining time/);
@@ -2213,6 +2233,55 @@ function testI18nCoverage() {
   }
 }
 
+function testHtmlFallbacksMatchEnglishI18n() {
+  const enI18n = loadI18nForLanguage("en");
+  const htmlFiles = ["popup.html", "options.html", "privacy.html"];
+
+  for (const file of htmlFiles) {
+    const source = fs.readFileSync(path.join(ROOT_DIR, file), "utf8");
+
+    for (const match of source.matchAll(/<([a-z0-9-]+)([^>]*\sdata-i18n="([^"]+)"[^>]*)>([\s\S]*?)<\/\1>/gi)) {
+      const [, tagName, , key, content] = match;
+      const fallback = normalizeFallbackText(content);
+      const expected = normalizeFallbackText(enI18n.t(key));
+      if (!fallback) {
+        continue;
+      }
+      assert.equal(
+        fallback,
+        expected,
+        `${file} <${tagName}> fallback for data-i18n="${key}" must match English i18n`
+      );
+    }
+
+    for (const match of source.matchAll(/<([a-z0-9-]+)([^>]*\sdata-i18n-placeholder="([^"]+)"[^>]*)>/gi)) {
+      const [, tagName, attributes, key] = match;
+      const fallback = decodeHtmlEntities(
+        attributes.match(/\splaceholder="([^"]*)"/)?.[1] || ""
+      );
+      const expected = enI18n.t(key);
+      assert.equal(
+        fallback,
+        expected,
+        `${file} <${tagName}> fallback for data-i18n-placeholder="${key}" must match English i18n`
+      );
+    }
+
+    for (const match of source.matchAll(/<([a-z0-9-]+)([^>]*\sdata-i18n-aria-label="([^"]+)"[^>]*)>/gi)) {
+      const [, tagName, attributes, key] = match;
+      const fallback = decodeHtmlEntities(
+        attributes.match(/\saria-label="([^"]*)"/)?.[1] || ""
+      );
+      const expected = enI18n.t(key);
+      assert.equal(
+        fallback,
+        expected,
+        `${file} <${tagName}> fallback for data-i18n-aria-label="${key}" must match English i18n`
+      );
+    }
+  }
+}
+
 function testI18nApplyDocumentRobustness() {
   const zhI18n = loadI18nForLanguage("zh-CN");
   assert.doesNotThrow(() => zhI18n.applyDocument());
@@ -2284,6 +2353,7 @@ function main() {
   testResponsiveTextHardeningSurface();
   testReleaseMaterialsCurrent();
   testI18nCoverage();
+  testHtmlFallbacksMatchEnglishI18n();
   testI18nApplyDocumentRobustness();
   console.log("All tests passed.");
 }
