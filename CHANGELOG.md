@@ -14,6 +14,7 @@
 - Settings connection now explains which modes need model fields or website access, so Fast mode no longer looks like mandatory API setup
 - Settings connection now collapses AI endpoint fields by default in Fast mode and opens them automatically for Balanced or Complete mode
 - Settings API Key field now has an explicit show/hide toggle so users can verify pasted keys without exposing them by default
+- Settings connection labels now use neutral Provider/Connection wording so Fast mode no longer looks like a required API setup flow
 - Settings organization rules now use the same Fast/Balanced/Complete segmented control as the popup instead of a compact dropdown
 - Settings automation now uses a direct Silent organize switch instead of a true/false dropdown
 - Settings automation keeps the interval field disabled until Silent organize is turned on, so inactive timing settings no longer distract or block saves

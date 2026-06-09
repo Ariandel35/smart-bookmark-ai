@@ -863,7 +863,8 @@ function testPreviewApplySurface() {
   assert.match(i18nSource, /saveBadgeFailed: "失败"/);
   assert.match(i18nSource, /saveBadgeLoadFailed: "读取失败"/);
   assert.match(i18nSource, /apiKeyClearedOnProviderChange: "已清空 API Key，避免把旧服务商密钥用于新服务商。"/);
-  assert.match(i18nSource, /connectionTitle: "模型连接"/);
+  assert.match(i18nSource, /connectionTitle: "Connection"/);
+  assert.match(i18nSource, /connectionTitle: "连接"/);
   assert.match(i18nSource, /labelProvider: "服务商"/);
   assert.match(i18nSource, /labelModel: "模型名称"/);
   assert.match(i18nSource, /aiConnectionFastSummary: "快速模式可选"/);
@@ -1065,6 +1066,9 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="testApiButton"[\s\S]*aria-describedby="apiTestStatus"[\s\S]*disabled/);
   assert.match(optionsHtml, /id="grantAccessButton"[\s\S]*aria-describedby="hostAccessStatus"[\s\S]*disabled/);
   assert.match(optionsHtml, /id="connectionModeHint"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*data-i18n="connectionModeFastHint"/);
+  assert.match(optionsHtml, /data-i18n="connectionTitle">Connection<\/h2>/);
+  assert.match(optionsHtml, /data-i18n="labelProvider">Provider<\/label>/);
+  assert.doesNotMatch(optionsHtml, /API Provider/);
   assert.match(optionsHtml, /id="provider"[\s\S]*aria-describedby="connectionModeHint aiConnectionSummaryNote"/);
   assert.match(optionsHtml, /id="aiConnectionBlock"/);
   assert.match(optionsHtml, /id="aiConnectionSummaryNote"[\s\S]*data-i18n="aiConnectionFastSummary"/);
@@ -1534,6 +1538,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings connection now explains which modes need model fields or website access/);
   assert.match(changelog, /collapses AI endpoint fields by default in Fast mode/);
   assert.match(changelog, /API Key field now has an explicit show\/hide toggle/);
+  assert.match(changelog, /neutral Provider\/Connection wording/);
   assert.match(changelog, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(changelog, /Settings automation now uses a direct Silent organize switch/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
@@ -1707,6 +1712,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings connection now explains which modes need model fields or website access/);
   assert.match(releaseNotes, /keeps AI connection fields collapsed by default/);
   assert.match(releaseNotes, /offers a show\/hide toggle/);
+  assert.match(releaseNotes, /neutral Connection and Provider labels/);
   assert.match(releaseNotes, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(releaseNotes, /Settings automation now uses a direct Silent organize switch/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
