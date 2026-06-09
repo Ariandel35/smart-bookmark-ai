@@ -203,16 +203,32 @@
 
                       <div class="field">
                         <label for="apiKey" data-i18n="labelApiKey">API Key</label>
-                        <input
-                          id="apiKey"
-                          name="apiKey"
-                          type="password"
-                          data-i18n-placeholder="placeholderApiKey"
-                          placeholder="Enter API key"
-                          autocomplete="new-password"
-                          aria-describedby="connectionModeHint"
-                          spellcheck="false"
-                        />
+                        <div class="input-action">
+                          <input
+                            id="apiKey"
+                            name="apiKey"
+                            type="password"
+                            data-i18n-placeholder="placeholderApiKey"
+                            placeholder="Enter API key"
+                            autocomplete="new-password"
+                            aria-describedby="connectionModeHint apiKeyVisibilityHint"
+                            spellcheck="false"
+                          />
+                          <button
+                            class="button button--ghost button--compact input-action__button"
+                            type="button"
+                            id="apiKeyVisibilityButton"
+                            aria-controls="apiKey"
+                            aria-pressed="false"
+                            data-i18n="showApiKeyButton"
+                            disabled
+                          >
+                            Show
+                          </button>
+                        </div>
+                        <div class="field__hint" id="apiKeyVisibilityHint" data-i18n="apiKeyVisibilityHint">
+                          Hidden by default. Use Show only to verify pasted text.
+                        </div>
                       </div>
 
                       <div class="field field--inline-actions">

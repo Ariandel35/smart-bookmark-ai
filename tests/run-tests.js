@@ -1070,7 +1070,9 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="aiConnectionSummaryNote"[\s\S]*data-i18n="aiConnectionFastSummary"/);
   assert.match(optionsHtml, /id="model"[\s\S]*aria-describedby="connectionModeHint"/);
   assert.match(optionsHtml, /id="baseUrl"[\s\S]*aria-describedby="connectionModeHint"/);
-  assert.match(optionsHtml, /id="apiKey"[\s\S]*aria-describedby="connectionModeHint"/);
+  assert.match(optionsHtml, /id="apiKey"[\s\S]*type="password"[\s\S]*aria-describedby="connectionModeHint apiKeyVisibilityHint"/);
+  assert.match(optionsHtml, /class="input-action"[\s\S]*id="apiKeyVisibilityButton"[\s\S]*aria-controls="apiKey"[\s\S]*aria-pressed="false"[\s\S]*data-i18n="showApiKeyButton"/);
+  assert.match(optionsHtml, /id="apiKeyVisibilityHint"[\s\S]*data-i18n="apiKeyVisibilityHint"/);
   assert.match(optionsHtml, /id="autoOrganizeAccessHint"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*hidden/);
   assert.match(optionsHtml, /id="linkCheckMode"[\s\S]*type="hidden"[\s\S]*value="fast"/);
   assert.match(optionsHtml, /id="linkCheckModeLabel"[\s\S]*data-i18n="labelLinkCheckMode"/);
@@ -1104,6 +1106,14 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /capConfigBatchSize/);
   assert.match(optionsSource, /batchSizeCapHint/);
   assert.match(optionsSource, /connectionModeHint/);
+  assert.match(optionsSource, /apiKeyVisibilityButton/);
+  assert.match(optionsSource, /function setApiKeyVisible\(isVisible\)/);
+  assert.match(optionsSource, /apiKeyInput\.type = isVisible \? "text" : "password"/);
+  assert.match(optionsSource, /function updateApiKeyVisibilityButton\(\)/);
+  assert.match(optionsSource, /apiKeyVisibilityButton\.setAttribute\("aria-pressed", String\(isVisible\)\)/);
+  assert.match(optionsSource, /apiKeyVisibilityButton\.disabled = isLocked/);
+  assert.match(optionsSource, /setApiKeyVisible\(false\)/);
+  assert.match(optionsSource, /apiKeyVisibilityButton\.addEventListener\("click"/);
   assert.match(optionsSource, /function updateBatchSizeCapHint\(\)/);
   assert.match(optionsSource, /function updateConnectionModeHint\(\)/);
   assert.match(optionsSource, /connectionModeCompleteHint/);
@@ -1388,6 +1398,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(stylesSource, /\.field label,[\s\S]*\.field__label/);
   assert.match(stylesSource, /\.field__hint--warm/);
   assert.match(stylesSource, /\.field__hint\[hidden\]/);
+  assert.match(stylesSource, /\.input-action[\s\S]*grid-template-columns: minmax\(0, 1fr\) auto/);
+  assert.match(stylesSource, /\.input-action__button[\s\S]*white-space: nowrap/);
   assert.match(stylesSource, /\.segmented-control[\s\S]*width: 100%/);
   assert.match(stylesSource, /\.segmented-control__button:focus-visible/);
   assert.match(stylesSource, /\.toggle[\s\S]*grid-template-columns: auto minmax\(0, 1fr\)/);
@@ -1408,6 +1420,11 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(i18nSource, /whitelistAddDomainWithCount/);
   assert.match(i18nSource, /whitelistRemoveDomainWithCount/);
   assert.match(i18nSource, /hintBatchSize/);
+  assert.match(i18nSource, /showApiKeyButton/);
+  assert.match(i18nSource, /hideApiKeyButton/);
+  assert.match(i18nSource, /showApiKeyAria/);
+  assert.match(i18nSource, /hideApiKeyAria/);
+  assert.match(i18nSource, /apiKeyVisibilityHint/);
   assert.match(i18nSource, /hintAutoOrganizeInterval/);
   assert.match(i18nSource, /settingsSavedStatus/);
   assert.match(i18nSource, /saveBadgeLoading/);
@@ -1516,6 +1533,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Fast mode no longer blocks preview or settings save when Base URL or model name are blank/);
   assert.match(changelog, /Settings connection now explains which modes need model fields or website access/);
   assert.match(changelog, /collapses AI endpoint fields by default in Fast mode/);
+  assert.match(changelog, /API Key field now has an explicit show\/hide toggle/);
   assert.match(changelog, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(changelog, /Settings automation now uses a direct Silent organize switch/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
@@ -1607,6 +1625,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(readme, /npm run package:webstore/);
   assert.match(readme, /Popup mode switch/);
   assert.match(readme, /keeps AI connection fields collapsed until Balanced or Complete needs them/);
+  assert.match(readme, /keeps API keys hidden by default with a show\/hide check/);
   assert.match(readme, /same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(readme, /built-in domain rules/);
   assert.match(readme, /unless Balanced\/Complete preview or enabled auto organize needs external access/);
@@ -1657,6 +1676,8 @@ function testReleaseMaterialsCurrent() {
   assert.match(readmeZh, /npm run package:webstore/);
   assert.match(readmeZh, /弹窗模式切换/);
   assert.match(readmeZh, /AI 连接字段会在平衡或完整模式需要时再展开/);
+  assert.match(readmeZh, /API Key 默认隐藏/);
+  assert.match(readmeZh, /手动显示\/隐藏/);
   assert.match(readmeZh, /和弹窗一致的快速\/平衡\/完整三段控件/);
   assert.match(readmeZh, /内置域名规则/);
   assert.match(readmeZh, /待手动分类兜底会在本地完成/);
@@ -1685,6 +1706,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Fast mode no longer blocks preview or settings save when Base URL or model name are blank/);
   assert.match(releaseNotes, /Settings connection now explains which modes need model fields or website access/);
   assert.match(releaseNotes, /keeps AI connection fields collapsed by default/);
+  assert.match(releaseNotes, /offers a show\/hide toggle/);
   assert.match(releaseNotes, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(releaseNotes, /Settings automation now uses a direct Silent organize switch/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
@@ -1978,6 +2000,12 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /optionsSaveExpression/);
   assert.match(extensionE2e, /settingsSpeedModeBalancedButton/);
   assert.match(extensionE2e, /settingsSpeedModeFastButton/);
+  assert.match(extensionE2e, /apiKeyVisibilityButton/);
+  assert.match(extensionE2e, /apiKeyTypeBeforeToggle/);
+  assert.match(extensionE2e, /apiKeyTypeAfterShow/);
+  assert.match(extensionE2e, /apiKeyTypeAfterHide/);
+  assert.match(extensionE2e, /options API key visibility toggle did not switch between password and text modes/);
+  assert.match(extensionE2e, /options API key visibility toggle did not update aria-pressed/);
   assert.match(extensionE2e, /element\.type === "checkbox"/);
   assert.match(extensionE2e, /element\.checked = value === true \|\| value === "true"/);
   assert.match(extensionE2e, /setValue\("autoOrganizeEnabled", false\)/);

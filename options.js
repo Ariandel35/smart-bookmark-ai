@@ -20,6 +20,7 @@ const settingsFields = Array.from(form.querySelectorAll("input, select, textarea
 const providerSelect = document.getElementById("provider");
 const baseUrlInput = document.getElementById("baseUrl");
 const apiKeyInput = document.getElementById("apiKey");
+const apiKeyVisibilityButton = document.getElementById("apiKeyVisibilityButton");
 const modelInput = document.getElementById("model");
 const batchSizeInput = document.getElementById("batchSize");
 const batchSizeCapHint = document.getElementById("batchSizeCapHint");
@@ -107,9 +108,25 @@ function syncPrimaryActionButtonLabels() {
   setButtonLabel(privacyButton, t("privacyButton"));
   setButtonLabel(testApiButton, t("testApiButton"));
   setButtonLabel(createBackupButton, t("createBackupNow"));
+  updateApiKeyVisibilityButton();
   setGrantAccessButtonState(grantAccessButton.dataset.granted === "true", {
     accessNeeded: grantAccessButton.dataset.accessNeeded !== "false"
   });
+}
+
+function setApiKeyVisible(isVisible) {
+  apiKeyInput.type = isVisible ? "text" : "password";
+  updateApiKeyVisibilityButton();
+}
+
+function updateApiKeyVisibilityButton() {
+  const isVisible = apiKeyInput.type === "text";
+  const buttonText = t(isVisible ? "hideApiKeyButton" : "showApiKeyButton");
+  const buttonLabel = t(isVisible ? "hideApiKeyAria" : "showApiKeyAria");
+  apiKeyVisibilityButton.textContent = buttonText;
+  apiKeyVisibilityButton.title = buttonLabel;
+  apiKeyVisibilityButton.setAttribute("aria-label", buttonLabel);
+  apiKeyVisibilityButton.setAttribute("aria-pressed", String(isVisible));
 }
 
 function syncNavigationButtonLabels() {
@@ -590,6 +607,7 @@ function updateSettingsOperationControls() {
   linkCheckModeButtons.forEach((button) => {
     button.disabled = isLocked;
   });
+  apiKeyVisibilityButton.disabled = isLocked;
   saveButton.disabled = isLocked;
   testApiButton.disabled = isLocked;
   resetButton.disabled = isLocked;
@@ -884,6 +902,7 @@ function populateForm(config) {
   providerSelect.value = config.provider;
   baseUrlInput.value = config.baseUrl;
   apiKeyInput.value = config.apiKey;
+  setApiKeyVisible(false);
   modelInput.value = config.model;
   batchSizeInput.value = String(config.batchSize);
   setLinkCheckMode(config.linkCheckMode);
@@ -1850,6 +1869,7 @@ providerSelect.addEventListener("change", () => {
 
   if (shouldClearApiKey) {
     apiKeyInput.value = "";
+    setApiKeyVisible(false);
   }
 
   if (!modelInput.value.trim() || modelInput.value.trim() === previousDefaults.model) {
@@ -1878,6 +1898,14 @@ providerSelect.addEventListener("change", () => {
     console.error("Failed to refresh host access status after provider change:", error);
     renderHostAccessRefreshFailure();
   });
+});
+
+apiKeyVisibilityButton.addEventListener("click", () => {
+  if (apiKeyVisibilityButton.disabled) {
+    return;
+  }
+
+  setApiKeyVisible(apiKeyInput.type !== "text");
 });
 
 linkCheckModeButtons.forEach((button, index) => {

@@ -2078,6 +2078,26 @@ function optionsSaveExpression() {
 
     setValue("provider", "deepseek");
     await wait(100);
+    document.getElementById("aiConnectionBlock").open = true;
+    const apiKeyInput = document.getElementById("apiKey");
+    const apiKeyVisibilityButton = document.getElementById("apiKeyVisibilityButton");
+    if (!apiKeyInput || !apiKeyVisibilityButton || apiKeyVisibilityButton.disabled) {
+      throw new Error("API key visibility controls are not available.");
+    }
+    setValue("apiKey", "sk-e2e-visibility");
+    const apiKeyTypeBeforeToggle = apiKeyInput.type;
+    const apiKeyButtonTextBeforeToggle = (apiKeyVisibilityButton.textContent || "").trim();
+    clickButton("apiKeyVisibilityButton");
+    await wait(100);
+    const apiKeyTypeAfterShow = apiKeyInput.type;
+    const apiKeyButtonTextAfterShow = (apiKeyVisibilityButton.textContent || "").trim();
+    const apiKeyPressedAfterShow = apiKeyVisibilityButton.getAttribute("aria-pressed");
+    clickButton("apiKeyVisibilityButton");
+    await wait(100);
+    const apiKeyTypeAfterHide = apiKeyInput.type;
+    const apiKeyButtonTextAfterHide = (apiKeyVisibilityButton.textContent || "").trim();
+    const apiKeyPressedAfterHide = apiKeyVisibilityButton.getAttribute("aria-pressed");
+    setValue("apiKey", "");
     clickButton("settings-tab-organize");
     await wait(100);
     const balancedButton = clickButton("settingsSpeedModeBalancedButton");
@@ -2154,6 +2174,14 @@ function optionsSaveExpression() {
       automationToggleOffStateText,
       automationToggleOffHint,
       automationIntervalDisabledOff,
+      apiKeyTypeBeforeToggle,
+      apiKeyButtonTextBeforeToggle,
+      apiKeyTypeAfterShow,
+      apiKeyButtonTextAfterShow,
+      apiKeyPressedAfterShow,
+      apiKeyTypeAfterHide,
+      apiKeyButtonTextAfterHide,
+      apiKeyPressedAfterHide,
       saveBadgeText: (document.getElementById("saveBadge")?.textContent || "").trim(),
       settingsActionText: (document.getElementById("settingsActionStatus")?.textContent || "").trim()
     };
@@ -2324,6 +2352,26 @@ function formatPageFailures(result, extensionId) {
     }
     if (result.optionsSave?.fastConnectionOpen) {
       failures.push("options save flow did not collapse AI connection fields after returning to Fast mode");
+    }
+    if (
+      result.optionsSave?.apiKeyTypeBeforeToggle !== "password" ||
+      result.optionsSave?.apiKeyTypeAfterShow !== "text" ||
+      result.optionsSave?.apiKeyTypeAfterHide !== "password"
+    ) {
+      failures.push("options API key visibility toggle did not switch between password and text modes");
+    }
+    if (
+      result.optionsSave?.apiKeyPressedAfterShow !== "true" ||
+      result.optionsSave?.apiKeyPressedAfterHide !== "false"
+    ) {
+      failures.push("options API key visibility toggle did not update aria-pressed");
+    }
+    if (
+      !result.optionsSave?.apiKeyButtonTextBeforeToggle ||
+      result.optionsSave.apiKeyButtonTextBeforeToggle === result.optionsSave?.apiKeyButtonTextAfterShow ||
+      result.optionsSave.apiKeyButtonTextBeforeToggle !== result.optionsSave?.apiKeyButtonTextAfterHide
+    ) {
+      failures.push("options API key visibility toggle did not swap visible labels");
     }
     if (
       result.optionsSave?.automationToggleOnChecked !== true ||
