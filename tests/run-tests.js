@@ -294,6 +294,7 @@ function testStaticExtensionAssets() {
   const packageJson = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "package.json"), "utf8"));
   assert.equal(manifest.manifest_version, 3);
   assert.equal(manifest.version, "3.0.0");
+  assert.equal(manifest.homepage_url, "https://github.com/Ariandel35/marko");
   assert.equal(packageJson.name, "marko");
   assert.equal(packageJson.version, manifest.version);
   assert.equal(packageJson.private, true);
@@ -1775,6 +1776,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(changelog, /Release tests now verify README local links and images resolve to existing files or directories/);
   assert.match(changelog, /Release tests now lock new-install and reset defaults to OpenAI, Fast mode, and Silent organize off/);
+  assert.match(changelog, /Manifest now declares the Marko GitHub homepage/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
   assert.match(changelog, /Popup progress now estimates remaining time/);
   assert.match(changelog, /warns when the background status has not changed for 45 seconds/);
@@ -1962,6 +1964,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(releaseNotes, /Release tests now verify README local links and images resolve to existing files or directories/);
   assert.match(releaseNotes, /new installs and resets default to the OpenAI provider, Fast mode, and Silent organize off/);
+  assert.match(releaseNotes, /manifest now declares the Marko GitHub homepage/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
   assert.match(releaseNotes, /Popup progress now estimates remaining time/);
   assert.match(releaseNotes, /warns when the background status has not changed for 45 seconds/);

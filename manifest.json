@@ -4,6 +4,7 @@
   "description": "__MSG_extDescription__",
   "version": "3.0.0",
   "default_locale": "en",
+  "homepage_url": "https://github.com/Ariandel35/marko",
   "permissions": ["bookmarks", "storage", "alarms"],
   "optional_host_permissions": ["https://*/*", "http://*/*"],
   "icons": {
