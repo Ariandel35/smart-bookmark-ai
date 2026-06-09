@@ -1105,9 +1105,15 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="settingsSpeedModeCompleteButton"[\s\S]*role="radio"[\s\S]*data-settings-speed-mode="complete"[\s\S]*aria-checked="false"[\s\S]*disabled/);
   assert.doesNotMatch(optionsHtml, /<select id="linkCheckMode"/);
   assert.match(optionsHtml, /id="linkCheckModeHint"[\s\S]*data-i18n="hintLinkCheckMode"/);
+  assert.match(optionsHtml, /data-i18n="organizeTitle">Rules<\/h2>/);
+  assert.doesNotMatch(optionsHtml, /Organization Rules/);
   assert.match(optionsHtml, /id="batchSize"[\s\S]*aria-describedby="batchSizeHint"/);
   assert.match(optionsHtml, /id="batchSizeHint"[\s\S]*data-i18n="hintBatchSize"/);
   assert.match(optionsHtml, /id="batchSizeCapHint"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*hidden/);
+  assert.match(optionsHtml, /data-i18n="advancedSettingsTitle">Advanced<\/summary>/);
+  assert.doesNotMatch(optionsHtml, /Advanced Settings/);
+  assert.match(optionsHtml, /data-i18n="automationTitle">Auto<\/h2>/);
+  assert.doesNotMatch(optionsHtml, /Automation<\/h2>/);
   assert.match(optionsHtml, /class="toggle"[\s\S]*for="autoOrganizeEnabled"/);
   assert.match(optionsHtml, /id="autoOrganizeEnabled"[\s\S]*type="checkbox"[\s\S]*role="switch"[\s\S]*aria-describedby="autoOrganizeAccessHint"[\s\S]*disabled/);
   assert.match(optionsHtml, /class="toggle__track"[\s\S]*class="toggle__thumb"/);
@@ -1121,6 +1127,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="autoOrganizeIntervalHint"[\s\S]*data-i18n="hintAutoOrganizeInterval"/);
   assert.match(optionsHtml, /id="whitelistSelectionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.match(optionsHtml, /id="whitelistSearch"[\s\S]*aria-describedby="whitelistSelectionStatus"/);
+  assert.match(optionsHtml, /data-i18n="backupTitle">Backups<\/h2>/);
+  assert.doesNotMatch(optionsHtml, /Backup Management/);
   assert.match(optionsHtml, /id="saveButton"/);
 
   const optionsSource = fs.readFileSync(path.join(ROOT_DIR, "options.js"), "utf8");
@@ -1573,6 +1581,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(changelog, /Settings automation now uses a direct Silent organize switch/);
   assert.match(changelog, /Settings automation fallback labels now match the simplified Silent organize wording/);
+  assert.match(changelog, /Settings fallback section headings now match the shorter Rules, Auto, Advanced, and Backups labels/);
   assert.match(changelog, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(changelog, /keeps the interval field disabled until Silent organize is turned on/);
   assert.match(changelog, /Popup progress now estimates remaining time/);
@@ -1754,6 +1763,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings organization rules now use the same Fast\/Balanced\/Complete segmented control as the popup/);
   assert.match(releaseNotes, /Settings automation now uses a direct Silent organize switch/);
   assert.match(releaseNotes, /Settings automation fallback labels now match the simplified Silent organize wording/);
+  assert.match(releaseNotes, /Settings fallback section headings now match the shorter Rules, Auto, Advanced, and Backups labels/);
   assert.match(releaseNotes, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(releaseNotes, /automation interval stays disabled until Silent organize is turned on/);
   assert.match(releaseNotes, /Popup progress now estimates remaining time/);

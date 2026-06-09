@@ -27,6 +27,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 设置页整理规则中的速度模式改为和弹窗一致的快速/平衡/完整三段控件，不再藏在下拉框里
 - 设置页自动整理改为直接的“静默整理”开关，不再让用户在 true/false 下拉框里选择
 - 设置页自动整理的英文兜底文案也与精简后的 Silent organize 命名保持一致，翻译脚本加载前不会闪现旧标签
+- 设置页英文兜底标题也对齐为更短的 Rules、Auto、Advanced 和 Backups，翻译脚本加载前保持简洁
 - README 顶部插图已改为 Marko 品牌，不再显示旧的 Smart Bookmark AI 标签
 - 自动整理间隔会在静默整理开关打开后才启用，关闭状态下不会用无关时间设置阻断保存
 - 弹窗进度会在已有实际处理进度后估算预计剩余时间，45 秒没有后台更新时会在详情区提供直接取消操作，便于改用快速模式重试，并本地轻量刷新时间文本
@@ -121,6 +122,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Settings organization rules now use the same Fast/Balanced/Complete segmented control as the popup instead of hiding speed mode in a dropdown
 - Settings automation now uses a direct Silent organize switch instead of asking users to choose true or false from a dropdown
 - Settings automation fallback labels now match the simplified Silent organize wording before translations load
+- Settings fallback section headings now match the shorter Rules, Auto, Advanced, and Backups labels before translations load
 - README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label
 - The automation interval stays disabled until Silent organize is turned on, so inactive timing settings no longer block saves
 - Popup progress now estimates remaining time after the first completed work segment, warns when the background status has not changed for 45 seconds, shows an inline wait-or-cancel suggestion with a direct cancel action in the detail panel, and refreshes the elapsed/remaining clock locally without reloading the full popup state every second
