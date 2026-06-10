@@ -39,6 +39,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - Manifest 现在声明 Marko 的 GitHub 主页，让安装后的扩展元数据也指向同一个公开支持入口
 - 隐私政策现在使用 2026-06-09 发布日期，仓库和 Chrome Web Store 披露材料保持一致
 - 内置隐私说明页现在也显示 2026-06-09 更新时间，并加入窄屏 UI 审计
+- 内置隐私说明页现在提供支持入口和私密安全报告入口，查看数据边界时可直接找到正确反馈路径
 - 运行时 helper 全局名现在使用 Marko 命名，同时保留原有存储 key 以兼容升级
 - 安全与支持文档现在使用 Marko 的 GitHub 私密漏洞报告路径，发布门禁会阻止占位安全联系人回归
 - README 的中英文入口和链接区现在都公开安全报告地址
@@ -148,6 +149,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - The manifest now declares the Marko GitHub homepage, keeping installed-extension metadata aligned with the public support links
 - The privacy policies now use the 2026-06-09 release date, keeping repository and Chrome Web Store disclosures aligned
 - The Privacy page now shows the 2026-06-09 update date and is covered by the narrow-width UI audit
+- The Privacy page now includes support and private security-reporting links, so data-boundary readers can reach the right help path directly
 - The runtime helper globals now use Marko names while storage keys stay unchanged for upgrade compatibility
 - Security and support docs now use Marko's GitHub vulnerability reporting path, and the release verifier blocks placeholder security contacts
 - README now exposes the security reporting link in both language entrypoints and support links

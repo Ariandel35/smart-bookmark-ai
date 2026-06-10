@@ -467,6 +467,15 @@ Hard rules:
       privacyBackupTitle: "Backup and restore",
       privacyBackupDesc:
         "A local snapshot backup is created before applying a preview plan, before automatic organize rebuilds, and before restoring an older backup. You can manage backups and restore older versions from the settings page.",
+      privacyContactEyebrow: "Contact",
+      privacyContactTitle: "Support and security",
+      privacySupportTitle: "Support",
+      privacySupportDesc: "Use GitHub Issues for product questions, bugs, and feature requests.",
+      privacySupportLink: "Open GitHub Issues",
+      privacySecurityTitle: "Security reporting",
+      privacySecurityDesc:
+        "Use GitHub private vulnerability reporting for sensitive security issues. Do not post secrets, bookmark data, or exploit details in public issues.",
+      privacySecurityLink: "Open private security report",
       defaultPrompt: DEFAULT_PROMPT_EN,
       legacyDefaultPrompt: LEGACY_DEFAULT_PROMPT_ZH
     },
@@ -784,6 +793,15 @@ Hard rules:
       privacyWhitelistDesc: "白名单域名不会被自动整理；状态不明确的书签会进入“待手动分类”。",
       privacyBackupTitle: "备份与恢复",
       privacyBackupDesc: "应用预览方案、自动整理重建和恢复旧备份前都会先创建本地快照备份。你可以在设置页管理备份并恢复旧版本。",
+      privacyContactEyebrow: "联系",
+      privacyContactTitle: "支持与安全",
+      privacySupportTitle: "支持",
+      privacySupportDesc: "产品问题、错误反馈和功能建议请使用 GitHub Issues。",
+      privacySupportLink: "打开 GitHub Issues",
+      privacySecurityTitle: "安全报告",
+      privacySecurityDesc:
+        "敏感安全问题请使用 GitHub 私密漏洞报告。不要在公开 issue 中发布密钥、书签数据或漏洞利用细节。",
+      privacySecurityLink: "打开私密安全报告",
       defaultPrompt: DEFAULT_PROMPT_ZH,
       legacyDefaultPrompt: LEGACY_DEFAULT_PROMPT_ZH
     }

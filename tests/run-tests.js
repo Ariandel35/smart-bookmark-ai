@@ -575,6 +575,10 @@ function testSpeedModeSurface() {
   assert.match(privacyHtml, /data-i18n="privacyLastUpdatedMeta">Last updated: 2026-06-09<\/p>/);
   assert.match(privacyHtml, /data-i18n="privacyDataUseEyebrow"/);
   assert.match(privacyHtml, /data-i18n="privacyControlEyebrow"/);
+  assert.match(privacyHtml, /data-i18n="privacyContactEyebrow">Contact<\/p>/);
+  assert.match(privacyHtml, /href="https:\/\/github\.com\/Ariandel35\/marko\/issues"[\s\S]*rel="noopener noreferrer"[\s\S]*data-i18n="privacySupportLink"/);
+  assert.match(privacyHtml, /href="https:\/\/github\.com\/Ariandel35\/marko\/security\/advisories\/new"[\s\S]*rel="noopener noreferrer"[\s\S]*data-i18n="privacySecurityLink"/);
+  assert.match(privacyHtml, /Do not post secrets, bookmark data, or exploit details in public issues/);
 
   const i18nSource = fs.readFileSync(path.join(ROOT_DIR, "i18n.js"), "utf8");
   assert.match(i18nSource, /privacyLastUpdatedMeta: "Last updated: 2026-06-09"/);
@@ -582,6 +586,8 @@ function testSpeedModeSurface() {
   assert.match(i18nSource, /privacyMeta: "Marko \/ 隐私说明"/);
   assert.match(i18nSource, /privacyDataUseEyebrow: "数据使用"/);
   assert.match(i18nSource, /privacyControlEyebrow: "控制项"/);
+  assert.match(i18nSource, /privacyContactTitle: "支持与安全"/);
+  assert.match(i18nSource, /privacySecurityLink: "打开私密安全报告"/);
 }
 
 function testRuntimeBrandingSurface() {
@@ -1828,6 +1834,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Manifest now declares the Marko GitHub homepage/);
   assert.match(changelog, /Privacy policies now use the 2026-06-09 release date/);
   assert.match(changelog, /Privacy page now shows the 2026-06-09 update date/);
+  assert.match(changelog, /Privacy page now includes support and private security-reporting links/);
   assert.match(changelog, /Runtime helper globals now use Marko names/);
   assert.match(changelog, /Security and support docs now use Marko's GitHub vulnerability reporting path/);
   assert.match(changelog, /README now exposes the security reporting link/);
@@ -2027,6 +2034,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /manifest now declares the Marko GitHub homepage/);
   assert.match(releaseNotes, /privacy policies now use the 2026-06-09 release date/);
   assert.match(releaseNotes, /Privacy page now shows the 2026-06-09 update date/);
+  assert.match(releaseNotes, /Privacy page now includes support and private security-reporting links/);
   assert.match(releaseNotes, /runtime helper globals now use Marko names/);
   assert.match(releaseNotes, /Security and support docs now use Marko's GitHub vulnerability reporting path/);
   assert.match(releaseNotes, /README now exposes the security reporting link/);

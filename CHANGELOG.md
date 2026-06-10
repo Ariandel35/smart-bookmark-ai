@@ -35,6 +35,7 @@
 - Manifest now declares the Marko GitHub homepage so installed-extension metadata points to the same public support entry as the store materials
 - Privacy policies now use the 2026-06-09 release date so repository and Web Store disclosures stay aligned with the current 3.0 package
 - Privacy page now shows the 2026-06-09 update date in English and Chinese, and the UI audit covers the privacy page at narrow width
+- Privacy page now includes support and private security-reporting links so data-boundary readers can reach the right help path directly
 - Runtime helper globals now use Marko names while storage keys remain unchanged for upgrade compatibility
 - Security and support docs now use Marko's GitHub vulnerability reporting path, and the release verifier blocks placeholder security contacts
 - README now exposes the security reporting link in both language entrypoints and support links
