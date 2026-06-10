@@ -11,6 +11,7 @@ const DEEPSEEK_RUNTIME_BATCH_SIZE = 9;
 const RUNTIME_BATCH_SIZE_CAPS = {
   deepseek: DEEPSEEK_RUNTIME_BATCH_SIZE
 };
+const SUPPORT_URL = "https://github.com/Ariandel35/marko/issues";
 const LINK_CHECK_MODE_FAST = "fast";
 const LINK_CHECK_MODE_BALANCED = "balanced";
 const LINK_CHECK_MODE_COMPLETE = "complete";
@@ -52,6 +53,7 @@ const saveButton = document.getElementById("saveButton");
 const testApiButton = document.getElementById("testApiButton");
 const grantAccessButton = document.getElementById("grantAccessButton");
 const resetButton = document.getElementById("resetButton");
+const supportButton = document.getElementById("supportButton");
 const privacyButton = document.getElementById("privacyButton");
 const backupList = document.getElementById("backupList");
 const backupStatusBadge = document.getElementById("backupStatusBadge");
@@ -106,6 +108,7 @@ function setGrantAccessButtonState(granted = false, options = {}) {
 function syncPrimaryActionButtonLabels() {
   setButtonLabel(saveButton, t("saveButton"));
   setButtonLabel(resetButton, t("resetButton"));
+  setButtonLabel(supportButton, t("supportButton"));
   setButtonLabel(privacyButton, t("privacyButton"));
   setButtonLabel(testApiButton, t("testApiButton"));
   setButtonLabel(createBackupButton, t("createBackupNow"));
@@ -543,6 +546,22 @@ async function openPrivacyPage() {
   const openedWindow = window.open(privacyUrl, "_blank", "noopener");
   if (!openedWindow) {
     throw new Error(t("privacyOpenFailed"));
+  }
+}
+
+async function openSupportPage() {
+  try {
+    if (chrome.tabs?.create) {
+      await chrome.tabs.create({ url: SUPPORT_URL });
+      return;
+    }
+  } catch (error) {
+    // Fall back to window.open when tab creation is not available in this context.
+  }
+
+  const openedWindow = window.open(SUPPORT_URL, "_blank", "noopener");
+  if (!openedWindow) {
+    throw new Error(t("supportOpenFailed"));
   }
 }
 
@@ -1970,6 +1989,12 @@ grantAccessButton.addEventListener("click", () => {
 });
 resetButton.addEventListener("click", resetCurrentProviderDefaults);
 createBackupButton.addEventListener("click", createManualBackup);
+supportButton.addEventListener("click", () => {
+  openSupportPage().catch((error) => {
+    console.error("Failed to open support page:", error);
+    setSettingsActionStatus(t("supportOpenFailed"), true);
+  });
+});
 privacyButton.addEventListener("click", () => {
   openPrivacyPage().catch((error) => {
     console.error("Failed to open privacy page:", error);

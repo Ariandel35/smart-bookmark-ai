@@ -1269,6 +1269,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsHtml, /id="backupStatusBadge"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*aria-atomic="true"/);
   assert.match(optionsHtml, /id="settingsActionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.match(optionsHtml, /id="privacyButton"[\s\S]*aria-describedby="settingsActionStatus"/);
+  assert.match(optionsHtml, /id="supportButton"[\s\S]*aria-describedby="settingsActionStatus"[\s\S]*data-i18n="supportButton"/);
   assert.match(optionsHtml, /id="backupActionStatus"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.match(optionsHtml, /data-i18n="navOrganize">Rules<\/span>/);
   assert.match(optionsHtml, /data-i18n="navAutomation">Auto<\/span>/);
@@ -1415,9 +1416,16 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /function syncPrimaryActionButtonLabels\(\)/);
   assert.match(optionsSource, /setButtonLabel\(saveButton, t\("saveButton"\)\)/);
   assert.match(optionsSource, /setButtonLabel\(resetButton, t\("resetButton"\)\)/);
+  assert.match(optionsSource, /setButtonLabel\(supportButton, t\("supportButton"\)\)/);
   assert.match(optionsSource, /setButtonLabel\(privacyButton, t\("privacyButton"\)\)/);
   assert.match(optionsSource, /setButtonLabel\(testApiButton, t\("testApiButton"\)\)/);
   assert.match(optionsSource, /setButtonLabel\(createBackupButton, t\("createBackupNow"\)\)/);
+  assert.match(optionsSource, /SUPPORT_URL = "https:\/\/github\.com\/Ariandel35\/marko\/issues"/);
+  assert.match(optionsSource, /async function openSupportPage\(\)/);
+  assert.match(optionsSource, /chrome\.tabs\.create\(\{ url: SUPPORT_URL \}\)/);
+  assert.match(optionsSource, /window\.open\(SUPPORT_URL, "_blank", "noopener"\)/);
+  assert.match(optionsSource, /supportButton\.addEventListener\("click"/);
+  assert.match(optionsSource, /setSettingsActionStatus\(t\("supportOpenFailed"\), true\)/);
   assert.match(optionsSource, /async function openPrivacyPage\(\)/);
   assert.match(optionsSource, /chrome\.tabs\?\.create/);
   assert.match(optionsSource, /window\.open\(privacyUrl, "_blank", "noopener"\)/);
@@ -1695,6 +1703,9 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(i18nSource, /apiTestAutoAccessFailed/);
   assert.match(i18nSource, /settingsAccessRequestingStatus/);
   assert.match(i18nSource, /privacyOpenFailed/);
+  assert.match(i18nSource, /supportOpenFailed/);
+  assert.match(i18nSource, /supportButton: "Support"/);
+  assert.match(i18nSource, /supportButton: "支持"/);
   assert.match(i18nSource, /hostAccessChecking/);
   assert.match(i18nSource, /autoOrganizeDisabledHint/);
   assert.match(i18nSource, /autoOrganizeFastHint/);
@@ -1810,6 +1821,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings fallback labels, hints, and placeholders now match the current English i18n copy before translations load/);
   assert.match(changelog, /Release tests now fail when HTML fallback copy drifts from the current English i18n text/);
   assert.match(changelog, /Settings speed mode now shows a live privacy\/access summary/);
+  assert.match(changelog, /Settings header now includes a direct Support link/);
   assert.match(changelog, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(changelog, /Release tests now verify README local links and images resolve to existing files or directories/);
   assert.match(changelog, /Release tests now lock new-install and reset defaults to OpenAI, Fast mode, and Silent organize off/);
@@ -2008,6 +2020,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings fallback labels, hints, and placeholders now match the current English i18n copy before translations load/);
   assert.match(releaseNotes, /Release tests now fail when HTML fallback copy drifts from the current English i18n text/);
   assert.match(releaseNotes, /Settings speed mode now shows a live privacy and access summary/);
+  assert.match(releaseNotes, /settings header now includes a direct Support link/);
   assert.match(releaseNotes, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(releaseNotes, /Release tests now verify README local links and images resolve to existing files or directories/);
   assert.match(releaseNotes, /new installs and resets default to the OpenAI provider, Fast mode, and Silent organize off/);
@@ -2155,7 +2168,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(storeListing, /Buttons and status badges shrink and wrap/);
   assert.match(storeListing, /startup controls stay disabled/);
   assert.match(storeListing, /Long settings status and hint text wraps safely/);
-  assert.match(storeListing, /Settings Privacy falls back from tab creation to window opening/);
+  assert.match(storeListing, /Settings Privacy and Support fall back from tab creation to window opening/);
   assert.match(storeListing, /Popup state refresh failures show an inline error/);
   assert.match(storeListing, /folder-summary load failures show an inline detail message/);
   assert.match(storeListing, /Whitelist website catalog load failures show a distinct inline error/);
