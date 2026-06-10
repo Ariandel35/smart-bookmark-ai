@@ -34,6 +34,10 @@ const EXACT_IMAGE_DIMENSIONS = {
   "icons/icon-128.png": [128, 128]
 };
 const CHROME_SHORT_DESCRIPTION_MAX_LENGTH = 132;
+const EXPECTED_MANIFEST_PERMISSIONS = ["bookmarks", "storage", "alarms"];
+const EXPECTED_OPTIONAL_HOST_PERMISSIONS = ["https://*/*", "http://*/*"];
+const REQUIRED_MANIFEST_MESSAGE_KEYS = ["extName", "extDescription", "actionTitle"];
+const OLD_BRAND_SNIPPETS = ["Smart Bookmark AI", "Smart Bookmark", "TidyMarks AI", "TidyMarks"];
 const STORE_LISTING_REQUIRED_HEADINGS = [
   "### 单一用途",
   "### 简短描述",
@@ -80,6 +84,20 @@ function assertTextExcludesAll(source, snippets, label) {
       throw new Error(`${label} contains internal-only text: ${snippet}`);
     }
   }
+}
+
+function assertJsonEqual(actual, expected, label) {
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+    throw new Error(`${label} must be ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}.`);
+  }
+}
+
+function getManifestMessageKey(manifestValue, label) {
+  const key = String(manifestValue || "").match(/^__MSG_([A-Za-z0-9_]+)__$/)?.[1];
+  if (!key) {
+    throw new Error(`${label} must use a localized __MSG_*__ manifest value.`);
+  }
+  return key;
 }
 
 function getSectionBody(source, heading) {
@@ -167,6 +185,73 @@ function readZipEntries(zipPath) {
   }
 
   return entries;
+}
+
+function verifyManifestMetadata() {
+  console.log("\n== Manifest metadata ==");
+  const manifest = readJson(path.join(ROOT_DIR, "manifest.json"));
+  const packageJson = readJson(path.join(ROOT_DIR, "package.json"));
+
+  if (manifest.manifest_version !== 3) {
+    throw new Error(`Manifest version must be 3, got ${manifest.manifest_version}.`);
+  }
+  if (manifest.version !== packageJson.version) {
+    throw new Error(`Manifest version ${manifest.version} does not match package version ${packageJson.version}.`);
+  }
+  if (manifest.default_locale !== "en") {
+    throw new Error(`Manifest default_locale must be en, got ${manifest.default_locale || "(missing)"}.`);
+  }
+  if (manifest.homepage_url !== "https://github.com/Ariandel35/marko") {
+    throw new Error(`Manifest homepage_url must point to the Marko GitHub repo, got ${manifest.homepage_url || "(missing)"}.`);
+  }
+
+  assertJsonEqual(manifest.permissions, EXPECTED_MANIFEST_PERMISSIONS, "Manifest permissions");
+  assertJsonEqual(manifest.optional_host_permissions, EXPECTED_OPTIONAL_HOST_PERMISSIONS, "Manifest optional_host_permissions");
+  if (Object.prototype.hasOwnProperty.call(manifest, "host_permissions")) {
+    throw new Error("Manifest must not declare host_permissions; website/API access must remain optional.");
+  }
+  if (manifest.background?.service_worker !== "background.js") {
+    throw new Error(`Manifest service worker must be background.js, got ${manifest.background?.service_worker || "(missing)"}.`);
+  }
+  if (manifest.action?.default_popup !== "popup.html") {
+    throw new Error(`Manifest action popup must be popup.html, got ${manifest.action?.default_popup || "(missing)"}.`);
+  }
+  if (manifest.options_page !== "options.html") {
+    throw new Error(`Manifest options_page must be options.html, got ${manifest.options_page || "(missing)"}.`);
+  }
+
+  const manifestMessageKeys = [
+    getManifestMessageKey(manifest.name, "Manifest name"),
+    getManifestMessageKey(manifest.description, "Manifest description"),
+    getManifestMessageKey(manifest.action?.default_title, "Manifest action title")
+  ];
+  for (const key of REQUIRED_MANIFEST_MESSAGE_KEYS) {
+    if (!manifestMessageKeys.includes(key)) {
+      throw new Error(`Manifest must reference localized message key ${key}.`);
+    }
+  }
+
+  for (const localePath of ["_locales/en/messages.json", "_locales/zh_CN/messages.json"]) {
+    const messages = readJson(path.join(ROOT_DIR, localePath));
+    for (const key of REQUIRED_MANIFEST_MESSAGE_KEYS) {
+      if (!messages[key]?.message) {
+        throw new Error(`${localePath} is missing manifest message ${key}.`);
+      }
+    }
+    if (messages.extName.message !== "Marko" || messages.actionTitle.message !== "Marko") {
+      throw new Error(`${localePath} extension name and action title must both be Marko.`);
+    }
+    if (messages.extDescription.message.length > CHROME_SHORT_DESCRIPTION_MAX_LENGTH) {
+      throw new Error(`${localePath} extDescription must be ${CHROME_SHORT_DESCRIPTION_MAX_LENGTH} characters or fewer.`);
+    }
+    assertTextExcludesAll(
+      Object.values(messages).map((entry) => entry?.message || "").join("\n"),
+      OLD_BRAND_SNIPPETS,
+      `${localePath} manifest messages`
+    );
+  }
+
+  console.log("OK manifest metadata");
 }
 
 function verifyStoreAssets() {
@@ -360,6 +445,7 @@ function verifyPackage() {
 
 function main() {
   runStep("Static and unit tests", process.execPath, ["tests/run-tests.js"]);
+  verifyManifestMetadata();
   runStep("Responsive UI audit", process.execPath, ["webstore/audit_ui_layout.mjs"]);
   verifyStoreTextMaterials();
   verifyStoreAssets();

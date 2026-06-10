@@ -75,6 +75,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 新增 `npm run verify:release`，一键串联测试、UI 审计、商店包生成、ZIP 校验和上传文件清单检查
 - 发布门禁现在也会校验 README 截图、Chrome Web Store 宣传图和图标尺寸
 - 发布门禁现在也会校验商店文案、隐私政策、审核备注、发布清单和 GitHub 商店链接
+- 发布门禁现在也会校验 manifest 元数据、本地化 Chrome 展示字段，以及 host 权限保持可选授权
 - 按钮和状态徽标现在默认会在容器内收缩和换行，降低长中英文文案造成挤压的风险
 - 弹窗文件夹摘要读取失败时会显示详情区提示，不再静默显示空白结果区
 - 白名单网站目录读取失败时会显示独立错误提示，不再误显示成没有可选网站
@@ -186,6 +187,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Added `npm run verify:release` as a single release gate for tests, UI layout audit, Web Store package generation, ZIP validation, and package-file allowlist checks
 - The release gate now validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes before rebuilding the upload package
 - The release gate now validates store listing, privacy policy, review notes, publish checklist, and GitHub store links before packaging
+- The release gate now validates manifest metadata, localized Chrome listing fields, and the optional-only host permission model before packaging
 - Buttons and status badges now shrink and wrap inside their containers to reduce overflow risk with longer localized labels
 - Popup and settings startup controls now stay disabled until saved state is loaded or a recoverable load failure is shown, avoiding early mis-clicks on stale default UI
 - Long settings status and hint text now wraps safely on narrow screens, and disabled primary buttons use a muted disabled style instead of looking actionable

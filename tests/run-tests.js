@@ -1833,6 +1833,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Release tests now verify README local links and images resolve to existing files or directories/);
   assert.match(changelog, /Release tests now lock new-install and reset defaults to OpenAI, Fast mode, and Silent organize off/);
   assert.match(changelog, /Manifest now declares the Marko GitHub homepage/);
+  assert.match(changelog, /release gate now validates manifest metadata/);
   assert.match(changelog, /Privacy policies now use the 2026-06-09 release date/);
   assert.match(changelog, /Privacy page now shows the 2026-06-09 update date/);
   assert.match(changelog, /Privacy page now includes support and private security-reporting links/);
@@ -2034,6 +2035,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Release tests now verify README local links and images resolve to existing files or directories/);
   assert.match(releaseNotes, /new installs and resets default to the OpenAI provider, Fast mode, and Silent organize off/);
   assert.match(releaseNotes, /manifest now declares the Marko GitHub homepage/);
+  assert.match(releaseNotes, /release gate now validates manifest metadata/);
   assert.match(releaseNotes, /privacy policies now use the 2026-06-09 release date/);
   assert.match(releaseNotes, /Privacy page now shows the 2026-06-09 update date/);
   assert.match(releaseNotes, /Privacy page now includes support and private security-reporting links/);
@@ -2394,6 +2396,14 @@ function testReleaseMaterialsCurrent() {
     "utf8"
   );
   assert.match(releaseVerifier, /tests\/run-tests\.js/);
+  assert.match(releaseVerifier, /verifyManifestMetadata/);
+  assert.match(releaseVerifier, /Manifest metadata/);
+  assert.match(releaseVerifier, /EXPECTED_MANIFEST_PERMISSIONS = \["bookmarks", "storage", "alarms"\]/);
+  assert.match(releaseVerifier, /EXPECTED_OPTIONAL_HOST_PERMISSIONS = \["https:\/\/\*\/\*", "http:\/\/\*\/\*"\]/);
+  assert.match(releaseVerifier, /host_permissions/);
+  assert.match(releaseVerifier, /Manifest homepage_url must point to the Marko GitHub repo/);
+  assert.match(releaseVerifier, /extDescription must be/);
+  assert.match(releaseVerifier, /Smart Bookmark AI/);
   assert.match(releaseVerifier, /webstore\/audit_ui_layout\.mjs/);
   assert.match(releaseVerifier, /verifyStoreTextMaterials/);
   assert.match(releaseVerifier, /Store text materials/);
