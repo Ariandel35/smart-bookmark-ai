@@ -1828,6 +1828,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Release tests now fail when HTML fallback copy drifts from the current English i18n text/);
   assert.match(changelog, /Settings speed mode now shows a live privacy\/access summary/);
   assert.match(changelog, /Settings header now includes a direct Support link/);
+  assert.match(changelog, /real extension E2E now clicks the settings Support link/);
   assert.match(changelog, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(changelog, /Release tests now verify README local links and images resolve to existing files or directories/);
   assert.match(changelog, /Release tests now lock new-install and reset defaults to OpenAI, Fast mode, and Silent organize off/);
@@ -2028,6 +2029,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Release tests now fail when HTML fallback copy drifts from the current English i18n text/);
   assert.match(releaseNotes, /Settings speed mode now shows a live privacy and access summary/);
   assert.match(releaseNotes, /settings header now includes a direct Support link/);
+  assert.match(releaseNotes, /real extension E2E now clicks the settings Support link/);
   assert.match(releaseNotes, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(releaseNotes, /Release tests now verify README local links and images resolve to existing files or directories/);
   assert.match(releaseNotes, /new installs and resets default to the OpenAI provider, Fast mode, and Silent organize off/);
@@ -2335,6 +2337,11 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /optionsSaveExpression/);
   assert.match(extensionE2e, /settingsSpeedModeBalancedButton/);
   assert.match(extensionE2e, /settingsSpeedModeFastButton/);
+  assert.match(extensionE2e, /SUPPORT_URL = "https:\/\/github\.com\/Ariandel35\/marko\/issues"/);
+  assert.match(extensionE2e, /supportButtonText/);
+  assert.match(extensionE2e, /supportTargetUrl/);
+  assert.match(extensionE2e, /options Support button did not open GitHub Issues/);
+  assert.match(extensionE2e, /supportUrl=/);
   assert.match(extensionE2e, /balancedModeSummaryText/);
   assert.match(extensionE2e, /balancedModeSummaryWarm/);
   assert.match(extensionE2e, /fastModeSummaryText/);

@@ -13,6 +13,7 @@ const rootDir = path.resolve(__dirname, "..");
 const REQUIRED_BACKGROUND_PATH = "background.js";
 const CDP_COMMAND_TIMEOUT_MS = 20_000;
 const OPTIONAL_SCREENSHOT_TIMEOUT_MS = 5_000;
+const SUPPORT_URL = "https://github.com/Ariandel35/marko/issues";
 const screenshotDir = process.env.MARKO_EXTENSION_SCREENSHOT_DIR || "";
 const runHeadless = process.env.MARKO_SHOW_BROWSER !== "1" && process.env.MARKO_EXTENSION_HEADLESS !== "0";
 const BROWSER_HINT =
@@ -362,6 +363,10 @@ async function waitForCdp(port, browserStderr) {
 
 async function createTarget(port, url = "about:blank") {
   return fetchJson(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(url)}`, { method: "PUT" });
+}
+
+async function listTargets(port) {
+  return fetchJson(`http://127.0.0.1:${port}/json/list`);
 }
 
 async function closeTarget(port, targetId) {
@@ -2098,6 +2103,10 @@ function optionsSaveExpression() {
     const apiKeyButtonTextAfterHide = (apiKeyVisibilityButton.textContent || "").trim();
     const apiKeyPressedAfterHide = apiKeyVisibilityButton.getAttribute("aria-pressed");
     setValue("apiKey", "");
+    const supportButton = clickButton("supportButton");
+    await wait(150);
+    const supportButtonText = (supportButton.textContent || "").trim();
+    const supportActionStatusText = (document.getElementById("settingsActionStatus")?.textContent || "").trim();
     clickButton("settings-tab-organize");
     await wait(100);
     const balancedButton = clickButton("settingsSpeedModeBalancedButton");
@@ -2190,6 +2199,8 @@ function optionsSaveExpression() {
       apiKeyTypeAfterHide,
       apiKeyButtonTextAfterHide,
       apiKeyPressedAfterHide,
+      supportButtonText,
+      supportActionStatusText,
       saveBadgeText: (document.getElementById("saveBadge")?.textContent || "").trim(),
       settingsActionText: (document.getElementById("settingsActionStatus")?.textContent || "").trim()
     };
@@ -2226,7 +2237,18 @@ async function auditExtensionPage(port, page) {
       await sleep(500);
     } else if (page.kind === "options") {
       if (page.action === "save-settings-and-backup") {
+        const existingTargetIds = new Set((await listTargets(port)).map((targetInfo) => targetInfo.id));
         optionsSave = await evaluate(client, optionsSaveExpression());
+        await sleep(500);
+        const supportTarget = (await listTargets(port)).find(
+          (targetInfo) =>
+            !existingTargetIds.has(targetInfo.id) &&
+            String(targetInfo.url || "").startsWith(SUPPORT_URL)
+        );
+        optionsSave.supportTargetUrl = supportTarget?.url || "";
+        if (supportTarget?.id) {
+          await closeTarget(port, supportTarget.id);
+        }
       }
       await evaluate(
         client,
@@ -2340,6 +2362,15 @@ function formatPageFailures(result, extensionId) {
     }
     if (!result.optionsSave?.saveBadgeText) {
       failures.push("options save did not render visible save feedback");
+    }
+    if (!result.optionsSave?.supportButtonText) {
+      failures.push("options Support button did not render a visible label");
+    }
+    if (/could not open|无法打开/i.test(result.optionsSave?.supportActionStatusText || "")) {
+      failures.push(`options Support button reported an open failure: ${result.optionsSave.supportActionStatusText}`);
+    }
+    if (!String(result.optionsSave?.supportTargetUrl || "").startsWith(SUPPORT_URL)) {
+      failures.push(`options Support button did not open GitHub Issues: ${result.optionsSave?.supportTargetUrl || "(missing)"}`);
     }
     if (
       result.optionsSave?.balancedModeValue !== "balanced" ||
@@ -2616,6 +2647,7 @@ async function main() {
               `automationOn=${Boolean(result.optionsSave.automationToggleOnChecked)}`,
               `automationOff=${Boolean(result.optionsSave.automationToggleOffChecked)}`,
               `interval=${result.optionsSave.savedConfig?.autoOrganizeIntervalHours || ""}`,
+              `supportUrl=${result.optionsSave.supportTargetUrl || ""}`,
               `feedback=${result.optionsSave.saveBadgeText || ""}`
             ].join(" | ")
           );

@@ -32,6 +32,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 发布测试现在会在 HTML 英文兜底文案偏离当前 i18n 时失败，避免初始化文案再次漂移
 - 设置页速度模式现在会即时显示隐私和授权摘要，快速、平衡、完整模式是否调用模型或直接检查网站一眼可见
 - 设置页顶部现在提供直接支持入口，会打开 GitHub Issues；如果浏览器阻止打开，也会在页面内提示
+- 真实扩展 E2E 现在会点击设置页支持入口，并确认它打开 Marko 的 GitHub Issues 页面
 - README 顶部插图已改为 Marko 品牌，不再显示旧的 Smart Bookmark AI 标签
 - 发布测试现在会校验 README 本地链接和图片是否指向真实存在的文件或目录，避免图文文档破链
 - Chrome Web Store 隐私政策已移除内部发布提示，发布门禁会阻止这类后台操作说明重新进入对外政策
@@ -142,6 +143,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Release tests now fail when HTML fallback copy drifts from the current English i18n text
 - Settings speed mode now shows a live privacy and access summary, making model calls and direct website checks clear for Fast, Balanced, and Complete
 - The settings header now includes a direct Support link to GitHub Issues, with inline feedback if the browser blocks opening it
+- The real extension E2E now clicks the settings Support link and verifies that it opens Marko's GitHub Issues page
 - README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label
 - Release tests now verify README local links and images resolve to existing files or directories
 - Web Store privacy policy now omits internal publishing instructions, and the release verifier blocks them from returning
