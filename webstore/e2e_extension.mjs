@@ -2107,6 +2107,8 @@ function optionsSaveExpression() {
     const balancedButtonChecked = balancedButton.getAttribute("aria-checked");
     const balancedConnectionOpen = Boolean(document.getElementById("aiConnectionBlock")?.open);
     const balancedConnectionSummaryText = (document.getElementById("aiConnectionSummaryNote")?.textContent || "").trim();
+    const balancedModeSummaryText = (document.getElementById("linkCheckModeSummary")?.textContent || "").trim();
+    const balancedModeSummaryWarm = Boolean(document.getElementById("linkCheckModeSummary")?.classList.contains("mode-summary--warm"));
     const fastButton = clickButton("settingsSpeedModeFastButton");
     await wait(150);
     const fastModeValue = document.getElementById("linkCheckMode")?.value || "";
@@ -2114,6 +2116,8 @@ function optionsSaveExpression() {
     const fastButtonChecked = fastButton.getAttribute("aria-checked");
     const fastConnectionOpen = Boolean(document.getElementById("aiConnectionBlock")?.open);
     const fastConnectionSummaryText = (document.getElementById("aiConnectionSummaryNote")?.textContent || "").trim();
+    const fastModeSummaryText = (document.getElementById("linkCheckModeSummary")?.textContent || "").trim();
+    const fastModeSummaryWarm = Boolean(document.getElementById("linkCheckModeSummary")?.classList.contains("mode-summary--warm"));
     clickButton("settings-tab-automation");
     await wait(100);
     const automationIntervalInput = document.getElementById("autoOrganizeIntervalHours");
@@ -2158,11 +2162,15 @@ function optionsSaveExpression() {
       balancedButtonChecked,
       balancedConnectionOpen,
       balancedConnectionSummaryText,
+      balancedModeSummaryText,
+      balancedModeSummaryWarm,
       fastModeValue,
       fastButtonActive,
       fastButtonChecked,
       fastConnectionOpen,
       fastConnectionSummaryText,
+      fastModeSummaryText,
+      fastModeSummaryWarm,
       automationToggleOnChecked,
       automationToggleOnAria,
       automationToggleOnStateText,
@@ -2344,6 +2352,12 @@ function formatPageFailures(result, extensionId) {
       failures.push("options save flow did not auto-open AI connection fields for Balanced mode");
     }
     if (
+      !/model|模型|AI/i.test(result.optionsSave?.balancedModeSummaryText || "") ||
+      result.optionsSave?.balancedModeSummaryWarm !== true
+    ) {
+      failures.push("options Balanced mode summary did not explain model access with warning styling");
+    }
+    if (
       result.optionsSave?.fastModeValue !== "fast" ||
       result.optionsSave?.fastButtonActive !== true ||
       result.optionsSave?.fastButtonChecked !== "true"
@@ -2352,6 +2366,12 @@ function formatPageFailures(result, extensionId) {
     }
     if (result.optionsSave?.fastConnectionOpen) {
       failures.push("options save flow did not collapse AI connection fields after returning to Fast mode");
+    }
+    if (
+      !/local|本地/i.test(result.optionsSave?.fastModeSummaryText || "") ||
+      result.optionsSave?.fastModeSummaryWarm !== false
+    ) {
+      failures.push("options Fast mode summary did not explain local-only behavior without warning styling");
     }
     if (
       result.optionsSave?.apiKeyTypeBeforeToggle !== "password" ||
@@ -2589,8 +2609,10 @@ async function main() {
               `mode=${result.optionsSave.savedConfig?.linkCheckMode || ""}`,
               `balancedButton=${result.optionsSave.balancedButtonChecked || ""}`,
               `balancedConnectionOpen=${Boolean(result.optionsSave.balancedConnectionOpen)}`,
+              `balancedSummaryWarm=${Boolean(result.optionsSave.balancedModeSummaryWarm)}`,
               `fastButton=${result.optionsSave.fastButtonChecked || ""}`,
               `fastConnectionOpen=${Boolean(result.optionsSave.fastConnectionOpen)}`,
+              `fastSummaryWarm=${Boolean(result.optionsSave.fastModeSummaryWarm)}`,
               `automationOn=${Boolean(result.optionsSave.automationToggleOnChecked)}`,
               `automationOff=${Boolean(result.optionsSave.automationToggleOffChecked)}`,
               `interval=${result.optionsSave.savedConfig?.autoOrganizeIntervalHours || ""}`,

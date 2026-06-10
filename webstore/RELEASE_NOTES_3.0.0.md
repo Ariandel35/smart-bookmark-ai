@@ -30,6 +30,7 @@ Marko 3.0.0 重点打磨界面流程和设置路径，让扩展更简洁、更�
 - 设置页英文兜底标题也对齐为更短的 Rules、Auto、Advanced 和 Backups，翻译脚本加载前保持简洁
 - 设置页英文兜底标签、提示和输入占位文案现在也与当前英文 i18n 一致，初始化时不会从旧文案跳变
 - 发布测试现在会在 HTML 英文兜底文案偏离当前 i18n 时失败，避免初始化文案再次漂移
+- 设置页速度模式现在会即时显示隐私和授权摘要，快速、平衡、完整模式是否调用模型或直接检查网站一眼可见
 - README 顶部插图已改为 Marko 品牌，不再显示旧的 Smart Bookmark AI 标签
 - 发布测试现在会校验 README 本地链接和图片是否指向真实存在的文件或目录，避免图文文档破链
 - Chrome Web Store 隐私政策已移除内部发布提示，发布门禁会阻止这类后台操作说明重新进入对外政策
@@ -137,6 +138,7 @@ Marko 3.0.0 focuses on a simpler, more polished workflow.
 - Settings fallback section headings now match the shorter Rules, Auto, Advanced, and Backups labels before translations load
 - Settings fallback labels, hints, and placeholders now match the current English i18n copy before translations load
 - Release tests now fail when HTML fallback copy drifts from the current English i18n text
+- Settings speed mode now shows a live privacy and access summary, making model calls and direct website checks clear for Fast, Balanced, and Complete
 - README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label
 - Release tests now verify README local links and images resolve to existing files or directories
 - Web Store privacy policy now omits internal publishing instructions, and the release verifier blocks them from returning

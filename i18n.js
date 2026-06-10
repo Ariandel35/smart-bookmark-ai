@@ -250,6 +250,12 @@ Hard rules:
       linkCheckComplete: "Complete",
       hintLinkCheckMode:
         "Fast finishes locally without waiting for the model. Balanced skips link checks but keeps AI classification. Complete checks links and uses AI.",
+      linkCheckFastSummary:
+        "Local preview only. No model call, website check, or extra access is needed.",
+      linkCheckBalancedSummary:
+        "Uses AI classification for uncached bookmarks. Needs model endpoint access, but skips direct website checks.",
+      linkCheckCompleteSummary:
+        "Uses AI classification and direct website checks. Needs model endpoint access and broader website access.",
       labelWhitelistDomains: "Whitelist Websites",
       labelProtectedRootFolders: "Protected Root Folders",
       labelDomainFolderRules: "Domain Folder Rules",
@@ -575,6 +581,9 @@ Hard rules:
       linkCheckBalanced: "平衡",
       linkCheckComplete: "完整",
       hintLinkCheckMode: "快速模式本地完成，不等待模型；平衡模式跳过链接检查但保留 AI 分类；完整模式会检查链接并使用 AI。",
+      linkCheckFastSummary: "仅本地预览。不调用模型、不检查网站，也不需要额外授权。",
+      linkCheckBalancedSummary: "未缓存书签会使用 AI 分类。需要模型接口权限，但不会直接检查网站。",
+      linkCheckCompleteSummary: "会使用 AI 分类并直接检查网站。需要模型接口权限和更广的网站访问权限。",
       labelWhitelistDomains: "白名单网站",
       labelProtectedRootFolders: "受保护根目录",
       labelDomainFolderRules: "域名目录规则",

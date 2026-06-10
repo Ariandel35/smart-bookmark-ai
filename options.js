@@ -26,6 +26,7 @@ const batchSizeInput = document.getElementById("batchSize");
 const batchSizeCapHint = document.getElementById("batchSizeCapHint");
 const linkCheckModeSelect = document.getElementById("linkCheckMode");
 const linkCheckModeButtons = Array.from(document.querySelectorAll("[data-settings-speed-mode]"));
+const linkCheckModeSummary = document.getElementById("linkCheckModeSummary");
 const connectionModeHint = document.getElementById("connectionModeHint");
 const aiConnectionBlock = document.getElementById("aiConnectionBlock");
 const aiConnectionSummaryNote = document.getElementById("aiConnectionSummaryNote");
@@ -976,6 +977,23 @@ function updateConnectionModeHint() {
   connectionModeHint.textContent = t(key);
   connectionModeHint.className = requiresAccess ? "field__hint panel__hint field__hint--warm" : "field__hint panel__hint";
   updateAiConnectionDisclosure(mode);
+  updateLinkCheckModeSummary(mode);
+}
+
+function updateLinkCheckModeSummary(mode = normalizeLinkCheckMode(linkCheckModeSelect.value)) {
+  if (!linkCheckModeSummary) {
+    return;
+  }
+
+  const summaryKeyByMode = {
+    [LINK_CHECK_MODE_FAST]: "linkCheckFastSummary",
+    [LINK_CHECK_MODE_BALANCED]: "linkCheckBalancedSummary",
+    [LINK_CHECK_MODE_COMPLETE]: "linkCheckCompleteSummary"
+  };
+  const isExternalMode = mode !== LINK_CHECK_MODE_FAST;
+
+  linkCheckModeSummary.textContent = t(summaryKeyByMode[mode] || summaryKeyByMode[LINK_CHECK_MODE_FAST]);
+  linkCheckModeSummary.classList.toggle("mode-summary--warm", isExternalMode);
 }
 
 function updateAiConnectionDisclosure(mode = normalizeLinkCheckMode(linkCheckModeSelect.value)) {

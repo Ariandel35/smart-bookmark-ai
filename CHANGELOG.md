@@ -21,6 +21,7 @@
 - Popup backup action now says Backup Now in English so the toolbar reads as an immediate action, matching the Chinese manual-backup label
 - Popup setup primary action now says Open Settings, making the missing-configuration path explicit on first use
 - Settings organization rules now use the same Fast/Balanced/Complete segmented control as the popup instead of a compact dropdown
+- Settings speed mode now shows a live privacy/access summary, so Fast, Balanced, and Complete clearly state whether they use the model or direct website checks
 - Settings automation now uses a direct Silent organize switch instead of a true/false dropdown
 - Settings automation fallback labels now match the simplified Silent organize wording before translations load
 - Settings fallback section headings now match the shorter Rules, Auto, Advanced, and Backups labels before translations load

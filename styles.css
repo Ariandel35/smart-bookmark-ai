@@ -535,6 +535,22 @@ textarea {
   display: none;
 }
 
+.mode-summary {
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.mode-summary--warm {
+  border-color: rgba(154, 91, 18, 0.18);
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
 .field label,
 .field__label {
   font-size: 13px;

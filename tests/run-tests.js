@@ -1306,6 +1306,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.doesNotMatch(optionsHtml, /<select id="linkCheckMode"/);
   assert.match(optionsHtml, /id="linkCheckModeHint"[\s\S]*data-i18n="hintLinkCheckMode"/);
   assert.match(optionsHtml, /Fast finishes locally without waiting for the model\. Balanced skips link checks but keeps AI classification\. Complete checks links and uses AI\./);
+  assert.match(optionsHtml, /id="linkCheckModeSummary"[\s\S]*role="status"[\s\S]*aria-live="polite"[\s\S]*data-i18n="linkCheckFastSummary"/);
+  assert.match(optionsHtml, /Local preview only\. No model call, website check, or extra access is needed\./);
   assert.match(optionsHtml, /data-i18n="organizeTitle">Rules<\/h2>/);
   assert.doesNotMatch(optionsHtml, /Organization Rules/);
   assert.match(optionsHtml, /data-i18n="labelBatchSize">Batch size<\/label>/);
@@ -1351,6 +1353,7 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /normalizeConfigBatchSize/);
   assert.match(optionsSource, /capConfigBatchSize/);
   assert.match(optionsSource, /batchSizeCapHint/);
+  assert.match(optionsSource, /linkCheckModeSummary/);
   assert.match(optionsSource, /connectionModeHint/);
   assert.match(optionsSource, /apiKeyVisibilityButton/);
   assert.match(optionsSource, /function setApiKeyVisible\(isVisible\)/);
@@ -1366,6 +1369,11 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(optionsSource, /connectionModeBalancedHint/);
   assert.match(optionsSource, /connectionModeFastHint/);
   assert.match(optionsSource, /connectionModeHint\.className = requiresAccess \? "field__hint panel__hint field__hint--warm" : "field__hint panel__hint"/);
+  assert.match(optionsSource, /function updateLinkCheckModeSummary/);
+  assert.match(optionsSource, /linkCheckFastSummary/);
+  assert.match(optionsSource, /linkCheckBalancedSummary/);
+  assert.match(optionsSource, /linkCheckCompleteSummary/);
+  assert.match(optionsSource, /linkCheckModeSummary\.classList\.toggle\("mode-summary--warm", isExternalMode\)/);
   assert.match(optionsSource, /function updateAiConnectionDisclosure/);
   assert.match(optionsSource, /aiConnectionRequiredSummary/);
   assert.match(optionsSource, /aiConnectionFastSummary/);
@@ -1641,6 +1649,8 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(stylesSource, /\.settings-action-status/);
   assert.match(stylesSource, /\.backup-confirm/);
   assert.match(stylesSource, /\.panel__hint/);
+  assert.match(stylesSource, /\.mode-summary/);
+  assert.match(stylesSource, /\.mode-summary--warm/);
   assert.match(stylesSource, /\.field label,[\s\S]*\.field__label/);
   assert.match(stylesSource, /\.field__hint--warm/);
   assert.match(stylesSource, /\.field__hint\[hidden\]/);
@@ -1666,6 +1676,10 @@ function testOptionsBackupInlineConfirmationSurface() {
   assert.match(i18nSource, /whitelistAddDomainWithCount/);
   assert.match(i18nSource, /whitelistRemoveDomainWithCount/);
   assert.match(i18nSource, /hintBatchSize/);
+  assert.match(i18nSource, /linkCheckFastSummary/);
+  assert.match(i18nSource, /linkCheckBalancedSummary/);
+  assert.match(i18nSource, /linkCheckCompleteSummary/);
+  assert.match(i18nSource, /仅本地预览/);
   assert.match(i18nSource, /showApiKeyButton/);
   assert.match(i18nSource, /hideApiKeyButton/);
   assert.match(i18nSource, /showApiKeyAria/);
@@ -1795,6 +1809,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Settings fallback section headings now match the shorter Rules, Auto, Advanced, and Backups labels/);
   assert.match(changelog, /Settings fallback labels, hints, and placeholders now match the current English i18n copy before translations load/);
   assert.match(changelog, /Release tests now fail when HTML fallback copy drifts from the current English i18n text/);
+  assert.match(changelog, /Settings speed mode now shows a live privacy\/access summary/);
   assert.match(changelog, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(changelog, /Release tests now verify README local links and images resolve to existing files or directories/);
   assert.match(changelog, /Release tests now lock new-install and reset defaults to OpenAI, Fast mode, and Silent organize off/);
@@ -1992,6 +2007,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /Settings fallback section headings now match the shorter Rules, Auto, Advanced, and Backups labels/);
   assert.match(releaseNotes, /Settings fallback labels, hints, and placeholders now match the current English i18n copy before translations load/);
   assert.match(releaseNotes, /Release tests now fail when HTML fallback copy drifts from the current English i18n text/);
+  assert.match(releaseNotes, /Settings speed mode now shows a live privacy and access summary/);
   assert.match(releaseNotes, /README hero artwork now shows the Marko brand instead of the old Smart Bookmark AI label/);
   assert.match(releaseNotes, /Release tests now verify README local links and images resolve to existing files or directories/);
   assert.match(releaseNotes, /new installs and resets default to the OpenAI provider, Fast mode, and Silent organize off/);
@@ -2298,6 +2314,12 @@ function testReleaseMaterialsCurrent() {
   assert.match(extensionE2e, /optionsSaveExpression/);
   assert.match(extensionE2e, /settingsSpeedModeBalancedButton/);
   assert.match(extensionE2e, /settingsSpeedModeFastButton/);
+  assert.match(extensionE2e, /balancedModeSummaryText/);
+  assert.match(extensionE2e, /balancedModeSummaryWarm/);
+  assert.match(extensionE2e, /fastModeSummaryText/);
+  assert.match(extensionE2e, /fastModeSummaryWarm/);
+  assert.match(extensionE2e, /options Balanced mode summary did not explain model access/);
+  assert.match(extensionE2e, /options Fast mode summary did not explain local-only behavior/);
   assert.match(extensionE2e, /apiKeyVisibilityButton/);
   assert.match(extensionE2e, /apiKeyTypeBeforeToggle/);
   assert.match(extensionE2e, /apiKeyTypeAfterShow/);
