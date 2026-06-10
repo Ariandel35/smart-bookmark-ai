@@ -71,6 +71,7 @@
 - The release gate now validates README screenshots, Chrome Web Store promo image dimensions, and icon sizes before rebuilding the upload package
 - The release gate now validates store listing, privacy policy, review notes, publish checklist, and GitHub store links before packaging
 - The release gate now validates manifest metadata, localized Chrome listing fields, and the optional-only host permission model before packaging
+- The release gate now validates the built-in privacy page support and private security-reporting links before packaging
 - Buttons and status badges now shrink and wrap within their containers by default, hardening future long localized labels against overflow
 - Popup and settings startup controls now stay disabled until saved state is loaded or a recoverable load failure is shown, avoiding early mis-clicks on stale default UI
 - Long settings status and hint text now wraps safely on narrow screens, and disabled primary buttons use a muted disabled style instead of looking actionable

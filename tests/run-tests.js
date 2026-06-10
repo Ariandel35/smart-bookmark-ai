@@ -2412,6 +2412,11 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseVerifier, /webstore\/STORE_LISTING\.md/);
   assert.match(releaseVerifier, /webstore\/REVIEW_NOTES\.md/);
   assert.match(releaseVerifier, /webstore\/PRIVACY_POLICY\.md/);
+  assert.match(releaseVerifier, /privacy\.html/);
+  assert.match(releaseVerifier, /privacy page trust links/);
+  assert.match(releaseVerifier, /privacySupportLink/);
+  assert.match(releaseVerifier, /privacySecurityLink/);
+  assert.match(releaseVerifier, /noopener noreferrer/);
   assert.match(releaseVerifier, /assertTextExcludesAll/);
   assert.match(releaseVerifier, /contains internal-only text/);
   assert.match(releaseVerifier, /发布前事项/);

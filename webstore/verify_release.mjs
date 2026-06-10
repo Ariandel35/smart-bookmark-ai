@@ -278,6 +278,7 @@ function verifyStoreTextMaterials() {
   const storeListing = readText("webstore/STORE_LISTING.md");
   const reviewNotes = readText("webstore/REVIEW_NOTES.md");
   const privacyPolicy = readText("webstore/PRIVACY_POLICY.md");
+  const privacyPage = readText("privacy.html");
   const publishChecklist = readText("webstore/PUBLISH_CHECKLIST.md");
   const githubLinks = readText("webstore/GITHUB_LINKS_TEMPLATE.md");
   const supportPolicy = readText("SUPPORT.md");
@@ -336,6 +337,27 @@ function verifyStoreTextMaterials() {
       "在 Chrome Web Store 后台把该 URL 作为隐私政策链接填写"
     ],
     "webstore privacy policy"
+  );
+
+  assertTextIncludesAll(
+    privacyPage,
+    [
+      "href=\"https://github.com/Ariandel35/marko/issues\"",
+      "href=\"https://github.com/Ariandel35/marko/security/advisories/new\"",
+      "rel=\"noopener noreferrer\"",
+      "data-i18n=\"privacySupportLink\"",
+      "data-i18n=\"privacySecurityLink\"",
+      "Do not post secrets, bookmark data, or exploit details in public issues"
+    ],
+    "privacy page trust links"
+  );
+  assertTextExcludesAll(
+    privacyPage,
+    [
+      "security@your-domain.com",
+      "replace this file"
+    ],
+    "privacy page trust links"
   );
 
   assertTextIncludesAll(
