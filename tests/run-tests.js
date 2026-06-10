@@ -1206,6 +1206,11 @@ function testSlowModelResilienceSurface() {
   assert.match(backgroundSource, /entry\.folderPath \?\? entry\.path \?\? entry\.category \?\? entry\.p/);
   assert.match(backgroundSource, /entry\.duplicateOf \?\? entry\.d/);
   assert.match(backgroundSource, /delete_duplicate\|delete-duplicate\|delete duplicate/);
+  assert.match(backgroundSource, /usesLocalFallback = shouldUseModelTimeoutFallback\(config\)/);
+  assert.match(backgroundSource, /stopped waiting for that model request/);
+  assert.match(backgroundSource, /instead of failing because the model queue is stuck/);
+  assert.match(backgroundSource, /completed mini-request results are kept/);
+  assert.match(backgroundSource, /unfinished items move to local fallback and manual review/);
   assert.match(backgroundSource, /Current model-request batch size/);
   assert.match(backgroundSource, /buildModelBookmarkInputPayload/);
   assert.match(backgroundSource, /compactModelUrl/);
@@ -1889,6 +1894,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(changelog, /Complete-mode dead-link checks now scan up to eight links/);
   assert.match(changelog, /missing job config no longer falls back to an OpenAI provider label/);
   assert.match(changelog, /mini-request timeouts now keep completed mini results/);
+  assert.match(changelog, /Slow-model timeout details now say Marko stopped waiting for the model request/);
   assert.match(changelog, /Cancellation requests are now checked before each split slow-provider model request/);
   assert.match(changelog, /compact request\/output keys and a lower token budget/);
   assert.match(changelog, /inline confirmations and status messages/);
@@ -2106,6 +2112,7 @@ function testReleaseMaterialsCurrent() {
   assert.match(releaseNotes, /run up to three mini requests at a time/);
   assert.match(releaseNotes, /skip the separate taxonomy-planning request/);
   assert.match(releaseNotes, /sends only unfinished bookmarks to local fallback/);
+  assert.match(releaseNotes, /stopped waiting for the model request while the current run continues with local fallback/);
   assert.match(releaseNotes, /reuses the popup preflight coverage result/);
   assert.match(releaseNotes, /inline confirmations and status messages/);
   assert.match(releaseNotes, /preview and error states cannot mutate bookmarks/);

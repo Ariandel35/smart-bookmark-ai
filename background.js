@@ -6167,16 +6167,25 @@ function buildRequestAbortError(reason, config, batchLength) {
   const providerLabel = getRuntimeProviderLabel(config);
   const firstResponseTimeoutSeconds = formatTimeoutSeconds(getFirstResponseTimeoutMs(config));
   const requestTimeoutSeconds = formatTimeoutSeconds(getRequestTimeoutMs(config));
+  const usesLocalFallback = shouldUseModelTimeoutFallback(config);
 
   if (reason === "first-response-timeout") {
     const error = buildUserFacingError(
       ux(
-        `${providerLabel} 在 ${firstResponseTimeoutSeconds} 秒内没有返回响应，任务已提前停止。`,
-        `${providerLabel} did not return a response within ${firstResponseTimeoutSeconds} seconds, so the task was stopped early.`
+        usesLocalFallback
+          ? `${providerLabel} 在 ${firstResponseTimeoutSeconds} 秒内没有返回首个响应，已停止等待模型请求。`
+          : `${providerLabel} 在 ${firstResponseTimeoutSeconds} 秒内没有返回响应，任务已提前停止。`,
+        usesLocalFallback
+          ? `${providerLabel} did not return an initial response within ${firstResponseTimeoutSeconds} seconds, so Marko stopped waiting for that model request.`
+          : `${providerLabel} did not return a response within ${firstResponseTimeoutSeconds} seconds, so the task was stopped early.`
       ),
       ux(
-        `这通常意味着模型首包太慢，容易撞到 Chrome Manifest V3 后台生命周期限制。Marko 已按慢模型策略拆小请求；如果仍然超时，请换更快模型或检查接口排队。当前模型请求批量：${batchLength}。`,
-        `This usually means the first token was too slow and may hit Chrome Manifest V3 service worker lifetime limits. Marko already split the work with the slow-model profile; if it still times out, switch to a faster model or check endpoint queueing. Current model-request batch size: ${batchLength}.`
+        usesLocalFallback
+          ? `当前运行会继续走本地规则、缓存、内置规则和待手动分类兜底，不会因为模型队列卡住而整体失败。Marko 已按慢模型策略拆小请求；如果想减少待分类项目，请换更快模型或检查接口排队。当前模型请求批量：${batchLength}。`
+          : `这通常意味着模型首包太慢，容易撞到 Chrome Manifest V3 后台生命周期限制。Marko 已按慢模型策略拆小请求；如果仍然超时，请换更快模型或检查接口排队。当前模型请求批量：${batchLength}。`,
+        usesLocalFallback
+          ? `This run will continue with local rules, cache, built-in rules, and manual-review fallback instead of failing because the model queue is stuck. Marko already split the work with the slow-model profile; switch to a faster model or check endpoint queueing if you want fewer manual-review items. Current model-request batch size: ${batchLength}.`
+          : `This usually means the first token was too slow and may hit Chrome Manifest V3 service worker lifetime limits. Marko already split the work with the slow-model profile; if it still times out, switch to a faster model or check endpoint queueing. Current model-request batch size: ${batchLength}.`
       ),
       reason
     );
@@ -6187,12 +6196,20 @@ function buildRequestAbortError(reason, config, batchLength) {
   if (reason === "request-timeout") {
     const error = buildUserFacingError(
       ux(
-        `${providerLabel} 请求超过 ${requestTimeoutSeconds} 秒仍未完成，任务已停止。`,
-        `${providerLabel} did not finish within ${requestTimeoutSeconds} seconds, so the task was stopped.`
+        usesLocalFallback
+          ? `${providerLabel} 请求超过 ${requestTimeoutSeconds} 秒仍未完整返回，已停止等待模型请求。`
+          : `${providerLabel} 请求超过 ${requestTimeoutSeconds} 秒仍未完成，任务已停止。`,
+        usesLocalFallback
+          ? `${providerLabel} did not finish within ${requestTimeoutSeconds} seconds, so Marko stopped waiting for that model request.`
+          : `${providerLabel} did not finish within ${requestTimeoutSeconds} seconds, so the task was stopped.`
       ),
       ux(
-        `模型虽然可能已经开始处理，但完整响应仍然过慢。Marko 已按慢模型策略拆小请求；如果仍然超时，请换更快模型或确认接口没有卡在排队状态。当前模型请求批量：${batchLength}。`,
-        `The model may have started working, but the full response was still too slow. Marko already split the work with the slow-model profile; if it still times out, switch to a faster model or confirm the endpoint is not stuck in queue. Current model-request batch size: ${batchLength}.`
+        usesLocalFallback
+          ? `当前运行会继续完成：已返回的小请求结果会保留，未返回项目会转入本地兜底和待手动分类，不会继续卡在模型队列。Marko 已按慢模型策略拆小请求；如果想减少待分类项目，请换更快模型或确认接口没有卡在排队状态。当前模型请求批量：${batchLength}。`
+          : `模型虽然可能已经开始处理，但完整响应仍然过慢。Marko 已按慢模型策略拆小请求；如果仍然超时，请换更快模型或确认接口没有卡在排队状态。当前模型请求批量：${batchLength}。`,
+        usesLocalFallback
+          ? `This run will continue: completed mini-request results are kept, and unfinished items move to local fallback and manual review instead of staying stuck in the model queue. Marko already split the work with the slow-model profile; switch to a faster model or confirm the endpoint is not stuck in queue if you want fewer manual-review items. Current model-request batch size: ${batchLength}.`
+          : `The model may have started working, but the full response was still too slow. Marko already split the work with the slow-model profile; if it still times out, switch to a faster model or confirm the endpoint is not stuck in queue. Current model-request batch size: ${batchLength}.`
       ),
       reason
     );
